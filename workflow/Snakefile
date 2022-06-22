@@ -7,4 +7,4 @@ module get_data:
 	snakefile: "rules/get_data.smk"
 	config: config
 
-use rule download_NeurIPS2021 from get_data
+use rule * from get_data
