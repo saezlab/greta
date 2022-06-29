@@ -3,8 +3,8 @@ min_version("6.0")
 
 configfile: "config/config.yaml"
 
-module get_data:
-	snakefile: "rules/get_data.smk"
+module neurips2021:
+	snakefile: "rules/neurips2021.smk"
 	config: config
 
-use rule * from get_data
+use rule * from neurips2021
