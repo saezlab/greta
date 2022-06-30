@@ -4,9 +4,20 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - scanpy=1.9.1
-  - leidenalg=0.8.10
+  - python=3.8
+  - cython
+  - ipython
+  - scanpy=1.8.2
+  - loompy=3.0.6
+  - python-igraph
+  - louvain>=0.6,!=0.6.2
+  - fa2
+  - leidenalg
+  - seaborn
   - pip
+  - ipykernel
+  - ipywidgets
+  - genomepy
   - pip:
     - dfply
     - git+https://github.com/settylab/Palantir@removeTSNE
