@@ -2,6 +2,7 @@ import scanpy as sc
 import argparse
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Init args
 parser = argparse.ArgumentParser()
@@ -42,11 +43,11 @@ sc.tl.umap(gex)
 sc.tl.leiden(gex)
 
 # Remove noisy cells
-gex = gex[~np.isin(gex.obs['leiden'], ['11', '12'])]
 atac = atac[~np.isin(gex.obs['leiden'], ['11', '12'])]
+gex = gex[~np.isin(gex.obs['leiden'], ['11', '12'])]
 
 # Plot results
-fig, ax = plt.subplots(2, 3, figsize=(12,3), facecolor='white', tight_layout=True)
+fig, ax = plt.subplots(2, 3, figsize=(12,6), facecolor='white', tight_layout=True)
 ax = ax.flatten()
 sc.pl.pca(gex, color=['leiden'], ax=ax[0], show=False)
 sc.pl.pca(gex, color=['cell_type'], ax=ax[1], show=False)

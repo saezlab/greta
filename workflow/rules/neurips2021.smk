@@ -25,3 +25,5 @@ rule split_neurips2021:
         "../envs/gretabench.yml"
     shell:
         "python workflow/scripts/split_neurips2021.py -i {input} -p {output.plot} -g {output.gex} -a {output.atac}"
+        
+# snakemake -c8 --use-conda split_neurips2021
