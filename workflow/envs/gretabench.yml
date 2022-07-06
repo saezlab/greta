@@ -20,5 +20,6 @@ dependencies:
   - genomepy
   - pip:
     - dfply
+    - muon
     - git+https://github.com/settylab/Palantir@removeTSNE
     - git+https://github.com/dpeerlab/SEACells
