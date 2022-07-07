@@ -21,5 +21,7 @@ dependencies:
   - pip:
     - dfply
     - muon
+    - pysam
+    - mofapy2
     - git+https://github.com/settylab/Palantir@removeTSNE
     - git+https://github.com/dpeerlab/SEACells
