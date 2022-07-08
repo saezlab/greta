@@ -16,6 +16,17 @@ rule download_pbmc10k:
         wget '{params.atac_frags}' -O {output.atac_frags}
         wget '{params.atac_index}' -O {output.atac_index}
         """
+        
+rule annotate_pbmc10k:
+    input:
+        "resources/pbmc10k/"
+    output:
+        plot="results/pbmc10k/annotated.pdf",
+        mdata="resources/pbmc10k/annotated.h5mu"
+    conda:
+        "../envs/gretabench.yml"
+    shell:
+        "python workflow/scripts/annotate_pbmc10k.py -i {input} -p {output.plot} -o {output.mdata}"
 
 rule download_neurips2021:
     output:
