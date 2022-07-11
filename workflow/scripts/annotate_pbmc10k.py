@@ -9,15 +9,21 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--input', required=True)
 parser.add_argument('-p','--plot', required=True)
+parser.add_argument('-g','--use_gpu', required=True, action='store_true')
 parser.add_argument('-o','--output', required=True)
 args = vars(parser.parse_args())
 
-data_dir = args['input']
+inp = args['input']
 plot = args['plot']
-out_dir = args['output']
+use_gpu = args['use_gpu']
+if use_gpu == 'True':
+    use_gpu = True
+else:
+    use_gpu = False
+out = args['output']
 
 # Read and create mdata object
-mdata = mu.read_10x_h5(os.path.join(data_dir, "filtered_feature_bc_matrix.h5"))
+mdata = mu.read_10x_h5(os.path.join(inp, "filtered_feature_bc_matrix.h5"))
 mdata.var_names_make_unique()
 
 # Fix muon #65 bug
@@ -189,4 +195,4 @@ fig.set_facecolor('white')
 fig.savefig(plot)
 
 ## Write
-mdata.write(out_dir)
+mdata.write(out)
