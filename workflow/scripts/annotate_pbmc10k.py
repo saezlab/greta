@@ -36,6 +36,7 @@ mu.pp.filter_obs(rna, 'total_counts', lambda x: x < 15000)
 mu.pp.filter_obs(rna, 'pct_counts_mt', lambda x: x < 20)
 
 ## Normalize
+rna.layers["counts"] = rna.X
 sc.pp.normalize_total(rna, target_sum=1e4)
 sc.pp.log1p(rna)
 

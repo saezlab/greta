@@ -18,6 +18,7 @@ dependencies:
   - ipykernel
   - ipywidgets
   - genomepy
+  - harmonypy
   - pip:
     - dfply
     - muon
