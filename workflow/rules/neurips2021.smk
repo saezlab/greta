@@ -19,14 +19,15 @@ rule download_pbmc10k:
         
 rule annotate_pbmc10k:
     input:
-        "resources/pbmc10k/"
+        dir="resources/pbmc10k/",
+        obj="resources/pbmc10k/filtered_feature_bc_matrix.h5"
     output:
         plot="results/pbmc10k/annotated.pdf",
         mdata="resources/pbmc10k/annotated.h5mu"
     conda:
         "../envs/gretabench.yml"
     shell:
-        "python workflow/scripts/annotate_pbmc10k.py -i {input} -p {output.plot} -o {output.mdata}"
+        "python workflow/scripts/annotate_pbmc10k.py -i {input.dir} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
 
 rule download_neurips2021:
     output:
@@ -44,17 +45,17 @@ rule decompress_neurips2021:
     shell:
         "gzip -k -d {input}"
         
-rule split_neurips2021:
+rule annotate_neurips2021:
     input:
-        "resources/neurips2021/original.h5ad"
+        dir="resources/neurips2021/",
+        obj="resources/neurips2021/original.h5ad"
     output:
-        gex="resources/neurips2021/gex.h5ad",
-        atac="resources/neurips2021/atac.h5ad",
-        plot="results/neurips2021/trajectory.pdf"
+        plot="results/neurips2021/annotated.pdf",
+        mdata="resources/neurips2021/annotated.h5mu"
     conda:
         "../envs/gretabench.yml"
     shell:
-        "python workflow/scripts/split_neurips2021.py -i {input} -p {output.plot} -g {output.gex} -a {output.atac}"
+        "python workflow/scripts/annotate_neurips2021.py -i {input.dir} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
         
 # snakemake -c8 --use-conda split_neurips2021
 # conda env update --file local.yml --prune
