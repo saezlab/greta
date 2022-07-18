@@ -8,6 +8,7 @@ max-status-checks-per-second: 10
 local-cores: 1
 latency-wait: 60
 use-conda: True
+jobs: 1
 default-resources:
     - runtime=100
     - mem_mb=16000

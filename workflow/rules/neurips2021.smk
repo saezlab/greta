@@ -49,16 +49,14 @@ rule annotate_neurips2021:
     resources:
         mem='32G',
         time='04:00:00'
-    input:
-        dir="resources/neurips2021/",
-        obj="resources/neurips2021/original.h5ad"
+    input: "resources/neurips2021/original.h5ad"
     output:
         plot="results/neurips2021/annotated.pdf",
         mdata="resources/neurips2021/annotated.h5mu"
     conda:
         "../envs/gretabench.yml"
     shell:
-        "python workflow/scripts/annotate_neurips2021.py -i {input.dir} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
+        "python workflow/scripts/annotate_neurips2021.py -i ${dirname {input}} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
         
-# snakemake --profile config/slurm/ split_neurips2021
+# snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune
