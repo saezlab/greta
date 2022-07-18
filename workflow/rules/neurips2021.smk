@@ -46,6 +46,9 @@ rule decompress_neurips2021:
         "gzip -k -d {input}"
         
 rule annotate_neurips2021:
+    resources:
+        mem='32G',
+        time='04:00:00'
     input:
         dir="resources/neurips2021/",
         obj="resources/neurips2021/original.h5ad"
@@ -57,5 +60,5 @@ rule annotate_neurips2021:
     shell:
         "python workflow/scripts/annotate_neurips2021.py -i {input.dir} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
         
-# snakemake -c8 --use-conda split_neurips2021
+# snakemake --profile config/slurm/ split_neurips2021
 # conda env update --file local.yml --prune
