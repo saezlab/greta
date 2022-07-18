@@ -43,12 +43,12 @@ rule decompress_neurips2021:
     output:
         "resources/neurips2021/original.h5ad"
     shell:
-        "gzip -k -d {input}"
+        "gzip -d {input}"
         
 rule annotate_neurips2021:
     resources:
-        mem='32G',
-        time='04:00:00'
+        mem_mb=48000,
+        gres="gpu:1"
     input: "resources/neurips2021/original.h5ad"
     output:
         plot="results/neurips2021/annotated.pdf",
@@ -56,7 +56,7 @@ rule annotate_neurips2021:
     conda:
         "../envs/gretabench.yml"
     shell:
-        "python workflow/scripts/annotate_neurips2021.py -i ${dirname {input}} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
+        "python workflow/scripts/annotate_neurips2021.py -i {input} -p {output.plot} -g False -o {output.mdata}"
         
 # snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune

@@ -11,7 +11,7 @@ from mudata import MuData
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--input', required=True)
 parser.add_argument('-p','--plot', required=True)
-parser.add_argument('-g','--use_gpu', required=True, action='store_true')
+parser.add_argument('-g','--use_gpu', required=True)
 parser.add_argument('-o','--out', required=True)
 args = vars(parser.parse_args())
 
@@ -77,7 +77,7 @@ sc.tl.pca(rna, svd_solver='arpack')
 
 ## Integrate
 rna.obs['batch'] = mdata.obs['batch']
-sce.pp.harmony_integrate(rna, 'batch', adjusted_basis='X_pca')
+sce.pp.harmony_integrate(rna, 'batch', adjusted_basis='X_pca', max_iter_harmony=30)
 
 ## UMAP
 sc.pp.neighbors(rna, n_neighbors=10, n_pcs=20)
@@ -109,7 +109,7 @@ atac.uns["lsi"]["stdev"] = atac.uns["lsi"]["stdev"][1:]
 
 ## Integrate
 atac.obs['batch'] = mdata.obs['batch']
-sce.pp.harmony_integrate(atac, 'batch', adjusted_basis='X_lsi')
+sce.pp.harmony_integrate(atac, 'batch', basis='X_lsi', adjusted_basis='X_lsi', max_iter_harmony=30)
 
 ## UMAP
 sc.pp.neighbors(atac, use_rep="X_lsi", n_neighbors=10, n_pcs=30)
