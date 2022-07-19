@@ -57,6 +57,14 @@ rule annotate_neurips2021:
         "../envs/gretabench.yml"
     shell:
         "python workflow/scripts/annotate_neurips2021.py -i {input} -p {output.plot} -g False -o {output.mdata}"
-        
+
+rule add_r_env:
+    conda:
+        "../envs/{env}.yml"
+    output:
+        "logs/add_r_env/{env}.out"
+    shell:
+        "Rscript workflow/envs/{wildcards.env}.R > {output}"
+
 # snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune

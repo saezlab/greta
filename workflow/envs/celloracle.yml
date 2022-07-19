@@ -9,7 +9,10 @@ dependencies:
   - pip
   - ipykernel
   - ipywidgets
-  - bioconductor-cicero
   - r-monocle3
+  - r-remotes
+  - bioconductor-rhdf5
+  - numpy
+  - cython
   - pip:
     - celloracle
