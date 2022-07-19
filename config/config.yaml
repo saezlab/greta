@@ -9,3 +9,6 @@ data:
 
 use_gpu: True
 
+trajectories:
+    neurips2021:
+        blood: ['HSC', 'MK/E prog', 'Proerythroblast', 'Erythroblast', 'Normoblast']
