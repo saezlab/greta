@@ -53,7 +53,31 @@ rule build_base_grn:
     params:
         thr_motif_score=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_motif_score']
     output:
-        "resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.parquet"
+        "resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
     shell:
         "python workflow/scripts/celloracle/build_base_grn.py -i {input} -t {params.thr_motif_score} -g {output}"
+
+rule build_grn:
+    input:
+        mdata="resources/{dataset}/{trajectory}/mdata.h5mu",
+        base_grn="resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
+    conda:
+        "../envs/celloracle.yml"
+    output:
+        "resources/{dataset}/{trajectory}/celloracle/links.hdf5"
+    shell:
+        "python workflow/scripts/celloracle/build_grn.py -m {input.mdata} -b {input.base_grn} -l {output}"
+
+rule filter_grn:
+    input:
+        "resources/{dataset}/{trajectory}/celloracle/links.hdf5"
+    conda:
+        "../envs/celloracle.yml"
+    params:
+        thr_edge_pval=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_edge_pval'],
+        thr_top_edges=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_top_edges'],
+    output:
+        "resources/{dataset}/{trajectory}/celloracle/grns/celloracle_*.csv"
+    shell:
+        "python workflow/scripts/celloracle/filter_grn.py -l {input} -p {params.thr_edge_pval} -t {params.thr_top_edges} -o {output}"
 

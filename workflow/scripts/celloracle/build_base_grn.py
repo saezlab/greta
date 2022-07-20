@@ -35,5 +35,5 @@ tfi.make_TFinfo_dataframe_and_dictionary(verbose=True)
 df = tfi.to_dataframe()
 
 # Save
-df.to_parquet(path_grn)
+df.to_csv(path_grn)
 
