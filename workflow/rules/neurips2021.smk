@@ -66,5 +66,25 @@ rule add_r_env:
     shell:
         "Rscript workflow/envs/{wildcards.env}.R > {output}"
 
+rule build_base_GRN:
+    input:
+        data="resources/{dataset}/{trajectory}/mdata.h5mu",
+        log="logs/add_r_env/celloracle.out"
+    conda:
+        "../envs/celloracle.yml"
+    output:
+        path_all_peaks="resources/{dataset}/{trajectory}/celloracle/all_peaks.csv",
+        path_connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv",
+        path_plot="results/{dataset}/{trajectory}/celloracle/peak_thr.pdf"
+    params:
+        organism=lambda w: config[w.dataset]['organism'],
+        min_count=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['min_count'],
+        max_count=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['max_count']
+    shell:
+        """
+        module load lib/openssl
+        Rscript workflow/scripts/celloracle/build_base_GRN.R {input.data} {params.organism} {params.min_count} {params.max_count} {output.path_plot} {output.path_all_peaks} {output.path_connections}
+        """
+
 # snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune
