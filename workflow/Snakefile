@@ -3,8 +3,25 @@ min_version("6.0")
 
 configfile: "config/config.yaml"
 
+rule add_r_env:
+    conda:
+        "../envs/{env}.yml"
+    output:
+        "logs/add_r_env/{env}.out"
+    shell:
+        "Rscript workflow/envs/{wildcards.env}.R > {output}"
+
 module neurips2021:
-	snakefile: "rules/neurips2021.smk"
-	config: config
+    snakefile: "rules/neurips2021.smk"
+    config: config
 
 use rule * from neurips2021
+
+module celloracle:
+    snakefile: "rules/celloracle.smk"
+    config: config
+
+use rule * from celloracle
+
+# snakemake --profile config/slurm/ annotate_neurips2021
+# conda env update --file local.yml --prune
