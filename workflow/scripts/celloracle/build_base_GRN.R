@@ -1,18 +1,41 @@
 library(cicero)
 library(monocle3)
+library(rhdf5)
 
-max_count <-  15000
-min_count <- 2000
-organism <- 'human'
 
-# Determine genome
-if (organism == 'human'){
-    data("human.hg19.genome")
-    genome <- human.hg19.genome
-} else if (organism == 'mouse'){
-    data("mouse.mm9.genome")
-    genome <- mouse.mm9.genome
-}
+# Parse args
+args <- commandArgs(trailingOnly = F)
+path_data <- args[1]
+organism <- args[2]
+min_count <- args[3]
+max_count <- args[4]
+path_plot <- args[5]
+path_all_peaks <- args[6]
+path_connections <- args[7]
+
+# Process mudata
+indata <- H5Fopen(path_data)
+indices <- indata$mod$atac$X$indices
+indptr <- indata$mod$atac$X$indptr
+data <- indata$mod$atac$raw$X$data
+barcodes <- indata$mod$atac$obs$`_index`
+peaks <- indata$mod$atac$var$`_index`
+h5closeAll()
+
+# Build sparse matrix and binarize
+indata <- Matrix::sparseMatrix(i=indices, p=indptr, x=data, index1 = FALSE)
+indata@x[indata@x > 0] <- 1
+
+# Format cell info
+cellinfo <- data.frame(row.names=barcodes, cells=barcodes)
+
+# Format peak info
+peakinfo <- data.frame(row.names=peaks, site_name=peaks)
+peakinfo <- tidyr::separate(data = peakinfo, col = 'site_name', into = c("chr", "bp1", "bp2"), sep = "_")
+
+# Add names
+row.names(indata) <- row.names(peakinfo)
+colnames(indata) <- row.names(cellinfo)
 
 # Make CDS
 input_cds <-  suppressWarnings(new_cell_data_set(indata,
@@ -24,7 +47,10 @@ input_cds <- monocle3::detect_genes(input_cds)
 input_cds <- input_cds[Matrix::rowSums(exprs(input_cds)) != 0,]
 
 # Visualize peak_count_per_cell
-plt <- hist(Matrix::colSums(exprs(input_cds)))
+plt <- c(hist(Matrix::colSums(exprs(input_cds))), abline(v = c(min_count, max_count), col='red', lwd=3, lty=2))
+pdf(file=path_plot, width=4, height=4)
+plot(plt)
+dev.off()
 
 # Filter by peak_count
 input_cds <- input_cds[,Matrix::colSums(exprs(input_cds)) >= min_count] 
@@ -44,11 +70,20 @@ umap_coords <- reducedDims(input_cds)$UMAP
 # Build cicero cds
 cicero_cds <- make_cicero_cds(input_cds, reduced_coordinates = umap_coords)
 
+# Determine genome
+if (organism == 'human'){
+    data("human.hg19.genome")
+    genome <- human.hg19.genome
+} else if (organism == 'mouse'){
+    data("mouse.mm9.genome")
+    genome <- mouse.mm9.genome
+}
+
 # Run the main function
-conns <- run_cicero(cicero_cds, chromosome_length) # Takes a few minutes to run
+conns <- run_cicero(cicero_cds, genome) # Takes a few minutes to run
 
 # Save
 all_peaks <- row.names(exprs(input_cds))
-write.csv(x = all_peaks, file = file.path(output_all_peaks))
-write.csv(x = conns, file = file.path(output_connections))
+write.csv(x = all_peaks, file = file.path(path_all_peaks))
+write.csv(x = conns, file = file.path(path_connections))
 
