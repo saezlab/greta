@@ -40,7 +40,7 @@ rule tf_motif_scan:
     output:
         "resources/{dataset}/{trajectory}/celloracle/tfinfo.hdf5"
     params:
-        organism=lambda w: config[w.dataset]['organism']
+        organism=lambda w: config[w.dataset]['organism'],
         fpr=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['fpr']
     shell:
         "python workflow/scripts/celloracle/tf_motif_scan.py -p {input} -o {params.organism} -f {params.fpr} -t {output}"
@@ -75,9 +75,9 @@ rule filter_grn:
         "../envs/celloracle.yml"
     params:
         thr_edge_pval=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_edge_pval'],
-        thr_top_edges=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_top_edges'],
+        thr_top_edges=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_top_edges']
     output:
-        "resources/{dataset}/{trajectory}/celloracle/grns/celloracle_*.csv"
+        "resources/{dataset}/{trajectory}/celloracle/grns/celloracle_{celltype}.csv"
     shell:
         "python workflow/scripts/celloracle/filter_grn.py -l {input} -p {params.thr_edge_pval} -t {params.thr_top_edges} -o {output}"
 
