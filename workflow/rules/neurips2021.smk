@@ -66,7 +66,7 @@ rule add_r_env:
     shell:
         "Rscript workflow/envs/{wildcards.env}.R > {output}"
 
-rule build_base_GRN:
+rule peak_corr:
     input:
         data="resources/{dataset}/{trajectory}/mdata.h5mu",
         log="logs/add_r_env/celloracle.out"
@@ -83,7 +83,7 @@ rule build_base_GRN:
     shell:
         """
         module load lib/openssl
-        Rscript workflow/scripts/celloracle/build_base_GRN.R {input.data} {params.organism} {params.min_count} {params.max_count} {output.path_plot} {output.path_all_peaks} {output.path_connections}
+        Rscript workflow/scripts/celloracle/peak_corr.R {input.data} {params.organism} {params.min_count} {params.max_count} {output.path_plot} {output.path_all_peaks} {output.path_connections}
         """
 
 rule tss_annotation:
@@ -100,6 +100,30 @@ rule tss_annotation:
     shell:
          "python workflow/scripts/celloracle/tss_annotation.py -a {input.all_peaks} -c {input.connections} -o {params.organism} -t {params.thr_coaccess} -p {output}"
 
+rule tf_motif_scan:
+    input:
+        "resources/{dataset}/{trajectory}/celloracle/processed_peak_file.csv"
+    conda:
+        "../envs/celloracle.yml"
+    output:
+        "resources/{dataset}/{trajectory}/celloracle/tfinfo.hdf5"
+    params:
+        organism=lambda w: config[w.dataset]['organism']
+        fpr=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['fpr']
+    shell:
+        "python workflow/scripts/celloracle/tf_motif_scan.py -p {input} -o {params.organism} -f {params.fpr} -t {output}"
+
+rule build_base_grn:
+    input:
+        "resources/{dataset}/{trajectory}/celloracle/tfinfo.hdf5"
+    conda:
+        "../envs/celloracle.yml"
+    params:
+        thr_motif_score=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_motif_score']
+    output:
+        "resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.parquet"
+    shell:
+        "python workflow/scripts/celloracle/build_base_grn.py -i {input} -t {params.thr_motif_score} -g {output}"
 
 # snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune

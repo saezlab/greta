@@ -17,7 +17,7 @@ args = vars(parser.parse_args())
 path_all_peaks = args['all_peaks']
 path_connections = args['connections']
 organism = args['organism']
-thr_coaccess = args['thr']
+thr_coaccess = float(args['thr'])
 path_prc_peaks = args['prc_peaks']
 
 # # Load scATAC-seq peak list
