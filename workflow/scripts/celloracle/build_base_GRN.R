@@ -17,7 +17,7 @@ path_connections <- args[7]
 indata <- H5Fopen(path_data)
 indices <- indata$mod$atac$X$indices
 indptr <- indata$mod$atac$X$indptr
-data <- indata$mod$atac$raw$X$data
+data <- is.numeric(indata$mod$atac$layers$counts$data)
 barcodes <- indata$mod$atac$obs$`_index`
 peaks <- indata$mod$atac$var$`_index`
 h5closeAll()
@@ -31,7 +31,7 @@ cellinfo <- data.frame(row.names=barcodes, cells=barcodes)
 
 # Format peak info
 peakinfo <- data.frame(row.names=peaks, site_name=peaks)
-peakinfo <- tidyr::separate(data = peakinfo, col = 'site_name', into = c("chr", "bp1", "bp2"), sep = "_")
+peakinfo <- tidyr::separate(data = peakinfo, col = 'site_name', into = c("chr", "bp1", "bp2"), sep = "-", remove=FALSE)
 
 # Add names
 row.names(indata) <- row.names(peakinfo)
@@ -47,14 +47,15 @@ input_cds <- monocle3::detect_genes(input_cds)
 input_cds <- input_cds[Matrix::rowSums(exprs(input_cds)) != 0,]
 
 # Visualize peak_count_per_cell
-plt <- c(hist(Matrix::colSums(exprs(input_cds))), abline(v = c(min_count, max_count), col='red', lwd=3, lty=2))
 pdf(file=path_plot, width=4, height=4)
-plot(plt)
+peaks_per_cell <- Matrix::colSums(exprs(input_cds))
+hist(peaks_per_cell)
+abline(v = c(min_count, max_count), col='red', lwd=3, lty=2)
 dev.off()
 
 # Filter by peak_count
-input_cds <- input_cds[,Matrix::colSums(exprs(input_cds)) >= min_count] 
-input_cds <- input_cds[,Matrix::colSums(exprs(input_cds)) <= max_count]
+input_cds <- input_cds[,peaks_per_cell >= min_count] 
+input_cds <- input_cds[,peaks_per_cell <= max_count]
 
 # Data preprocessing
 set.seed(2017)

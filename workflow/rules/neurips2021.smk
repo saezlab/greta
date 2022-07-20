@@ -86,5 +86,20 @@ rule build_base_GRN:
         Rscript workflow/scripts/celloracle/build_base_GRN.R {input.data} {params.organism} {params.min_count} {params.max_count} {output.path_plot} {output.path_all_peaks} {output.path_connections}
         """
 
+rule tss_annotation:
+    input:
+        all_peaks="resources/{dataset}/{trajectory}/celloracle/all_peaks.csv",
+        connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv"
+    conda:
+        "../envs/celloracle.yml"
+    output:
+        "resources/{dataset}/{trajectory}/celloracle/processed_peak_file.csv"
+    params:
+        organism=lambda w: config[w.dataset]['organism'],
+        thr_coaccess=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_coaccess']
+    shell:
+         "python workflow/scripts/celloracle/tss_annotation.py -a {input.all_peaks} -c {input.connections} -o {params.organism} -t {params.thr_coaccess} -p {output}"
+
+
 # snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune

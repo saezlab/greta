@@ -5,6 +5,8 @@ from muon import atac as ac
 import argparse
 import os
 from mudata import MuData
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Init args
@@ -125,16 +127,24 @@ mu.pp.intersect_obs(mdata)
 mdata.update()
 
 ## MOFA
-mu.tl.mofa(mdata, groups_label='batch', verbose=True, use_raw=True)
+#mu.tl.mofa(mdata, groups_label='batch', verbose=True, use_raw=True)
 
 ## UMAP
-sc.pp.neighbors(mdata, use_rep="X_mofa")
-sc.tl.leiden(mdata, key_added='leiden_joint', resolution=0.5)
-sc.tl.umap(mdata, min_dist=.2, spread=1., random_state=10)
+#sc.pp.neighbors(mdata, use_rep="X_mofa")
+#sc.tl.leiden(mdata, key_added='leiden_joint', resolution=0.5)
+#sc.tl.umap(mdata, min_dist=.2, spread=1., random_state=10)
 
 ## Figure
-fig = mu.pl.umap(mdata, color="celltype", legend_loc="on data", frameon=False, return_fig=True, show=False)
-fig.set_facecolor('white')
+rna.obs['celltype'] = mdata.obs['celltype']
+atac.obs['celltype'] = mdata.obs['celltype']
+fig, axes = plt.subplots(2,3, figsize=(12,8), dpi=100, facecolor='white', tight_layout=True)
+axes = axes.flatten()
+sc.pl.umap(rna, color='celltype', ax=axes[0], legend_loc='on data', return_fig=False, show=False)
+sc.pl.umap(rna, color='leiden', ax=axes[3], legend_loc='on data', return_fig=False, show=False)
+sc.pl.umap(atac, color='celltype', ax=axes[1], legend_loc='on data', return_fig=False, show=False)
+sc.pl.umap(atac, color='leiden', ax=axes[4], legend_loc='on data', return_fig=False, show=False)
+#sc.pl.umap(mdata, color='celltype', ax=axes[2], legend_loc='on data', return_fig=False, show=False)
+#sc.pl.umap(mdata, color='leiden_joint', ax=axes[5], legend_loc='on data', return_fig=False, show=False)
 fig.savefig(plot)
 
 ## Write
