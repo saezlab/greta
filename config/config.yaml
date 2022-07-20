@@ -4,7 +4,7 @@ neurips2021:
     data: "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE194122&format=file&file=GSE194122%5Fopenproblems%5Fneurips2021%5Fmultiome%5FBMMC%5Fprocessed%2Eh5ad%2Egz"
     trajectories:
         blood:
-            celltypes: ['HSC', 'MK/E prog', 'Proerythroblast', 'Erythroblast', 'Normoblast']
+            celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
             celloracle:
                 min_count: 2000
                 max_count: 15000
