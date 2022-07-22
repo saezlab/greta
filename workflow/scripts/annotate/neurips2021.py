@@ -13,17 +13,11 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--input', required=True)
 parser.add_argument('-p','--plot', required=True)
-parser.add_argument('-g','--use_gpu', required=True)
 parser.add_argument('-o','--out', required=True)
 args = vars(parser.parse_args())
 
 inp = args['input']
 plot = args['plot']
-use_gpu = args['use_gpu']
-if use_gpu == 'True':
-    use_gpu = True
-else:
-    use_gpu = False
 out = args['out']
 
 # Read object
