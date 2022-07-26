@@ -68,9 +68,8 @@ sc.pp.highly_variable_genes(rna, min_mean=0.02, max_mean=4, min_disp=0.5)
 
 ## PCA
 rna.raw = rna
-rna = rna[:, rna.var['highly_variable']]
 sc.pp.scale(rna, max_value=10)
-sc.tl.pca(rna, svd_solver='arpack')
+sc.tl.pca(rna, svd_solver='arpack', use_highly_variable=True)
 
 ## Integrate
 rna.obs['batch'] = mdata.obs['batch']
@@ -99,7 +98,6 @@ sc.pp.highly_variable_genes(atac, min_mean=0.05, max_mean=1.5, min_disp=.5)
 
 ## LSI
 atac.raw = atac
-atac = atac[:, atac.var['highly_variable']]
 ac.tl.lsi(atac)
 atac.obsm['X_lsi'] = atac.obsm['X_lsi'][:,1:]
 atac.varm["LSI"] = atac.varm["LSI"][:,1:]

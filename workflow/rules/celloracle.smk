@@ -12,9 +12,10 @@ rule peak_corr:
         organism=lambda w: config[w.dataset]['organism'],
         min_count=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['min_count'],
         max_count=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['max_count']
+    envmodules:
+        "lib/openssl"
     shell:
         """
-        module load lib/openssl
         Rscript workflow/scripts/celloracle/peak_corr.R {input.data} {params.organism} {params.min_count} {params.max_count} {output.path_plot} {output.path_all_peaks} {output.path_connections}
         """
 
