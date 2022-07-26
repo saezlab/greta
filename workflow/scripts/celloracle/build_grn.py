@@ -29,6 +29,9 @@ oracle = co.Oracle()
 # Set to raw counts
 adata.X = adata.layers['counts']
 
+# Filter by HVG
+adata = adata[:, adata.var.highly_variable]
+
 # Instantiate Oracle object
 oracle.import_anndata_as_raw_count(adata=adata,
                                    cluster_column_name="celltype",

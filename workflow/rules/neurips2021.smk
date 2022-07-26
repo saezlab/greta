@@ -3,7 +3,7 @@ rule download_neurips2021:
     output:
         "resources/neurips2021/original.h5ad.gz"
     params:
-        url=config['data']['neurips2021']
+        url=config['neurips2021']['data']
     shell:
         "wget '{params.url}' -O {output}"
 

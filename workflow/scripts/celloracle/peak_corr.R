@@ -5,18 +5,19 @@ library(rhdf5)
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
-path_data <- args[1]
-organism <- args[2]
-min_count <- args[3]
-max_count <- args[4]
-path_plot <- args[5]
-path_all_peaks <- args[6]
-path_connections <- args[7]
+path_data <- args[6]
+organism <- args[7]
+min_count <- args[8]
+max_count <- args[9]
+path_plot <- args[10]
+path_all_peaks <- args[11]
+path_connections <- args[12]
 
 # Process mudata
+print(args)
 indata <- H5Fopen(path_data)
-indices <- indata$mod$atac$X$indices
-indptr <- indata$mod$atac$X$indptr
+indices <- indata$mod$atac$layers$counts$indices
+indptr <- indata$mod$atac$layers$counts$indptr
 data <- is.numeric(indata$mod$atac$layers$counts$data)
 barcodes <- indata$mod$atac$obs$`_index`
 peaks <- indata$mod$atac$var$`_index`
