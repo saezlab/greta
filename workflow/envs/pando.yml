@@ -1,0 +1,36 @@
+name: pando
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.8
+  - r-seurat
+  - r-signac
+  - r-remotes
+  - r-matrix
+  - r-ggplot2
+  - bioconductor-iranges
+  - bioconductor-genomicranges
+  - bioconductor-motifmatchr
+  - r-matrix.utils
+  - r-glmnetutils
+  - r-bayestestr
+  - r-xgboost
+  - r-brms
+  - r-ggpointdensity
+  - r-ggraph
+  - r-tidygraph
+  - r-pals
+  - r-patchwork
+  - bioconductor-tfbstools
+  - r-foreach
+  - bioconductor-sparsematrixstats
+  - r-irlba
+  - r-uwot
+  - bioconductor-rhdf5
+  - r-tidyverse
+  - bioconductor-ensdb.hsapiens.v75
+  - bioconductor-biovizbase
+  - r-doparallel
+

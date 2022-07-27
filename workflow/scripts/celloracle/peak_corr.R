@@ -7,18 +7,17 @@ library(rhdf5)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
-min_count <- args[8]
-max_count <- args[9]
+min_count <- as.numeric(args[8])
+max_count <- as.numeric(args[9])
 path_plot <- args[10]
 path_all_peaks <- args[11]
 path_connections <- args[12]
 
 # Process mudata
-print(args)
 indata <- H5Fopen(path_data)
 indices <- indata$mod$atac$layers$counts$indices
 indptr <- indata$mod$atac$layers$counts$indptr
-data <- is.numeric(indata$mod$atac$layers$counts$data)
+data <- as.numeric(indata$mod$atac$layers$counts$data)
 barcodes <- indata$mod$atac$obs$`_index`
 peaks <- indata$mod$atac$var$`_index`
 h5closeAll()

@@ -22,7 +22,6 @@ path_prc_peaks = args['prc_peaks']
 
 # # Load scATAC-seq peak list
 peaks = pd.read_csv(path_all_peaks, index_col=0).x.values
-peaks = peaks.x.values
 
 # Load Cicero coaccessibility scores
 cicero_connections = pd.read_csv("cicero_connections.csv", index_col=0)

@@ -22,5 +22,11 @@ module celloracle:
 
 use rule * from celloracle
 
+module pando:
+    snakefile: "rules/pando.smk"
+    config: config
+
+use rule * from pando
+
 # snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune
