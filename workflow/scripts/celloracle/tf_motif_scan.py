@@ -3,7 +3,7 @@ import numpy as np
 import celloracle as co
 from celloracle import motif_analysis as ma
 from celloracle.utility import save_as_pickled_object
-from genomepy import Genome
+from genomepy import Genome, install_genome
 import argparse
 
 
@@ -25,6 +25,14 @@ if organism == 'human':
     genome = 'hg38'
 elif organism == 'mouse':
     genome = 'mm10'
+
+# Check genome
+genome_installation = ma.is_genome_installed(ref_genome=genome)
+if not genome_installation:
+    install_genome(name=genome, provider="UCSC")
+else:
+    print(genome, "is installed.")
+
 
 # Load annotated peak data.
 peaks = pd.read_csv(path_peaks, index_col=0)

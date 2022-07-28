@@ -14,5 +14,6 @@ dependencies:
   - bioconductor-rhdf5
   - numpy
   - cython
+  - bedtools
   - pip:
     - celloracle

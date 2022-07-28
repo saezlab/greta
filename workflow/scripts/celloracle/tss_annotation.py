@@ -21,11 +21,13 @@ thr_coaccess = float(args['thr'])
 path_prc_peaks = args['prc_peaks']
 
 # # Load scATAC-seq peak list
-peaks = pd.read_csv(path_all_peaks, index_col=0).x.values
+peaks = pd.read_csv(path_all_peaks, index_col=0).x.values.astype('U')
+peaks = np.char.replace(peaks, '-', '_')
 
 # Load Cicero coaccessibility scores
-cicero_connections = pd.read_csv("cicero_connections.csv", index_col=0)
-cicero_connections.head()
+cicero_connections = pd.read_csv(path_connections, index_col=0)
+cicero_connections['Peak1'] = np.char.replace(cicero_connections['Peak1'].values.astype('U'), '-', '_')
+cicero_connections['Peak2'] = np.char.replace(cicero_connections['Peak2'].values.astype('U'), '-', '_')
 
 # Determine genome
 if organism == 'human':
