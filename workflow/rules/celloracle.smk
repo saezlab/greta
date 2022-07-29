@@ -39,7 +39,9 @@ rule tf_motif_scan:
     conda:
         "../envs/celloracle.yml"
     output:
-        "resources/{dataset}/{trajectory}/celloracle/tfinfo.hdf5"
+        "resources/{dataset}/{trajectory}/celloracle/motifs.celloracle.tfinfo"
+    resources:
+        mem_mb=32000
     params:
         organism=lambda w: config[w.dataset]['organism'],
         fpr=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['fpr']
@@ -48,7 +50,7 @@ rule tf_motif_scan:
 
 rule build_base_grn:
     input:
-        "resources/{dataset}/{trajectory}/celloracle/tfinfo.hdf5"
+        "resources/{dataset}/{trajectory}/celloracle/motifs.celloracle.tfinfo"
     conda:
         "../envs/celloracle.yml"
     params:

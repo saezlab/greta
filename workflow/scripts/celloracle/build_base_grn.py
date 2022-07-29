@@ -19,8 +19,7 @@ thr_score = float(args['thr_score'])
 path_grn = args['path_grn']
 
 # Read tfi
-with h5py.File(path_tfi, "r") as f:
-    tfi = f['/']
+tfi = ma.load_TFinfo(path_tfi)
 
 # Reset filtering
 tfi.reset_filtering()

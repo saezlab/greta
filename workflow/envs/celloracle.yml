@@ -15,5 +15,6 @@ dependencies:
   - numpy
   - cython
   - bedtools
+  - mudata
   - pip:
     - celloracle
