@@ -73,11 +73,13 @@ cicero_cds <- make_cicero_cds(input_cds, reduced_coordinates = umap_coords)
 
 # Determine genome
 if (organism == 'human'){
-    data("human.hg19.genome")
-    genome <- human.hg19.genome
+    download.file(url = "http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes",
+              destfile = "./hg38_chromosome_length.txt")
+    genome <- read.table("./hg38_chromosome_length.txt")
 } else if (organism == 'mouse'){
-    data("mouse.mm9.genome")
-    genome <- mouse.mm9.genome
+    download.file(url = "http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes",
+              destfile = "./mm10_chromosome_length.txt")
+    genome <- read.table("./mm10_chromosome_length.txt")
 }
 
 # Run the main function
