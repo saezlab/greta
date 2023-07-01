@@ -14,7 +14,7 @@ path_all_peaks <- args[11]
 path_connections <- args[12]
 
 # Read genome
-if (organsim == 'human'){
+if (organism == 'human'){
     genome <- read.table('resources/genome_sizes/human.txt')
 } else {
     genome <- read.table('resources/genome_sizes/mouse.txt')
