@@ -13,6 +13,13 @@ path_plot <- args[10]
 path_all_peaks <- args[11]
 path_connections <- args[12]
 
+# Read genome
+if (organsim == 'human'){
+    genome <- read.table('resources/genome_sizes/human.txt')
+} else {
+    genome <- read.table('resources/genome_sizes/mouse.txt')
+}
+
 # Process mudata
 indata <- H5Fopen(path_data)
 indices <- indata$mod$atac$layers$counts$indices
@@ -54,8 +61,8 @@ abline(v = c(min_count, max_count), col='red', lwd=3, lty=2)
 dev.off()
 
 # Filter by peak_count
-input_cds <- input_cds[,peaks_per_cell >= min_count] 
-input_cds <- input_cds[,peaks_per_cell <= max_count]
+#input_cds <- input_cds[,peaks_per_cell >= min_count] 
+#input_cds <- input_cds[,peaks_per_cell <= max_count]
 
 # Data preprocessing
 set.seed(2017)
@@ -70,17 +77,6 @@ umap_coords <- reducedDims(input_cds)$UMAP
 
 # Build cicero cds
 cicero_cds <- make_cicero_cds(input_cds, reduced_coordinates = umap_coords)
-
-# Determine genome
-if (organism == 'human'){
-    download.file(url = "http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes",
-              destfile = "./hg38_chromosome_length.txt")
-    genome <- read.table("./hg38_chromosome_length.txt")
-} else if (organism == 'mouse'){
-    download.file(url = "http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes",
-              destfile = "./mm10_chromosome_length.txt")
-    genome <- read.table("./mm10_chromosome_length.txt")
-}
 
 # Run the main function
 conns <- run_cicero(cicero_cds, genome) # Takes a few minutes to run

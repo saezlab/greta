@@ -1,7 +1,20 @@
+rule get_genome_size:
+    input:
+        data="resources/{dataset}/{trajectory}/mdata.h5mu",
+        log="logs/add_r_env/celloracle.out"
+    output:
+        outdir="resources/genome_sizes/"
+    shell:
+        """
+        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes' -O {output}human.txt
+        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes' -O {output}mouse.txt
+        """
+
 rule peak_corr:
     input:
         data="resources/{dataset}/{trajectory}/mdata.h5mu",
         log="logs/add_r_env/celloracle.out"
+        genome_dir="resources/genome_sizes/"
     conda:
         "../envs/celloracle.yml"
     output:
