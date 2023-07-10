@@ -9,12 +9,16 @@ library(BSgenome.Hsapiens.UCSC.hg38)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
-path_gof_plot <- args[8]
-path_modules_plot <- args[9]
-path_topo_plot <- args[10]
 
 # Set cores
 registerDoParallel(parallel::detectCores())
+
+# Set genome
+if (organism == 'human'){
+    library(BSgenome.Hsapiens.UCSC.hg38)
+} else {
+    library(BSgenome.Mmusculus.UCSC.mm10)
+}
 
 # Set up data
 
