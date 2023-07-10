@@ -7,8 +7,6 @@ library(rhdf5)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
-min_count <- as.numeric(args[8])
-max_count <- as.numeric(args[9])
 path_plot <- args[10]
 path_all_peaks <- args[11]
 path_connections <- args[12]
@@ -53,17 +51,6 @@ input_cds <- monocle3::detect_genes(input_cds)
 # Ensure there are no peaks included with zero reads
 input_cds <- input_cds[Matrix::rowSums(exprs(input_cds)) != 0,]
 
-# Visualize peak_count_per_cell
-pdf(file=path_plot, width=4, height=4)
-peaks_per_cell <- Matrix::colSums(exprs(input_cds))
-hist(peaks_per_cell)
-abline(v = c(min_count, max_count), col='red', lwd=3, lty=2)
-dev.off()
-
-# Filter by peak_count
-#input_cds <- input_cds[,peaks_per_cell >= min_count] 
-#input_cds <- input_cds[,peaks_per_cell <= max_count]
-
 # Data preprocessing
 set.seed(2017)
 input_cds <- detect_genes(input_cds)
@@ -85,4 +72,3 @@ conns <- run_cicero(cicero_cds, genome) # Takes a few minutes to run
 all_peaks <- row.names(exprs(input_cds))
 write.csv(x = all_peaks, file = file.path(path_all_peaks))
 write.csv(x = conns, file = file.path(path_connections))
-

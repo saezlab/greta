@@ -21,7 +21,7 @@ path_links = args['path_links']
 adata = mudata.read(os.path.join(path_mdata, 'rna'))
 
 # Load base grn
-base_GRN = pd.read(path_base_grn)
+base_GRN = pd.read_csv(path_base_grn)
 
 # Instantiate Oracle object
 oracle = co.Oracle()
@@ -43,12 +43,17 @@ oracle.import_TF_data(TF_info_matrix=base_GRN)
 # Perform PCA
 oracle.perform_PCA()
 
+# Select important PCs
+n_comps = np.where(np.diff(np.diff(np.cumsum(oracle.pca.explained_variance_ratio_))>0.002))[0][0]
+n_comps = min(n_comps, 50)
+print(n_comps)
+
 # KNN imputation
 n_cell = oracle.adata.shape[0]
 print("cell number is: {0}".format(n_cell))
 
 k = int(0.025 * n_cell)
-print('Auto-selected k is: {1}'.format(k))
+print('Auto-selected k is: {0}'.format(k))
 
 oracle.knn_imputation(n_pca_dims=n_comps, k=k, balanced=True, b_sight=k*8,
                       b_maxl=k*4, n_jobs=os.cpu_count())
@@ -59,4 +64,3 @@ links = oracle.get_links(cluster_name_for_GRN_unit="celltype", alpha=10,
 
 # Save Links object
 links.to_hdf5(file_path=path_links)
-

@@ -14,7 +14,7 @@ module neurips2021:
     snakefile: "rules/neurips2021.smk"
     config: config
 
-use rule * from neurips2021
+#use rule * from neurips2021
 
 module celloracle:
     snakefile: "rules/celloracle.smk"

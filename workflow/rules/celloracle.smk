@@ -14,30 +14,24 @@ rule peak_corr:
     input:
         data="resources/{dataset}/{trajectory}/mdata.h5mu",
         log="logs/add_r_env/celloracle.out"
-        genome_dir="resources/genome_sizes/"
-    conda:
-        "../envs/celloracle.yml"
+    singularity:
+        "workflow/envs/celloracle.sif"
     output:
         path_all_peaks="resources/{dataset}/{trajectory}/celloracle/all_peaks.csv",
-        path_connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv",
-        path_plot="results/{dataset}/{trajectory}/celloracle/peak_thr.pdf"
+        path_connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv"
     params:
-        organism=lambda w: config[w.dataset]['organism'],
-        min_count=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['min_count'],
-        max_count=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['max_count']
-    envmodules:
-        "lib/openssl"
+        organism=lambda w: config[w.dataset]['organism']
     shell:
         """
-        Rscript workflow/scripts/celloracle/peak_corr.R {input.data} {params.organism} {params.min_count} {params.max_count} {output.path_plot} {output.path_all_peaks} {output.path_connections}
+        Rscript workflow/scripts/celloracle/peak_corr.R {input.data} {params.organism} {output.path_all_peaks} {output.path_connections}
         """
 
 rule tss_annotation:
     input:
         all_peaks="resources/{dataset}/{trajectory}/celloracle/all_peaks.csv",
         connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv"
-    conda:
-        "../envs/celloracle.yml"
+    singularity:
+        "workflow/envs/celloracle.sif"
     output:
         "resources/{dataset}/{trajectory}/celloracle/processed_peak_file.csv"
     params:
@@ -49,8 +43,8 @@ rule tss_annotation:
 rule tf_motif_scan:
     input:
         "resources/{dataset}/{trajectory}/celloracle/processed_peak_file.csv"
-    conda:
-        "../envs/celloracle.yml"
+    singularity:
+        "workflow/envs/celloracle.sif"
     output:
         "resources/{dataset}/{trajectory}/celloracle/motifs.celloracle.tfinfo"
     resources:
@@ -64,8 +58,8 @@ rule tf_motif_scan:
 rule build_base_grn:
     input:
         "resources/{dataset}/{trajectory}/celloracle/motifs.celloracle.tfinfo"
-    conda:
-        "../envs/celloracle.yml"
+    singularity:
+        "workflow/envs/celloracle.sif"
     params:
         thr_motif_score=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_motif_score']
     output:
@@ -77,23 +71,24 @@ rule build_grn:
     input:
         mdata="resources/{dataset}/{trajectory}/mdata.h5mu",
         base_grn="resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
-    conda:
-        "../envs/celloracle.yml"
+    singularity:
+        "workflow/envs/celloracle.sif"
     output:
-        "resources/{dataset}/{trajectory}/celloracle/links.hdf5"
+        "resources/{dataset}/{trajectory}/celloracle/grn.celloracle.links"
     shell:
         "python workflow/scripts/celloracle/build_grn.py -m {input.mdata} -b {input.base_grn} -l {output}"
 
 rule filter_grn:
     input:
-        "resources/{dataset}/{trajectory}/celloracle/links.hdf5"
-    conda:
-        "../envs/celloracle.yml"
+        grn="resources/{dataset}/{trajectory}/celloracle/grn.celloracle.links",
+        base="resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
+    singularity:
+        "workflow/envs/celloracle.sif"
     params:
         thr_edge_pval=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_edge_pval'],
         thr_top_edges=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_top_edges']
     output:
-        "resources/{dataset}/{trajectory}/celloracle/grns/celloracle_{celltype}.csv"
+        grn="resources/{dataset}/{trajectory}/celloracle/grn.csv",
+        base="resources/{dataset}/{trajectory}/celloracle/tri.csv"
     shell:
-        "python workflow/scripts/celloracle/filter_grn.py -l {input} -p {params.thr_edge_pval} -t {params.thr_top_edges} -o {output}"
-
+        "python workflow/scripts/celloracle/filter_grn.py -l {input.grn} -b {input.base} -p {params.thr_edge_pval} -t {params.thr_top_edges} -g {output.grn} -r {output.base}"
