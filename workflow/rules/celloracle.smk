@@ -1,21 +1,10 @@
-rule get_genome_size:
-    input:
-        data="resources/{dataset}/{trajectory}/mdata.h5mu",
-        log="logs/add_r_env/celloracle.out"
-    output:
-        outdir="resources/genome_sizes/"
-    shell:
-        """
-        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes' -O {output}human.txt
-        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes' -O {output}mouse.txt
-        """
-
 rule peak_corr:
     input:
-        data="resources/{dataset}/{trajectory}/mdata.h5mu",
-        log="logs/add_r_env/celloracle.out"
+        data="resources/{dataset}/{trajectory}/mdata.h5mu"
     singularity:
         "workflow/envs/celloracle.sif"
+    benchmark:
+        "benchmarks/celloracle/{dataset}.{trajectory}.peak_corr.txt"
     output:
         path_all_peaks="resources/{dataset}/{trajectory}/celloracle/all_peaks.csv",
         path_connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv"
@@ -32,6 +21,8 @@ rule tss_annotation:
         connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv"
     singularity:
         "workflow/envs/celloracle.sif"
+    benchmark:
+        "benchmarks/celloracle/{dataset}.{trajectory}.tss_annotation.txt"
     output:
         "resources/{dataset}/{trajectory}/celloracle/processed_peak_file.csv"
     params:
@@ -45,6 +36,8 @@ rule tf_motif_scan:
         "resources/{dataset}/{trajectory}/celloracle/processed_peak_file.csv"
     singularity:
         "workflow/envs/celloracle.sif"
+    benchmark:
+        "benchmarks/celloracle/{dataset}.{trajectory}.tf_motif_scan.txt"
     output:
         "resources/{dataset}/{trajectory}/celloracle/motifs.celloracle.tfinfo"
     resources:
@@ -60,6 +53,8 @@ rule build_base_grn:
         "resources/{dataset}/{trajectory}/celloracle/motifs.celloracle.tfinfo"
     singularity:
         "workflow/envs/celloracle.sif"
+    benchmark:
+        "benchmarks/celloracle/{dataset}.{trajectory}.build_base_grn.txt"
     params:
         thr_motif_score=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_motif_score']
     output:
@@ -73,6 +68,8 @@ rule build_grn:
         base_grn="resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
     singularity:
         "workflow/envs/celloracle.sif"
+    benchmark:
+        "benchmarks/celloracle/{dataset}.{trajectory}.build_grn.txt"
     output:
         "resources/{dataset}/{trajectory}/celloracle/grn.celloracle.links"
     shell:
@@ -84,6 +81,8 @@ rule filter_grn:
         base="resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
     singularity:
         "workflow/envs/celloracle.sif"
+    benchmark:
+        "benchmarks/celloracle/{dataset}.{trajectory}.filter_grn.txt"
     params:
         thr_edge_pval=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_edge_pval'],
         thr_top_edges=lambda w: config[w.dataset]['trajectories'][w.trajectory]['celloracle']['thr_top_edges']

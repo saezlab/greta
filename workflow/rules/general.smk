@@ -1,11 +1,3 @@
-rule add_r_env:
-    conda:
-        "../envs/{env}.yml"
-    output:
-        "logs/add_r_env/{env}.out"
-    shell:
-        "Rscript workflow/envs/{wildcards.env}.R > {output}"
-
 rule extract_trajectory:
     input:
         "resources/{dataset}/annotated.h5mu"

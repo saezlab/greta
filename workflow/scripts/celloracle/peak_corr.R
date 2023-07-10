@@ -7,9 +7,8 @@ library(rhdf5)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
-path_plot <- args[10]
-path_all_peaks <- args[11]
-path_connections <- args[12]
+path_all_peaks <- args[8]
+path_connections <- args[9]
 
 # Read genome
 if (organism == 'human'){
