@@ -13,6 +13,16 @@ neurips2021:
                 thr_motif_score: 10
                 thr_edge_pval: 0.001
                 thr_top_edges: 2000
+        small:
+            celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
+            celloracle:
+                min_count: 2000
+                max_count: 15000
+                thr_coaccess: 0.8
+                fpr: 0.02
+                thr_motif_score: 10
+                thr_edge_pval: 0.001
+                thr_top_edges: 2000
 
 pbmc10k:
     organism: "human"
