@@ -76,6 +76,9 @@ From: ubuntu:20.04
     r-sctransform \
     bioconductor-bsgenome.hsapiens.ucsc.hg38 \
     bioconductor-bsgenome.mmusculus.ucsc.mm10 \
+    bioconductor-ensdb.hsapiens.v86 \
+    bioconductor-ensdb.mmusculus.v79 \
+    bioconductor-biovizbase \
     r-scattermore \
     r-rtsne \
     r-rann \
@@ -101,4 +104,3 @@ From: ubuntu:20.04
     # Install pando
     conda activate env
     Rscript -e "devtools::install_github('quadbiolab/Pando@efec71e334f6a580df2f6df61896b59d8d296918', upgrade = 'never')"
-

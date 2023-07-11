@@ -19,6 +19,10 @@ neurips2021:
                 thr_motif_score: 10
                 thr_edge_pval: 0.001
                 thr_top_edges: 2000
+            pando:
+                p_thresh: 0.05
+                rsq_thresh: 0.1
+                nvar_thresh: 10
 
 pbmc10k:
     organism: "human"

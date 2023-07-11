@@ -1,19 +1,19 @@
 rule run_pando:
     input:
-        data="resources/{dataset}/{trajectory}/mdata.h5mu",
-        log="logs/add_r_env/pando.out"
-    conda:
-        "../envs/pando.yml"
+        data="resources/{dataset}/{trajectory}/mdata.h5mu"
+    singularity:
+        "workflow/envs/pando.sif"
+    benchmark:
+        "benchmarks/pando/{dataset}.{trajectory}.run_pando.txt"
     output:
         grn="resources/{dataset}/{trajectory}/pando/grn.csv",
-        gof="results/{dataset}/{trajectory}/pando/goodness_of_fit.pdf",
-        modules="results/{dataset}/{trajectory}/pando/mod_distrs.pdf",
-        topo="results/{dataset}/{trajectory}/pando/topology.pdf"
+        tri="resources/{dataset}/{trajectory}/pando/tri.csv"
     params:
-        organism=lambda w: config[w.dataset]['organism']
-    envmodules:
-        "lib/openssl"
+        organism=lambda w: config[w.dataset]['organism'],
+        p_thresh=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['p_thresh'],
+        rsq_thresh=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['rsq_thresh'],
+        nvar_thresh=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['nvar_thresh']
     shell:
         """
-        Rscript workflow/scripts/pando/run_pando.R {input.data} {params.organism} {output.gof} {output.modules} {output.topo} {output.grn}
+        Rscript workflow/scripts/pando/run_pando.R {input.data} {params.organism} {params.p_thresh} {params.rsq_thresh} {params.nvar_thresh} {output.grn} {output.tri}
         """

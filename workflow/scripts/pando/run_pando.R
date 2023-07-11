@@ -2,13 +2,17 @@ library(tidyverse)
 library(rhdf5)
 library(Pando)
 library(doParallel)
-library(BSgenome.Hsapiens.UCSC.hg38)
 
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
+p_thresh = args[8]
+rsq_thresh = args[9]
+nvar_thresh = args[10]
+path_grn <- args[11]
+path_tri <- args[12]
 
 # Set cores
 registerDoParallel(parallel::detectCores())
@@ -16,8 +20,10 @@ registerDoParallel(parallel::detectCores())
 # Set genome
 if (organism == 'human'){
     library(BSgenome.Hsapiens.UCSC.hg38)
+    library(EnsDb.Hsapiens.v86)
 } else {
     library(BSgenome.Mmusculus.UCSC.mm10)
+    library(EnsDb.Mmusculus.v79)
 }
 
 # Set up data
@@ -26,9 +32,9 @@ if (organism == 'human'){
 indata <- H5Fopen(path_data)
 
 ### RNA
-rna_indices <- indata$mod$rna$raw$X$indices
-rna_indptr <- indata$mod$rna$raw$X$indptr
-rna_data <- as.numeric(indata$mod$rna$raw$X$data)
+rna_indices <- indata$mod$rna$X$indices
+rna_indptr <- indata$mod$rna$X$indptr
+rna_data <- as.numeric(indata$mod$rna$X$data)
 barcodes <- indata$obs$`_index`
 genes <- indata$mod$rna$var$`_index`
 rna_X <- Matrix::sparseMatrix(i=rna_indices, p=rna_indptr, x=rna_data, index1 = FALSE)
@@ -37,17 +43,22 @@ row.names(rna_X) <- genes
 muo_data <- Seurat::CreateSeuratObject(rna_X)
 
 ### ATAC
-atac_indices <- indata$mod$atac$raw$X$indices
-atac_indptr <- indata$mod$atac$raw$X$indptr
-atac_data <- as.numeric(indata$mod$atac$raw$X$data)
+atac_indices <- indata$mod$atac$X$indices
+atac_indptr <- indata$mod$atac$X$indptr
+atac_data <- as.numeric(indata$mod$atac$X$data)
 peaks <- indata$mod$atac$var$`_index`
 atac_X <- Matrix::sparseMatrix(i=atac_indices, p=atac_indptr, x=atac_data, index1 = FALSE)
 colnames(atac_X) <- barcodes
 row.names(atac_X) <- peaks
-muo_data[['peaks']] <- Signac::CreateChromatinAssay(counts = atac_X, genome = "hg19")
+muo_data[['peaks']] <- Signac::CreateChromatinAssay(counts = atac_X)
+h5closeAll()
 
 ## Annotate peaks
-gene.ranges <- Signac::GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v75)
+if (organism == 'human'){
+    gene.ranges <- Signac::GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+} else {
+    gene.ranges <- Signac::GetGRangesFromEnsDb(ensdb = EnsDb.Mmusculus.v79)
+}
 seqlevelsStyle(gene.ranges) <- "UCSC"
 Signac::Annotation(muo_data[['peaks']]) <- gene.ranges
 
@@ -63,57 +74,55 @@ muo_data <- initiate_grn(
 # Scan Motifs
 data('motifs')
 data('motif2tf')
-patterning_genes <- read_tsv('patterning_genes.tsv')
-pattern_tfs <- patterning_genes %>% 
-    filter(type=='Transcription factor') %>% 
-    pull(symbol)
 motif2tf_use <- motif2tf %>%
-    filter(tf %in% pattern_tfs)
+    dplyr::filter(tf %in% genes)
 motifs_use <- motifs[unique(motif2tf_use$motif)]
-muo_data <- find_motifs(
-    muo_data, 
-    pfm = motifs_use, 
-    motif_tfs = motif2tf_use,
-    genome = BSgenome.Hsapiens.UCSC.hg38
-)
+
+if (organism == 'human'){
+    muo_data <- find_motifs(
+            muo_data, 
+            pfm = motifs_use, 
+            motif_tfs = motif2tf_use,
+            genome = BSgenome.Hsapiens.UCSC.hg38
+        )
+} else {
+        muo_data <- find_motifs(
+            muo_data, 
+            pfm = motifs_use, 
+            motif_tfs = motif2tf_use,
+            genome = BSgenome.Mmusculus.UCSC.mm10
+        )
+}
 
 # Infer GRN
 muo_data <- infer_grn(
     muo_data,
     peak_to_gene_method = 'GREAT',
-    genes = patterning_genes$symbol,
+    genes = genes,
     parallel = T
 )
 
 # Module discovery
 muo_data <- find_modules(
     muo_data, 
-    p_thresh = 0.1,
-    nvar_thresh = 2, 
-    min_genes_per_module = 1, 
-    rsq_thresh = 0.05
+    p_thresh = p_thresh,
+    rsq_thresh = rsq_thresh
 )
 
-# Extract network
-modules <- NetworkModules(muo_data) 
+# Extract and filter
+grn <- NetworkModules(muo_data)@meta %>%
+    dplyr::rename(source = tf, weight = estimate, pvals = pval) %>%
+    dplyr::select(source, target, weight, pvals, padj) %>%
+    dplyr::arrange(source, target)
+
+targets <- unique(grn$target)
+
+tri <- coef(muo_data) %>%
+    dplyr::arrange(tf, target, region) %>%
+    dplyr::rename(source = tf, weight = estimate, pvals = pval) %>%
+    dplyr::filter(padj < p_thresh, target %in% targets) %>%
+    dplyr::select(source, target, region, weight, pvals, padj)
 
 # Write
-write.csv(modules@meta, path_grn)
-
-# Plotting
-
-## Goodness-of-fit
-pdf(file=path_gof_plot, width=8, height=4)
-plot_gof(muo_data, point_size=3)
-dev.off()
-
-## Distirbution modules
-pdf(file=path_modules_plot, width=8, height=4)
-plot_module_metrics(muo_data)
-dev.off()
-
-## GRN topology
-pdf(file=path_topo_plot, width=8, height=4)
-plot_network_graph(muo_data)
-dev.off()
-
+write.csv(grn, path_grn, row.names = FALSE)
+write.csv(tri, path_tri, row.names = FALSE)
