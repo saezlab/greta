@@ -106,7 +106,8 @@ muo_data <- infer_grn(
 muo_data <- find_modules(
     muo_data, 
     p_thresh = p_thresh,
-    rsq_thresh = rsq_thresh
+    rsq_thresh = rsq_thresh,
+    nvar_thresh = nvar_thresh
 )
 
 # Extract and filter
