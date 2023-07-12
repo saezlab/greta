@@ -31,17 +31,16 @@ for celltype in links.links_dict.keys():
     tmp['celltype'] = celltype
     grn.append(tmp)
 grn = pd.concat(grn)[['source', 'target', 'coef_mean', 'p', 'celltype']]
-grn = grn.rename(columns={'coef_mean': 'weight', 'p': 'pvals'}).reset_index(drop=True)
+grn = grn.rename(columns={'coef_mean': 'weight', 'p': 'pvals'}).sort_values(['source', 'target']).reset_index(drop=True)
 
 # Extract triplets and filter by grn
 tri = pd.read_csv(path_basegrn, index_col=0)
 tri = tri.melt(id_vars=['peak_id', 'gene_short_name'], var_name='TF', value_name='interaction')
 tri = tri[tri['interaction'] != 0]
-tri = tri[['TF', 'peak_id', 'gene_short_name']].rename(columns={'TF': 'tf', 'peak_id': 'peak', 'gene_short_name': 'gene'})
-tfs = grn['source'].unique().astype('U')
-gns = grn['target'].unique().astype('U')
-tri = tri.loc[np.isin(tri['tf'], tfs)]
-tri = tri.loc[np.isin(tri['gene'], gns)].reset_index(drop=True)
+tri = tri[['TF', 'gene_short_name', 'peak_id']].rename(columns={'TF': 'source', 'peak_id': 'region', 'gene_short_name': 'target'})
+tri = tri.sort_values(['source', 'target', 'region'])
+tri = tri.merge(grn.groupby(['source', 'target']).size().reset_index(), on=['source', 'target'])
+tri = tri[['source', 'target', 'region']]
 
 # Save both grns
 grn.to_csv(path_grn, index=False)
