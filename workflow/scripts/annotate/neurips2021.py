@@ -47,6 +47,12 @@ rna.var['gene_id'] = var['gene_id']
 rna.var_names_make_unique()
 atac.var_names_make_unique()
 
+# Remove cells witout trajectory
+barcodes = rna.obs['pseudotime_order'].dropna().index
+rna = rna[barcodes, :].copy()
+barcodes = atac.obs['pseudotime_order'].dropna().index
+atac = atac[barcodes, :].copy()
+
 # Basic filtering
 sc.pp.filter_cells(rna, min_genes=200)
 sc.pp.filter_genes(rna, min_cells=3)

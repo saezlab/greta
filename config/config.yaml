@@ -5,6 +5,8 @@ neurips2021:
     trajectories:
         blood:
             celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
+            n_hvg: 2048
+            n_downsample: 0
             celloracle:
                 thr_coaccess: 0.8
                 fpr: 0.02
@@ -13,6 +15,8 @@ neurips2021:
                 thr_top_edges: 2000
         small:
             celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
+            n_hvg: 512
+            n_downsample: 2
             celloracle:
                 thr_coaccess: 0.8
                 fpr: 0.02
@@ -31,4 +35,3 @@ pbmc10k:
         peak_annot: "https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_peak_annotation.tsv"
         atac_frags: "https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz"
         atac_index: "https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz.tbi"
-

@@ -1,0 +1,54 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%environment
+    # PATHS
+    export PATH=/opt/miniconda3/bin:$PATH
+    . /opt/miniconda3/etc/profile.d/conda.sh
+    conda activate env
+
+%post
+
+    # update apt
+    apt update -y
+
+    # basic packages (~2 min)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    apt install -y build-essential  \
+                   gcc \
+                   cmake \
+                   wget \
+                   curl \
+                   libcurl4-openssl-dev \
+                   libssl-dev \
+                   libxml2-dev \
+                   libcairo2-dev \
+                   libxt-dev \
+                   libopenblas-dev \
+                   bedtools
+
+    # conda
+    mkdir -p /opt/miniconda3
+    cd /opt/miniconda3 
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -p /opt/miniconda3 -b -f
+    rm Miniconda3-latest-Linux-x86_64.sh
+    export PATH=/opt/miniconda3/bin:$PATH
+
+    # Install conda and mamba
+    conda update conda -y
+    . /opt/miniconda3/etc/profile.d/conda.sh
+    conda install -n base -c conda-forge mamba
+
+    # Create env
+    mamba create -y -n=env -c conda-forge -c bioconda \
+    python=3.10 \
+    pip \
+    muon \
+    scanpy \
+    leidenalg \
+    harmonypy \
+    jupyterlab
+
+    conda activate env
+    pip install mofapy2
