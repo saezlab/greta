@@ -11,8 +11,9 @@ organism <- args[7]
 p_thresh = args[8]
 rsq_thresh = args[9]
 nvar_thresh = args[10]
-path_grn <- args[11]
-path_tri <- args[12]
+exclude_exons = as.logical(args[11])
+path_grn <- args[12]
+path_tri <- args[13]
 
 # Set cores
 registerDoParallel(parallel::detectCores())
@@ -27,7 +28,7 @@ if (organism == 'human'){
 }
 
 # Set up data
-
+print('Open object')
 ## Read data
 indata <- H5Fopen(path_data)
 
@@ -41,19 +42,26 @@ rna_X <- Matrix::sparseMatrix(i=rna_indices, p=rna_indptr, x=rna_data, index1 = 
 colnames(rna_X) <- barcodes
 row.names(rna_X) <- genes
 muo_data <- Seurat::CreateSeuratObject(rna_X)
+muo_data@assays$RNA@var.features <- genes
 
 ### ATAC
 atac_indices <- indata$mod$atac$X$indices
 atac_indptr <- indata$mod$atac$X$indptr
 atac_data <- as.numeric(indata$mod$atac$X$data)
 peaks <- indata$mod$atac$var$`_index`
+#
+#peaks <- sample(rownames(test_data), 8192, replace=F)
+#
 atac_X <- Matrix::sparseMatrix(i=atac_indices, p=atac_indptr, x=atac_data, index1 = FALSE)
 colnames(atac_X) <- barcodes
 row.names(atac_X) <- peaks
-muo_data[['peaks']] <- Signac::CreateChromatinAssay(counts = atac_X)
+muo_data[['peaks']] <- Signac::CreateChromatinAssay(data = atac_X)
+muo_data@assays$peaks@var.features <- peaks
+Seurat::DefaultAssay(object = muo_data) <- 'peaks'
 h5closeAll()
 
 ## Annotate peaks
+print('Add peak annotations')
 if (organism == 'human'){
     gene.ranges <- Signac::GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
 } else {
@@ -63,15 +71,28 @@ seqlevelsStyle(gene.ranges) <- "UCSC"
 Signac::Annotation(muo_data[['peaks']]) <- gene.ranges
 
 # Initiate GRN and filter regions
+print('Init GRN and filter regions based on evoconv')
 data('phastConsElements20Mammals.UCSC.hg38')
-muo_data <- initiate_grn(
-    muo_data,
-    rna_assay = 'RNA',
-    peak_assay = 'peaks',
-    regions = phastConsElements20Mammals.UCSC.hg38 
-)
+if (organism == 'human'){
+    muo_data <- initiate_grn(
+        muo_data,
+        rna_assay = 'RNA',
+        peak_assay = 'peaks',
+        regions = phastConsElements20Mammals.UCSC.hg38,
+        exclude_exons = exclude_exons
+    )
+} else {
+    muo_data <- initiate_grn(
+        muo_data,
+        rna_assay = 'RNA',
+        peak_assay = 'peaks',
+        regions = phastConsElements20Mammals.UCSC.mm10,
+        exclude_exons = exclude_exons
+    )
+}
 
 # Scan Motifs
+print('Scan motifs')
 data('motifs')
 data('motif2tf')
 motif2tf_use <- motif2tf %>%
@@ -95,6 +116,7 @@ if (organism == 'human'){
 }
 
 # Infer GRN
+print('Infer GRN')
 muo_data <- infer_grn(
     muo_data,
     peak_to_gene_method = 'GREAT',
@@ -103,6 +125,7 @@ muo_data <- infer_grn(
 )
 
 # Module discovery
+print('Find modules')
 muo_data <- find_modules(
     muo_data, 
     p_thresh = p_thresh,
@@ -111,6 +134,7 @@ muo_data <- find_modules(
 )
 
 # Extract and filter
+print('Extract and filter')
 grn <- NetworkModules(muo_data)@meta %>%
     dplyr::rename(source = tf, weight = estimate, pvals = pval) %>%
     dplyr::select(source, target, weight, pvals, padj) %>%

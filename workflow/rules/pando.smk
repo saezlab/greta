@@ -12,8 +12,9 @@ rule run_pando:
         organism=lambda w: config[w.dataset]['organism'],
         p_thresh=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['p_thresh'],
         rsq_thresh=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['rsq_thresh'],
-        nvar_thresh=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['nvar_thresh']
+        nvar_thresh=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['nvar_thresh'],
+        exclude_exons=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['exclude_exons']
     shell:
         """
-        Rscript workflow/scripts/pando/run_pando.R {input.data} {params.organism} {params.p_thresh} {params.rsq_thresh} {params.nvar_thresh} {output.grn} {output.tri}
+        Rscript workflow/scripts/pando/run_pando.R {input.data} {params.organism} {params.p_thresh} {params.rsq_thresh} {params.nvar_thresh} {params.exclude_exons} {output.grn} {output.tri}
         """

@@ -27,6 +27,7 @@ neurips2021:
                 p_thresh: 0.05
                 rsq_thresh: 0.1
                 nvar_thresh: 10
+                exclude_exons: FALSE
 
 pbmc10k:
     organism: "human"
