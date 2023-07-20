@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import celloracle as co
-import mudata
+import muon as mu
 import os
 import argparse
 
@@ -18,7 +18,11 @@ path_base_grn = args['base_grn']
 path_links = args['path_links']
 
 # Read rna adata
-adata = mudata.read(os.path.join(path_mdata, 'rna'))
+adata = mu.read(path_mdata)
+del adata.mod['atac']
+obs = adata.obs.copy()
+adata = adata.mod['rna'].copy()
+adata.obs = obs
 
 # Load base grn
 base_GRN = pd.read_csv(path_base_grn)
@@ -29,13 +33,10 @@ oracle = co.Oracle()
 # Set to raw counts
 adata.X = adata.layers['counts']
 
-# Filter by HVG
-adata = adata[:, adata.var.highly_variable]
-
 # Instantiate Oracle object
 oracle.import_anndata_as_raw_count(adata=adata,
                                    cluster_column_name="celltype",
-                                   embedding_name="X_umap")
+                                   embedding_name="X_pca")
 
 # You can load TF info dataframe with the following code
 oracle.import_TF_data(TF_info_matrix=base_GRN)

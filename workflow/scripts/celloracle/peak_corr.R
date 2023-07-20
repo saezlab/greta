@@ -47,12 +47,8 @@ cell_metadata = cellinfo,
 gene_metadata = peakinfo))
 input_cds <- monocle3::detect_genes(input_cds)
 
-# Ensure there are no peaks included with zero reads
-input_cds <- input_cds[Matrix::rowSums(exprs(input_cds)) != 0,]
-
 # Data preprocessing
 set.seed(2017)
-input_cds <- detect_genes(input_cds)
 input_cds <- estimate_size_factors(input_cds)
 input_cds <- preprocess_cds(input_cds, method = "LSI")
 

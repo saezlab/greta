@@ -41,6 +41,7 @@ tri = tri[['TF', 'gene_short_name', 'peak_id']].rename(columns={'TF': 'source', 
 tri = tri.sort_values(['source', 'target', 'region'])
 tri = tri.merge(grn.groupby(['source', 'target']).size().reset_index(), on=['source', 'target'])
 tri = tri[['source', 'target', 'region']]
+tri['region'] = [r.replace('_', '-') for r in tri['region']]
 
 # Save both grns
 grn.to_csv(path_grn, index=False)
