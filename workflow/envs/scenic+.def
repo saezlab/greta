@@ -87,3 +87,7 @@ From: ubuntu:20.04
     igv-jupyter \
     loomxpy \
     git+https://github.com/aertslab/scenicplus
+
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y

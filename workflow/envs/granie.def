@@ -86,3 +86,7 @@ From: ubuntu:20.04
     # Install granie
     conda activate env
     Rscript -e "devtools::install_gitlab('grp-zaugg/GRaNIE@b5726a8a6516f297267492a6fbeb5fd7cfbd52b5', host = 'git.embl.de', subdir = 'src/GRaNIE', upgrade = 'never')"
+
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y

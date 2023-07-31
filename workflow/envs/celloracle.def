@@ -69,3 +69,6 @@ From: ubuntu:20.04
     # Install CellOracle
     pip install celloracle==0.12.1
 
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y

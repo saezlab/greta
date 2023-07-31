@@ -104,3 +104,7 @@ From: ubuntu:20.04
     # Install pando
     conda activate env
     Rscript -e "devtools::install_github('quadbiolab/Pando@efec71e334f6a580df2f6df61896b59d8d296918', upgrade = 'never')"
+
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y
