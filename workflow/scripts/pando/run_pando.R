@@ -31,7 +31,6 @@ if (organism == 'human'){
 print('Open object')
 ## Read data
 indata <- H5Fopen(path_data)
-
 ### RNA
 rna_indices <- indata$mod$rna$X$indices
 rna_indptr <- indata$mod$rna$X$indptr
@@ -49,9 +48,6 @@ atac_indices <- indata$mod$atac$X$indices
 atac_indptr <- indata$mod$atac$X$indptr
 atac_data <- as.numeric(indata$mod$atac$X$data)
 peaks <- indata$mod$atac$var$`_index`
-#
-#peaks <- sample(rownames(test_data), 8192, replace=F)
-#
 atac_X <- Matrix::sparseMatrix(i=atac_indices, p=atac_indptr, x=atac_data, index1 = FALSE)
 colnames(atac_X) <- barcodes
 row.names(atac_X) <- peaks
