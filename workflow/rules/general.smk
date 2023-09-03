@@ -10,5 +10,5 @@ rule extract_trajectory:
         n_hvg=lambda w: config[w.dataset]['trajectories'][w.trajectory]['n_hvg'],
         n_downsample=lambda w: config[w.dataset]['trajectories'][w.trajectory]['n_downsample']
     shell:
-        "python workflow/scripts/extract_trajectory.py -i {input} -c '{params.celltypes}' -g {params.n_hvg} -d {params.n_downsample} -o {output.mdata}"
+        "python scripts/extract_trajectory.py -i {input} -c '{params.celltypes}' -g {params.n_hvg} -d {params.n_downsample} -o {output.mdata}"
 

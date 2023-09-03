@@ -16,5 +16,5 @@ rule run_pando:
         exclude_exons=lambda w: config[w.dataset]['trajectories'][w.trajectory]['pando']['exclude_exons']
     shell:
         """
-        Rscript workflow/scripts/pando/run_pando.R {input.data} {params.organism} {params.p_thresh} {params.rsq_thresh} {params.nvar_thresh} {params.exclude_exons} {output.grn} {output.tri}
+        Rscript scripts/pando/run_pando.R {input.data} {params.organism} {params.p_thresh} {params.rsq_thresh} {params.nvar_thresh} {params.exclude_exons} {output.grn} {output.tri}
         """

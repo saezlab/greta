@@ -24,4 +24,4 @@ rule annotate_neurips2021:
     singularity:
         "envs/gretabench.sif"
     shell:
-        "python workflow/scripts/annotate/neurips2021.py -i {input} -o {output.mdata}"
+        "python scripts/annotate/neurips2021.py -i {input} -o {output.mdata}"

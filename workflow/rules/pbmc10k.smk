@@ -27,5 +27,5 @@ rule annotate_pbmc10k:
     singularity:
         "envs/gretabench.sif"
     shell:
-        "python workflow/scripts/annotate/pbmc10k.py -i {input.dir} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
+        "python scripts/annotate/pbmc10k.py -i {input.dir} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
 
