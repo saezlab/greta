@@ -2,7 +2,7 @@ rule run_pando:
     input:
         data="resources/{dataset}/{trajectory}/mdata.h5mu"
     singularity:
-        "workflow/envs/pando.sif"
+        "envs/pando.sif"
     benchmark:
         "benchmarks/pando/{dataset}.{trajectory}.run_pando.txt"
     output:

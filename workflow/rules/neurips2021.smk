@@ -22,6 +22,6 @@ rule annotate_neurips2021:
     output:
         mdata="resources/neurips2021/annotated.h5mu"
     singularity:
-        "../envs/gretabench.sif"
+        "envs/gretabench.sif"
     shell:
         "python workflow/scripts/annotate/neurips2021.py -i {input} -o {output.mdata}"

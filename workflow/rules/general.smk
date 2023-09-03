@@ -2,7 +2,7 @@ rule extract_trajectory:
     input:
         "resources/{dataset}/annotated.h5mu"
     singularity:
-        "workflow/envs/gretabench.sif"
+        "envs/gretabench.sif"
     output:
         mdata="resources/{dataset}/{trajectory}/mdata.h5mu",
     params:

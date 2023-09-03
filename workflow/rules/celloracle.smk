@@ -2,7 +2,7 @@ rule peak_corr:
     input:
         data="resources/{dataset}/{trajectory}/mdata.h5mu"
     singularity:
-        "workflow/envs/celloracle.sif"
+        "envs/celloracle.sif"
     benchmark:
         "benchmarks/celloracle/{dataset}.{trajectory}.peak_corr.txt"
     output:
@@ -20,7 +20,7 @@ rule tss_annotation:
         all_peaks="resources/{dataset}/{trajectory}/celloracle/all_peaks.csv",
         connections="resources/{dataset}/{trajectory}/celloracle/cicero_connections.csv"
     singularity:
-        "workflow/envs/celloracle.sif"
+        "envs/celloracle.sif"
     benchmark:
         "benchmarks/celloracle/{dataset}.{trajectory}.tss_annotation.txt"
     output:
@@ -35,7 +35,7 @@ rule tf_motif_scan:
     input:
         "resources/{dataset}/{trajectory}/celloracle/processed_peak_file.csv"
     singularity:
-        "workflow/envs/celloracle.sif"
+        "envs/celloracle.sif"
     benchmark:
         "benchmarks/celloracle/{dataset}.{trajectory}.tf_motif_scan.txt"
     output:
@@ -52,7 +52,7 @@ rule build_base_grn:
     input:
         "resources/{dataset}/{trajectory}/celloracle/motifs.celloracle.tfinfo"
     singularity:
-        "workflow/envs/celloracle.sif"
+        "envs/celloracle.sif"
     benchmark:
         "benchmarks/celloracle/{dataset}.{trajectory}.build_base_grn.txt"
     params:
@@ -67,7 +67,7 @@ rule build_grn:
         mdata="resources/{dataset}/{trajectory}/mdata.h5mu",
         base_grn="resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
     singularity:
-        "workflow/envs/celloracle.sif"
+        "envs/celloracle.sif"
     benchmark:
         "benchmarks/celloracle/{dataset}.{trajectory}.build_grn.txt"
     output:
@@ -80,7 +80,7 @@ rule filter_grn:
         grn="resources/{dataset}/{trajectory}/celloracle/grn.celloracle.links",
         base="resources/{dataset}/{trajectory}/celloracle/base_GRN_dataframe.csv"
     singularity:
-        "workflow/envs/celloracle.sif"
+        "envs/celloracle.sif"
     benchmark:
         "benchmarks/celloracle/{dataset}.{trajectory}.filter_grn.txt"
     params:
