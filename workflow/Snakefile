@@ -33,5 +33,12 @@ module pando:
 
 use rule * from pando
 
+module hummus:
+    snakefile: "rules/hummus.smk"
+    config: config
+
+use rule * from hummus
+
+
 # snakemake --profile config/slurm/ annotate_neurips2021
 # conda env update --file local.yml --prune
