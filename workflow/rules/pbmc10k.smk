@@ -24,8 +24,8 @@ rule annotate_pbmc10k:
     output:
         plot="results/pbmc10k/annotated.pdf",
         mdata="resources/pbmc10k/annotated.h5mu"
-    conda:
-        "../envs/gretabench.yml"
+    singularity:
+        "envs/gretabench.sif"
     shell:
         "python workflow/scripts/annotate/pbmc10k.py -i {input.dir} -p {output.plot} -g {config.use_gpu} -o {output.mdata}"
 
