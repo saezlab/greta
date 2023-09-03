@@ -28,6 +28,14 @@ neurips2021:
                 rsq_thresh: 0.1
                 nvar_thresh: 10
                 exclude_exons: FALSE
+            hummus:
+                genie3_cores: 2
+                genie3_thresh: 0
+                cicero_k_per_pseudocells: 50
+                cicero_thresh: 0
+                upstream_gene: 10000 #to determine
+                downstream_gene: 100000 #to determine
+                only_tss: TRUE
 
 pbmc10k:
     organism: "human"
