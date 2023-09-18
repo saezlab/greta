@@ -8,7 +8,7 @@ configfile: "../config/config.yaml"
 
 rule all:
     input:
-        expand("resources/{dataset}/{tool}/grn.csv", dataset = ["neurips2021/small"],  tool = ["pando", "hummus", "GRaNIE"])
+        expand("resources/{dataset}/{trajectory}/{tool}/grn.csv", dataset = ["neurips2021"], trajextory = ["small"], tool = ["pando", "hummus", "GRaNIE"])
 
 # CA: TODO: Whats the advantage of the (repetetive) module structure below as opposed to just using "include" srtatments to import the various smk files? Which advantage the modularization brings here, just curious
 
@@ -42,12 +42,12 @@ module hummus:
 
 use rule * from hummus
 
-
-module GRaNIE:
-    snakefile: "rules/GRaNIE.smk"
-    config: config
-
-use rule * from GRaNIE
+# Not tested and activated yet
+# module GRaNIE:
+#     snakefile: "rules/GRaNIE.smk"
+#     config: config
+#
+# use rule * from GRaNIE
 
 
 # snakemake --profile config/slurm/ annotate_neurips2021

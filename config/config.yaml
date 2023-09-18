@@ -36,6 +36,21 @@ neurips2021:
                 upstream_gene: 10000 #to determine
                 downstream_gene: 100000 #to determine
                 only_tss: TRUE
+            GRaNIE:
+                TFBS_source: "custom" # or JASPAR
+                normalization_peaks: "DESeq2_sizeFactors"
+                normalization_rna: "limma_quantile"
+                includeSexChr: FALSE
+                minCV: 0
+                minNormalizedMean_peak: 5
+                minNormalizedMean_RNA: 1
+                minSizePeaks: 5
+                corMethod: "pearson",
+                promoterRange: 250000
+                TF_peak.fdr.threshold: 0.2
+                peak_gene.fdr.threshold: 0.1
+                runTFClassification: FALSE
+                runNetworkAnalyses: FALSE
 
 pbmc10k:
     organism: "human"
