@@ -1,13 +1,16 @@
 from snakemake.utils import min_version
-min_version("6.0")
+
+## CA: TODO: I suggest putting a more recent version here, like 7.29 that offers slurm support and support for cluster profiles with enriched functions 8see Changelog for 7.29)
+min_version("7.29.0")
 
 configfile: "../config/config.yaml"
 
 
 rule all:
     input:
-        "resources/neurips2021/small/pando/grn.csv",
-        "resources/neurips2021/small/hummus/grn.csv"
+        expand("resources/{dataset}/{tool}/grn.csv", dataset = ["neurips2021/small"],  tool = ["pando", "hummus", "GRaNIE"])
+
+# CA: TODO: Whats the advantage of the (repetetive) module structure below as opposed to just using "include" srtatments to import the various smk files? Which advantage the modularization brings here, just curious
 
 module general:
     snakefile: "rules/general.smk"
@@ -38,6 +41,13 @@ module hummus:
     config: config
 
 use rule * from hummus
+
+
+module GRaNIE:
+    snakefile: "rules/GRaNIE.smk"
+    config: config
+
+use rule * from GRaNIE
 
 
 # snakemake --profile config/slurm/ annotate_neurips2021
