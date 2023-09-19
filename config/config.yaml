@@ -37,6 +37,7 @@ neurips2021:
                 downstream_gene: 100000 #to determine
                 only_tss: TRUE
             GRaNIE:
+                preprocessing_pseudobulk: TRUE
                 TFBS_source: "custom" # or JASPAR
                 normalization_peaks: "DESeq2_sizeFactors"
                 normalization_rna: "limma_quantile"
