@@ -20,7 +20,7 @@ runGRaNIE <- function(dir_output = "output_GRaNIE",
                       TF_peak.fdr.threshold = 0.2,
                       peak_gene.fdr.threshold = 0.1,
                       runTFClassification = FALSE,
-                      runNetworkAnalyses = FALSE, 
+                      runNetworkAnalyses = FALSE
                       nCores = 4,
                       forceRerun = TRUE
 ) {

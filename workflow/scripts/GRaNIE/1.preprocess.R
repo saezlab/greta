@@ -7,12 +7,12 @@ library(Matrix)
 library(Seurat)
 
 parser <- ArgumentParser(description= 'GRaNIE preprocessing')
-parser$add_argument('--input', '-i', help= 'Input file that contains both raw RNA and raw ATAC counts (h5 file)',  required= TRUE)
-parser$add_argument('--output', '-o', help= 'A list of 3 exactly 3 output files: 1. RNA counts, 2. ATAC counts, 3. metadata', nargs= 3, required= TRUE)
+parser$add_argument('--input', '-i', help= 'Input file that contains both raw RNA and raw ATAC counts (h5 file)', nargs = 1,  required= TRUE)
+parser$add_argument('--output', '-o', help= 'A list of exactly 3 output files: 1. RNA counts, 2. ATAC counts, 3. metadata', nargs= 3, required= TRUE)
 parser$add_argument('--param', '-p', help= 'An optional integer parameter', default= 1, type= 'integer')
 xargs <- parser$parse_args()
 
-str(xargs)
+# str(xargs)
 
 # ./1.preprocess.R --input "/g/zaugg/carnold/Projects/GRETA/src/greta_benchmark/resources/neurips2021/small/mdata.h5mu" --output "/g/zaugg/carnold/Projects/GRETA/src/greta_benchmark/resources/neurips2021/small/GRaNIE/counts_RNA_raw.tsv.gz" "/g/zaugg/carnold/Projects/GRETA/src/greta_benchmark/resources/neurips2021/small/GRaNIE/counts_ATAC_raw.tsv.gz" "/g/zaugg/carnold/Projects/GRETA/src/greta_benchmark/resources/neurips2021/small/GRaNIE/metadata.tsv.gz"
 

@@ -1,15 +1,37 @@
+library(argparse)
 library(readr)
 library(GRaNIE)
 
+parser <- ArgumentParser(description= 'Run GRaNIE')
+parser$add_argument('--input', '-i', help= 'Input files: RNA, ATAC, metadata', nargs = 3,  required= TRUE)
+parser$add_argument('--output', '-o', help= 'List of 3 filenames: 1. GRN object, 2. TF_gene table, 3. TF_peak_gene table', nargs= 3, required= TRUE)
+parser$add_argument('--threads', help= 'Threads', nargs= 1, required= TRUE)
+
+parser$add_argument('--name', help= 'Dataset name', nargs= 1, required= TRUE) 
+parser$add_argument('--TBFS_source', help= 'TBFS_source', nargs= 1, required= TRUE) 
+parser$add_argument('--normalization_peaks', help= 'normalization_peaks', nargs= 1, required= TRUE) 
+parser$add_argument('--normalization_rna', help= 'normalization_rna', nargs= 1, required= TRUE) 
+parser$add_argument('--includeSexChr', help= 'includeSexChr', nargs= 1, required= TRUE) 
+parser$add_argument('--minCV', help= 'minCV', nargs= 1, required= TRUE) 
+parser$add_argument('--minNormalizedMean_peak', help= 'minNormalizedMean_peak', nargs= 1, required= TRUE) 
+parser$add_argument('--minNormalizedMean_RNA', help= 'minNormalizedMean_RNA', nargs= 1, required= TRUE) 
+parser$add_argument('--minSizePeaks', help= 'minSizePeaks', nargs= 1, required= TRUE) 
+parser$add_argument('--corMethod', help= 'corMethod', nargs= 1, required= TRUE) 
+parser$add_argument('--promoterRange', help= 'promoterRange', nargs= 1, required= TRUE) 
+parser$add_argument('--TF_peak_fdr', help= 'TF_peak.fdr.threshold', nargs= 1, required= TRUE) 
+parser$add_argument('--peak_gene_fdr', help= 'peak_gene.fdr.threshold', nargs= 1, required= TRUE) 
+parser$add_argument('--runTFClassification', help= 'runTFClassification', nargs= 1, required= TRUE) 
+parser$add_argument('--runNetworkAnalyses', help= 'runNetworkAnalyses', nargs= 1, required= TRUE) 
+
+
+xargs <- parser$parse_args()
+
+
 # Parse args
-args <- commandArgs(trailingOnly = F)
-path_data <- args[6]
-organism <- args[7]
-path_all_peaks <- args[8]
-path_connections <- args[9]
+outdir <-dirname(xargs$output[1])
 
 # Read genome
-if (organism == 'human'){
+if (xargs$organism == 'human'){
   genomeAssembly = "hg38"
 } else {
   stop("Not implemented yet")
@@ -17,37 +39,52 @@ if (organism == 'human'){
 
 source("workflow/scripts/GRaNIE/functions.R")
 
-runGRaNIE (dir_output = "output_GRaNIE", 
-                      datasetName = "undescribed",
-                      file_peaks, file_rna, file_metadata,
-                      TFBS_source = "custom",
+GRN = runGRaNIE (dir_output = outdir, 
+                      datasetName = xargs$name,
+                      file_rna = args$input[1], file_peaks = args$input[2], file_metadata = xargs$input[3],
+                      TFBS_source = xargs$TBFS_source,
                       TFBS_folder = NULL,
                       TFBS_JASPAR_useSpecificTaxGroup = NULL,
-                      genomeAssembly = "hg38",
-                      normalization_peaks = "DESeq2_sizeFactors", 
+                      genomeAssembly = genomeAssembly,
+                      normalization_peaks = xargs$normalization_peaks, 
                       idColumn_peaks = "peakID",
-                      normalization_rna = "limma_quantile", 
+                      normalization_rna = xargs$normalization_rna, 
                       idColumn_RNA =  "ENSEMBL",
-                      includeSexChr = FALSE,
-                      minCV = 0,
-                      minNormalizedMean_peaks = 5,
-                      minNormalizedMean_RNA = 1,
-                      minSizePeaks = 5,
-                      corMethod = "pearson",
-                      promoterRange = 250000, 
+                      includeSexChr = xargs$includeSexChr,
+                      minCV = xargs$minCV,
+                      minNormalizedMean_peaks = xargs$minNormalizedMean_peak,
+                      minNormalizedMean_RNA = xargs$minNormalizedMean_RNA,
+                      minSizePeaks = xargs$minSizePeaks,
+                      corMethod = xargs$corMethod,
+                      promoterRange = xargs$promoterRange, 
                       useGCCorrection = FALSE,
-                      TF_peak.fdr.threshold = 0.2,
-                      peak_gene.fdr.threshold = 0.1,
-                      runTFClassification = FALSE,
-                      runNetworkAnalyses = FALSE, 
-                      nCores = 4,
+                      TF_peak.fdr.threshold = xargs$TF_peak_fdr,
+                      peak_gene.fdr.threshold = xargs$peak_gene_fdr,
+                      runTFClassification = xargs$runTFClassification,
+                      runNetworkAnalyses = xargs$runNetworkAnalyses, 
+                      nCores = xargs$threads,
                       forceRerun = TRUE
 )
 
-# TODO
-# Save
-all_peaks <- row.names(exprs(input_cds))
-write.csv(x = all_peaks, file = file.path(path_all_peaks))
-write.csv(x = conns, file = file.path(path_connections))
+
+con.df = GRaNIE::getGRNConnections(GRN, include_TF_gene_correlations = TRUE)
 
 
+
+con.sel.df = con.df %>%
+    dplyr::select("TF.ID", "gene.name", "peak.ID", "TF_peak.fdr", "TF_gene.p_raw", "peak_gene.p_adj") %>%
+    dplyr::rename(source = "TF.ID", target = "gene.name", region = "peak.ID") %>%
+    dplyr::mutate(weight = 1) %>%
+    dplyr::select("source", "target", "region", "weight", tidyselect::everything())
+
+# todo: other cols to include?
+
+TF_gene.df = con.sel.df %>%
+    dplyr::select(-region, TODO)
+
+TF_peak_gene.df = con.sel.df %>%
+    dplyr::select(-region, TODO)
+
+readr::write_csv(TF_gene.df, xargs$output[2])
+
+readr::write_csv(TF_peak_gene.df, xargs$output[3])

@@ -34,7 +34,10 @@ rule run_GRaNIE:
     benchmark:
         "benchmarks/GRaNIE/{dataset}.{trajectory}.run_GRaNIE.txt"
     singularity: GRaNIE_singularity_path
+    threads: 8
     params:
+        organism                = lambda w: config[w.dataset]["organism"],
+        name                    = lambda w: w.dataset + "." + w.trajectory,
         TFBS_source             = lambda w: getConfigValue(w.dataset, w.trajectory, "TFBS_source"),
         normalization_peaks     = lambda w: getConfigValue(w.dataset, w.trajectory, "normalization_peaks"),
         normalization_rna       = lambda w: getConfigValue(w.dataset, w.trajectory, "normalization_rna"),
@@ -45,16 +48,19 @@ rule run_GRaNIE:
         minSizePeaks            = lambda w: getConfigValue(w.dataset, w.trajectory, "minSizePeaks"),
         corMethod               = lambda w: getConfigValue(w.dataset, w.trajectory, "corMethod"),
         promoterRange           = lambda w: getConfigValue(w.dataset, w.trajectory, "promoterRange"),
-        TF_peak.fdr.threshold   = lambda w: getConfigValue(w.dataset, w.trajectory, "TF_peak.fdr.threshold"),
-        peak_gene.fdr.threshold = lambda w: getConfigValue(w.dataset, w.trajectory, "peak_gene.fdr.threshold"),
+        TF_peak_fdr             = lambda w: getConfigValue(w.dataset, w.trajectory, "TF_peak.fdr.threshold"),
+        peak_gene_fdr           = lambda w: getConfigValue(w.dataset, w.trajectory, "peak_gene.fdr.threshold"),
         runTFClassification     = lambda w: getConfigValue(w.dataset, w.trajectory, "runTFClassification"),
         runNetworkAnalyses      = lambda w: getConfigValue(w.dataset, w.trajectory, "runNetworkAnalyses")
     shell:
         """
         Rscript scripts/GRaNIE/2.runGRaNIE.R \
          --input {input} \
-         --output {output} \
-         --TBGS_source {params.TFBS_source} \
+         --output {output.data} \
+         --threads {threads} \
+         --organism {params.organism} \
+         --name {params.name} \
+         --TBFS_source {params.TFBS_source} \
          --normalization_peaks {params.normalization_peaks} \
          --normalization_rna {params.normalization_rna} \
          --includeSexChr {params.includeSexChr} \
@@ -64,8 +70,8 @@ rule run_GRaNIE:
          --minSizePeaks {params.minSizePeaks} \
          --corMethod {params.corMethod} \
          --promoterRange {params.promoterRange} \
-         --TF_peak.fdr.threshold {params.TF_peak.fdr.threshold} \
-         --peak_gene.fdr.threshold {params.peak_gene.fdr.threshold} \
+         --TF_peak_fdr {params.TF_peak_fdr} \
+         --peak_gene_fdr {params.peak_gene_fdr} \
          --runTFClassification {params.runTFClassification} \
          --runNetworkAnalyses {params.runNetworkAnalyses}
         """
