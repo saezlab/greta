@@ -38,6 +38,10 @@ neurips2021:
                 only_tss: TRUE
             GRaNIE:
                 preprocessing_pseudobulk: TRUE
+                preprocessing_countAggregation: "mean"
+                preprocessing_minCellsPerCluster: 25
+                preprocessing_minClusters: 30
+
                 TFBS_source: "custom" # or JASPAR
                 normalization_peaks: "DESeq2_sizeFactors"
                 normalization_rna: "limma_quantile"
@@ -52,6 +56,8 @@ neurips2021:
                 peak_gene.fdr.threshold: 0.1
                 runTFClassification: FALSE
                 runNetworkAnalyses: FALSE
+                ranking_TF_gene: "TF_gene.p_raw"
+                ranking_TF_peak_gene: "TF_gene.p_raw"
 
 pbmc10k:
     organism: "human"

@@ -1,27 +1,46 @@
 
 GRaNIE_singularity_path = "envs/GRaNIE.sif"
 
+def getOutputFiles(dataset, trajectory):
+    """"Helper function to retrieve the GRaNIE output file names based on config parameters"""
+
+    filenames =
+    expand("resources/{dataset}/{trajectory}/GRaNIE/{modality}_minClusters{minClusters}_{countAggr}.tsv.gz",
+        dataset = dataset, trajectory = trajectory,
+        modality = ["rna.pseudobulkFromClusters", "atac.pseudobulkFromClusters", "metadata"],
+        minClusters = config[dataset]['trajectories'][trajectory]["GRaNIE"]["preprocessing_minClusters"],
+        countAggr   = config[dataset]['trajectories'][trajectory]["GRaNIE"]["preprocessing_countAggregation"]
+    )
+
+    return filenames
+
 rule preprocess_GRaNIE:
     input:
         data="resources/{dataset}/{trajectory}/mdata.h5mu"
     output:
-        counts_rna  = "resources/{dataset}/{trajectory}/GRaNIE/counts_rna.tsv.gz",
-        counts_atac = "resources/{dataset}/{trajectory}/GRaNIE/counts_atac.tsv.gz"
-        metadata    = "resources/{dataset}/{trajectory}/GRaNIE/metadata.tsv.gz"
+        lambda w: getOutputFiles(w.dataset, w.trajectory)
     benchmark:
         "benchmarks/GRaNIE/{dataset}.{trajectory}.preprocess_GRaNIE.txt"
     singularity: GRaNIE_singularity_path
     params:
-        pseudubulk = lambda w: config[w.dataset]['trajectories'][w.trajectory]["GRaNIE"]["preprocessing_pseudobulk"]
+        #pseudubulk                       = lambda w: getConfigValue(w.dataset, w.trajectory,  "preprocessing_pseudobulk"),
+        preprocessing_countAggregation   = lambda w: getConfigValue(w.dataset, w.trajectory, "preprocessing_countAggregation"),
+        preprocessing_minCellsPerCluster = lambda w: getConfigValue(w.dataset, w.trajectory, "preprocessing_minCellsPerCluster"),
+        preprocessing_minClusters        = lambda w: getConfigValue(w.dataset, w.trajectory, "preprocessing_minClusters"),
+        organism   = lambda w: config[w.dataset]["organism"]
     shell:
         """
         Rscript scripts/GRaNIE/1.preprocess.R \
          --input {input} \
          --output {output} \
-         --pseudobulk {params.pseudobulk}
+         --organism {params.organism} \
+         --preprocessing_countAggregation {params.preprocessing_countAggregation} \
+         --preprocessing_minCellsPerCluster {params.preprocessing_minCellsPerCluster} \
+         --preprocessing_minClusters  {params.preprocessing_minClusters }
         """
 
 def getConfigValue(dataset, trajectory, par):
+    """"Helper function to retrieve the GRaNIE config values"""
     return config[dataset]['trajectories'][trajectory]["GRaNIE"][par]
 
 
@@ -29,8 +48,7 @@ rule run_GRaNIE:
     input:
         data=rules.preprocess_GRaNIE.output
     output:
-        data = "resources/{dataset}/{trajectory}/GRaNIE/connections_filtered.tsv.gz",
-        GRN  = "resources/{dataset}/{trajectory}/GRaNIE/GRN.qs"
+        GRN          = "resources/{dataset}/{trajectory}/GRaNIE/GRN.qs"
     benchmark:
         "benchmarks/GRaNIE/{dataset}.{trajectory}.run_GRaNIE.txt"
     singularity: GRaNIE_singularity_path
@@ -76,10 +94,9 @@ rule run_GRaNIE:
          --runNetworkAnalyses {params.runNetworkAnalyses}
         """
 
-
 rule postprocess_GRaNIE:
     input:
-        data=rules.run_GRaNIE.output
+        GRN = rules.run_GRaNIE.output
     output:
         TF_gene      = "resources/{dataset}/{trajectory}/GRaNIE/grn.csv",
         TF_peak_gene = "resources/{dataset}/{trajectory}/GRaNIE/tri.csv"
@@ -87,9 +104,13 @@ rule postprocess_GRaNIE:
     benchmark:
         "benchmarks/GRaNIE/{dataset}.{trajectory}.postprocess_GRaNIE.txt"
     params:
+        ranking_TF_gene      = lambda w: getConfigValue(w.dataset, w.trajectory, "ranking_TF_gene"),
+        ranking_TF_peak_gene = lambda w: getConfigValue(w.dataset, w.trajectory, "ranking_TF_peak_gene")
     shell:
         """
         Rscript scripts/GRaNIE/3.postprocess.R \
-         --input {input} \
-         --output {output}
+         --input {input.GRN} \
+         --output {output} \
+         --ranking_TF_gene {params.ranking_TF_gene} \
+         --ranking_TF_peak_gene {params.ranking_TF_peak_gene}
         """

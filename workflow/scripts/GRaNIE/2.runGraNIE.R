@@ -6,7 +6,7 @@ parser <- ArgumentParser(description= 'Run GRaNIE')
 parser$add_argument('--input', '-i', help= 'Input files: RNA, ATAC, metadata', nargs = 3,  required= TRUE)
 parser$add_argument('--output', '-o', help= 'List of 3 filenames: 1. GRN object, 2. TF_gene table, 3. TF_peak_gene table', nargs= 3, required= TRUE)
 parser$add_argument('--threads', help= 'Threads', nargs= 1, required= TRUE)
-
+parser$add_argument('--organism', help= 'Organism', nargs= 1, required= TRUE)
 parser$add_argument('--name', help= 'Dataset name', nargs= 1, required= TRUE) 
 parser$add_argument('--TBFS_source', help= 'TBFS_source', nargs= 1, required= TRUE) 
 parser$add_argument('--normalization_peaks', help= 'normalization_peaks', nargs= 1, required= TRUE) 
@@ -66,25 +66,3 @@ GRN = runGRaNIE (dir_output = outdir,
                       forceRerun = TRUE
 )
 
-
-con.df = GRaNIE::getGRNConnections(GRN, include_TF_gene_correlations = TRUE)
-
-
-
-con.sel.df = con.df %>%
-    dplyr::select("TF.ID", "gene.name", "peak.ID", "TF_peak.fdr", "TF_gene.p_raw", "peak_gene.p_adj") %>%
-    dplyr::rename(source = "TF.ID", target = "gene.name", region = "peak.ID") %>%
-    dplyr::mutate(weight = 1) %>%
-    dplyr::select("source", "target", "region", "weight", tidyselect::everything())
-
-# todo: other cols to include?
-
-TF_gene.df = con.sel.df %>%
-    dplyr::select(-region, TODO)
-
-TF_peak_gene.df = con.sel.df %>%
-    dplyr::select(-region, TODO)
-
-readr::write_csv(TF_gene.df, xargs$output[2])
-
-readr::write_csv(TF_peak_gene.df, xargs$output[3])
