@@ -1,0 +1,124 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%environment
+    # PATHS
+    export PATH=/opt/miniconda3/bin:$PATH
+    . /opt/miniconda3/etc/profile.d/conda.sh
+    conda activate env
+
+%post
+
+    # update apt
+    apt update -y
+
+    # basic packages (~2 min)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    apt install -y build-essential  \
+                   gcc \
+                   cmake \
+                   wget \
+                   curl \
+                   libcurl4-openssl-dev \
+                   libssl-dev \
+                   libxml2-dev \
+                   libcairo2-dev \
+                   libxt-dev \
+                   libopenblas-dev
+
+    # conda
+    mkdir -p /opt/miniconda3
+    cd /opt/miniconda3 
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -p /opt/miniconda3 -b -f
+    rm Miniconda3-latest-Linux-x86_64.sh
+    export PATH=/opt/miniconda3/bin:$PATH
+
+    # Install conda and mamba
+    conda update conda -y
+    . /opt/miniconda3/etc/profile.d/conda.sh
+    conda install -n base -c conda-forge mamba
+    
+    
+    # Create env
+    #mamba create -y -n=env -c conda-forge -c bioconda \
+    mamba create -y -n=directnet -c conda-forge -c bioconda \
+    python=3.10 \
+    r-base==4.2 \
+    r-tidyverse \
+    bioconductor-chromvar \
+    r-signac \
+    bioconductor-matrixgenerics \
+    bioconductor-motifmatchr \
+    r-glmnetutils \
+    r-bayestestr \
+    r-ggpointdensity \
+    r-ggraph \
+    r-tidygraph \
+    r-pals \
+    bioconductor-tfbstools \
+    r-foreach \
+    bioconductor-sparsematrixstats \
+    r-uwot \
+    r-grr \
+    bioconductor-rhdf5 \
+    r-devtools \
+    r-deldir \
+    r-spatstat.utils \
+    r-tensor \
+    r-abind \
+    r-goftest \
+    r-spatstat \
+    r-spatstat.sparse \
+    r-spatstat.random \
+    r-spatstat.geom \
+    r-parallelly \
+    r-listenv \
+    r-globals \
+    r-seuratobject \
+    r-sctransform \
+    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
+    bioconductor-bsgenome.mmusculus.ucsc.mm10 \
+    bioconductor-ensdb.hsapiens.v86 \
+    bioconductor-ensdb.mmusculus.v79 \
+    bioconductor-biovizbase \
+    r-scattermore \
+    r-rtsne \
+    r-rann \
+    r-cluster \
+    r-reticulate \
+    r-lmtest \
+    r-kernsmooth \
+    r-fastmatch \
+    r-patchwork \
+    r-pbapply \
+    r-leiden \
+    r-ica \
+    r-ggridges \
+    r-fitdistrplus \
+    r-cowplot \
+    r-conflicted \
+    r-doparallel \
+    r-gplots \
+    r-rocr \
+    r-plotly \
+    r-seurat \
+    bioconductor-rtracklayer \
+    bioconductor-gviz \
+    bioconductor-genomicranges \
+    r-monocle3 \
+    r-vgam \
+    r-glasso
+    
+
+    # Install cicero
+    conda activate env
+    Rscript -e "devtools::install_github('cole-trapnell-lab/cicero-release', ref = 'monocle3', upgrade = 'never')"
+
+    Rscript -e "devtools::install_github("immunogenomics/presto")"
+    
+    Rscript -e "devtools::install_github('zhanglhbioinfor/DIRECT-NET')"
+    
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y
