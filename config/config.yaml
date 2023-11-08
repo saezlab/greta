@@ -41,8 +41,7 @@ neurips2021:
                 preprocessing_countAggregation: "mean"
                 preprocessing_minCellsPerCluster: 25
                 preprocessing_minClusters: 30
-
-                TFBS_source: "custom" # or JASPAR
+                TFBS_source: "custom"
                 normalization_peaks: "DESeq2_sizeFactors"
                 normalization_rna: "limma_quantile"
                 includeSexChr: FALSE
@@ -50,7 +49,7 @@ neurips2021:
                 minNormalizedMean_peak: 5
                 minNormalizedMean_RNA: 1
                 minSizePeaks: 5
-                corMethod: "pearson",
+                corMethod: "pearson"
                 promoterRange: 250000
                 TF_peak.fdr.threshold: 0.2
                 peak_gene.fdr.threshold: 0.1

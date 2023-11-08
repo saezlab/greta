@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Run a Snakemake v7+ sidecar process for Slurm
 
-This sidecar process will poll ``squeue --me --format='%i,%T'`` every 60
-seconds by default (use environment variable ``SNAKEMAKE_SLURM_SQUEUE_WAIT``
-for adjusting this).
+This sidecar process will poll ``squeue --user [user] --format='%i,%T'``
+every 60 seconds by default (use environment variable
+``SNAKEMAKE_SLURM_SQUEUE_WAIT`` for adjusting this).
 
 Note that you have to adjust the value to fit to your ``MinJobAge`` Slurm
 configuration.  Jobs remain at least ``MinJobAge`` seconds known to the
@@ -39,8 +39,10 @@ import uuid
 from CookieCutter import CookieCutter
 
 
-#: Enables debug messages for slurm sidecard.
+#: Enables debug messages for slurm sidecar.
 DEBUG = bool(int(os.environ.get("SNAKEMAKE_SLURM_DEBUG", "0")))
+#: Enables HTTP request logging in sidecar.
+LOG_REQUESTS = bool(int(os.environ.get("SNAKEMAKE_SLURM_LOG_REQUESTS", "0")))
 #: Command to call when calling squeue
 SQUEUE_CMD = os.environ.get("SNAKEMAKE_SLURM_SQUEUE_CMD", "squeue")
 #: Number of seconds to wait between ``squeue`` calls.
@@ -141,7 +143,7 @@ class PollSqueueThread(threading.Thread):
         """Run the call to ``squeue``"""
         cluster = CookieCutter.get_cluster_option()
         try_num = 0
-        cmd = [SQUEUE_CMD, "--me", "--format=%i,%T", "--state=all"]
+        cmd = [SQUEUE_CMD, "--user={}".format(os.environ.get("USER")), "--format=%i,%T", "--state=all"]
         if cluster:
             cmd.append(cluster)
         while try_num < self.max_tries:
@@ -247,6 +249,10 @@ class JobStateHttpHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         logger.debug("--- END POST")
 
+    def log_request(self, *args, **kwargs):
+        if LOG_REQUESTS:
+            super().log_request(*args, **kwargs)
+
 
 class JobStateHttpServer(http.server.HTTPServer):
     """The HTTP server class"""
@@ -280,8 +286,8 @@ def main():
     poll_thread = PollSqueueThread(SQUEUE_WAIT, SQUEUE_CMD, name="poll-squeue")
     poll_thread.start()
 
-    # Initialize HTTP server that makes available the output of ``squeue --me`` in a
-    # controlled fashion.
+    # Initialize HTTP server that makes available the output of ``squeue --user [user]``
+    # in a controlled fashion.
     http_server = JobStateHttpServer(poll_thread)
     http_thread = threading.Thread(name="http-server", target=http_server.serve_forever)
     http_thread.start()

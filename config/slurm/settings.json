@@ -1,6 +1,5 @@
 {
-    "SBATCH_DEFAULTS": "job-name=smk-{rule}-{wildcards} output=logs/{rule}/{rule}-{wildcards}-%j.out",
+    "SBATCH_DEFAULTS": "",
     "CLUSTER_NAME": "",
-    "CLUSTER_CONFIG": "",
-    "ADVANCED_ARGUMENT_CONVERSION": "no"
+    "CLUSTER_CONFIG": ""
 }

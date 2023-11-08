@@ -1,54 +1,15 @@
 from snakemake.utils import min_version
 
-## CA: TODO: I suggest putting a more recent version here, like 7.29 that offers slurm support and support for cluster profiles with enriched functions 8see Changelog for 7.29)
-min_version("7.29.0")
+min_version('7.29.0')
 
-configfile: "../config/config.yaml"
+configfile: 'config/config.yaml'
+container: 'workflow/envs/gretabench.sif'
 
+include: 'rules/general.smk'
+include: 'rules/neurips2021.smk'
+include: 'rules/celloracle.smk'
+include: 'rules/pando.smk'
+include: 'rules/hummus.smk'
+#include: 'rules/granie.smk'
 
-rule all:
-    input:
-        expand("resources/{dataset}/{trajectory}/{tool}/grn.csv", dataset = ["neurips2021"], trajextory = ["small"], tool = ["pando", "hummus", "GRaNIE"])
-
-# CA: TODO: Whats the advantage of the (repetetive) module structure below as opposed to just using "include" srtatments to import the various smk files? Which advantage the modularization brings here, just curious
-
-module general:
-    snakefile: "rules/general.smk"
-    config: config
-
-use rule * from general
-
-module neurips2021:
-    snakefile: "rules/neurips2021.smk"
-    config: config
-
-use rule * from neurips2021
-
-module celloracle:
-    snakefile: "rules/celloracle.smk"
-    config: config
-
-use rule * from celloracle
-
-module pando:
-    snakefile: "rules/pando.smk"
-    config: config
-
-use rule * from pando
-
-module hummus:
-    snakefile: "rules/hummus.smk"
-    config: config
-
-use rule * from hummus
-
-# Not tested and activated yet
-# module GRaNIE:
-#     snakefile: "rules/GRaNIE.smk"
-#     config: config
-#
-# use rule * from GRaNIE
-
-
-# snakemake --profile config/slurm/ annotate_neurips2021
-# conda env update --file local.yml --prune
+# snakemake --profile config/slurm/ ...

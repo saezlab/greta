@@ -68,12 +68,34 @@ sbatch_options.update(cluster_config.get(job_properties.get("rule"), {}))
 # 5) cluster_config options
 sbatch_options.update(job_properties.get("cluster", {}))
 
+# convert human-friendly time - leaves slurm format time as is
+if "time" in sbatch_options:
+    duration = str(sbatch_options["time"])
+    sbatch_options["time"] = str(slurm_utils.Time(duration))
+
 # 6) Format pattern in snakemake style
 sbatch_options = slurm_utils.format_values(sbatch_options, job_properties)
+
+# 7) create output and error filenames and paths
+joblog = slurm_utils.JobLog(job_properties)
+log = ""
+if "output" not in sbatch_options and CookieCutter.get_cluster_logpath():
+    outlog = joblog.outlog
+    log = outlog
+    sbatch_options["output"] = outlog
+
+if "error" not in sbatch_options and CookieCutter.get_cluster_logpath():
+    errlog = joblog.errlog
+    log = errlog
+    sbatch_options["error"] = errlog
 
 # ensure sbatch output dirs exist
 for o in ("output", "error"):
     slurm_utils.ensure_dirs_exist(sbatch_options[o]) if o in sbatch_options else None
+
+# 9) Set slurm job name
+if "job-name" not in sbatch_options and "job_name" not in sbatch_options:
+    sbatch_options["job-name"] = joblog.jobname
 
 # submit job and echo id back to Snakemake (must be the only stdout)
 jobid = slurm_utils.submit_job(jobscript, **sbatch_options)

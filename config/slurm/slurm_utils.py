@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-import os
-import sys
-from os.path import dirname
-import re
-import math
 import argparse
+import math
+import os
+import re
 import subprocess as sp
+import sys
+from datetime import timedelta
+from os.path import dirname
+from time import time as unix_time
+from typing import Union
+from uuid import uuid4
+import shlex
 from io import StringIO
 
+from CookieCutter import CookieCutter
 from snakemake import io
+from snakemake.exceptions import WorkflowError
 from snakemake.io import Wildcards
-from snakemake.utils import SequenceFormatter
+from snakemake.logging import logger
 from snakemake.utils import AlwaysQuotedFormatter
 from snakemake.utils import QuotedFormatter
-from snakemake.exceptions import WorkflowError
-from snakemake.logging import logger
-
-from CookieCutter import CookieCutter
+from snakemake.utils import SequenceFormatter
 
 
 def _convert_units_to_mb(memory):
@@ -44,7 +48,7 @@ def parse_jobscript():
 
 def parse_sbatch_defaults(parsed):
     """Unpack SBATCH_DEFAULTS."""
-    d = parsed.split() if type(parsed) == str else parsed
+    d = shlex.split(parsed) if type(parsed) == str else parsed
     args = {}
     for keyval in [a.split("=") for a in d]:
         k = keyval[0].strip().strip("-")
@@ -93,7 +97,7 @@ def format(_pattern, _quote_all=False, **kwargs):  # noqa: A001
 
 #  adapted from Job.format_wildcards in snakemake.jobs
 def format_wildcards(string, job_properties):
-    """ Format a string with variables from the job. """
+    """Format a string with variables from the job."""
 
     class Job(object):
         def __init__(self, job_properties):
@@ -148,6 +152,19 @@ def convert_job_properties(job_properties, resource_mapping=None):
 
     if "threads" in job_properties:
         options["cpus-per-task"] = job_properties["threads"]
+
+    slurm_opts = resources.get("slurm", "")
+    if not isinstance(slurm_opts, str):
+        raise ValueError(
+            "The `slurm` argument to resources must be a space-separated string"
+        )
+
+    for opt in slurm_opts.split():
+        kv = opt.split("=", maxsplit=1)
+        k = kv[0]
+        v = None if len(kv) == 1 else kv[1]
+        options[k.lstrip("-").replace("_", "-")] = v
+
     return options
 
 
@@ -226,3 +243,161 @@ def time_to_minutes(time):
     )
     assert minutes > 0, "minutes has to be greater than 0"
     return minutes
+
+
+class InvalidTimeUnitError(Exception):
+    pass
+
+
+class Time:
+    _nanosecond_size = 1
+    _microsecond_size = 1000 * _nanosecond_size
+    _millisecond_size = 1000 * _microsecond_size
+    _second_size = 1000 * _millisecond_size
+    _minute_size = 60 * _second_size
+    _hour_size = 60 * _minute_size
+    _day_size = 24 * _hour_size
+    _week_size = 7 * _day_size
+    units = {
+        "s": _second_size,
+        "m": _minute_size,
+        "h": _hour_size,
+        "d": _day_size,
+        "w": _week_size,
+    }
+    pattern = re.compile(rf"(?P<val>\d+(\.\d*)?|\.\d+)(?P<unit>[a-zA-Z])")
+
+    def __init__(self, duration: str):
+        self.duration = Time._from_str(duration)
+
+    def __str__(self) -> str:
+        return Time._timedelta_to_slurm(self.duration)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def _timedelta_to_slurm(delta: Union[timedelta, str]) -> str:
+        if isinstance(delta, timedelta):
+            d = dict()
+            d["hours"], rem = divmod(delta.seconds, 3600)
+            d["minutes"], d["seconds"] = divmod(rem, 60)
+            d["hours"] += delta.days * 24
+            return "{hours}:{minutes:02d}:{seconds:02d}".format(**d)
+        elif isinstance(delta, str):
+            return delta
+        else:
+            raise ValueError("Time is in an unknown format '{}'".format(delta))
+
+    @staticmethod
+    def _from_str(duration: str) -> Union[timedelta, str]:
+        """Parse a duration string to a datetime.timedelta"""
+
+        matches = Time.pattern.finditer(duration)
+
+        total = 0
+        n_matches = 0
+        for m in matches:
+            n_matches += 1
+            value = m.group("val")
+            unit = m.group("unit").lower()
+            if unit not in Time.units:
+                raise InvalidTimeUnitError(
+                    "Unknown unit '{}' in time {}".format(unit, duration)
+                )
+
+            total += float(value) * Time.units[unit]
+
+        if n_matches == 0:
+            return duration
+
+        microseconds = total / Time._microsecond_size
+        return timedelta(microseconds=microseconds)
+
+
+class JobLog:
+    def __init__(self, job_props: dict):
+        self.job_properties = job_props
+        self.uid = str(uuid4())
+
+    @property
+    def wildcards(self) -> dict:
+        return self.job_properties.get("wildcards", dict())
+
+    @property
+    def wildcards_str(self) -> str:
+        return (
+            ".".join("{}={}".format(k, v) for k, v in self.wildcards.items())
+            or "unique"
+        )
+
+    @property
+    def rule_name(self) -> str:
+        if not self.is_group_jobtype:
+            return self.job_properties.get("rule", "nameless_rule")
+        return self.groupid
+
+    @property
+    def groupid(self) -> str:
+        return self.job_properties.get("groupid", "group")
+
+    @property
+    def is_group_jobtype(self) -> bool:
+        return self.job_properties.get("type", "") == "group"
+
+    @property
+    def short_uid(self) -> str:
+        return self.uid.split("-")[0]
+
+    def pattern_replace(self, s: str) -> str:
+        """
+        %r - rule name. If group job, will use the group ID instead
+        %i - snakemake job ID
+        %w - wildcards. e.g., wildcards A and B will be concatenated as 'A=<val>.B=<val>'
+        %U - a random universally unique identifier
+        %S - shortened version od %U
+        %T - Unix time, aka seconds since epoch (rounded to an integer)
+        """
+        replacement = {
+            "%r": self.rule_name,
+            "%i": self.jobid,
+            "%w": self.wildcards_str,
+            "%U": self.uid,
+            "%T": str(int(unix_time())),
+            "%S": self.short_uid,
+        }
+        for old, new in replacement.items():
+            s = s.replace(old, new)
+
+        return s
+
+    @property
+    def jobname(self) -> str:
+        jobname_pattern = CookieCutter.get_cluster_jobname()
+        if not jobname_pattern:
+            return ""
+
+        return self.pattern_replace(jobname_pattern)
+
+    @property
+    def jobid(self) -> str:
+        """The snakemake jobid"""
+        if self.is_group_jobtype:
+            return self.job_properties.get("jobid", "").split("-")[0]
+        return str(self.job_properties.get("jobid"))
+
+    @property
+    def logpath(self) -> str:
+        logpath_pattern = CookieCutter.get_cluster_logpath()
+        if not logpath_pattern:
+            return ""
+
+        return self.pattern_replace(logpath_pattern)
+
+    @property
+    def outlog(self) -> str:
+        return self.logpath + ".out"
+
+    @property
+    def errlog(self) -> str:
+        return self.logpath + ".err"
