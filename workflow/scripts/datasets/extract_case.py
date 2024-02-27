@@ -14,14 +14,14 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-i','--path_input', required=True)
 parser.add_argument('-c','--celltypes', required=True)
 parser.add_argument('-g','--n_hvg', required=True)
-parser.add_argument('-d','--n_downsample', required=True)
+parser.add_argument('-r','--n_hvr', required=True)
 parser.add_argument('-o','--path_output', required=True)
 args = vars(parser.parse_args())
 
 path_input = args['path_input']
 celltypes = args['celltypes']
 n_hvg = int(args['n_hvg'])
-n_downsample = int(args['n_downsample'])
+n_hvr = int(args['n_hvr'])
 path_output = args['path_output']
 
 # Read object
@@ -38,20 +38,12 @@ mdata.obs['celltype'] = mdata.obs['celltype'].cat.remove_unused_categories()
 rna = mdata.mod['rna']
 atac = mdata.mod['atac']
 
-# Store counts
+# Normalize
 rna.layers['counts'] = rna.X.copy()
 atac.layers['counts'] = atac.X.copy()
-
-# Normalize
 sc.pp.normalize_total(rna, target_sum=1e4)
 sc.pp.log1p(rna)
 ac.pp.tfidf(atac, scale_factor=1e4)
-
-# Subset if needed
-if n_downsample > 0:
-    barcodes = mdata.obs.groupby(['celltype', 'batch']).head(n_downsample).index
-    rna = rna[barcodes, :].copy()
-    atac = atac[barcodes, :].copy()
 
 # HVG
 rna.obs['batch'] = mdata.obs['batch']
@@ -71,7 +63,23 @@ def filter_hvg(adata, n_hvg):
     return adata
 
 rna = filter_hvg(rna, n_hvg=n_hvg)
-atac = filter_hvg(atac, n_hvg=n_hvg * 16)
+atac = filter_hvg(atac, n_hvg=n_hvr)
+
+# Filter cells and intersect
+rna = rna[(rna.X.A != 0).sum(1) > 3, :].copy()
+atac = atac[(atac.X.A != 0).sum(1) > 3, :].copy()
+obs_inter = atac.obs_names.intersection(rna.obs_names)
+rna = rna[obs_inter].copy()
+atac = atac[obs_inter].copy()
+
+# TODO: add downsampling
+# Subset if needed
+#if n_downsample > 0:
+#    index = rna.obs.sample(frac=1, random_state=1, replace=False).index
+#    barcodes = mdata.obs.groupby(['celltype', 'batch']).head(n_downsample).index
+#    rna = rna[barcodes, :].copy()
+#    atac = atac[barcodes, :].copy()
+
 
 ## PCA
 rna.layers['norm'] = rna.X.copy()

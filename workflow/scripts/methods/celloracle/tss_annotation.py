@@ -29,14 +29,8 @@ cicero_connections = pd.read_csv(path_connections, index_col=0)
 cicero_connections['Peak1'] = np.char.replace(cicero_connections['Peak1'].values.astype('U'), '-', '_')
 cicero_connections['Peak2'] = np.char.replace(cicero_connections['Peak2'].values.astype('U'), '-', '_')
 
-# Determine genome
-if organism == 'human':
-    genome = 'hg38'
-elif organism == 'mouse':
-    genome = 'mm10'
-
 # Extract tss information
-tss_annotated = ma.get_tss_info(peak_str_list=peaks, ref_genome=genome)
+tss_annotated = ma.get_tss_info(peak_str_list=peaks, ref_genome=organism)
 
 # Integrate
 integrated = ma.integrate_tss_peak_with_cicero(tss_peak=tss_annotated,
@@ -48,4 +42,3 @@ peak = peak[["peak_id", "gene_short_name"]].reset_index(drop=True)
 
 # Save
 peak.to_csv(path_prc_peaks)
-

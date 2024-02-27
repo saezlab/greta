@@ -1,5 +1,4 @@
 library(cicero)
-library(monocle3)
 library(rhdf5)
 
 
@@ -7,14 +6,15 @@ library(rhdf5)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
-path_all_peaks <- args[8]
-path_connections <- args[9]
+k <- as.numeric(args[8])
+path_all_peaks <- args[9]
+path_connections <- args[10]
 
 # Read genome
-if (organism == 'human'){
-    genome <- read.table('resources/genome_sizes/human.txt')
+if (organism == 'hg38'){
+    genome <- read.table('genomes/sizes/hg38.txt')
 } else {
-    genome <- read.table('resources/genome_sizes/mouse.txt')
+    genome <- read.table('genomes/sizes/mm10.txt')
 }
 
 # Process mudata
@@ -42,10 +42,11 @@ row.names(indata) <- row.names(peakinfo)
 colnames(indata) <- row.names(cellinfo)
 
 # Make CDS
-input_cds <-  suppressWarnings(new_cell_data_set(indata,
-cell_metadata = cellinfo,
-gene_metadata = peakinfo))
-input_cds <- monocle3::detect_genes(input_cds)
+input_cds <-  suppressWarnings(
+    new_cell_data_set(indata,
+    cell_metadata = cellinfo,
+    gene_metadata = peakinfo)
+)
 
 # Data preprocessing
 set.seed(2017)
@@ -53,12 +54,19 @@ input_cds <- estimate_size_factors(input_cds)
 input_cds <- preprocess_cds(input_cds, method = "LSI")
 
 # Dimensional reduction with umap
-input_cds <- reduce_dimension(input_cds, reduction_method = 'UMAP', 
-                              preprocess_method = "LSI")
+input_cds <- reduce_dimension(
+    input_cds,
+    reduction_method = 'UMAP',
+    preprocess_method = "LSI"
+)
 umap_coords <- reducedDims(input_cds)$UMAP
 
 # Build cicero cds
-cicero_cds <- make_cicero_cds(input_cds, reduced_coordinates = umap_coords)
+cicero_cds <- make_cicero_cds(
+    input_cds,
+    reduced_coordinates = umap_coords,
+    k = k
+)
 
 # Run the main function
 conns <- run_cicero(cicero_cds, genome) # Takes a few minutes to run
