@@ -5,7 +5,7 @@ restart-times: "0"
 jobscript: "slurm-jobscript.sh"
 cluster: "slurm-submit.py"
 cluster-status: "slurm-status.py"
-max-jobs-per-second: "2"
+max-jobs-per-second: "10"
 max-status-checks-per-second: "10"
 local-cores: 1
 latency-wait: "5"
@@ -20,6 +20,7 @@ default-resources:
    - runtime=60
    - mem_mb=16000
    - partition=single
+   - threads=128
 # # set-threads: map rule names to threads
 # set-threads:
 #   - single_core_rule=1

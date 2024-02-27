@@ -1,67 +1,21 @@
 # Datasets
-neurips2021:
-    organism: "human"
-    data: "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE194122&format=file&file=GSE194122%5Fopenproblems%5Fneurips2021%5Fmultiome%5FBMMC%5Fprocessed%2Eh5ad%2Egz"
-    trajectories:
-        blood:
-            celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
-            n_hvg: 2048
-            n_downsample: 0
-            celloracle:
-                thr_coaccess: 0.8
-                fpr: 0.02
-                thr_motif_score: 10
-                thr_edge_pval: 0.001
-                thr_top_edges: 2000
-        small:
-            celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
-            n_hvg: 512
-            n_downsample: 2
-            celloracle:
-                thr_coaccess: 0.8
-                fpr: 0.02
-                thr_motif_score: 10
-                thr_edge_pval: 0.001
-                thr_top_edges: 2000
-            pando:
-                p_thresh: 0.05
-                rsq_thresh: 0.1
-                nvar_thresh: 10
-                exclude_exons: FALSE
-            hummus:
-                genie3_cores: 2
-                genie3_thresh: 0
-                cicero_k_per_pseudocells: 50
-                cicero_thresh: 0
-                upstream_gene: 10000 #to determine
-                downstream_gene: 100000 #to determine
-                only_tss: TRUE
-            GRaNIE:
-                preprocessing_pseudobulk: TRUE
-                preprocessing_countAggregation: "mean"
-                preprocessing_minCellsPerCluster: 25
-                preprocessing_minClusters: 30
-                TFBS_source: "custom"
-                normalization_peaks: "DESeq2_sizeFactors"
-                normalization_rna: "limma_quantile"
-                includeSexChr: FALSE
-                minCV: 0
-                minNormalizedMean_peak: 5
-                minNormalizedMean_RNA: 1
-                minSizePeaks: 5
-                corMethod: "pearson"
-                promoterRange: 250000
-                TF_peak.fdr.threshold: 0.2
-                peak_gene.fdr.threshold: 0.1
-                runTFClassification: FALSE
-                runNetworkAnalyses: FALSE
-                ranking_TF_gene: "TF_gene.p_raw"
-                ranking_TF_peak_gene: "TF_gene.p_raw"
-
-pbmc10k:
-    organism: "human"
-    data:
-        matrix: "https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.h5"
-        peak_annot: "https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_peak_annotation.tsv"
-        atac_frags: "https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz"
-        atac_index: "https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz.tbi"
+datasets:
+    neurips2021:
+        organism: 'hg38'
+        url: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE194122&format=file&file=GSE194122%5Fopenproblems%5Fneurips2021%5Fmultiome%5FBMMC%5Fprocessed%2Eh5ad%2Egz'
+        cases:
+            blood:
+                celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
+                n_hvg: 2048
+                n_hvr: 2048
+            small:
+                celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
+                n_hvg: 512
+                n_hvr: 1024
+    pbmc10k:
+        organism: 'hg38'
+        url:
+            matrix: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.h5'
+            peak_annot: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_peak_annotation.tsv'
+            atac_frags: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz'
+            atac_index: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz.tbi'
