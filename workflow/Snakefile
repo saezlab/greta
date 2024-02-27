@@ -5,11 +5,7 @@ min_version('7.29.0')
 configfile: 'config/config.yaml'
 container: 'workflow/envs/gretabench.sif'
 
-include: 'rules/general.smk'
-include: 'rules/neurips2021.smk'
-include: 'rules/celloracle.smk'
-include: 'rules/pando.smk'
-include: 'rules/hummus.smk'
-#include: 'rules/granie.smk'
+include: 'rules/datasets.smk'
+include: 'rules/methods/celloracle.smk'
 
 # snakemake --profile config/slurm/ ...
