@@ -1,3 +1,13 @@
+rule pre_pando:
+    input:
+        'datasets/{dataset}/cases/{case}/mdata.h5mu'
+    output:
+        'datasets/{dataset}/cases/{case}/runs/pando.{tfb}.{p2g}.{mdl}.{pst}.mdata.h5mu'
+    shell:
+        """
+        cp {input} {output}
+        """
+
 rule run_pando:
     input:
         data="resources/{dataset}/{trajectory}/mdata.h5mu"
