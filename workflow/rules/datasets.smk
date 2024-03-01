@@ -65,3 +65,4 @@ rule download_pbmc10k:
         wget '{params.peak_annot}' -O {output.peak_annot}
         wget '{params.atac_frags}' -O {output.atac_frags}
         wget '{params.atac_index}' -O {output.atac_index}
+        """
