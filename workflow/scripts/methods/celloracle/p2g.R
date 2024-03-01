@@ -12,9 +12,9 @@ path_connections <- args[10]
 
 # Read genome
 if (organism == 'hg38'){
-    genome <- read.table('genomes/sizes/hg38.txt')
+    genome <- read.table('gdata/sizes/hg38.txt')
 } else {
-    genome <- read.table('genomes/sizes/mm10.txt')
+    genome <- read.table('gdata/sizes/mm10.txt')
 }
 
 # Process mudata

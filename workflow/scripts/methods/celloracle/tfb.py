@@ -1,41 +1,33 @@
+import matplotlib.pyplot as plt  # Import else compiling error
 import pandas as pd
 import numpy as np
+import os
 import celloracle as co
 from celloracle import motif_analysis as ma
-from celloracle.utility import save_as_pickled_object
-from genomepy import Genome, install_genome
+from genomepy import Genome, install_genome, config
 import argparse
 
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-p','--peaks', required=True)
-parser.add_argument('-o','--organism', required=True)
+parser.add_argument('-p','--path_p2g', required=True)
+parser.add_argument('-g','--gname', required=True)
 parser.add_argument('-f','--fpr', required=True)
-parser.add_argument('-t','--tfinfo', required=True)
+parser.add_argument('-b','--blen', required=True)
+parser.add_argument('-t','--tfb_thr', required=True)
+parser.add_argument('-o','--path_out', required=True)
 args = vars(parser.parse_args())
 
-path_peaks = args['peaks']
-organism = args['organism']
+path_p2g = args['path_p2g']
+gname = args['gname']
 fpr = float(args['fpr'])
-path_tfinfo = args['tfinfo']
-
-# Determine genome
-if organism == 'human':
-    genome = 'hg38'
-elif organism == 'mouse':
-    genome = 'mm10'
-
-# Check genome
-genome_installation = ma.is_genome_installed(ref_genome=genome)
-if not genome_installation:
-    install_genome(name=genome, provider="UCSC")
-else:
-    print(genome, "is installed.")
-
+blen = int(args['blen'])
+tfb_thr = float(args['tfb_thr'])
+path_out = args['path_out']
 
 # Load annotated peak data.
-peaks = pd.read_csv(path_peaks, index_col=0)
+peaks = pd.read_csv(path_p2g)
+peaks['cre'] = peaks['cre'].str.replace('-', '_')
 
 def decompose_chrstr(peak_str):
     """
@@ -50,8 +42,7 @@ def decompose_chrstr(peak_str):
     chr_ = "_".join(chr_)
     return chr_, start, end
 
-
-def check_peak_format(peaks_df, ref_genome):
+def check_peak_format(peaks_df, gname, gdir):
     """
     Check peak format.
      (1) Check chromosome name.
@@ -60,7 +51,7 @@ def check_peak_format(peaks_df, ref_genome):
     """
 
     df = peaks_df.copy()
-
+    df = df.rename(columns={'cre': 'peak_id', 'gene': 'gene_short_name'})
     n_peaks_before = df.shape[0]
 
     # Decompose peaks and make df
@@ -71,13 +62,11 @@ def check_peak_format(peaks_df, ref_genome):
     df_decomposed["end"] = df_decomposed["end"].astype(int)
 
     # Load genome data
-    genome_data = Genome(ref_genome)
+    genome_data = Genome(gname, genomes_dir=gdir)
     all_chr_list = list(genome_data.keys())
-
 
     # DNA length check
     lengths = np.abs(df_decomposed["end"] - df_decomposed["start"])
-
 
     # Filter peaks with invalid chromosome name
     n_threshold = 5
@@ -91,8 +80,7 @@ def check_peak_format(peaks_df, ref_genome):
     n_peaks_invalid_chr = n_peaks_before - df_decomposed.chr.isin(all_chr_list).sum()
     n_peaks_after = df.shape[0]
 
-
-    #
+    # Print
     print("Peaks before filtering: ", n_peaks_before)
     print("Peaks with invalid chr_name: ", n_peaks_invalid_chr)
     print("Peaks with invalid length: ", n_invalid_length)
@@ -100,18 +88,44 @@ def check_peak_format(peaks_df, ref_genome):
 
     return df
 
-# Check if right genome
-peaks = check_peak_format(peaks, genome)
+# Format and delete peaks
+gdir = 'gdata/genomes'
+peaks = check_peak_format(peaks, gname=gname, gdir=gdir)
 
 # Instantiate TFinfo object
-tfi = ma.TFinfo(peak_data_frame=peaks,
-                ref_genome=genome)
+tfi = ma.TFinfo(
+    peak_data_frame=peaks,
+    ref_genome=gname,
+    genomes_dir=gdir,
+)
 
-# Scan motifs. !!CAUTION!! This step may take several hours if you have many peaks!
-tfi.scan(fpr=fpr,
-         motifs=None,  # If you enter None, default motifs will be loaded.
-         verbose=True)
+# Update config
+config.config.config['genomes_dir'] = gdir
 
-# Save
-tfi.to_hdf5(file_path=path_tfinfo)
+# Scan
+tfi.scan(
+    background_length=blen,
+    fpr=fpr,
+    motifs=None,  # Use default motifs
+    verbose=True,
+    n_cpus=os.cpu_count(),
+)
 
+# Do filtering
+tfi.filter_motifs_by_score(threshold=tfb_thr)
+
+# Extract filtered TF predictions
+df = tfi.scanned_filtered[["seqname", "motif_id", "score"]].copy()
+df['motif_values'] = df['motif_id'].map(tfi.dic_motif2TFs)
+df = df.explode('motif_values')
+df = df.groupby(['seqname', 'motif_values'])['score'].max().reset_index()
+df = df[['seqname', 'motif_values', 'score']].dropna()
+df = df.reset_index(drop=True).rename(columns={'seqname': 'cre', 'motif_values': 'tf'})
+df['cre'] = df['cre'].str.replace('_', '-')
+df = df.sort_values(['cre', 'score'], ascending=[True, False])
+
+# Write
+df.to_csv(path_out, index=False)
+
+print('Done')
+os._exit(0)  # Add this else it gets stuck
