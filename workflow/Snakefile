@@ -7,5 +7,6 @@ container: 'workflow/envs/gretabench.sif'
 
 include: 'rules/datasets.smk'
 include: 'rules/methods/celloracle.smk'
+include: 'rules/methods/pando.smk'
 
 # snakemake --profile config/slurm/ ...
