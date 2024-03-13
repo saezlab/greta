@@ -18,10 +18,10 @@ rule pre_pando:
     singularity:
         'workflow/envs/pando.sif'
     benchmark:
-        'benchmarks/{dataset}.{case}.pando.{p2g}.{tfb}.{mdl}.pre.txt'
+        'benchmarks/{dataset}.{case}.pando.pre.txt'
     output:
-        p='datasets/{dataset}/cases/{case}/runs/pando.{p2g}.{tfb}.{mdl}.peaks.csv',
-        d='datasets/{dataset}/cases/{case}/runs/pando.{p2g}.{tfb}.{mdl}.pre.h5mu'
+        p=temp(local('datasets/{dataset}/cases/{case}/runs/pando.peaks.csv')),
+        d='datasets/{dataset}/cases/{case}/runs/pando.pre.h5mu'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         exclude_exons='TRUE',
@@ -42,15 +42,15 @@ rule pre_pando:
 
 rule p2g_pando:
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pando.{tfb}.{mdl}.pre.h5mu',
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         h='gdata/granges/hg38_ensdb_v86.csv',
         m='gdata/granges/mm10_ensdb_v79.csv',
     singularity:
         'workflow/envs/pando.sif'
     benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.pando.{tfb}.{mdl}.pre.txt'
+        'benchmarks/{dataset}.{case}.{pre}.pando.p2g.txt'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.pando.{tfb}.{mdl}.p2g.csv'
+        'datasets/{dataset}/cases/{case}/runs/{pre}.pando.p2g.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=1e6,
@@ -67,14 +67,14 @@ rule p2g_pando:
 
 rule tfb_pando:
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.pando.{mdl}.pre.h5mu',
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.pando.{mdl}.p2g.csv'
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv'
     singularity:
         'workflow/envs/pando.sif'
     benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.pando.{mdl}.pre.txt'
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.pando.tfb.txt'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.pando.{mdl}.tfb.csv'
+        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.pando.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism']
     shell:
@@ -83,5 +83,25 @@ rule tfb_pando:
         {input.d} \
         {params.organism} \
         {input.p} \
+        {output}
+        """
+
+rule mdl_pando:
+    input:
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        t='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv'
+    singularity:
+        'workflow/envs/pando.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.pando.mdl.txt'
+    output:
+        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
+    shell:
+        """
+        Rscript workflow/scripts/methods/pando/mdl.R \
+        {input.d} \
+        {input.p} \
+        {input.t} \
         {output}
         """
