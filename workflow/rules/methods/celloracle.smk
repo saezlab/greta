@@ -4,9 +4,9 @@ rule pre_celloracle:
     singularity:
         'workflow/envs/celloracle.sif'
     benchmark:
-        'benchmarks/{dataset}.{case}.celloracle.{p2g}.{tfb}.{mdl}.pre.txt'
+        'benchmarks/{dataset}.{case}.celloracle.pre.txt'
     output:
-        'datasets/{dataset}/cases/{case}/runs/celloracle.{p2g}.{tfb}.{mdl}.pre.h5mu'
+        'datasets/{dataset}/cases/{case}/runs/celloracle.pre.h5mu'
     params:
         k=20
     shell:
@@ -30,16 +30,16 @@ rule download_genomesizes:
 
 rule p2g_celloracle:
     input:
-        data='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.{tfb}.{mdl}.pre.h5mu',
+        data='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         sizes='gdata/sizes/',
     singularity:
         'workflow/envs/celloracle.sif'
     benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.celloracle.{tfb}.{mdl}.p2g.txt'
+        'benchmarks/{dataset}.{case}.{pre}.celloracle.p2g.txt'
     output:
-        pp='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.{tfb}.{mdl}.all_peaks.csv',
-        pc='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.{tfb}.{mdl}.cicero_connections.csv',
-        pg='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.{tfb}.{mdl}.p2g.csv',
+        pp=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.peaks.csv')),
+        pc=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.conns.csv')),
+        pg='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.p2g.csv',
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         k=50,
@@ -74,14 +74,15 @@ rule download_genomes:
 
 rule tfb_celloracle:
     input:
-        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.celloracle.{mdl}.p2g.csv',
-        gdir='gdata/genomes',
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        g='gdata/genomes',
     singularity:
         'workflow/envs/celloracle.sif'
     benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.celloracle.{mdl}.tfb.txt',
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.celloracle.tfb.txt',
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.celloracle.{mdl}.tfb.csv'
+        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.celloracle.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         fpr=0.02,
@@ -90,7 +91,8 @@ rule tfb_celloracle:
     shell:
         """
         python workflow/scripts/methods/celloracle/tfb.py \
-        -p {input.p2g} \
+        -d {input.d} \
+        -p {input.p} \
         -g {params.organism} \
         -f {params.fpr} \
         -b {params.blen} \
@@ -100,15 +102,15 @@ rule tfb_celloracle:
 
 rule mdl_celloracle:
     input:
-        pre='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.pre.h5mu',
-        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.p2g.csv',
-        tfb='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.tfb.csv',
+        pre='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        tfb='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
     singularity:
         'workflow/envs/celloracle.sif'
     benchmark:
         'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.celloracle.mdl.txt',
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.grn.csv'
+        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.mdl.csv'
     params:
         a=10,
         p=0.001,
