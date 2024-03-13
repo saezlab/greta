@@ -5,11 +5,14 @@ import os
 import celloracle as co
 from celloracle import motif_analysis as ma
 from genomepy import Genome, install_genome, config
+from gimmemotifs.motif import default_motifs
+import mudata as mu
 import argparse
 
 
 # Init args
 parser = argparse.ArgumentParser()
+parser.add_argument('-d','--path_data', required=True)
 parser.add_argument('-p','--path_p2g', required=True)
 parser.add_argument('-g','--gname', required=True)
 parser.add_argument('-f','--fpr', required=True)
@@ -18,6 +21,7 @@ parser.add_argument('-t','--tfb_thr', required=True)
 parser.add_argument('-o','--path_out', required=True)
 args = vars(parser.parse_args())
 
+path_data = args['path_data']
 path_p2g = args['path_p2g']
 gname = args['gname']
 fpr = float(args['fpr'])
@@ -99,6 +103,22 @@ tfi = ma.TFinfo(
     genomes_dir=gdir,
 )
 
+# Filter motifs based on gene expression
+motifs = default_motifs()
+dic_motif2TFs = ma.tfinfo_core._get_dic_motif2TFs(
+    species='Human',
+    motifs=motifs,
+    TF_evidence_level='direct_and_indirect',
+    formatting='auto'
+)
+genes = mu.read(os.path.join(path_data, 'rna')).var.index.values.astype('U')
+m_keys = []
+for m in dic_motif2TFs:
+    tfs = np.unique(dic_motif2TFs[m]).astype('U')
+    if np.any(np.isin(tfs, genes)):
+        m_keys.append(m)
+motifs = [m for m in motifs if m.id in m_keys]
+
 # Update config
 config.config.config['genomes_dir'] = gdir
 
@@ -106,7 +126,7 @@ config.config.config['genomes_dir'] = gdir
 tfi.scan(
     background_length=blen,
     fpr=fpr,
-    motifs=None,  # Use default motifs
+    motifs=motifs,  # Use filtered motifs
     verbose=True,
     n_cpus=os.cpu_count(),
 )
@@ -118,6 +138,7 @@ tfi.filter_motifs_by_score(threshold=tfb_thr)
 df = tfi.scanned_filtered[["seqname", "motif_id", "score"]].copy()
 df['motif_values'] = df['motif_id'].map(tfi.dic_motif2TFs)
 df = df.explode('motif_values')
+df = df[df['motif_values'].isin(genes)]  # Filter TFs not in GEX
 df = df.groupby(['seqname', 'motif_values'])['score'].max().reset_index()
 df = df[['seqname', 'motif_values', 'score']].dropna()
 df = df.reset_index(drop=True).rename(columns={'seqname': 'cre', 'motif_values': 'tf'})
