@@ -30,3 +30,29 @@ rule pre_granie:
         {output}
         """
 
+rule p2g_granie:
+    input:
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        g='gdata/geneids',
+    singularity:
+        'workflow/envs/granie.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.granie.p2g.txt'
+    output:
+        t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.granie_tmp'))),
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.granie.p2g.csv'
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        ext=500000,
+        thr_fdr=0.5, # Need to change back to 0.2
+    shell:
+        """
+        Rscript workflow/scripts/methods/granie/p2g.R \
+        {input.d} \
+        {params.organism} \
+        {input.g} \
+        {output.t} \
+        {params.ext} \
+        {params.thr_fdr} \
+        {output.p}
+        """
