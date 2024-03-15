@@ -54,6 +54,7 @@ rule p2g_celloracle:
         {output.pc}
 
         python workflow/scripts/methods/celloracle/p2g.py \
+        -d {input.data} \
         -a {output.pp} \
         -c {output.pc} \
         -o {params.organism} \
