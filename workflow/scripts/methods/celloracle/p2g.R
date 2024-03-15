@@ -7,8 +7,9 @@ args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
 k <- as.numeric(args[8])
-path_all_peaks <- args[9]
-path_connections <- args[10]
+ext <- as.numeric(args[9])
+path_all_peaks <- args[10]
+path_connections <- args[11]
 
 # Read genome
 if (organism == 'hg38'){
@@ -68,8 +69,28 @@ cicero_cds <- make_cicero_cds(
     k = k
 )
 
-# Run the main function
-conns <- run_cicero(cicero_cds, genome) # Takes a few minutes to run
+# Run cicero
+print("Starting Cicero")
+print("Calculating distance_parameter value")
+distance_parameters <- estimate_distance_parameter(
+    input_cds,
+    window=ext,
+    maxit=100,
+    sample_num = 100,
+    distance_constraint = round(ext / 2),
+    distance_parameter_convergence = 1e-22,
+    genomic_coords = genome
+)
+mean_distance_parameter <- mean(unlist(distance_parameters))
+print("Running models")
+cicero_out <- generate_cicero_models(
+    input_cds,
+    distance_parameter = mean_distance_parameter,
+    window = ext,
+    genomic_coords = genome
+)
+print("Assembling connections")
+conns <- assemble_connections(cicero_out, silent=FALSE)
 
 # Save
 all_peaks <- row.names(exprs(input_cds))

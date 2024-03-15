@@ -44,12 +44,14 @@ rule p2g_celloracle:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         k=50,
         thr_coaccess=0.8,
+        ext=500000
     shell:
         """
         Rscript workflow/scripts/methods/celloracle/p2g.R \
         {input.data} \
         {params.organism} \
         {params.k} \
+        {params.ext} \
         {output.pp} \
         {output.pc}
 
