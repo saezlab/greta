@@ -1,10 +1,11 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
+
 %environment
-    # PATHS
-    export PATH=/opt/miniconda3/bin:$PATH
-    . /opt/miniconda3/etc/profile.d/conda.sh
+    export PATH=/opt/:$PATH
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
     conda activate env
 
 %post
@@ -24,25 +25,20 @@ From: ubuntu:20.04
                    libxml2-dev \
                    libcairo2-dev \
                    libxt-dev \
-                   libopenblas-dev
+                   libopenblas-dev \
+                   bedtools
 
-    # Mamba
-    mkdir -p /opt/miniconda3
-    cd /opt/miniconda3 
-    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    bash Miniconda3-latest-Linux-x86_64.sh -p /opt/miniconda3 -b -f
-    rm Miniconda3-latest-Linux-x86_64.sh
-    export PATH=/opt/miniconda3/bin:$PATH
-
-    # Install conda and mamba
-    conda update conda -y
-    . /opt/miniconda3/etc/profile.d/conda.sh
-    conda install -n base --override-channels -c conda-forge mamba 'python_abi=*=*cp*'
+    # conda
+    wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+    bash Miniforge3.sh -b -p "/opt/conda"
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate
 
     # Create env
     mamba create -y -n=env -c conda-forge -c bioconda \
     python=3.10 \
-    r-base==4.2 \
+    r-base==4.3 \
     r-futile.logger \
     r-checkmate \
     r-patchwork \
@@ -81,11 +77,16 @@ From: ubuntu:20.04
     bioconductor-annotationhub \
     bioconductor-ensembldb \
     r-devtools \
-    bioconductor-rhdf5
+    bioconductor-rhdf5 \
+    r-irkernel \
+    mudata \
+    decoupler \
+    jupyterlab \
+    r-tidyverse
 
     # Install granie
     conda activate env
-    Rscript -e "devtools::install_gitlab('grp-zaugg/GRaNIE@b5726a8a6516f297267492a6fbeb5fd7cfbd52b5', host = 'git.embl.de', subdir = 'src/GRaNIE', upgrade = 'never')"
+    Rscript -e "devtools::install_gitlab('grp-zaugg/GRaNIE@a674074cc0b2ff13b8abc3146e92347b58d54398', host = 'git.embl.de', subdir = 'src/GRaNIE', upgrade = 'never')"
 
     # Remove cache for lighter containers
     pip cache purge
