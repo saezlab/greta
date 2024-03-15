@@ -19,6 +19,20 @@ rule extract_case:
         -o '{output.mdata}'
         """
 
+rule download_geneids:
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        hg='gdata/geneids/hg38.csv',
+        mm='gdata/geneids/mm10.csv',
+        dr=directory('gdata/geneids')
+    shell:
+        """
+        Rscript workflow/scripts/datasets/download_geneids.R \
+        {output.hg} \
+        {output.mm}
+        """
+
 # NEURIPS2021
 rule download_neurips2021:
     output:
@@ -35,17 +49,27 @@ rule decompress_neurips2021:
         'datasets/neurips2021/original.h5ad'
     shell:
         'gzip -d {input}'
-        
+
 rule annotate_neurips2021:
-    resources:
-        mem_mb=48000,
-    input: 'datasets/neurips2021/original.h5ad'
-    output:
-        mdata='datasets/neurips2021/annotated.h5mu'
+    input:
+        d='datasets/neurips2021/original.h5ad',
+        g='gdata/geneids',
     singularity:
         'workflow/envs/gretabench.sif'
+    output:
+        'datasets/neurips2021/annotated.h5mu'
+    params:
+        organism='hg38',
+    resources:
+        mem_mb=48000,
     shell:
-        'python workflow/scripts/datasets/neurips2021.py -i {input} -o {output.mdata}'
+        """
+        python workflow/scripts/datasets/neurips2021.py \
+        -i {input.d} \
+        -r {params.organism} \
+        -g {input.g} \
+        -o {output}
+        """
 
 # PBMC10K
 rule download_pbmc10k:

@@ -4,15 +4,20 @@ import scanpy as sc
 import muon as mu
 from mudata import MuData
 import numpy as np
+import pandas as pd
 
 
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--input', required=True)
+parser.add_argument('-r','--organism', required=True)
+parser.add_argument('-g','--path_geneids', required=True)
 parser.add_argument('-o','--out', required=True)
 args = vars(parser.parse_args())
 
 inp = args['input']
+organism = args['organism']
+path_geneids = args['path_geneids']
 out = args['out']
 
 # Read object
@@ -52,6 +57,13 @@ barcodes = rna.obs['pseudotime_order'].dropna().index
 rna = rna[barcodes, :].copy()
 barcodes = atac.obs['pseudotime_order'].dropna().index
 atac = atac[barcodes, :].copy()
+
+# Remove genes that have no ENSEMBL id
+path_geneids = os.path.join(path_geneids, organism + '.csv')
+geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
+ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
+msk = ensmbls != ''
+rna = rna[:, msk].copy()
 
 # Basic filtering
 sc.pp.filter_cells(rna, min_genes=200)

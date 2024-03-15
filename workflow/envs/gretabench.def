@@ -48,7 +48,9 @@ From: ubuntu:20.04
     scanpy \
     leidenalg \
     harmonypy \
-    jupyterlab
+    jupyterlab \
+    r-base==4.3 \
+    bioconductor-biomart
 
     conda activate env
     pip install mofapy2
