@@ -8,23 +8,15 @@ import argparse
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--path_input', required=True)
-parser.add_argument('-g','--path_geneids', required=True)
 parser.add_argument('-o','--path_out', required=True)
 args = vars(parser.parse_args())
 
 path_input = args['path_input']
-path_geneids = args['path_geneids']
 path_out = args['path_out']
 
 # Read rna adata
 mdata = mu.read(path_input)
 rna = mdata.mod['rna'].copy()
-
-# Remove genes that have no ENSEMBL id
-geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
-ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
-msk = ensmbls != ''
-rna = rna[:, msk].copy()
 
 # Psbulk rna
 rna.obs['celltype'] = mdata.obs['celltype']
