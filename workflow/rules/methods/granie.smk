@@ -1,7 +1,7 @@
 rule download_tfbs:
     output:
-        h=directory('gdata/tfbs/TFBS_hg38_PWMScan_HOCOMOCOv11'),
-        m=directory('gdata/tfbs/TFBS_mm10_PWMScan_HOCOMOCOv10'),
+        h=directory('gdata/tfbs/hg38'),
+        m=directory('gdata/tfbs/mm10'),
     shell:
         """
         wget 'https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_PWMScan_HOCOMOCOv11.tar.gz' -O {output.h}.tar.gz
@@ -10,6 +10,9 @@ rule download_tfbs:
         tar -xvf {output.h}.tar.gz -C {output.h}
         tar -xvf {output.m}.tar.gz -C {output.m}
         rm {output.h}.tar.gz {output.m}.tar.gz
+        mv {output.h}/*/* {output.h}
+        mv {output.m}/*/* {output.m}
+        rm -r {output.h}/PWMScan_* {output.m}/PWMScan_*
         """
 
 rule pre_granie:
@@ -44,7 +47,7 @@ rule p2g_granie:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=500000,
-        thr_fdr=0.5, # Need to change back to 0.2
+        thr_fdr=0.2, # Need to change back to 0.2
     shell:
         """
         Rscript workflow/scripts/methods/granie/p2g.R \
@@ -53,6 +56,32 @@ rule p2g_granie:
         {input.g} \
         {output.t} \
         {params.ext} \
-        {params.thr_fdr} \
+        {output.p}
+        """
+
+rule tfb_granie:
+    input:
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        g='gdata/geneids',
+        t='gdata/tfbs',
+    singularity:
+        'workflow/envs/granie.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.granie.tfb.txt'
+    output:
+        t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie_tmp'))),
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+    shell:
+        """
+        Rscript workflow/scripts/methods/granie/tfb.R \
+        {input.d} \
+        {params.organism} \
+        {input.g} \
+        {output.t} \
+        {input.t} \
+        {input.p} \
         {output.p}
         """
