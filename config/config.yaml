@@ -7,7 +7,7 @@ datasets:
             blood:
                 celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
                 n_hvg: 2048
-                n_hvr: 2048
+                n_hvr: 8192
             small:
                 celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
                 n_hvg: 512
