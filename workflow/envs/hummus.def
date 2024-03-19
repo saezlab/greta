@@ -165,7 +165,6 @@ From: ubuntu:20.04
     r-biocmanager
 
     # can try r-seurat instead of seurat object to add options
-
     pip install hummuspy
 
     # Install cicero, monocle3 (and omnipath) from github
