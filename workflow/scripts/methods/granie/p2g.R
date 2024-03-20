@@ -69,7 +69,7 @@ gene.types = stats::na.omit(unique(GRN@annotation$genes$gene.type))
 overlaps.sub.df = GRaNIE:::.calculatePeakGeneOverlaps(
     GRN, allPeaks = consensusPeaks,
     peak.TADs.df,
-    neighborhoodSize = ext,
+    neighborhoodSize = round(ext / 2),
     genomeAssembly = genomeAssembly,
     gene.types = gene.types,
     overlapTypeGene = 'TSS'
