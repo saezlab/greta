@@ -94,8 +94,9 @@ tfb <- data.frame(
     cre = rownames(tfb)[sparse$i],
     motif = colnames(tfb)[sparse$j]
 )
+motif2ens <- setNames(GRN@annotation$TFs$TF.ENSEMBL, GRN@annotation$TFs$TF.ID)
 tfb <- dplyr::mutate(tfb,
-    tf = sub("\\..*", "", motif),
+    tf = gsym[motif2ens[as.character(tfb$motif)]],
     cre = stringr::str_replace_all(cre, ':', '-')
 )
 tfb <- dplyr::summarize(tfb, score = dplyr::n(), .by=c(cre, tf))
