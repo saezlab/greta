@@ -47,7 +47,6 @@ rule p2g_granie:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=500000,
-        thr_fdr=0.2, # Need to change back to 0.2
     shell:
         """
         Rscript workflow/scripts/methods/granie/p2g.R \
@@ -83,5 +82,34 @@ rule tfb_granie:
         {output.t} \
         {input.t} \
         {input.p} \
+        {output.p}
+        """
+
+rule mdl_granie:
+    input:
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        t='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+        g='gdata/geneids',
+    singularity:
+        'workflow/envs/granie.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.granie.mdl.txt'
+    output:
+        t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie_tmp'))),
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        thr_fdr=0.2,
+    shell:
+        """
+        Rscript workflow/scripts/methods/granie/mdl.R \
+        {input.d} \
+        {params.organism} \
+        {input.g} \
+        {output.t} \
+        {input.p} \
+        {input.t} \
+        {params.thr_fdr} \
         {output.p}
         """
