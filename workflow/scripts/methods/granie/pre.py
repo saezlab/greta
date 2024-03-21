@@ -19,15 +19,16 @@ mdata = mu.read(path_input)
 rna = mdata.mod['rna'].copy()
 
 # Psbulk rna
+rna.obs['batch'] = mdata.obs['batch']
 rna.obs['celltype'] = mdata.obs['celltype']
 rna = dc.get_pseudobulk(
     adata=rna,
-    sample_col='celltype',
-    groups_col=None,
+    sample_col='batch',
+    groups_col='celltype',
     layer='counts',
     mode='sum',
     min_cells=10,
-    min_counts=100,
+    min_counts=1000,
 )
 for col in rna.obs.columns:
     del rna.obs[col]
@@ -35,15 +36,16 @@ del rna.layers['psbulk_props']
 
 # Psbulk atac
 atac = mdata.mod['atac'].copy()
+atac.obs['batch'] = mdata.obs['batch']
 atac.obs['celltype'] = mdata.obs['celltype']
 atac = dc.get_pseudobulk(
     adata=atac,
-    sample_col='celltype',
-    groups_col=None,
+    sample_col='batch',
+    groups_col='celltype',
     layer='counts',
     mode='sum',
     min_cells=10,
-    min_counts=100,
+    min_counts=1000,
 )
 for col in atac.obs.columns:
     del atac.obs[col]
