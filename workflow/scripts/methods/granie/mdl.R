@@ -28,7 +28,7 @@ gsym <- setNames(gene_table$symbol, gene_table$id)
 
 # Read data
 print('Open object')
-indata <- H5Fopen(path_data)
+indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 
 # RNA
 rna_data <- as.data.frame(indata$mod$rna$X)
@@ -187,7 +187,8 @@ mdl <- dplyr::select(GRN@connections$all.filtered$`0`, TF.ENSEMBL, TF_peak.r, pe
 mdl <- dplyr::mutate(mdl, score = TF_peak.r * peak_gene.r)
 mdl <- dplyr::mutate(mdl, source=gsym[as.character(TF.ENSEMBL)], target=gsym[as.character(gene.ENSEMBL)])
 mdl <- dplyr::mutate(dplyr::rowwise(mdl), pval = mean(c(TF_peak.fdr, peak_gene.p_adj)))
-mdl <- dplyr::select(mdl, source, target, score, pval)
+mdl <- dplyr::select(dplyr::ungroup(mdl), source, target, score, pval)
+mdl <- dplyr::summarize(mdl, score = mean(score), pval=mean(pval), .by=c(source, target))
 mdl <- dplyr::arrange(mdl, desc(abs(score)))
 
 # Write
