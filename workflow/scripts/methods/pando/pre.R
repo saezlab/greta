@@ -25,7 +25,7 @@ annot <- GenomicRanges::makeGRangesFromDataFrame(annot, keep.extra.columns=TRUE)
 GenomeInfoDb::seqlevelsStyle(annot) <- 'UCSC'
 
 # Read peaks
-indata <- H5Fopen(path_data)
+indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 peaks <- indata$mod$atac$var$`_index`
 h5closeAll()
 peaks <- data.frame(seqnames=peaks)

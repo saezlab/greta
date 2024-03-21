@@ -18,7 +18,7 @@ tfb <- read.csv(path_tfb)[, c('cre', 'tf')]
 
 # Read data
 print('Open object')
-indata <- H5Fopen(path_data)
+indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # RNA
 rna_indices <- indata$mod$rna$X$indices
 rna_indptr <- indata$mod$rna$X$indptr

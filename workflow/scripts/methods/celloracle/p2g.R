@@ -19,7 +19,7 @@ if (organism == 'hg38'){
 }
 
 # Process mudata
-indata <- H5Fopen(path_data)
+indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 indices <- indata$mod$atac$layers$counts$indices
 indptr <- indata$mod$atac$layers$counts$indptr
 data <- as.numeric(indata$mod$atac$layers$counts$data)

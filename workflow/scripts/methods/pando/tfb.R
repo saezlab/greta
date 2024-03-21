@@ -22,7 +22,7 @@ if (organism == 'hg38'){
 p2g <- read.csv(path_p2g)
 
 # Read genes
-indata <- H5Fopen(path_data)
+indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 genes <- indata$mod$rna$var$`_index`
 h5closeAll()
 

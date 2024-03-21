@@ -27,7 +27,7 @@ gsym <- setNames(gene_table$symbol, gene_table$id)
 
 # Read data
 print('Open object')
-indata <- H5Fopen(path_data)
+indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 
 # RNA
 rna_data <- as.data.frame(indata$mod$rna$X)
