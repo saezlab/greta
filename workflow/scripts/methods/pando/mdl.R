@@ -15,6 +15,11 @@ path_out = args[9]
 # Read dfs
 p2g <- read.csv(path_p2g)[, c('cre', 'gene')]
 tfb <- read.csv(path_tfb)[, c('cre', 'tf')]
+if ((nrow(p2g) == 0) | (nrow(tfb) == 0)){
+    mdl <- data.frame(source=character(), target=character(), score=numeric(), pval=numeric())
+    write.csv(x = mdl, file = path_out, row.names=FALSE)
+    quit(save="no")
+}
 
 # Read data
 print('Open object')

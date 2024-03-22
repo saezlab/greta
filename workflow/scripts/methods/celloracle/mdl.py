@@ -28,6 +28,10 @@ path_out = args['path_out']
 # Process base GRN
 p2g = pd.read_csv(path_p2g)
 tfb = pd.read_csv(path_tfb)
+if (p2g.shape[0] == 0) or (tfb.shape[0] == 0):
+    grn = pd.DataFrame(columns=['source', 'target', 'score', 'pval'])
+    grn.to_csv(path_out, index=False)
+    exit()
 tfb['score'] = 1
 p2g = p2g[['cre', 'gene']]
 base_grn = pd.merge(
@@ -44,11 +48,12 @@ base_grn['peak_id'] = base_grn['peak_id'].str.replace('-', '_')
 # Init oracle object
 oracle = co.Oracle()
 oracle.adata = mu.read(path_mdata)['rna'].copy()
+oracle.adata.obsm['X_umap'] = np.zeros((oracle.adata.shape[0], 2))
 oracle.adata.layers['imputed_count'] = oracle.adata.X
 oracle.adata.obs['cluster'] = 'cluster'
 oracle.cluster_column_name = 'cluster'
 oracle.embedding_name = 'X_umap'
-oracle.pcs = oracle.adata.obsm['X_pca']
+oracle.pcs = np.zeros((oracle.adata.shape[0], 2))
 oracle.knn = True
 oracle.k_knn_imputation = True
 oracle.import_TF_data(TF_info_matrix=base_grn)

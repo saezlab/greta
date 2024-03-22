@@ -41,15 +41,19 @@ colnames(atac_data) <- indata$obs$`_index`
 atac_data[, 'peakID'] <- format_peaks(indata$mod$atac$var$`_index`)
 h5closeAll()
 
-# Read p2g results
+# Read p2g and tfb results
 p2g <- read.csv(path_p2g)
-p2g$cre <- format_peaks(p2g$cre)
-p2g$gene <- unname(gids[p2g$gene])
-
-# Read tfb results
 tfb <- read.csv(path_tfb)
+if ((nrow(p2g) == 0) | (nrow(tfb) == 0)){
+    mdl <- data.frame(source=character(), target=character(), score=numeric(), pval=numeric())
+    write.csv(x = mdl, file = path_out, row.names=FALSE)
+    dir.create(tmp_dir)
+    quit(save="no")
+}
 tfb$cre <- format_peaks(tfb$cre)
 tfb$tf <- unname(gids[tfb$tf])
+p2g$cre <- format_peaks(p2g$cre)
+p2g$gene <- unname(gids[p2g$gene])
 
 # Subset data by p2g and tfb
 p2g <- dplyr::filter(p2g, cre %in% tfb$cre)
