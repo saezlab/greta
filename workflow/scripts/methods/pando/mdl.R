@@ -20,23 +20,14 @@ tfb <- read.csv(path_tfb)[, c('cre', 'tf')]
 print('Open object')
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # RNA
-rna_indices <- indata$mod$rna$X$indices
-rna_indptr <- indata$mod$rna$X$indptr
-rna_data <- as.numeric(indata$mod$rna$X$data)
-barcodes <- indata$obs$`_index`
-genes <- indata$mod$rna$var$`_index`
-rna_X <- Matrix::sparseMatrix(i=rna_indices, p=rna_indptr, x=rna_data, index1 = FALSE)
-colnames(rna_X) <- barcodes
-row.names(rna_X) <- stringr::str_replace_all(genes, '-', '_')
+rna_X <- indata$mod$rna$X
+colnames(rna_X) <- indata$obs$`_index`
+rownames(rna_X) <- stringr::str_replace_all(indata$mod$rna$var$`_index`, '-', '_')
 
 ### ATAC
-atac_indices <- indata$mod$atac$X$indices
-atac_indptr <- indata$mod$atac$X$indptr
-atac_data <- as.numeric(indata$mod$atac$X$data)
-peaks <- indata$mod$atac$var$`_index`
-atac_X <- Matrix::sparseMatrix(i=atac_indices, p=atac_indptr, x=atac_data, index1 = FALSE)
-colnames(atac_X) <- barcodes
-row.names(atac_X) <- stringr::str_replace_all(peaks, '-', '_')
+atac_X <- indata$mod$atac$X
+colnames(atac_X) <- indata$obs$`_index`
+rownames(atac_X) <- stringr::str_replace_all(indata$mod$atac$var$`_index`, '-', '_')
 h5closeAll()
 
 # Run per feature
@@ -46,7 +37,8 @@ model_fits <- Pando::map_par(features, function(g){
     # Subset scaffold
     g_scaff_grn <- inner_join(p2g[p2g$gene == g, ], tfb, by = 'cre') %>%
         filter(tf != gene) # Remove self regulation
-    if (nrow(g_scaff_grn) == 0){
+    n_covs = nrow(g_scaff_grn)
+    if ((n_covs == 0) | ((n_covs + 2) > ncol(rna_X))){
         return()
     }
     # Update strings
@@ -56,7 +48,7 @@ model_fits <- Pando::map_par(features, function(g){
     # Extract data for given gene
     g_gex <- rna_X[c(g, unique(g_scaff_grn$tf)), , drop=FALSE]
     g_acc <- atac_X[unique(g_scaff_grn$cre), , drop=FALSE]
-    model_mat <- as.data.frame(t(as.matrix(rbind(g_gex, g_acc))))
+    model_mat <- as.data.frame(t(rbind(g_gex, g_acc)))
 
     # Generate formula
     formula <- g_scaff_grn %>%

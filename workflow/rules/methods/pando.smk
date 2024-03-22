@@ -97,6 +97,8 @@ rule mdl_pando:
         'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.pando.mdl.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
+    resources:
+        mem_mb=64000,
     shell:
         """
         Rscript workflow/scripts/methods/pando/mdl.R \
