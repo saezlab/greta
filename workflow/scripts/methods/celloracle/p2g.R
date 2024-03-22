@@ -20,16 +20,13 @@ if (organism == 'hg38'){
 
 # Process mudata
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
-indices <- indata$mod$atac$layers$counts$indices
-indptr <- indata$mod$atac$layers$counts$indptr
-data <- as.numeric(indata$mod$atac$layers$counts$data)
+data <- indata$mod$atac$X
 barcodes <- indata$mod$atac$obs$`_index`
 peaks <- indata$mod$atac$var$`_index`
 h5closeAll()
 
 # Build sparse matrix and binarize
-indata <- Matrix::sparseMatrix(i=indices, p=indptr, x=data, index1 = FALSE)
-indata@x[indata@x > 0] <- 1
+data[data > 0] <- 1
 
 # Format cell info
 cellinfo <- data.frame(row.names=barcodes, cells=barcodes)
@@ -39,12 +36,12 @@ peakinfo <- data.frame(row.names=peaks, site_name=peaks)
 peakinfo <- tidyr::separate(data = peakinfo, col = 'site_name', into = c("chr", "bp1", "bp2"), sep = "-", remove=FALSE)
 
 # Add names
-row.names(indata) <- row.names(peakinfo)
-colnames(indata) <- row.names(cellinfo)
+row.names(data) <- row.names(peakinfo)
+colnames(data) <- row.names(cellinfo)
 
 # Make CDS
 input_cds <-  suppressWarnings(
-    new_cell_data_set(indata,
+    new_cell_data_set(data,
     cell_metadata = cellinfo,
     gene_metadata = peakinfo)
 )

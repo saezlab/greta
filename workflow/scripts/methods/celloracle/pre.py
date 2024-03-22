@@ -52,7 +52,7 @@ oracle.knn_imputation(
 )
 
 # Update object with imputet counts
-mdata['rna'].X = scipy.sparse.csr_matrix(oracle.adata.layers['imputed_count']).copy()
+mdata['rna'].X = oracle.adata.layers['imputed_count']
 
 # Write
 mdata.write(path_out)
