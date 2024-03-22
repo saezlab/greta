@@ -6,6 +6,7 @@ import scanpy as sc
 import scanpy.external as sce
 import os
 import matplotlib.pyplot as plt
+from scipy.sparse import issparse
 import argparse
 
 
@@ -122,6 +123,12 @@ del atac.obs['batch']
 del atac.uns
 del atac.varm
 del atac.obsp
+
+# Desparsify
+if issparse(rna.X):
+    rna.X = rna.X.A
+if issparse(atac.X):
+    atac.X = atac.X.A
 
 # Update mdata
 mdata.mod['rna'] = rna
