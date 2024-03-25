@@ -1,0 +1,53 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+
+%environment
+    export PATH=/opt/:$PATH
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate env
+
+%post
+
+    # update apt
+    apt update -y
+
+    # basic packages (~2 min)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    apt install -y build-essential  \
+                   gcc \
+                   libstdc++6 \
+                   cmake \
+                   wget \
+                   curl \
+                   libcurl4-openssl-dev \
+                   libssl-dev \
+                   libxml2-dev \
+                   libcairo2-dev \
+                   libxt-dev \
+                   libopenblas-dev \
+                   bedtools
+
+    # conda
+    wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+    bash Miniforge3.sh -b -p "/opt/conda"
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate
+
+    # Create env
+    mamba create -y -n=env -c lingfeiwang -c conda-forge -c bioconda -c pytorch \
+    python=3.10 \
+    pip \
+    dictys \
+    pytorch \
+    torchvision \
+    torchaudio \
+    cpuonly \
+    jupyterlab \
+    mudata
+
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y
