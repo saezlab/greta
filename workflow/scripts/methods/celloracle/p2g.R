@@ -6,10 +6,9 @@ library(rhdf5)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 organism <- args[7]
-k <- as.numeric(args[8])
-ext <- as.numeric(args[9])
-path_all_peaks <- args[10]
-path_connections <- args[11]
+ext <- as.numeric(args[8])
+path_all_peaks <- args[9]
+path_connections <- args[10]
 
 # Read genome
 if (organism == 'hg38'){
@@ -24,9 +23,6 @@ data <- indata$mod$atac$X
 barcodes <- indata$mod$atac$obs$`_index`
 peaks <- indata$mod$atac$var$`_index`
 h5closeAll()
-
-# Build sparse matrix and binarize
-data[data > 0] <- 1
 
 # Format cell info
 cellinfo <- data.frame(row.names=barcodes, cells=barcodes)
@@ -48,23 +44,6 @@ input_cds <-  suppressWarnings(
 
 # Data preprocessing
 set.seed(2017)
-input_cds <- estimate_size_factors(input_cds)
-input_cds <- preprocess_cds(input_cds, method = "LSI")
-
-# Dimensional reduction with umap
-input_cds <- reduce_dimension(
-    input_cds,
-    reduction_method = 'UMAP',
-    preprocess_method = "LSI"
-)
-umap_coords <- reducedDims(input_cds)$UMAP
-
-# Build cicero cds
-cicero_cds <- make_cicero_cds(
-    input_cds,
-    reduced_coordinates = umap_coords,
-    k = k
-)
 
 # Run cicero
 print("Starting Cicero")
