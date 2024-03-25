@@ -2,8 +2,10 @@ library(tidyverse)
 library(rhdf5)
 library(Pando)
 library(doParallel)
-registerDoParallel(detectCores())
 
+nCores <- 32
+cat("N cores: ", nCores, '\n')
+registerDoParallel(nCores)
 
 # Parse args
 args <- commandArgs(trailingOnly = F)

@@ -62,6 +62,7 @@ oracle.import_TF_data(TF_info_matrix=base_grn)
 links = oracle.get_links(
     cluster_name_for_GRN_unit="cluster",
     alpha=alpha,
+    n_jobs=32,
 )
 links.filter_links(
     p=pthr,
