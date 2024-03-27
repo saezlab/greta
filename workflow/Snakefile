@@ -2,6 +2,17 @@ from snakemake.utils import min_version
 
 min_version('7.29.0')
 
+def make_combs():
+    from itertools import product
+    mthds = ['celloracle', 'pando', 'granie']
+    s = 'datasets/neurips2021/cases/blood/runs/{0}.{1}.{2}.{3}.mdl.csv'
+    combinations = product(mthds, repeat=4)
+    strings = []
+    for combo in combinations:
+        formatted_string = s.format(*combo)
+        strings.append(formatted_string)
+    return strings
+
 configfile: 'config/config.yaml'
 container: 'workflow/envs/gretabench.sif'
 
@@ -9,5 +20,10 @@ include: 'rules/datasets.smk'
 include: 'rules/methods/celloracle.smk'
 include: 'rules/methods/pando.smk'
 include: 'rules/methods/granie.smk'
+include: 'rules/methods/figr.smk'
+
+rule all:
+    input:
+        make_combs()
 
 # snakemake --profile config/slurm/ ...
