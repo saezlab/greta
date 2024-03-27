@@ -122,68 +122,25 @@ permIndex = as.character(0)
 GRN@connections$TF_peaks$`0`$main = GRaNIE:::.optimizeSpaceGRN(stats::na.omit(GRN@connections$TF_peaks$`0`$main))
 GRN@connections$TF_peaks$`1` <- GRN@connections$TF_peaks$`0`
 
-# Compute p2g corrs
-model_p2g <- function(GRN, p2g, nCores=nCores, chunksize=50000){
-    # Format p2g
-    overlaps.sub.filt.df <- dplyr::rename(
-        p2g,
-        peak.ID = cre,
-        gene.ENSEMBL = gene
-    )
-    countsPeaks.clean = GRaNIE::getCounts(GRN, type = "peaks",  permuted = FALSE, includeIDColumn = FALSE)
-    countsRNA.clean = GRaNIE::getCounts(GRN, type = "rna", permuted = FALSE, includeIDColumn = FALSE)
-    map_peaks = match(overlaps.sub.filt.df$peak.ID,  rownames(countsPeaks.clean))
-    map_rna  = match(overlaps.sub.filt.df$gene.ENSEMBL, rownames(countsRNA.clean))
-    maxRow = nrow(overlaps.sub.filt.df)
-    cat('Running p2g for', length(unique(map_peaks)), 'peaks and', length(unique(map_rna)), 'genes.')
-    
-    # Run correlation
-    res.l = GRaNIE:::.execInParallelGen(
-        nCores,
-        returnAsList = TRUE,
-        listNames = NULL,
-        iteration = 0,
-        verbose = TRUE,
-        functionName = GRaNIE:::.correlateDataWrapper,
-        chunksize = chunksize,
-        maxRow = maxRow,
-        counts1 = countsPeaks.clean,
-        counts2 = countsRNA.clean,
-        map1 = map_peaks,
-        map2 = map_rna, 
-        corMethod = 'pearson'
-    )
-    res.m  = do.call(rbind, res.l)
-    
-    # Convert to df and format
-    res.df = tibble::as_tibble(res.m)
-    res.df = dplyr::mutate(
-        res.df,
-        peak.ID = rownames(countsPeaks.clean)[map_peaks],
-        gene.ENSEMBL = rownames(countsRNA.clean)[map_rna]
-    )
-    res.df = dplyr::filter(res.df, !is.na(.data$gene.ENSEMBL))
-    res.df = dplyr::left_join(res.df, overlaps.sub.filt.df, by = c("gene.ENSEMBL", "peak.ID"), multiple = "all")
-    selectColumns = c("peak.ID", "gene.ENSEMBL", "r", "p.raw")
-    res.df = dplyr::select(res.df, tidyselect::all_of(selectColumns))
-    res.df = dplyr::mutate(
-        res.df,
-        peak.ID = as.factor(.data$peak.ID),
-        gene.ENSEMBL = as.factor(.data$gene.ENSEMBL), 
-    )
-    res.df = dplyr::rename(res.df, peak_gene.r = "r", peak_gene.p_raw = "p.raw")
-    res.df = dplyr::arrange(res.df, peak.ID)
-    return(res.df)
-}
-GRN@connections$peak_genes$`0` <- model_p2g(GRN, p2g, nCores=nCores, chunksize=50000)
+# Add p2g
+# Add peak_gene.r=0.5 and peak_gene.p_raw = 0.01 to bypass filters
+p2g <- dplyr::mutate(
+    p2g,
+    peak_gene.r=0.5,
+    peak_gene.p_raw=0.01,
+    peak.ID=cre,
+    gene.ENSEMBL=gene
+)
+p2g <- dplyr::select(p2g, peak.ID, gene.ENSEMBL, peak_gene.r, peak_gene.p_raw)
+GRN@connections$peak_genes$`0` <- p2g
 GRN@connections$peak_genes$`1` <- GRN@connections$peak_genes$`0`
 
 # Format final grn
 GRN = GRaNIE::filterGRNAndConnectGenes(
     GRN,
     TF_peak.fdr.threshold = thr_fdr,
-    peak_gene.fdr.threshold = thr_fdr,
-    peak_gene.fdr.method = "BH",
+    peak_gene.fdr.threshold = 0.9,  # Assume is done in respective p2g
+    peak_gene.fdr.method = "none",  # Assume is done in respective p2g
     gene.types = c("all"),
     allowMissingTFs = FALSE,
     allowMissingGenes = FALSE,
