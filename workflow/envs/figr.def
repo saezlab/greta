@@ -64,6 +64,8 @@ From: ubuntu:20.04
     r-ggrastr \
     r-uwot \
     r-mass \
+    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
+    bioconductor-bsgenome.mmusculus.ucsc.mm10 \
     jupyterlab \
     r-irkernel \
     mudata \
