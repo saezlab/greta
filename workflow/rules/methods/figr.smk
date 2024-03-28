@@ -41,3 +41,26 @@ rule p2g_figr:
         {params.ncres} \
         {output}
         """
+
+rule tfb_figr:
+    input:
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+    singularity:
+        'workflow/envs/figr.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.figr.tfb.txt'
+    output:
+        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        k=3  # TODO: change to 30
+    shell:
+        """
+        Rscript workflow/scripts/methods/figr/tfb.R \
+        {input.d} \
+        {params.organism} \
+        {input.p} \
+        {params.k} \
+        {output}
+        """
