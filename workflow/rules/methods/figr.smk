@@ -64,3 +64,26 @@ rule tfb_figr:
         {params.k} \
         {output}
         """
+
+rule mdl_figr:
+    input:
+        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        t='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+    singularity:
+        'workflow/envs/figr.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.figr.mdl.txt'
+    output:
+        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
+    params:
+        thr=0.75,
+    shell:
+        """
+        Rscript workflow/scripts/methods/figr/mdl.R \
+        {input.d} \
+        {input.p} \
+        {input.t} \
+        {params.thr} \
+        {output}
+        """
