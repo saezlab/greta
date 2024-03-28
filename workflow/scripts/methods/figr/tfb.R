@@ -109,6 +109,9 @@ mZtest.list <- foreach(
     # Take peaks associated with gene and its k neighbors
     # Pool and use union for motif enrichment
     DORCNNpeaks <- unique(p2g$Peak[p2g$Gene %in% c(g,rownames(dorcMat)[DORC.knn[g,]])])
+    if(length(DORCNNpeaks) <= 1){
+        return()
+    }
 
     # Z test
     mZ <- FigR::motifPeakZtest(
