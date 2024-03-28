@@ -46,7 +46,6 @@ p2g$cre <- format_peaks(p2g$cre)
 p2g$gene <- unname(gids[p2g$gene])
 
 # Subset data by p2g
-rna_data <- dplyr::filter(rna_data, ENSEMBL %in% p2g$gene)
 atac_data <- dplyr::filter(atac_data, peakID %in% p2g$cre)
                         
 # Init GRN object
