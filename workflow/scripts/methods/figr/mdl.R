@@ -75,13 +75,15 @@ mZtest.list <- foreach(
     .options.snow = opts,
     .packages = c("FigR", "dplyr","Matrix","Rmpfr")
 ) %dopar% {
-    print(g)
     mZ <- inner_join(p2g[p2g$Gene == g, ], tfb, by = 'PeakRanges') %>%
     summarize(tf_pval=mean(score), .by=c(tf)) %>%
     mutate(tf_pval = 10 ** -tf_pval)
+    if(nrow(mZ) <= 1){
+        return()
+    }
     
     corr.r <- cor(dorcMat[g,], t(as.matrix(rna_X[mZ$tf,])), method = "spearman")
-    stopifnot(all.equal(colnames(corr.r),mZ$tf))
+    stopifnot(all(colnames(corr.r) == mZ$tf))
     
     mZ$Corr <- corr.r[1,] # Correlation coefficient
     mZ$Corr.Z <- scale(mZ$Corr,center = TRUE,scale = TRUE)[,1] # Z-score among all TF correlations
