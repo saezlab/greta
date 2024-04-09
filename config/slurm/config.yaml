@@ -8,7 +8,7 @@ cluster-status: "slurm-status.py"
 max-jobs-per-second: "5"
 max-status-checks-per-second: "5"
 local-cores: 1
-latency-wait: "5"
+latency-wait: "60"
 use-conda: "False"
 use-singularity: "True"
 use-envmodules: "True"
