@@ -12,6 +12,7 @@ args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 path_p2g <- args[7]
 path_tfb = args[8]
+thr_cor = 0.05
 path_out = args[9]
 
 # Read dfs
@@ -42,20 +43,36 @@ p2g$gene = stringr::str_replace_all(p2g$gene, '-', '_')
 features <- unique(p2g$gene)
 model_fits <- Pando::map_par(features, function(g){
     # Subset scaffold
+    print(g)
     g_scaff_grn <- inner_join(p2g[p2g$gene == g, ], tfb, by = 'cre') %>%
         filter(tf != gene) # Remove self regulation
-    n_covs = nrow(g_scaff_grn)
-    if ((n_covs == 0) | ((n_covs + 2) > ncol(rna_X))){
-        return()
-    }
+
     # Update strings
     g_scaff_grn$cre = stringr::str_replace_all(g_scaff_grn$cre, '-', '_')
     g_scaff_grn$tf = stringr::str_replace_all(g_scaff_grn$tf, '-', '_')
     
     # Extract data for given gene
-    g_gex <- rna_X[c(g, unique(g_scaff_grn$tf)), , drop=FALSE]
-    g_acc <- atac_X[unique(g_scaff_grn$cre), , drop=FALSE]
-    model_mat <- as.data.frame(t(rbind(g_gex, g_acc)))
+    g_gex <- t(rna_X[c(g, unique(g_scaff_grn$tf)), , drop=FALSE])
+    g_acc <- t(atac_X[unique(g_scaff_grn$cre), , drop=FALSE])
+    
+    # Filter by min corr
+    pks <- cor(g_acc, g_gex[, g, drop=FALSE]) %>%
+        as.data.frame() %>%
+        arrange(!!as.symbol(g)) %>%
+        filter(abs(!!as.symbol(g)) > thr_cor) %>%
+        rownames()
+    gns <- cor(g_gex, g_gex[, g, drop=FALSE]) %>%
+        as.data.frame() %>%
+        arrange(!!as.symbol(g)) %>%
+        filter(abs(!!as.symbol(g)) > thr_cor) %>%
+        rownames()
+    
+    g_scaff_grn <- g_scaff_grn %>% filter(cre %in% pks, tf %in% gns)
+    n_covs = nrow(g_scaff_grn)
+    if ((n_covs == 0) | ((n_covs + 2) > ncol(rna_X))){
+        return()
+    }
+    model_mat <- as.data.frame(cbind(g_gex[, gns, drop=FALSE], g_acc[, pks, drop=FALSE]))
 
     # Generate formula
     formula <- g_scaff_grn %>%
@@ -77,6 +94,11 @@ model_fits <- Pando::map_par(features, function(g){
 
 # Format results
 gof <- map_dfr(model_fits, function(x) x$gof, .id='target')
+if (nrow(gof) == 0){
+    mdl <- data.frame(source=character(), target=character(), score=numeric(), pval=numeric())
+    write.csv(x = mdl, file = path_out, row.names=FALSE)
+    quit(save="no")
+}
 gof$target <- features[as.numeric(gof$target)]
 coefs <- map_dfr(model_fits, function(x) x$coefs, .id='target')
 coefs <- format_coefs(coefs, term=':', adjust_method='fdr')
