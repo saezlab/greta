@@ -99,6 +99,7 @@ rule mdl_pando:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
     resources:
         mem_mb=64000,
+        runtime=180,
     shell:
         """
         Rscript workflow/scripts/methods/pando/mdl.R \
