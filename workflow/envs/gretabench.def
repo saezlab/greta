@@ -2,9 +2,9 @@ Bootstrap: docker
 From: ubuntu:20.04
 
 %environment
-    # PATHS
-    export PATH=/opt/miniconda3/bin:$PATH
-    . /opt/miniconda3/etc/profile.d/conda.sh
+    export PATH=/opt/:$PATH
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
     conda activate env
 
 %post
@@ -28,17 +28,11 @@ From: ubuntu:20.04
                    bedtools
 
     # conda
-    mkdir -p /opt/miniconda3
-    cd /opt/miniconda3 
-    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    bash Miniconda3-latest-Linux-x86_64.sh -p /opt/miniconda3 -b -f
-    rm Miniconda3-latest-Linux-x86_64.sh
-    export PATH=/opt/miniconda3/bin:$PATH
-
-    # Install conda and mamba
-    conda update conda -y
-    . /opt/miniconda3/etc/profile.d/conda.sh
-    conda install -n base -c conda-forge mamba
+    wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+    bash Miniforge3.sh -b -p "/opt/conda"
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate
 
     # Create env
     mamba create -y -n=env -c conda-forge -c bioconda \
@@ -50,7 +44,9 @@ From: ubuntu:20.04
     harmonypy \
     jupyterlab \
     r-base==4.3 \
-    bioconductor-biomart
+    bioconductor-biomart \
+    macs3
 
     conda activate env
-    pip install mofapy2
+    pip install mofapy2 snapatac2==2.6.0
+
