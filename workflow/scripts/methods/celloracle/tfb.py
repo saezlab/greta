@@ -31,6 +31,10 @@ path_out = args['path_out']
 
 # Load annotated peak data.
 peaks = pd.read_csv(path_p2g)
+if peaks.shape[0] == 0:
+    tfb = pd.DataFrame(columns=['cre', 'tf', 'score'])
+    tfb.to_csv(path_out, index=False)
+    exit()
 peaks['cre'] = peaks['cre'].str.replace('-', '_')
 
 def decompose_chrstr(peak_str):

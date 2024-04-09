@@ -36,7 +36,13 @@ peak_ranges <- GenomicRanges::GRanges(
 atac_X <- SummarizedExperiment::SummarizedExperiment(assays = list(counts=atac_X), rowRanges = peak_ranges)
 
 # Read p2g
-p2g <- read.csv(path_p2g) %>%
+p2g <- read.csv(path_p2g)
+if (nrow(p2g) == 0){
+    tfb <- data.frame(cre=character(), tf=character(), score=numeric())
+    write.csv(x = tfb, file = path_out, row.names=FALSE)
+    quit(save="no")
+}
+p2g <- p2g %>%
     mutate(Peak=match(cre,  rownames(atac_X))) %>%
     rename(PeakRanges=cre, Gene=gene) %>%
     mutate(PeakRanges=sub("-", ":", PeakRanges, fixed = TRUE)) %>%

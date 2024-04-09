@@ -42,6 +42,12 @@ h5closeAll()
 
 # Read p2g results
 p2g <- read.csv(path_p2g)
+if (nrow(p2g) == 0){
+    tfb <- data.frame(cre=character(), tf=character(), score=numeric())
+    write.csv(x = tfb, file = path_out, row.names=FALSE)
+    dir.create(tmp_dir)
+    quit(save="no")
+}
 p2g$cre <- format_peaks(p2g$cre)
 p2g$gene <- unname(gids[p2g$gene])
 

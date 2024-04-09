@@ -20,6 +20,11 @@ if (organism == 'hg38'){
 
 # Read p2g
 p2g <- read.csv(path_p2g)
+if (nrow(p2g) == 0){
+    tfb <- data.frame(cre=character(), tf=character(), score=numeric())
+    write.csv(x = tfb, file = path_out, row.names=FALSE)
+    quit(save="no")
+}
 
 # Read genes
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
@@ -73,6 +78,7 @@ df <- data.frame(
 mutate(tf=motif2tf_lst[tf]) %>%
 unnest(tf) %>%
 summarize(score = max(score), .by=c(cre, tf)) %>%
+mutate(score = ifelse(score < 0, 0, score)) %>%  # Sometimes MOODs returns negative values
 arrange(cre, desc(score))
 
 # Write
