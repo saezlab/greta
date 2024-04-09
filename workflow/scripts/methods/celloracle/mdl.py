@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import muon as mu
 import celloracle as co
+import os
 import argparse
 
 
@@ -59,16 +60,20 @@ oracle.k_knn_imputation = True
 oracle.import_TF_data(TF_info_matrix=base_grn)
 
 # Model TF ~ G
+print('Modeling GRN...')
 links = oracle.get_links(
     cluster_name_for_GRN_unit="cluster",
     alpha=alpha,
     n_jobs=32,
 )
+print('Modeling Done!')
+print('Filtering links...')
 links.filter_links(
     p=pthr,
     weight="coef_abs",
     threshold_number=top_n
 )
+print('Filtering done!')
 
 # Extract grn
 grn = links.filtered_links['cluster'].dropna()[['source', 'target', 'coef_mean', 'p']]
@@ -76,3 +81,6 @@ grn = grn.rename(columns={'coef_mean': 'score', 'p': 'pval'})
 
 # Write
 grn.to_csv(path_out, index=False)
+
+print('Done')
+os._exit(0)  # Add this else it gets stuck
