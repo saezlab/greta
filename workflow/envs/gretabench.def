@@ -1,6 +1,7 @@
 Bootstrap: docker
 From: ubuntu:20.04
 
+
 %environment
     export PATH=/opt/:$PATH
     . "/opt/conda/etc/profile.d/conda.sh"
@@ -16,9 +17,11 @@ From: ubuntu:20.04
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
     apt install -y build-essential  \
                    gcc \
+                   libstdc++6 \
                    cmake \
                    wget \
                    curl \
+                   git \
                    libcurl4-openssl-dev \
                    libssl-dev \
                    libxml2-dev \
@@ -38,15 +41,29 @@ From: ubuntu:20.04
     mamba create -y -n=env -c conda-forge -c bioconda \
     python=3.10 \
     pip \
-    muon \
-    scanpy \
+    muon==0.1.5 \
+    scanpy==1.9.8 \
     leidenalg \
     harmonypy \
     jupyterlab \
     r-base==4.3 \
     bioconductor-biomart \
+    cython \
+    polars \
+    hmmlearn \
+    plotly \
+    pooch \
+    python-kaleido \
+    multiprocess \
+    pyarrow \
+    rustworkx \
+    dill \
     macs3
 
     conda activate env
-    pip install mofapy2 snapatac2==2.6.0
+    pip install mofapy2 marsilea==0.3.2 snapatac2==2.6.0
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/conda/lib
 
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y
