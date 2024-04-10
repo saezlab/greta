@@ -28,12 +28,11 @@ path_output = args['path_output']
 # Read object
 mdata = mu.read(path_input)
 
-# Process celltypes
-celltypes = celltypes.split(';')
-
-# Filter
-mdata = mdata[np.isin(mdata.obs['celltype'], celltypes)].copy()
-mdata.obs['celltype'] = mdata.obs['celltype'].cat.remove_unused_categories()
+# Filter celltypes
+if celltypes != 'all':
+    celltypes = celltypes.split(';')
+    mdata = mdata[np.isin(mdata.obs['celltype'], celltypes)].copy()
+    mdata.obs['celltype'] = mdata.obs['celltype'].cat.remove_unused_categories()
 
 # Extract
 rna = mdata.mod['rna']

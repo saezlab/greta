@@ -65,6 +65,11 @@ ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
 msk = ensmbls != ''
 rna = rna[:, msk].copy()
 
+# Remove non standard chr names
+seqnames = np.array(['chr{0}'.format(i+1) for i in range(22)] + ['chrX', 'chrY'])
+msk = np.array([p.split('-')[0] in seqnames for p in atac.var_names])
+atac = atac[:, msk].copy()
+
 # Basic filtering
 sc.pp.filter_cells(rna, min_genes=200)
 sc.pp.filter_genes(rna, min_cells=3)
