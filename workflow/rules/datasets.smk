@@ -36,19 +36,14 @@ rule download_geneids:
 # NEURIPS2021
 rule download_neurips2021:
     output:
-        'datasets/neurips2021/original.h5ad.gz'
+        temp(local('datasets/neurips2021/original.h5ad'))
     params:
         url=config['datasets']['neurips2021']['url']
     shell:
-        "wget '{params.url}' -O '{output}'"
-
-rule decompress_neurips2021:
-    input:
-        'datasets/neurips2021/original.h5ad.gz'
-    output:
-        'datasets/neurips2021/original.h5ad'
-    shell:
-        'gzip -d {input}'
+        """
+        wget '{params.url}' -O '{output}.gz'
+        gzip -d {output}.gz
+        """
 
 rule annotate_neurips2021:
     input:
