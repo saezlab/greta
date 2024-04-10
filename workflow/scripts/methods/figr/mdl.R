@@ -97,7 +97,9 @@ mZtest.list <- foreach(
     select(tf, target, score, pval)
     return(mZ)
 }
-mdl <- do.call('rbind', mZtest.list) %>% filter(abs(score) > score_thr)
+mdl <- do.call('rbind', mZtest.list) %>%
+    filter(abs(score) > score_thr) %>%
+    rename(source=tf)
 
 # Write
 write.csv(x = mdl, file = path_out, row.names=FALSE)
