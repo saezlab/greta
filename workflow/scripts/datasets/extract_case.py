@@ -32,7 +32,7 @@ mdata = mu.read(path_input)
 if celltypes != 'all':
     celltypes = celltypes.split(';')
     mdata = mdata[np.isin(mdata.obs['celltype'], celltypes)].copy()
-    mdata.obs['celltype'] = mdata.obs['celltype'].cat.remove_unused_categories()
+mdata.obs['celltype'] = mdata.obs['celltype'].cat.remove_unused_categories()
 
 # Extract
 rna = mdata.mod['rna']

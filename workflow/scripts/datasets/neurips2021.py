@@ -52,12 +52,6 @@ rna.var['gene_id'] = var['gene_id']
 rna.var_names_make_unique()
 atac.var_names_make_unique()
 
-# Remove cells witout trajectory
-barcodes = rna.obs['pseudotime_order'].dropna().index
-rna = rna[barcodes, :].copy()
-barcodes = atac.obs['pseudotime_order'].dropna().index
-atac = atac[barcodes, :].copy()
-
 # Remove genes that have no ENSEMBL id
 path_geneids = os.path.join(path_geneids, organism + '.csv')
 geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
