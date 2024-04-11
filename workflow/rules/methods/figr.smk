@@ -10,7 +10,7 @@ rule pre_figr:
     params:
         k=10,
     resources:
-        mem_mb=64000,
+        mem_mb=128000,
     shell:
         """
         cp {input} {output}
@@ -32,6 +32,8 @@ rule p2g_figr:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=500000,
         ncres=3,  # TODO: change to 10
+    resources:
+        mem_mb=128000,
     shell:
         """
         Rscript workflow/scripts/methods/figr/p2g.R \

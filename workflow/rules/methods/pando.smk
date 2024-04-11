@@ -98,7 +98,7 @@ rule mdl_pando:
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
     resources:
-        mem_mb=64000,
+        mem_mb=256000,
         runtime=180,
     shell:
         """

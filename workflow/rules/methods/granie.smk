@@ -47,6 +47,8 @@ rule p2g_granie:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=500000,
+    resources:
+        mem_mb=128000,
     shell:
         """
         Rscript workflow/scripts/methods/granie/p2g.R \
@@ -101,6 +103,8 @@ rule mdl_granie:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         thr_fdr=0.2,
+    resources:
+        mem_mb=128000,
     shell:
         """
         Rscript workflow/scripts/methods/granie/mdl.R \
