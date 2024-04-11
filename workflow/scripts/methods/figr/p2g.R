@@ -42,7 +42,7 @@ cisCorr <- FigR::runGenePeakcorr(
     ATAC.se = atac_X,
     RNAmat = rna_X,
     genome = organism,
-    nCores = 6,
+    nCores = nCores,
     p.cut = NULL,
     n_bg = 100,
     normalizeATACmat = FALSE,

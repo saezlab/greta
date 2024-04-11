@@ -6,7 +6,7 @@ library(doParallel)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 k <- as.numeric(args[7])
-nCores <- 8
+nCores <- 32
 
 # Read data
 print('Open object')
