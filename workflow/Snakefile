@@ -21,6 +21,7 @@ include: 'rules/methods/celloracle.smk'
 include: 'rules/methods/pando.smk'
 include: 'rules/methods/granie.smk'
 include: 'rules/methods/figr.smk'
+include: 'rules/methods/hummus.smk'
 
 rule all:
     input:
