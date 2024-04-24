@@ -13,13 +13,16 @@ tf_motif_file <- args[9]
 # Read MuData
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # RNA
-rna_X <- Matrix::sparseMatrix(
-  i = as.vector(indata$mod$rna$X[['indices']][] + 1),
-  p = as.vector(indata$mod$rna$X[['indptr']][]),
-  x = as.vector(indata$mod$rna$X[['data']][])
-)
+#rna_X <- Matrix::sparseMatrix(
+#  i = as.vector(indata$mod$rna$X[['indices']][] + 1),
+#  p = as.vector(indata$mod$rna$X[['indptr']][]),
+#  x = as.vector(indata$mod$rna$X[['data']][])
+#)
 
-print(rna_X)
+# RNA
+rna_X <- as.matrix(indata$mod$rna$X)
+
+print(rna_X[1:5, 1:5])
 colnames(rna_X) <- indata$obs$`_index`
 rownames(rna_X) <- stringr::str_replace_all(indata$mod$rna$var$`_index`, '-', '_')
 h5closeAll()

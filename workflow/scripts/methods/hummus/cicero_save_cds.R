@@ -11,13 +11,14 @@ path_data <- snakemake@input$atac_path
 # Read MuData
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # ATAC
-atac_X <- Matrix::sparseMatrix(
-  i = as.vector(indata$mod$atac$X[['indices']][] + 1),
-  p = as.vector(indata$mod$atac$X[['indptr']][]),
-  x = as.vector(indata$mod$atac$X[['data']][])
-)
+atac_X <- as.matrix(indata$mod$atac$X)
+#atac_X <- Matrix::sparseMatrix(
+#  i = as.vector(indata$mod$atac$X[['indices']][] + 1),
+#  p = as.vector(indata$mod$atac$X[['indptr']][]),
+#  x = as.vector(indata$mod$atac$X[['data']][])
+#)
 
-print(atac_X)
+print(atac_X[1:5, 1:5])
 colnames(atac_X) <- indata$obs$`_index`
 rownames(atac_X) <- stringr::str_replace_all(indata$mod$atac$var$`_index`, '-', '_')
 h5closeAll()

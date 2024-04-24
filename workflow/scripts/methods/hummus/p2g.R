@@ -28,22 +28,24 @@ print(annot)
 # Read peaks and genes
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # RNA
-rna_X <- Matrix::sparseMatrix(
-  i = as.vector(indata$mod$rna$X[['indices']][] + 1),
-  p = as.vector(indata$mod$rna$X[['indptr']][]),
-  x = as.vector(indata$mod$rna$X[['data']][])
-)
+rna_X <- as.matrix(indata$mod$rna$X)
+#rna_X <- Matrix::sparseMatrix(
+#  i = as.vector(indata$mod$rna$X[['indices']][] + 1),
+#  p = as.vector(indata$mod$rna$X[['indptr']][]),
+#  x = as.vector(indata$mod$rna$X[['data']][])
+#)
 
 #print(rna_X)
 colnames(rna_X) <- indata$obs$`_index`
 rownames(rna_X) <- stringr::str_replace_all(indata$mod$rna$var$`_index`, '-', '_')
 
 #ATAC
-atac_X <- Matrix::sparseMatrix(
-  i = as.vector(indata$mod$atac$X[['indices']][] + 1),
-  p = as.vector(indata$mod$atac$X[['indptr']][]),
-  x = as.vector(indata$mod$atac$X[['data']][])
-)
+atac_X <- as.matrix(indata$mod$atac$X)
+#atac_X <- Matrix::sparseMatrix(
+#  i = as.vector(indata$mod$atac$X[['indices']][] + 1),
+#  p = as.vector(indata$mod$atac$X[['indptr']][]),
+#  x = as.vector(indata$mod$atac$X[['data']][])
+#)
 
 #print(atac_X)
 colnames(atac_X) <- indata$obs$`_index`
