@@ -61,8 +61,8 @@ rule grnboost2:
     params:
         n_cores = 30
     output:
-        rna_loom = temp('datasets/{dataset}/cases/{case}/runs/{pre}.hummus.rna.loom'),
-        rna_network = temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.hummus.grnboost2.csv'))
+        rna_loom = temp('datasets/{dataset}/cases/{case}/runs/{pre}.rna.loom'),
+        rna_network = temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.grnboost2.csv'))
     shell:
         """
         #add prepare rna as loom TODO add/change to d instead of rna
@@ -105,14 +105,41 @@ rule run_atac_networks:
     script:
         "../../../workflow/scripts/methods/hummus/atac_network.py"
 
-
-rule p2g_hummus:
+rule initiate_multilayer:
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         h='gdata/granges/hg38_ensdb_v86.csv',
         m='gdata/granges/mm10_ensdb_v79.csv',
-        rna_network = local('datasets/{dataset}/cases/{case}/runs/{pre}.hummus.grnboost2.csv'),
+        rna_network = local('datasets/{dataset}/cases/{case}/runs/{pre}.grnboost2.csv'),
         atac_network = local('datasets/{dataset}/cases/{case}/runs/{pre}.atacnet.csv')
+    singularity:
+        'workflow/envs/hummus.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.hummus.p2g.txt'
+    output:
+        # multilayer_f indictaed through multiplex subfolder that won't change
+        # bipartites not given since they can be change with other p2g and tfb outputs
+        hummus_object = "datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS",
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        n_cores = 32
+    shell:
+        """
+        # add Integrate networks into multilayer object, and connect them
+        Rscript workflow/scripts/methods/hummus/initiate_multilayer.R \
+        {input.d} \
+        {params.organism} \
+        {input.h} \
+        {input.m} \
+        {input.rna_network} \
+        {input.atac_network} \
+        {output.hummus_object} \
+        """
+
+
+rule p2g_hummus:
+    input:
+        hummus_object = "datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS"
     singularity:
         'workflow/envs/hummus.sif'
     benchmark:
@@ -123,44 +150,62 @@ rule p2g_hummus:
 #        atac_network = temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.hummus.atacnet.csv')),
         # multilayer_f indictaed through multiplex subfolder that won't change
         # bipartites not given since they can be change with other p2g and tfb outputs
-        multilayer_f = directory("datasets/{dataset}/cases/{case}/runs/{pre}.hummus.multilayer/multiplex"),
+        multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.multilayer")),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=1e6,
-        n_cores = 1
+        ext=500,
+        n_cores = 32
     shell:
         """
         # add Integrate networks into multilayer object, and connect them
         Rscript workflow/scripts/methods/hummus/p2g.R \
-        {input.d} \
-        {params.organism} \
-        {input.h} \
-        {input.m} \
+        {input.hummus_object} \
         {params.ext} \
         {output.p2g} \
-        {input.rna_network} \
-        {input.atac_network} \
         {output.multilayer_f} \
         """
+
 
 rule tfb_hummus:
     input:
         #d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        m='datasets/{dataset}/cases/{case}/runs/hummus.multilayer'
+        p2g = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        hummus_object = 'datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS'
     singularity:
         'workflow/envs/hummus.sif'
     benchmark:
         'benchmarks/{dataset}.{case}.{pre}.{p2g}.hummus.tfb.txt'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.hummus.tfb.csv'
-    params:
-        organism=lambda w: config['datasets'][w.dataset]['organism']
+        tfb = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.hummus.tfb.csv',
+        multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.multilayer")),
     shell:
         """
         Rscript workflow/scripts/methods/hummus/tfb.R \
-        {input.m} \
-        {params.organism} \
-        {input.p} \ # will replace p2g bipartite ? or should it replace p2g exploration
-        {output}
+        {input.hummus_object} \
+        {input.p2g} \
+        {output.tfb} \
+        {output.multilayer_f} \
+        """
+
+rule mdl_hummus:
+    input:
+        #d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p2g = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        tfb = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+        hummus_object = 'datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS'
+    singularity:
+        'workflow/envs/hummus.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.hummus.mdl.txt'
+    output:
+        mdl = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.hummus.mdl.csv',
+        multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.multilayer")),
+    shell:
+        """
+        Rscript workflow/scripts/methods/hummus/tfb.R \
+        {input.hummus_object} \
+        {input.p2g} \
+        {input.tfb} \
+        {output.mdl}
+        {output.multilayer_f} \
         """

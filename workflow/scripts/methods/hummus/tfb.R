@@ -6,7 +6,7 @@ library(HuMMuS)
 # Parse args
 args <- commandArgs(trailingOnly = F)
 hummus_object_f <- args[6]
-extend <- as.numeric(args[7])
+p2g_f <- args[7]
 path_out <- args[8]
 multilayer_f <- args[9]
 
@@ -14,6 +14,9 @@ multilayer_f <- args[9]
 #load {pre}.hummus_object, containing formatted preprocessed data
 hummus <- readRDS(hummus_object_f)
 
+#load p2g bipartite, to be added to this hummus_object
+p2g <- read.csv2(p2g_f)
+p2g <- p2g[, c("gene", "cre", "score")]
 
 # Add bipartites from hummus method
 hummus <- bipartite_tfs2peaks(
@@ -25,14 +28,10 @@ hummus <- bipartite_tfs2peaks(
               genome = genome,
               )
 
-hummus <- bipartite_peaks2genes(
-                      hummus_object = hummus,
-                      gene_assay = "RNA",
-                      peak_assay = "peaks",
-                      store_network = FALSE,
-                      upstream = extend,
-                      downstream = extend,
-                      )
+hummus@multilayer@bipartite['atac_rna'] <- new("bipartite",
+                           "network" = p2g,
+                           "multiplex_left" = "RNA",
+                           "multiplex_right" = "peaks")
 
 
 # Save the multilayer, necessary since multixrank uses locally saved files
@@ -42,7 +41,7 @@ save_multilayer(
 
 
 # Run HuMMuS enhancers search
-enhancers <- define_enhancers(
+tfb <- define_binding_regions(
   hummus,
 #  gene_list = list("ATF2"),
   multilayer_f = multilayer_f,
@@ -50,12 +49,12 @@ enhancers <- define_enhancers(
   )
 
 #get only gene, peaks and score columns
-enhancers <- enhancers[, c("gene", "peak", "score")]
-colnames(enhancers) <- c("gene", "cre", "score")
+tfb <- tfb[, c("peak", "tf", "score")]
+colnames(tfb) <- c("cre", "tf",  "score")
 
 # Write
 write.csv(
-    x = enhancers,
+    x = tfb,
     file = path_out,
     row.names = FALSE,
     quote = FALSE)
