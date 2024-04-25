@@ -6,7 +6,7 @@ library(doParallel)
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 k <- as.numeric(args[7])
-nCores <- 32
+nCores <- 1
 
 # Read data
 print('Open object')
@@ -27,10 +27,10 @@ atac_data <- Matrix::sparseMatrix(
 colnames(atac_data) <- indata$obs$`_index`
 rownames(atac_data) <- indata$mod$atac$var$`_index`
 
-# LSI
-lsi <- indata$mod$atac$obsm$X_lsi
+# Dim reduction
+lsi <- indata$obsm$X_spectral
 colnames(lsi) <- colnames(rna_data)
-rownames(lsi) <- paste0("LSI_", 1:nrow(lsi))
+rownames(lsi) <- paste0("SPL_", 1:nrow(lsi))
 
 # Normalize ATAC data
 atac_data <- as.matrix(FigR::centerCounts(atac_data, chunkSize = 100000))

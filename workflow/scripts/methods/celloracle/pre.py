@@ -27,6 +27,7 @@ adata = mdata.mod['rna'].copy()
 adata.layers['lognorm'] = adata.X.copy()
 adata.X = adata.layers['counts'].copy()
 adata.obs['celltype'] = mdata.obs['celltype']
+adata.obsm['X_pca'] = mdata.obsm['X_spectral']
 
 # Instantiate Oracle object
 oracle = co.Oracle()
