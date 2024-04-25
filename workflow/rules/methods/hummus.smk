@@ -79,21 +79,22 @@ rule grnboost2:
         --seed 100 --sparse
         """
 
-rule save_pseudocells_cicero:
-    input:
-        atac_path = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu"
-    output:
-        cicero_cds_tsv = "datasets/{dataset}/cases/{case}/runs/{pre}.cicero_cds.tsv"
-    params:
-        number_cells_per_clusters = 50,
-    singularity:
-        "workflow/envs/hummus.sif"
-    script:
-        "../../../workflow/scripts/methods/hummus/cicero_save_cds.R"
+#rule save_pseudocells_cicero:
+#    input:
+#        atac_path = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu"
+#    output:
+#        cicero_cds_tsv = "datasets/{dataset}/cases/{case}/runs/{pre}.cicero_cds.tsv"
+#    params:
+#        number_cells_per_clusters = 50,
+#    singularity:
+#        "workflow/envs/hummus.sif"
+#    script:
+#        "../../../workflow/scripts/methods/hummus/cicero_save_cds.R"
 
 rule run_atac_networks:
     input:
-        cicero_cds = "datasets/{dataset}/cases/{case}/runs/{pre}.cicero_cds.tsv",
+#        cicero_cds = "datasets/{dataset}/cases/{case}/runs/{pre}.cicero_cds.tsv",
+        mudata = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu"
     output:
         atacnet_network = "datasets/{dataset}/cases/{case}/runs/{pre}.atacnet.csv"
     params:
@@ -153,14 +154,16 @@ rule p2g_hummus:
         multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.multilayer")),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=500,
+        ext=900000,
         n_cores = 32
     shell:
         """
         # add Integrate networks into multilayer object, and connect them
         Rscript workflow/scripts/methods/hummus/p2g.R \
         {input.hummus_object} \
+        {params.organism} \
         {params.ext} \
+        {params.n_cores} \
         {output.p2g} \
         {output.multilayer_f} \
         """
@@ -178,11 +181,16 @@ rule tfb_hummus:
     output:
         tfb = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.hummus.tfb.csv',
         multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.multilayer")),
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        n_cores = 32
     shell:
         """
         Rscript workflow/scripts/methods/hummus/tfb.R \
         {input.hummus_object} \
         {input.p2g} \
+        {params.organism} \
+        {params.n_cores} \
         {output.tfb} \
         {output.multilayer_f} \
         """
@@ -200,12 +208,15 @@ rule mdl_hummus:
     output:
         mdl = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.hummus.mdl.csv',
         multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.multilayer")),
+    params:
+        n_cores = 32
     shell:
         """
-        Rscript workflow/scripts/methods/hummus/tfb.R \
+        Rscript workflow/scripts/methods/hummus/mdl.R \
         {input.hummus_object} \
         {input.p2g} \
         {input.tfb} \
-        {output.mdl}
+        {params.n_cores} \
+        {output.mdl} \
         {output.multilayer_f} \
         """

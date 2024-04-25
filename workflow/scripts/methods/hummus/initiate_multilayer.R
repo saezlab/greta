@@ -17,11 +17,14 @@ hummus_object_f <- args[12]
 if (organism == 'hg38'){
     genome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
     annot <- read.csv(granges_hg)
+    genome_annot = get_genome_annotations(
+        ensdb_annotations = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86)
 } else if (organism == 'mm10'){
     annot <- read.csv(granges_mm)
     genome <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+    genome_annot = get_genome_annotations(
+        ensdb_annotations = EnsDb.Mmusculus.v79::EnsDb.Mmusculus.v79)
 }
-print(annot)
 
 # Read peaks and genes
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
@@ -47,10 +50,10 @@ atac_X <- as.matrix(indata$mod$atac$X)
 
 #print(atac_X)
 colnames(atac_X) <- indata$obs$`_index`
-rownames(atac_X) <- stringr::str_replace_all(indata$mod$atac$var$`_index`, '-', '_')
+rownames(atac_X) <- stringr::str_replace_all(indata$mod$atac$var$`_index`, '-', '-')
 
 
-print(Matrix::t(rna_X[1:5, 1:5]))
+print(Matrix::t(atac_X[1:5, 1:5]))
 # Create HuMMuS object
 h5closeAll()
 
@@ -60,7 +63,7 @@ seurat_object <- SeuratObject::CreateSeuratObject(rna_X)
 rm(rna_X)
 seurat_object[['peaks']] <- Signac::CreateChromatinAssay(
   counts = atac_X,
-  sep = c("_", "_"))
+  sep = c("-", "-"))
 rm(atac_X)
 hummus = Initiate_Hummus_Object(seurat_object)
 rm(seurat_object)
@@ -90,6 +93,9 @@ hummus <- add_network(
 
 
 atac_network <- read.csv2(atac_network_path, sep = "\t")
+#atac_network[,'peak1'] <- stringr::str_replace_all(atac_network[,'peak1'], '-', '_')
+#atac_network[,'peak2'] <- stringr::str_replace_all(atac_network[,'peak2'], '-', '_')
+
 print(head(atac_network))
 hummus <- add_network(
     hummus,

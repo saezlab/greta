@@ -164,11 +164,10 @@ From: ubuntu:20.04
     r-yaml \
     r-base=4.3 \
     bioconductor-dirichletmultinomial \
-    r-biocmanager
-
+    r-biocmanager 
     # can try r-seurat instead of seurat object to add options
 
-    pip install hummuspy atacnet
+    pip install hummuspy atacnet muon
 
     # Install cicero, monocle3 (and omnipath) from github
     Rscript -e "devtools::install_github('cole-trapnell-lab/cicero-release', ref = 'monocle3', upgrade = 'never')"

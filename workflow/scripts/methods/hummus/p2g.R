@@ -6,14 +6,25 @@ library(HuMMuS)
 # Parse args
 args <- commandArgs(trailingOnly = F)
 hummus_object_f <- args[6]
-extend <- as.numeric(args[7])
-path_out <- args[8]
-multilayer_f <- args[9]
+organism <- args[7]
+extend <- as.numeric(args[8])
+n_cores <- args[9]
+path_out <- args[10]
+multilayer_f <- args[11]
+print(extend)
+print(multilayer_f)
+
+# Set genome
+if (organism == 'hg38'){
+    genome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+} else if (organism == 'mm10'){
+    genome <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
+}
 
 
 #load {pre}.hummus_object, containing formatted preprocessed data
 hummus <- readRDS(hummus_object_f)
-
+print(hummus)
 
 # Add bipartites from hummus method
 hummus <- bipartite_tfs2peaks(
@@ -25,16 +36,18 @@ hummus <- bipartite_tfs2peaks(
               genome = genome,
               )
 
+
+hummus@assays$peaks
 hummus <- bipartite_peaks2genes(
                       hummus_object = hummus,
                       gene_assay = "RNA",
                       peak_assay = "peaks",
                       store_network = FALSE,
                       upstream = extend,
-                      downstream = extend,
+                      downstream = extend
                       )
 
-
+intersect(unique(hummus@multilayer@multiplex$peaks@networks$AtacNet$peak2), unique(hummus@multilayer@bipartites$atac_rna@network$peak))
 # Save the multilayer, necessary since multixrank uses locally saved files
 save_multilayer(
   hummus,
@@ -46,7 +59,7 @@ enhancers <- define_enhancers(
   hummus,
 #  gene_list = list("ATF2"),
   multilayer_f = multilayer_f,
-  njobs = 1
+  njobs = n_cores
   )
 
 #get only gene, peaks and score columns

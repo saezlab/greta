@@ -3,7 +3,7 @@ import pandas as pd
 import anndata as ad
 import scanpy as sc
 import atacnet as an
-
+import mudata as mu
 
 # Parameters
 distance_threshold = snakemake.params['distance_threshold']
@@ -23,7 +23,10 @@ distance_threshold = snakemake.params['distance_threshold']
  #                              k = snakemake.params["number_cells_per_clusters"])
 
 
-atac = ad.read_csv(snakemake.input["cicero_cds"], delimiter=' ').transpose()
+
+mudata = mu.read_h5mu(snakemake.input["mudata"])
+atac = mudata["atac"].copy()
+del mudata
 print(atac)
 # Add region infos
 an.add_region_infos(atac, sep=('-', '-'))
@@ -37,7 +40,7 @@ an.compute_atac_network(
     distance_constraint=distance_threshold/2,
     n_samples=100,
     n_samples_maxtry=500,
-    max_alpha_iteration=300,
+    max_alpha_iteration=100,
 )
 
 # Save results
