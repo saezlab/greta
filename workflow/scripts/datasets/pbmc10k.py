@@ -1,198 +1,176 @@
 import scanpy as sc
-import muon as mu
-from muon import atac as ac
-import argparse
+import pandas as pd
+import numpy as np
 import os
+import snapatac2 as snap
+from snapatac2.datasets import _datasets, datasets
+from pathlib import Path
+import argparse
 
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-i','--input', required=True)
-parser.add_argument('-p','--plot', required=True)
-parser.add_argument('-g','--use_gpu', required=True, action='store_true')
-parser.add_argument('-o','--output', required=True)
+parser.add_argument('-r','--path_rna', required=True)
+parser.add_argument('-g','--path_geneids', required=True)
+parser.add_argument('-o','--organism', required=True)
+parser.add_argument('-t','--path_tmp', required=True)
+parser.add_argument('-f','--path_frags', required=True)
 args = vars(parser.parse_args())
 
-inp = args['input']
-plot = args['plot']
-use_gpu = args['use_gpu']
-if use_gpu == 'True':
-    use_gpu = True
-else:
-    use_gpu = False
-out = args['output']
+# Get args
+path_rna = args['path_rna']
+path_geneids = args['path_geneids']
+organism = args['organism']
+path_tmp = args['path_tmp']
+path_frags = args['path_frags']
 
-# Read and create mdata object
-mdata = mu.read_10x_h5(os.path.join(inp, "filtered_feature_bc_matrix.h5"))
-mdata.var_names_make_unique()
+n_jobs=8
 
-# Fix muon #65 bug
-mdata.mod['atac'].uns['files'] = dict(mdata.mod['atac'].uns['files'])
-mdata.mod['atac'].uns['atac'] = dict(mdata.mod['atac'].uns['atac'])
+# Change default cache dir
+if not os.path.exists(path_tmp):
+    os.mkdir(path_tmp)
+_datasets = datasets()
+_datasets.path = Path(path_tmp)
 
-# Extract RNA
-rna = mdata.mod['rna']
+# Read raw rna
+rna = sc.read_10x_h5(path_rna)
 
-## QC
-rna.var['mt'] = rna.var_names.str.startswith('MT-')
-sc.pp.calculate_qc_metrics(rna, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
-mu.pp.filter_var(rna, 'n_cells_by_counts', lambda x: x >= 3)
-mu.pp.filter_obs(rna, 'n_genes_by_counts', lambda x: (x >= 200) & (x < 5000))
-mu.pp.filter_obs(rna, 'total_counts', lambda x: x < 15000)
-mu.pp.filter_obs(rna, 'pct_counts_mt', lambda x: x < 20)
+# Filter faulty gene symbols
+path_geneids = os.path.join(path_geneids, organism + '.csv')
+geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
+ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
+msk = ensmbls != ''
+rna = rna[:, msk].copy()
 
-## Normalize
-rna.layers["counts"] = rna.X
-sc.pp.normalize_total(rna, target_sum=1e4)
+# Basic QC
+sc.pp.filter_cells(rna, min_genes=100)
+sc.pp.filter_genes(rna, min_cells=3)
+
+# Remove duplicated genes based on num of cells
+to_remove = []
+for dup in rna.var.index[rna.var.index.duplicated()]:
+    tmp = rna.var.loc[dup]
+    max_idx = tmp.set_index('gene_ids')['n_cells'].idxmax()
+    to_remove.extend(tmp['gene_ids'][tmp['gene_ids'] != max_idx].values)
+rna = rna[:, ~rna.var['gene_ids'].isin(to_remove)].copy()
+
+# General QC
+rna.var["mt"] = rna.var_names.str.startswith("MT-")
+sc.pp.calculate_qc_metrics(
+    rna, qc_vars=["mt"], inplace=True, log1p=False
+)
+rna = rna[(rna.obs['n_genes_by_counts'] < 5000) & (rna.obs['total_counts'] < 20000) & (rna.obs['pct_counts_mt'] < 25), :].copy()
+
+# Remove doublets
+sc.external.pp.scrublet(rna)
+rna = rna[rna.obs['doublet_score'] < 0.1].copy()
+
+# Normalize
+rna.layers["counts"] = rna.X.copy()
+sc.pp.normalize_total(rna, target_sum=10000)
 sc.pp.log1p(rna)
 
-## HVG
-sc.pp.highly_variable_genes(rna, min_mean=0.02, max_mean=4, min_disp=0.5)
+# Dim reduction
+sc.pp.highly_variable_genes(rna, n_top_genes=2048)
+sc.tl.pca(rna)
+sc.pp.neighbors(rna)
+sc.tl.leiden(rna)
+sc.tl.umap(rna)
 
-## PCA
-rna.raw = rna
-sc.pp.scale(rna, max_value=10)
-sc.tl.pca(rna, svd_solver='arpack')
+# Delete potential erythroblasts and empty genes
+rna = rna[rna.obs['leiden'] != '13'].copy()
+sc.pp.filter_genes(rna, min_cells=3)
 
-## UMAP
-sc.pp.neighbors(rna, n_neighbors=10, n_pcs=20)
-sc.tl.leiden(rna, resolution=.5)
-sc.tl.umap(rna, spread=1., min_dist=.5, random_state=11)
-
-## Remove noisy clusters
-mu.pp.filter_obs(rna, "leiden", lambda x: ~x.isin(["9", "15", "12", "16"]))
-
-## Annotate
-new_cluster_names = {
-    "0": "CD4+ memory T",
-    "1": "intermediate mono",
-    "2": "CD4+ naïve T",
-    "3": "CD8+ naïve T",
-    "4": "CD14 mono",
-    "5": "CD8+ activated T",
-    "6": "memory B",
-    "7": "NK",
-    "8": "CD16 mono",
-    "10": "naïve B",
-    "11": "mDC",
-    "13": "MAIT",
-    "14": "pDC"
+# Annotate
+annot = {
+    '0': 'mono_CD14',
+    '1': 'tnaive_CD8',
+    '2': 'tnaive_CD4',
+    '3': 'tcm_CD4',
+    '4': 'tem_CD8',
+    '5': 'mono_CD14',
+    '6': 'bnaive',
+    '7': 'nk',
+    '8': 'mono_CD16',
+    '9': 'bmemory',
+    '10': 'cdc',
+    '11': 'treg',
+    '12': 'pdc',
 }
-rna.obs['celltype'] = rna.obs.leiden.astype("str").values
-rna.obs.celltype = rna.obs.celltype.astype("category")
-rna.obs.celltype = rna.obs.celltype.cat.rename_categories(new_cluster_names)
-rna.obs.celltype.cat.reorder_categories([
-    'CD4+ naïve T', 'CD4+ memory T', 'MAIT',
-    'CD8+ naïve T', 'CD8+ activated T', 'NK',
-    'naïve B', 'memory B',
-    'CD14 mono', 'intermediate mono', 'CD16 mono',
-    'mDC', 'pDC'], inplace=True)
 
-# Extract ATAC
-atac = mdata.mod['atac']
+rna.obs['celltype'] = [annot[l] for l in rna.obs['leiden']]
 
-## QC
-sc.pp.calculate_qc_metrics(atac, percent_top=None, log1p=False, inplace=True)
-mu.pp.filter_var(atac, 'n_cells_by_counts', lambda x: x >= 10)
-mu.pp.filter_obs(atac, 'n_genes_by_counts', lambda x: (x >= 2000) & (x <= 15000))
-mu.pp.filter_obs(atac, 'total_counts', lambda x: (x >= 4000) & (x <= 40000))
+# Read fragment file
+print('Reading fragments')
+atac = snap.pp.import_data(
+    path_frags,
+    chrom_sizes=snap.genome.hg38,
+    file=None,
+    tempdir=path_tmp,
+    sorted_by_barcode=False,
+)
 
-## Normalize
-atac.layers["counts"] = atac.X
-ac.pp.tfidf(atac, scale_factor=1e4)
-sc.pp.normalize_per_cell(atac, counts_per_cell_after=1e4)
+# Remove by RNA intersect
+atac = atac[atac.obs.index.intersection(rna.obs_names), :].copy()
+
+# Basic QC
+snap.metrics.tsse(atac, snap.genome.hg38)
+snap.pp.filter_cells(atac, min_counts=5000, min_tsse=10, max_counts=100000)
+
+# Generation tile matrix
+snap.pp.add_tile_matrix(atac, n_jobs=n_jobs)
+snap.pp.select_features(atac, n_features=250000)
+
+# Filter by doublet score
+snap.pp.scrublet(
+    atac,
+    n_jobs=n_jobs
+)
+snap.pp.filter_doublets(atac)
+
+# Call peaks
+atac.obs['celltype'] = rna.obs['celltype'].copy()
+snap.tl.macs3(atac, groupby='celltype', n_jobs=n_jobs, tempdir=path_tmp)
+peaks = snap.tl.merge_peaks(atac.uns['macs3'], snap.genome.hg38)
+atac = snap.pp.make_peak_matrix(atac, use_rep=peaks['Peaks'])
+sc.pp.filter_cells(atac, min_genes=100)
+sc.pp.filter_genes(atac, min_cells=3)
+
+# Compute dim reduction
+snap.tl.spectral(atac, features=None)
+snap.tl.umap(atac, random_state=0)
+
+# Remove by final intersect
+inter = rna.obs_names.intersection(atac.obs_names)
+rna = rna[inter, :].copy()
+atac = atac[inter, :].copy()
+
+# Final QC
+sc.pp.filter_genes(atac, min_cells=3)
+sc.pp.filter_cells(atac, min_genes=100)
+sc.pp.filter_genes(rna, min_cells=3)
+sc.pp.filter_cells(rna, min_genes=100)
+
+# Generate shared emmbeding
+atac.obs['X_joint'] = snap.tl.multi_spectral([rna, atac], features=None)[1]
+snap.tl.umap(atac, use_rep='X_joint')
+
+# Clean objects
+rna.obs = rna.obs[['celltype']].copy()
+del rna.var
+del rna.uns
+del rna.varm
+del rna.obsp
+
+# Renormalize
+rna.X = rna.layers['counts'].copy()
+sc.pp.normalize_total(rna, target_sum=10000)
+sc.pp.log1p(rna)
+del rna.uns
+atac.layers['counts'].copy()
+sc.pp.normalize_total(atac, target_sum=10000)
 sc.pp.log1p(atac)
+del atac.uns
 
-## HVP
-sc.pp.highly_variable_genes(atac, min_mean=0.05, max_mean=1.5, min_disp=.5)
-
-## LSI
-atac.raw = atac
-ac.tl.lsi(atac)
-atac.obsm['X_lsi'] = atac.obsm['X_lsi'][:,1:]
-atac.varm["LSI"] = atac.varm["LSI"][:,1:]
-atac.uns["lsi"]["stdev"] = atac.uns["lsi"]["stdev"][1:]
-
-## UMAP
-sc.pp.neighbors(atac, use_rep="X_lsi", n_neighbors=10, n_pcs=30)
-sc.tl.leiden(atac, resolution=.5)
-sc.tl.umap(atac, spread=1.5, min_dist=.5, random_state=20)
-
-## Remove noisy clusters
-mu.pp.filter_obs(atac, "leiden", lambda x: ~x.isin(["13", "14", "15"]))
-
-## Annotate
-new_cluster_names = {
-    "0": "intermediate mono",
-    "1": "CD4+ memory T",
-    "2": "CD8+ naïve T",
-    "3": "CD4+ naïve T",
-    "4": "CD14 mono",
-    "5": "CD8+ activated T",
-    "6": "NK",
-    "7": "memory B",
-    "8": "CD16 mono",
-    "9": "naïve B",
-    "10": "mDC",
-    "11": "MAIT",
-    "12": "pDC",
-}
-
-atac.obs['celltype'] = atac.obs.leiden.astype("str").values
-atac.obs.celltype = atac.obs.celltype.astype("category").cat.rename_categories(new_cluster_names)
-atac.obs.celltype.cat.reorder_categories([
-    'CD4+ naïve T', 'CD4+ memory T', 'MAIT',
-    'CD8+ naïve T', 'CD8+ activated T', 'NK',
-    'naïve B', 'memory B',
-    'CD14 mono', 'intermediate mono', 'CD16 mono',
-    'mDC', 'pDC'], inplace=True)
-
-# Integration
-
-## Intersect
-mu.pp.intersect_obs(mdata)
-mdata.update()
-
-## MOFA
-mu.tl.mofa(mdata, verbose=True)
-
-## UMAP
-sc.pp.neighbors(mdata, use_rep="X_mofa")
-sc.tl.leiden(mdata, key_added='leiden_joint', resolution=0.5)
-sc.tl.umap(mdata, min_dist=.2, spread=1., random_state=10)
-
-## Annotate
-new_cluster_names = {
-    "0": "CD8+ naïve T",
-    "1": "CD4+ naïve T",
-    "2": "CD14 mono",
-    "3": "CD4+ memory T",
-    "4": "intermediate mono",
-    "5": "CD4+ memory T",
-    "6": "CD14 mono",
-    "7": "CD8+ activated T",
-    "8": "NK", 
-    "9": "memory B",
-    "10": "CD16 mono",
-    "11": "naïve B",
-    "12": "CD8+ activated T",
-    "13": "mDC",
-    "14": "MAIT",
-    "15": "pDC"
-}
-mdata.obs['celltype'] = mdata.obs.leiden_joint.astype("str")
-mdata.obs.celltype = mdata.obs.celltype.map(new_cluster_names).astype("category")
-mdata.obs.celltype.cat.reorder_categories([
-    'CD4+ naïve T', 'CD4+ memory T', 'MAIT',
-    'CD8+ naïve T', 'CD8+ activated T', 'NK',
-    'naïve B', 'memory B',
-    'CD14 mono', 'intermediate mono', 'CD16 mono',
-    'mDC', 'pDC'], inplace=True)
-
-## Figure
-fig = mu.pl.umap(mdata, color="celltype", legend_loc="on data", frameon=False, return_fig=True, show=False)
-fig.set_facecolor('white')
-fig.savefig(plot)
-
-## Write
-mdata.write(out)
+atac.write('datasets/pbmc10k/atac.h5ad')
+rna.write('datasets/pbmc10k/rna.h5ad')
