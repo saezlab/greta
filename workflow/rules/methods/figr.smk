@@ -34,6 +34,7 @@ rule p2g_figr:
         ncres=3,  # TODO: change to 10
     resources:
         mem_mb=128000,
+        runtime=360,
     shell:
         """
         Rscript workflow/scripts/methods/figr/p2g.R \
@@ -57,6 +58,8 @@ rule tfb_figr:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         k=3  # TODO: change to 30
+    resources:
+        mem_mb=128000,
     shell:
         """
         Rscript workflow/scripts/methods/figr/tfb.R \
@@ -80,6 +83,8 @@ rule mdl_figr:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
     params:
         thr=0.75,
+    resources:
+        mem_mb=256000,
     shell:
         """
         Rscript workflow/scripts/methods/figr/mdl.R \

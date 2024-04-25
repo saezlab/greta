@@ -10,7 +10,7 @@ path_p2g <- args[7]
 path_tfb <- args[8]
 score_thr <- as.numeric(args[9])
 path_out <- args[10]
-nCores <- 1
+nCores <- 32
 
 # Read data
 print('Open object')
