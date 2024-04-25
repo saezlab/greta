@@ -75,6 +75,8 @@ rule tfb_granie:
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
+    resources:
+        mem_mb=128000,
     shell:
         """
         Rscript workflow/scripts/methods/granie/tfb.R \
