@@ -8,6 +8,10 @@ datasets:
                 celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
                 n_hvg: 2048
                 n_hvr: 8192
+            all:
+                celltypes: 'all'
+                n_hvg: 2048
+                n_hvr: 16384
             small:
                 celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
                 n_hvg: 512
@@ -19,3 +23,15 @@ datasets:
             peak_annot: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_peak_annotation.tsv'
             atac_frags: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz'
             atac_index: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz.tbi'
+    reprofibro:
+        organism: 'hg38'
+        url:
+            tar: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE242419&format=file'
+            barcodes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE242419&format=file&file=GSE242419%5Fmultiome%2EATAC%2ERNA%2Ebarcode%2Emap%2Etsv%2Egz'
+            genes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE242419&format=file&file=GSE242419%5Fmultiome%5Fgenes%2Etsv%2Egz'
+            annot: 'https://zenodo.org/records/8313962/files/multiome.zip?download=1'
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 2048
+                n_hvr: 16384
