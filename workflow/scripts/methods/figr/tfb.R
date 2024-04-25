@@ -10,7 +10,7 @@ genome <- args[7]
 path_p2g <- args[8]
 dorcK <- as.numeric(args[9])
 path_out <- args[10]
-nCores <- 1
+nCores <- 32
 n_bg <- 50
 
 # Read data
@@ -131,7 +131,7 @@ mZtest.list <- foreach(
     colnames(mZ)[2] <- "Enrichment.Z"
     mZ$Enrichment.P <- 2*pnorm(abs(mZ$Enrichment.Z),lower.tail = FALSE) # One-tailed
     mZ <- cbind("DORC"=g,mZ)
-    #mZ <- mZ %>% filter(Enrichment.P < 0.05)
+    mZ <- mZ %>% filter(Enrichment.P < 0.1)
     return(mZ)
 }
 TFenrich.d <- do.call('rbind',mZtest.list)
@@ -143,7 +143,7 @@ tfb <- left_join(
     rename(TFenrich.d, Gene=DORC),
     p2g %>% select(Gene, PeakRanges),
     relationship = "many-to-many",
-    by='Gene') %>% 
+    by='Gene') %>%
     summarize(Enrichment.P=mean(Enrichment.P), .by=c(Motif, PeakRanges)) %>% 
     mutate(score=-log10(Enrichment.P)) %>%
     rename(tf=Motif, cre=PeakRanges) %>%

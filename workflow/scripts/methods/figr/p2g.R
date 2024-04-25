@@ -51,7 +51,7 @@ cisCorr <- FigR::runGenePeakcorr(
 
 # Process
 p2g <- cisCorr %>%
-    filter(pvalZ <= 0.05) %>%
+    filter(pvalZ <= 0.1) %>%
     mutate(cre=stringr::str_replace(PeakRanges, ':', '-')) %>%
     rename(gene=Gene, score=rObs, pval=pvalZ) %>%
     select(cre, gene, score, pval)
