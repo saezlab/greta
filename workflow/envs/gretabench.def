@@ -58,7 +58,8 @@ From: ubuntu:20.04
     pyarrow \
     rustworkx \
     dill \
-    macs3
+    macs3 \
+    scrublet
 
     conda activate env
     pip install mofapy2 marsilea==0.3.2 snapatac2==2.6.0
