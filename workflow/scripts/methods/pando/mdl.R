@@ -3,7 +3,7 @@ library(rhdf5)
 library(Pando)
 library(doParallel)
 
-nCores <- 32
+nCores <- 16
 cat("N cores: ", nCores, '\n')
 registerDoParallel(nCores)
 
@@ -13,6 +13,7 @@ path_data <- args[6]
 path_p2g <- args[7]
 path_tfb = args[8]
 thr_cor = 0.05
+thr_rsq = 0.05
 path_out = args[9]
 
 # Read dfs
@@ -118,6 +119,10 @@ network_obj <- new(
 # Extract GRN
 grn <- find_modules(
     network_obj,
+    rsq_thresh = thr_rsq,
+    p_thresh = 0.1,
+    nvar_thresh = 2,
+    min_genes_per_module = 3
 )@modules@meta %>%
 select(tf, target, estimate, padj) %>%
 rename(source=tf, score=estimate, pval=padj) %>%
