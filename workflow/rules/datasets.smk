@@ -66,52 +66,6 @@ rule annotate_neurips2021:
         -o {output}
         """
 
-# PBMC10K
-rule download_pbmc10k:
-    output:
-        matrix=temp(local('datasets/pbmc10k/filtered_feature_bc_matrix.h5')),
-        peak_annot=temp(local('datasets/pbmc10k/atac_peak_annotation.tsv')),
-        atac_frags=temp(local('datasets/pbmc10k/atac_fragments.tsv.gz')),
-        atac_index=temp(local('datasets/pbmc10k/atac_fragments.tsv.gz.tbi')),
-    params:
-        matrix=config['datasets']['pbmc10k']['url']['matrix'],
-        peak_annot=config['datasets']['pbmc10k']['url']['peak_annot'],
-        atac_frags=config['datasets']['pbmc10k']['url']['atac_frags'],
-        atac_index=config['datasets']['pbmc10k']['url']['atac_index']
-    shell:
-        """
-        wget '{params.matrix}' -O {output.matrix}
-        wget '{params.peak_annot}' -O {output.peak_annot}
-        wget '{params.atac_frags}' -O {output.atac_frags}
-        wget '{params.atac_index}' -O {output.atac_index}
-        """
-
-rule annotate_pbmc10k:
-    input:
-        matrix='datasets/pbmc10k/filtered_feature_bc_matrix.h5',
-        peak_annot='datasets/pbmc10k/atac_peak_annotation.tsv',
-        atac_frags='datasets/pbmc10k/atac_fragments.tsv.gz',
-        atac_index='datasets/pbmc10k/atac_fragments.tsv.gz.tbi',
-        g='gdata/geneids',
-    singularity:
-        'workflow/envs/gretabench.sif'
-    output:
-        a='datasets/pbmc10k/atac.h5ad',
-        r='datasets/pbmc10k/rna.h5ad',
-        tmp=temp(directory(local('datasets/pbmc10k/tmp'))),
-    params:
-        organism=config['datasets']['pbmc10k']['organism'],
-    resources:
-        mem_mb=512000,
-    shell:
-        """
-        python workflow/scripts/datasets/pbmc10k.py \
-        -r {input.matrix} \
-        -g {input.g} \
-        -o {params.organism} \
-        -t {output.tmp} \
-        -f {input.atac_frags}
-        """
 
 # reprofibro
 rule download_reprofibro:
@@ -201,4 +155,74 @@ rule annotate_reprofibro:
         -j {input.path_geneids} \
         -k {params.organism} \
         -l {output}
+        """
+
+
+# PBMC10K
+rule download_pbmc10k:
+    output:
+        atac_frags='datasets/pbmc10k/smpl.frags.tsv.gz',
+    params:
+        matrix=config['datasets']['pbmc10k']['url']['matrix'],
+        atac_frags=config['datasets']['pbmc10k']['url']['atac_frags'],
+    shell:
+        """
+        wget '{params.atac_frags}' -O {output.atac_frags}
+        """
+
+rule prcannot_pbmc10k:
+    output:
+        tmp=temp(directory(local('datasets/pbmc10k/tmp'))),
+        annot=temp(local('datasets/pbmc10k/annot.csv')),
+    shell:
+        """
+        python workflow/scripts/datasets/pbmc10k/prc_annot.py \
+        -t {output.tmp} \
+        -a {output.annot}
+        """
+
+rule callpeaks_pbmc10k:
+    input:
+        frags='datasets/pbmc10k/smpl.frags.tsv.gz',
+        annot='datasets/pbmc10k/annot.csv',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        tmp=temp(directory(local('datasets/pbmc10k/tmp_peaks'))),
+        peaks=temp(local('datasets/pbmc10k/peaks.h5ad'))
+    resources:
+        mem_mb=64000,
+    threads: 16
+    shell:
+        """
+        python workflow/scripts/datasets/callpeaks.py \
+        -f {input.frags} \
+        -a {input.annot} \
+        -t {output.tmp} \
+        -o {output.peaks}
+        """
+
+rule annotate_pbmc10k:
+    input:
+        annot='datasets/pbmc10k/annot.csv',
+        g='gdata/geneids',
+        peaks='datasets/pbmc10k/peaks.h5ad',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        tmp=temp(directory(local('datasets/pbmc10k/tmp_annot'))),
+        out='datasets/pbmc10k/annotated.h5mu'
+    params:
+        organism=config['datasets']['pbmc10k']['organism'],
+    resources:
+        mem_mb=32000,
+    shell:
+        """
+        python workflow/scripts/datasets/pbmc10k/pbmc10k.py \
+        -a {output.tmp} \
+        -b {input.annot} \
+        -c {input.g} \
+        -d {params.organism} \
+        -e {input.peaks} \
+        -f {output.out}
         """

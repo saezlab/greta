@@ -22,6 +22,8 @@ path_annot = args['path_annot']
 path_tmp = args['path_tmp']
 path_output = args['path_output']
 
+print(path_frags)
+
 if __name__ == '__main__':
     n_jobs = 16
     print('N of cores:', n_jobs)
