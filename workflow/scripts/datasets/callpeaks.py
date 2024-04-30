@@ -82,7 +82,14 @@ if __name__ == '__main__':
     del atac.var
 
     # Update format peaks
-    atac.var_names = [p.replace(':', '-') for p in atac.var_names]
+    new_var_names = []
+    for p in atac.var_names:
+        p = p.replace(':', '-')
+        seq, start, end = p.split('-')
+        end = int(end) - 1
+        p = '{0}-{1}-{2}'.format(seq, start, end)
+        new_var_names.append(p)
+    atac.var_names = new_var_names
     
     # Write
     atac.write(path_output)
