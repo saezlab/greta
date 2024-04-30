@@ -11,7 +11,8 @@ organism <- args[7]
 granges_hg <- args[8]
 granges_mm <- args[9]
 exclude_exons <- args[10]
-path_out <- args[11]
+path_cand <- args[11]
+path_matches <- args[12]
 
 # Set genome
 if (organism == 'hg38'){
@@ -60,9 +61,9 @@ if (exclude_exons){
     cand <- GenomicRanges::subtract(cand, exons, ignore.strand=TRUE) %>% unlist()
 }
 
-# Filter peaks by candidate regions
+# Find matches of new peaks to old peaks
 matches <- S4Vectors::subjectHits(GenomicRanges::findOverlaps(cand, peaks))
-peaks <- peaks[unique(matches), ]
 
 # Write
-write.csv(x = peaks, file = path_out, row.names=FALSE)
+write.csv(x = cand, file = path_cand, row.names=FALSE)
+write.csv(x = matches, file = path_matches, row.names=FALSE)

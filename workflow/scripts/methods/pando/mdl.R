@@ -93,6 +93,10 @@ model_fits <- Pando::map_par(features, function(g){
     return(result)
 }, parallel=TRUE)
 
+# Filter features by failed models
+msk <- unlist(map(model_fits, function(x){!is.null(x)}))
+features <- features[msk]
+
 # Format results
 gof <- map_dfr(model_fits, function(x) x$gof, .id='target')
 if (nrow(gof) == 0){

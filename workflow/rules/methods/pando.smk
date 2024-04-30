@@ -21,6 +21,7 @@ rule pre_pando:
         'benchmarks/{dataset}.{case}.pando.pre.txt'
     output:
         p=temp(local('datasets/{dataset}/cases/{case}/runs/pando.peaks.csv')),
+        m=temp(local('datasets/{dataset}/cases/{case}/runs/pando.matches.csv')),
         d='datasets/{dataset}/cases/{case}/runs/pando.pre.h5mu'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
@@ -33,10 +34,12 @@ rule pre_pando:
         {input.h} \
         {input.m} \
         {params.exclude_exons} \
-        {output.p}
+        {output.p} \
+        {output.m}
         python workflow/scripts/methods/pando/pre.py \
         -i {input.d} \
         -p {output.p} \
+        -m {output.m} \
         -o {output.d}
         """
 
@@ -53,7 +56,7 @@ rule p2g_pando:
         'datasets/{dataset}/cases/{case}/runs/{pre}.pando.p2g.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=1e6,
+        ext=500000,
     shell:
         """
         Rscript workflow/scripts/methods/pando/p2g.R \
@@ -106,5 +109,45 @@ rule mdl_pando:
         {input.d} \
         {input.p} \
         {input.t} \
+        {output}
+        """
+
+rule src_pando:
+    input:
+        d='datasets/{dataset}/cases/{case}/mdata.h5mu',
+        h='gdata/granges/hg38_ensdb_v86.csv',
+        m='gdata/granges/mm10_ensdb_v79.csv',
+    singularity:
+        'workflow/envs/pando.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.pando.src.txt'
+    output:
+        'datasets/{dataset}/cases/{case}/runs/pando.src.csv'
+    resources:
+        mem_mb=256000,
+        runtime=180,
+    params:
+        exclude_exons='TRUE',
+        ext=500000,
+        thr_corr=0.05,
+        p_thresh=0.1,
+        rsq_thresh=0.05,
+        nvar_thresh=2,
+        min_genes_per_module=3,
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+    shell:
+        """
+        Rscript workflow/scripts/methods/pando/src.R \
+        {input.d} \
+        {params.exclude_exons} \
+        {params.ext} \
+        {params.thr_corr} \
+        {params.p_thresh} \
+        {params.rsq_thresh} \
+        {params.nvar_thresh} \
+        {params.min_genes_per_module} \
+        {params.organism} \
+        {input.h} \
+        {input.m} \
         {output}
         """

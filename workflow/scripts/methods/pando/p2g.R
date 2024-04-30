@@ -32,16 +32,15 @@ peaks <- tidyr::separate(data = peaks, col = 'seqnames', into = c("seqnames", "s
 peaks <- GenomicRanges::makeGRangesFromDataFrame(peaks)
 
 # Filter annot by seen genes
-annot <- annot[annot$gene_name %in% intersect(genes, annot$gene_name)]
+annot <- annot[annot$gene_name %in% intersect(genes, annot$gene_name), ]
 
 # Find peak2gene links
 peaks_near_gene <- find_peaks_near_genes(
     peaks = peaks,
     genes = annot,
     method = 'GREAT',
-    upstream = 100000,
-    downstream = 0,
-    extend = extend,
+    upstream = round(extend / 2),
+    downstream = round(extend / 2),
 )
 peaks2gene <- aggregate_matrix(t(peaks_near_gene), groups=colnames(peaks_near_gene), fun='sum')
 

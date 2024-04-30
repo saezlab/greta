@@ -45,7 +45,7 @@ motif2tf <- motif2tf[, intersect(genes, colnames(motif2tf))]
 motifs <- motifs[rownames(motif2tf)[Matrix::rowSums(motif2tf) != 0 ]]
 
 # Transform peaks to Granger
-peaks <- data.frame(seqnames=p2g$cre)
+peaks <- data.frame(seqnames=p2g$cre) %>% distinct()
 peaks <- tidyr::separate(data = peaks, col = 'seqnames', into = c("seqnames", "start", "end"), sep = "-", remove=FALSE)
 peaks <- GenomicRanges::makeGRangesFromDataFrame(peaks)
 
