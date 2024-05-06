@@ -7,16 +7,13 @@ rule pre_figr:
         'benchmarks/{dataset}.{case}.figr.pre.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/figr.pre.h5mu'
-    params:
-        k=10,
     resources:
         mem_mb=128000,
     shell:
         """
         cp {input} {output}
         Rscript workflow/scripts/methods/figr/pre.R \
-        {output} \
-        {params.k}
+        {output}
         """
 
 rule p2g_figr:
@@ -31,6 +28,7 @@ rule p2g_figr:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=500000,
+        thr_p2g_pval=0.1,
         ncres=3,  # TODO: change to 10
     resources:
         mem_mb=128000,
@@ -41,6 +39,7 @@ rule p2g_figr:
         {input} \
         {params.organism} \
         {params.ext} \
+        {params.thr_p2g_pval} \
         {params.ncres} \
         {output}
         """
@@ -57,7 +56,8 @@ rule tfb_figr:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        k=3  # TODO: change to 30
+        cellK=10,
+        dorcK=3,  # TODO: change to 30
     resources:
         mem_mb=128000,
     shell:
@@ -66,7 +66,8 @@ rule tfb_figr:
         {input.d} \
         {params.organism} \
         {input.p} \
-        {params.k} \
+        {params.cellK} \
+        {params.dorcK} \
         {output}
         """
 
@@ -82,7 +83,8 @@ rule mdl_figr:
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
     params:
-        thr=0.75,
+        cellK=10,
+        thr_score=1,
     resources:
         mem_mb=256000,
     shell:
@@ -91,6 +93,40 @@ rule mdl_figr:
         {input.d} \
         {input.p} \
         {input.t} \
-        {params.thr} \
+        {params.cellK} \
+        {params.thr_score} \
+        {output}
+        """
+
+rule src_figr:
+    input:
+        'datasets/{dataset}/cases/{case}/mdata.h5mu',
+    singularity:
+        'workflow/envs/figr.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.figr.src.txt'
+    output:
+        'datasets/{dataset}/cases/{case}/runs/figr.src.csv'
+    params:
+        cellK=10,
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        ext=500000,
+        thr_p2g_pval=0.1,
+        ncres=3,
+        dorcK=3,
+        thr_score=1,
+    resources:
+        mem_mb=128000,
+    shell:
+        """
+        Rscript workflow/scripts/methods/figr/src.R \
+        {input} \
+        {params.cellK} \
+        {params.organism} \
+        {params.ext} \
+        {params.thr_p2g_pval} \
+        {params.ncres} \
+        {params.dorcK} \
+        {params.thr_score} \
         {output}
         """

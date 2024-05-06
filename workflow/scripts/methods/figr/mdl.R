@@ -2,41 +2,55 @@ library(rhdf5)
 library(GenomicRanges)
 library(SummarizedExperiment)
 library(dplyr)
+library(doParallel)
+library(FigR)
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 path_p2g <- args[7]
 path_tfb <- args[8]
-score_thr <- as.numeric(args[9])
-path_out <- args[10]
-nCores <- 32
+cellK <- as.numeric(args[9])
+score_thr <- as.numeric(args[10])
+path_out <- args[11]
+nCores <- 4
 
 # Read data
 print('Open object')
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # RNA
 rna_X <- indata$mod$rna$X
-colnames(rna_X) <- indata$obs$`_index`
-rownames(rna_X) <- indata$mod$rna$var$`_index`
+colnames(rna_X) <- as.character(indata$obs$`_index`)
+rownames(rna_X) <- as.character(indata$mod$rna$var$`_index`)
 
-# ATAC
-atac_X <- indata$mod$atac$X
-colnames(atac_X) <- indata$obs$`_index`
-rownames(atac_X) <- indata$mod$atac$var$`_index`
+# ATAC (read only raw counts)
+ATAC.se <- Matrix::sparseMatrix(
+    i=indata$mod$atac$layers$counts$indices,
+    p=indata$mod$atac$layers$counts$indptr,
+    x=as.numeric(indata$mod$atac$layers$counts$data),
+    index1 = FALSE
+)
+colnames(ATAC.se) <- as.character(indata$obs$`_index`)
+rownames(ATAC.se) <- as.character(indata$mod$atac$var$`_index`)
+
+# Dim reduction
+lsi <- indata$obsm$X_spectral
+colnames(lsi) <- as.character(colnames(rna_X))
+rownames(lsi) <- as.character(paste0("SPL_", 1:nrow(lsi)))
+
 h5closeAll()
 
 # Transform atac to sme Object
-peaks <- strsplit(rownames(atac_X), "-")
+peaks <- strsplit(rownames(ATAC.se), "-")
 peak_ranges <- GenomicRanges::GRanges(
     seqnames = sapply(peaks, "[[", 1),
     ranges = IRanges::IRanges(start = as.numeric(sapply(peaks, "[[", 2)), end = as.numeric(sapply(peaks, "[[", 3)))
 )
-atac_X <- SummarizedExperiment::SummarizedExperiment(assays = list(counts=atac_X), rowRanges = peak_ranges)
+ATAC.se <- SummarizedExperiment::SummarizedExperiment(assays = list(counts=ATAC.se), rowRanges = peak_ranges)
 
 # Read p2g
 p2g <- read.csv(path_p2g) %>%
-    mutate(Peak=match(cre,  rownames(atac_X))) %>%
+    mutate(Peak=match(cre,  rownames(ATAC.se))) %>%
     rename(PeakRanges=cre, Gene=gene) %>%
     mutate(PeakRanges=sub("-", ":", PeakRanges, fixed = TRUE)) %>%
     select(Peak, PeakRanges, Gene)
@@ -51,17 +65,23 @@ if ((nrow(p2g) == 0) | (nrow(tfb) == 0)){
 
 # Compute sum of peaks per gene (DORCs)
 dorcMat <- FigR::getDORCScores(
-    ATAC.se = atac_X,
+    ATAC.se = ATAC.se,
     dorcTab = p2g,
-    normalizeATACmat=FALSE,
+    normalizeATACmat=TRUE,
     nCores = nCores
 )
 
+# Smooth data
+set.seed(123)
+cellkNN <- FNN::get.knn(t(lsi), k = cellK)$nn.index
+rownames(cellkNN) <- as.character(colnames(rna_X))
+dorcMat <- FigR::smoothScoresNN(NNmat = cellkNN, mat = dorcMat, nCores = nCores)
+rna_X <- FigR::smoothScoresNN(NNmat = cellkNN, mat = rna_X, nCores = nCores)
+
 # Process
-dorcGenes <- rownames(dorcMat)
+dorcGenes <- as.character(rownames(dorcMat))
 
 # Find enriched motifs
-library(doParallel)
 opts <- list()
 pb <- txtProgressBar(min = 0, max = length(dorcGenes), style = 3)
 progress <- function(n) setTxtProgressBar(pb, n)
@@ -70,6 +90,20 @@ time_elapsed <- Sys.time()
 cl <- parallel::makeCluster(nCores)
 parallel::clusterEvalQ(cl, .libPaths())
 doSNOW::registerDoSNOW(cl)
+
+get_pval <- function(x, corr){
+    # Number of observations
+    n <- length(x)
+    # Standard error of the Spearman correlation coefficient
+    standard_error <- 1 / sqrt(n - 3)
+    # Z-score
+    z <- 0.5 * log((1 + corr) / (1 - corr))
+    z_score <- z / standard_error
+    # Calculate p-value
+    p_value <- 2 * (1 - pnorm(abs(z_score)))
+    return(p_value[1,])
+}
+
 mZtest.list <- foreach(
     g=dorcGenes,
     .options.snow = opts,
@@ -99,7 +133,8 @@ mZtest.list <- foreach(
 }
 mdl <- do.call('rbind', mZtest.list) %>%
     filter(abs(score) > score_thr) %>%
-    rename(source=tf)
+    rename(source=tf) %>%
+    arrange(source, target)
 
 # Write
 write.csv(x = mdl, file = path_out, row.names=FALSE)
