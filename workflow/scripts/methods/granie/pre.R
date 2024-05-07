@@ -38,8 +38,8 @@ norm_data <- function(data, norm){
     return(data)
 }
 # Add pseudocounts for sparsity and normalize
-rna_data <- norm_data(rna_data + 1, 'limma')
-atac_data <- norm_data(atac_data + 1, 'deseq2')
+rna_data <- norm_data(rna_data, 'limma')
+atac_data <- norm_data(atac_data, 'deseq2')
 
 # Write
 h5write(rna_data, name="mod/rna/X", file=indata)

@@ -88,7 +88,7 @@ GRN = GRaNIE::addTFBS(
 # Overlap with peaks
 GRN = GRaNIE::overlapPeaksAndTFBS(
     GRN,
-    nCores = parallel::detectCores(),
+    nCores = 32,
     forceRerun = TRUE
 )
 

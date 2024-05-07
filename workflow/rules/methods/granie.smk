@@ -119,3 +119,39 @@ rule mdl_granie:
         {params.thr_fdr} \
         {output.p}
         """
+
+rule src_granie:
+    input:
+        d='datasets/{dataset}/cases/{case}/mdata.h5mu',
+        g='gdata/geneids',
+        t='gdata/tfbs',
+    singularity:
+        'workflow/envs/granie.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.granie.src.txt'
+    output:
+        h=temp(local('datasets/{dataset}/cases/{case}/runs/pre.granie.src.h5mu')),
+        t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/granie_tmp.src'))),
+        p='datasets/{dataset}/cases/{case}/runs/granie.src.csv'
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        ext=500000,
+        thr_fdr=0.2,
+    resources:
+        mem_mb=128000,
+    shell:
+        """
+        python workflow/scripts/methods/granie/pre.py \
+        -i {input.d} \
+        -o {output.h}
+
+        Rscript workflow/scripts/methods/granie/src.R \
+        {output.h} \
+        {params.organism} \
+        {input.g} \
+        {output.t} \
+        {params.ext} \
+        {input.t} \
+        {params.thr_fdr} \
+        {output.p}
+        """
