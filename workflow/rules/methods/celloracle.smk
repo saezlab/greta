@@ -127,3 +127,52 @@ rule mdl_celloracle:
         -n {params.n} \
         -o {output}
         """
+
+rule src_celloracle:
+    input:
+        dta='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        tfb='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+    singularity:
+        'workflow/envs/celloracle.sif'
+    benchmark:
+        'benchmarks/{dataset}.{case}.celloracle.src.txt',
+    output:
+        pp=temp(local('datasets/{dataset}/cases/{case}/runs/celloracle.src.peaks.csv')),
+        pc=temp(local('datasets/{dataset}/cases/{case}/runs/celloracle.src.conns.csv')),
+        gr='datasets/{dataset}/cases/{case}/runs/celloracle.src.csv',
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        ext=500000,
+        thr_coaccess=0.8,
+        fpr=0.02,
+        blen=200,
+        tfb_thr=10,
+        a=10,
+        p=0.001,
+        n=2000,
+        k=20,
+    shell:
+        """
+        Rscript workflow/scripts/methods/celloracle/src.R \
+        {input.data} \
+        {params.organism} \
+        {params.ext} \
+        {output.pp} \
+        {output.pc}
+
+        python workflow/scripts/methods/celloracle/src.py \
+        -a {input.dta} \
+        -b {output.pp} \
+        -c {output.pc} \
+        -d {params.organism} \
+        -e {params.thr_coaccess} \
+        -f {params.fpr} \
+        -g {params.blen} \
+        -i {params.tfb_thr} \
+        -j {params.a} \
+        -k {params.p} \
+        -l {params.n} \
+        -m {params.k} \
+        -n {output.gr}
+        """

@@ -78,6 +78,7 @@ print('Filtering done!')
 # Extract grn
 grn = links.filtered_links['cluster'].dropna()[['source', 'target', 'coef_mean', 'p']]
 grn = grn.rename(columns={'coef_mean': 'score', 'p': 'pval'})
+grn = grn.sort_values(['source', 'target', 'pval'])
 
 # Write
 grn.to_csv(path_out, index=False)
