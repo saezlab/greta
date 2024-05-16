@@ -36,9 +36,10 @@ rownames(ATAC.se) <- indata$mod$atac$var$`_index`
 
 # Dim reduction
 lsi <- indata$obsm$X_spectral
-colnames(lsi) <- colnames(rna_X)
-rownames(lsi) <- paste0("SPL_", 1:nrow(lsi))
-
+if (!is.null(lsi)){
+    colnames(lsi) <- colnames(rna_X)
+    rownames(lsi) <- paste0("SPL_", 1:nrow(lsi))
+}
 h5closeAll()
 
 # Transform atac to sme Object
@@ -72,9 +73,11 @@ dorcMat <- FigR::getDORCScores(
 
 # Smooth data
 set.seed(123)
-cellkNN <- FNN::get.knn(t(lsi), k = cellK)$nn.index
-rownames(cellkNN) <- as.character(colnames(rna_X))
-dorcMat <- FigR::smoothScoresNN(NNmat = cellkNN, mat = dorcMat, nCores = nCores)
+if (!is.null(lsi)){
+    cellkNN <- FNN::get.knn(t(lsi), k = cellK)$nn.index
+    rownames(cellkNN) <- as.character(colnames(rna_X))
+    dorcMat <- FigR::smoothScoresNN(NNmat = cellkNN, mat = dorcMat, nCores = nCores)
+}
 
 get_TFenrich <- function(
     ATAC.se,

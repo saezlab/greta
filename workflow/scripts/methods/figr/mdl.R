@@ -35,9 +35,10 @@ rownames(ATAC.se) <- as.character(indata$mod$atac$var$`_index`)
 
 # Dim reduction
 lsi <- indata$obsm$X_spectral
-colnames(lsi) <- as.character(colnames(rna_X))
-rownames(lsi) <- as.character(paste0("SPL_", 1:nrow(lsi)))
-
+if (!is.null(lsi)){
+    colnames(lsi) <- as.character(colnames(rna_X))
+    rownames(lsi) <- as.character(paste0("SPL_", 1:nrow(lsi)))
+}
 h5closeAll()
 
 # Transform atac to sme Object
@@ -73,11 +74,12 @@ dorcMat <- FigR::getDORCScores(
 
 # Smooth data
 set.seed(123)
-cellkNN <- FNN::get.knn(t(lsi), k = cellK)$nn.index
-rownames(cellkNN) <- as.character(colnames(rna_X))
-dorcMat <- FigR::smoothScoresNN(NNmat = cellkNN, mat = dorcMat, nCores = nCores)
-rna_X <- FigR::smoothScoresNN(NNmat = cellkNN, mat = rna_X, nCores = nCores)
-
+if (!is.null(lsi)){
+    cellkNN <- FNN::get.knn(t(lsi), k = cellK)$nn.index
+    rownames(cellkNN) <- as.character(colnames(rna_X))
+    dorcMat <- FigR::smoothScoresNN(NNmat = cellkNN, mat = dorcMat, nCores = nCores)
+    rna_X <- FigR::smoothScoresNN(NNmat = cellkNN, mat = rna_X, nCores = nCores)
+}
 # Process
 dorcGenes <- as.character(rownames(dorcMat))
 
