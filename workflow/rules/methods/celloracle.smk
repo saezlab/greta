@@ -130,9 +130,7 @@ rule mdl_celloracle:
 
 rule src_celloracle:
     input:
-        dta='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        tfb='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+        'datasets/{dataset}/cases/{case}/mdata.h5mu',
     singularity:
         'workflow/envs/celloracle.sif'
     benchmark:
@@ -155,14 +153,14 @@ rule src_celloracle:
     shell:
         """
         Rscript workflow/scripts/methods/celloracle/src.R \
-        {input.data} \
+        {input} \
         {params.organism} \
         {params.ext} \
         {output.pp} \
         {output.pc}
 
         python workflow/scripts/methods/celloracle/src.py \
-        -a {input.dta} \
+        -a {input} \
         -b {output.pp} \
         -c {output.pc} \
         -d {params.organism} \

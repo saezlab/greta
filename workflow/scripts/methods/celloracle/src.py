@@ -199,7 +199,7 @@ adata.obsm['X_pca'] = mdata.obsm['X_spectral']
 oracle = co.Oracle()
 oracle.import_anndata_as_raw_count(
     adata=adata,
-    cluster_column_name="celltype",
+    cluster_column_name="cluster",
     embedding_name="X_pca"
 )
 
