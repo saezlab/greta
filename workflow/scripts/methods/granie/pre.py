@@ -2,6 +2,7 @@ import decoupler as dc
 import pandas as pd
 import numpy as np
 import mudata as mu
+import scipy.sparse as ss
 import argparse
 
 
@@ -33,6 +34,7 @@ rna = dc.get_pseudobulk(
 for col in rna.obs.columns:
     del rna.obs[col]
 del rna.layers['psbulk_props']
+rna.layers['counts'] = ss.csr_matrix(rna.X.copy())
 
 # Psbulk atac
 atac = mdata.mod['atac'].copy()
@@ -50,6 +52,7 @@ atac = dc.get_pseudobulk(
 for col in atac.obs.columns:
     del atac.obs[col]
 del atac.layers['psbulk_props']
+atac.layers['counts'] = ss.csr_matrix(atac.X.copy())
 
 # Intersect and generate new object
 inter = np.intersect1d(rna.obs_names, atac.obs_names)

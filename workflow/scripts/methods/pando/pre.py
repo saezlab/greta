@@ -34,10 +34,16 @@ atac = atac[msk, :].copy()
 # Remove missmatched obs
 rna = mdata.mod['rna'].copy()
 inter = np.intersect1d(rna.obs_names, atac.obs_names)
-mdata = mu.MuData({
+x_spectral = mdata[inter, :].obsm['X_spectral'].copy()
+x_umap = mdata[inter, :].obsm['X_umap'].copy()
+mdata = mu.MuData(
+    {
     'rna': rna[inter, :].copy(),
     'atac': atac[inter, :].copy(),
-})
+    }
+)
+mdata.obsm['X_spectral'] = x_spectral
+mdata.obsm['X_umap'] = x_umap
 
 # Write
 mdata.write(path_out)
