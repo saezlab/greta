@@ -3,7 +3,7 @@ library(rhdf5)
 library(Pando)
 library(doParallel)
 
-nCores <- 16
+nCores <- 64
 cat("N cores: ", nCores, '\n')
 registerDoParallel(nCores)
 
@@ -42,6 +42,7 @@ h5closeAll()
 # Run per feature
 p2g$gene = stringr::str_replace_all(p2g$gene, '-', '_')
 features <- unique(p2g$gene)
+cat("Number of target genes to fit: ", length(features), '\n')
 model_fits <- Pando::map_par(features, function(g){
     # Subset scaffold
     print(g)
