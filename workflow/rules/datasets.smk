@@ -9,6 +9,7 @@ rule extract_case:
         celltypes=lambda w: config['datasets'][w.dataset]['cases'][w.case]['celltypes'],
         n_hvg=lambda w: config['datasets'][w.dataset]['cases'][w.case]['n_hvg'],
         n_hvr=lambda w: config['datasets'][w.dataset]['cases'][w.case]['n_hvr'],
+        root=lambda w: config['datasets'][w.dataset]['cases'][w.case]['root'] if 'root' in config['datasets'][w.dataset]['cases'][w.case] else 'None',
     shell:
         """
         python workflow/scripts/datasets/extract_case.py \
@@ -16,6 +17,7 @@ rule extract_case:
         -c '{params.celltypes}' \
         -g '{params.n_hvg}' \
         -r '{params.n_hvr}' \
+        -t '{params.root}' \
         -o '{output.mdata}'
         """
 

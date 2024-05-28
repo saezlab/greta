@@ -14,6 +14,7 @@ parser.add_argument('-i','--path_input', required=True)
 parser.add_argument('-c','--celltypes', required=True)
 parser.add_argument('-g','--n_hvg', required=True)
 parser.add_argument('-r','--n_hvr', required=True)
+parser.add_argument('-t','--root', required=True)
 parser.add_argument('-o','--path_output', required=True)
 args = vars(parser.parse_args())
 
@@ -21,6 +22,7 @@ path_input = args['path_input']
 celltypes = args['celltypes']
 n_hvg = int(args['n_hvg'])
 n_hvr = int(args['n_hvr'])
+root = args['root']
 path_output = args['path_output']
 
 # Read
@@ -108,6 +110,15 @@ if issparse(atac.X):
 mdata.mod['rna'] = rna
 mdata.mod['atac'] = atac
 mdata.update()
+
+if root != 'None':
+    sc.pp.neighbors(mdata, use_rep='X_spectral')
+    sc.tl.paga(mdata, groups='celltype')
+    mdata.uns['iroot'] = np.flatnonzero(mdata.obs['celltype']  == root)[0]
+    sc.tl.dpt(mdata)
+    mdata.uns = dict()
+    del mdata.obsm['X_diffmap']
+    del mdata.obsp
 
 # Save
 mdata.write(path_output)
