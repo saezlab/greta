@@ -114,11 +114,12 @@ get_TFenrich <- function(
         names(pwm) <- FigR::extractTFNames(names(pwm))
     
     # Modify gene names
-    myGeneNames <- gsub(x = rownames(rna_X),pattern = "-",replacement = "") # NKX2-1 to NKX21 (e.g.)
-    rownames(rna_X) <- myGeneNames
+    #myGeneNames <- gsub(x = rownames(rna_X),pattern = "-",replacement = "") # NKX2-1 to NKX21 (e.g.)
+    #rownames(rna_X) <- myGeneNames
+    myGeneNames <- rownames(rna_X)
     
     # Only non-zero expression TFs (also found in rna_X)
-    motifsToKeep <- intersect(names(pwm),myGeneNames)
+    motifsToKeep <- intersect(names(pwm), myGeneNames)
     
     # Find motifs in peaks
     cat("Getting peak x motif matches ..\n")

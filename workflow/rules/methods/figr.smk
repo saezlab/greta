@@ -87,6 +87,7 @@ rule mdl_figr:
         thr_score=1,
     resources:
         mem_mb=256000,
+        runtime=180,
     shell:
         """
         Rscript workflow/scripts/methods/figr/mdl.R \
@@ -116,7 +117,8 @@ rule src_figr:
         dorcK=3,
         thr_score=1,
     resources:
-        mem_mb=128000,
+        mem_mb=256000,
+        runtime=180,
     shell:
         """
         Rscript workflow/scripts/methods/figr/src.R \
