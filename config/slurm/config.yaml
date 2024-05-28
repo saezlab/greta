@@ -12,7 +12,7 @@ latency-wait: "15"
 use-conda: "False"
 use-singularity: "True"
 use-envmodules: "True"
-jobs: "32"
+jobs: "64"
 printshellcmds: "True"
 
 # Example resource configuration
