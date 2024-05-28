@@ -25,6 +25,10 @@ tfs = np.intersect1d(genes, tfs)
 
 # Sample random tf-cre interactions
 p2g = pd.read_csv(p2g_path)
+if p2g.shape[0] == 0:
+    tfb = pd.DataFrame(columns=['cre', 'tf', 'score'])
+    tfb.to_csv(out_path, index=False)
+    exit()
 cres = p2g.cre.unique().astype('U')
 rng = np.random.default_rng(seed=42)
 df = []
@@ -33,7 +37,7 @@ for cre in cres:
     r_tfs = rng.choice(tfs, n_tfs_per_cre)
     for tf in r_tfs:
         df.append([cre, tf, 1])
-df = pd.DataFrame(df, columns=['cre', 'tf', 'score']).sort_values(['cre', 'tf'])
+df = pd.DataFrame(df, columns=['cre', 'tf', 'score']).sort_values(['cre', 'tf']).drop_duplicates(['cre', 'tf'])
 
 # Write
 df.to_csv(out_path, index=False)

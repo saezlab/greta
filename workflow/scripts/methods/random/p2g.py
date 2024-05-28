@@ -31,7 +31,7 @@ for g in genes:
     for cre in r_cres:
         df.append([cre, g, 1])
 df = pd.DataFrame(df, columns=['cre', 'gene', 'score'])
-df = df.sort_values(['cre', 'gene'])
+df = df.sort_values(['cre', 'gene']).drop_duplicates(['cre', 'gene'])
 
 # Write
 df.to_csv(out_path, index=False)
