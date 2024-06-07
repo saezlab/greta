@@ -12,6 +12,11 @@ granges_mm <- args[9]
 rna_network_path <- args[10]
 atac_network_path <- args[11]
 hummus_object_f <- args[12]
+grn_number_edges <- as.numeric(args[13])
+tf_layer_method <- args[14]
+if (tf_layer_method == "None"){
+    tf_layer_method = NULL
+}
 
 # Set genome
 if (organism == 'hg38'){
@@ -29,32 +34,14 @@ if (organism == 'hg38'){
 # Read peaks and genes
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # RNA
-rna_X <- as.matrix(indata$mod$rna$X)
-#rna_X <- Matrix::sparseMatrix(
-#  i = as.vector(indata$mod$rna$X[['indices']][] + 1),
-#  p = as.vector(indata$mod$rna$X[['indptr']][]),
-#  x = as.vector(indata$mod$rna$X[['data']][])
-#)
-
-#print(rna_X)
-colnames(rna_X) <- indata$obs$`_index`
+rna_X <- indata$mod$rna$X
+colnames(rna_X) <- indata$mod$rna$obs$`_index`
 rownames(rna_X) <- stringr::str_replace_all(indata$mod$rna$var$`_index`, '-', '_')
 
 #ATAC
-atac_X <- as.matrix(indata$mod$atac$X)
-#atac_X <- Matrix::sparseMatrix(
-#  i = as.vector(indata$mod$atac$X[['indices']][] + 1),
-#  p = as.vector(indata$mod$atac$X[['indptr']][]),
-#  x = as.vector(indata$mod$atac$X[['data']][])
-#)
-
-#print(atac_X)
-colnames(atac_X) <- indata$obs$`_index`
-rownames(atac_X) <- stringr::str_replace_all(indata$mod$atac$var$`_index`, '-', '-')
-
-
-print(Matrix::t(atac_X[1:5, 1:5]))
-# Create HuMMuS object
+atac_X <- indata$mod$atac$X
+colnames(atac_X) <- indata$mod$atac$obs$`_index`
+rownames(atac_X) <- indata$mod$atac$var$`_index`
 h5closeAll()
 
 
@@ -65,7 +52,7 @@ seurat_object[['peaks']] <- Signac::CreateChromatinAssay(
   counts = atac_X,
   sep = c("-", "-"))
 rm(atac_X)
-hummus = Initiate_Hummus_Object(seurat_object)
+hummus <- Initiate_Hummus_Object(seurat_object)
 rm(seurat_object)
 hummus
 hummus[['RNA']]
@@ -76,23 +63,23 @@ hummus[['peaks']]
 annot <- annot[annot$gene_name %in% intersect(colnames(hummus[['RNA']]), annot$gene_name)]
 
 
-genome_annot = get_genome_annotations(
+genome_annot <- get_genome_annotations(
   ensdb_annotations = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86)
-Signac::Annotation(hummus@assays$peaks) = genome_annot
+Signac::Annotation(hummus@assays$peaks) <- genome_annot
 rm(annot)
 
-rna_network <- read.csv2(rna_network_path, sep=",")
-print(head(rna_network))
+rna_network <- read.csv2(rna_network_path, sep = ",")
+rna_network <- rna_network[1:grn_number_edges,]
 # Add external networks
 hummus <- add_network(
-    hummus, 
+    hummus,
     rna_network,
     multiplex_name = "RNA",
     network_name = "GRN_Boost2",
-    weighted=TRUE)
+    weighted = TRUE)
 
 
-atac_network <- read.csv2(atac_network_path, sep = "\t")
+atac_network <- read.csv2(atac_network_path, sep = ",")
 #atac_network[,'peak1'] <- stringr::str_replace_all(atac_network[,'peak1'], '-', '_')
 #atac_network[,'peak2'] <- stringr::str_replace_all(atac_network[,'peak2'], '-', '_')
 
@@ -106,7 +93,7 @@ hummus <- add_network(
 
 # Connect TF to peaks !!!!!TODO: to move in tf2p
 hummus@motifs_db <- get_tf2motifs() # TF motif DB # by default human motifs
-hummus <- compute_tf_network(hummus, method = NULL)
+hummus <- compute_tf_network(hummus, method = tf_layer_method)
 
 
 saveRDS(hummus, hummus_object_f)

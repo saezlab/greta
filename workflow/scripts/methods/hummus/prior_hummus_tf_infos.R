@@ -12,8 +12,8 @@ tf_list_file <- args[8]
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 
 # RNA
-rna_X <- as.matrix(indata$mod$rna$X)
-colnames(rna_X) <- indata$obs$`_index`
+rna_X <- indata$mod$rna$X
+colnames(rna_X) <- indata$mod$rna$obs$`_index`
 rownames(rna_X) <- stringr::str_replace_all(indata$mod$rna$var$`_index`, '-', '_')
 h5closeAll()
 
@@ -22,6 +22,7 @@ h5closeAll()
 seurat <- SeuratObject::CreateSeuratObject(
     assay = "RNA",
     counts = rna_X[, 1:2])
+
 hummus <- HuMMuS::Initiate_Hummus_Object(seurat)
 rm(seurat)
 
