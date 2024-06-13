@@ -130,3 +130,12 @@ dmypy.json
 
 # singularity images
 *.sif
+
+# vs code
+.vscode/
+
+# DS_Store
+.DS_Store
+workflow/.DS_Store
+workflow/scripts/.DS_Store
+workflow/scripts/methods/.DS_Store
