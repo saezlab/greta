@@ -38,7 +38,7 @@ rule download_geneids:
 # NEURIPS2021
 rule download_neurips2021:
     output:
-        temp(local('datasets/neurips2021/original.h5ad'))
+        temp(local('datasets/neurips2021/original.h5.'))
     params:
         url=config['datasets']['neurips2021']['url']
     shell:
@@ -227,4 +227,150 @@ rule annotate_pbmc10k:
         -d {params.organism} \
         -e {input.peaks} \
         -f {output.out}
+        """
+
+# pituPaired
+rule download_pitupaired:
+    output:
+        multi=temp(local('datasets/pitupaired/multiome_original.h5')),
+        frags=temp(local('datasets/pitupaired/smpl.frags.tsv.gz'))
+    params:
+        multi=config['datasets']['pitupaired']['url']['multi'],
+        frags=config['datasets']['pitupaired']['url']['frags'],
+    shell:
+        """
+        wget '{params.frags}' -O '{output.frags}'
+        wget '{params.multi}' -O '{output.multi}'
+        """
+
+    rule prcannot_pitupaired:
+output:
+    tmp=temp(directory(local('datasets/pitupaired/tmp'))),
+    annot=temp(local('datasets/pitupaired/annot.csv')),
+shell:
+    """
+    python workflow/scripts/datasets/pitupaired/prc_annot.py \
+    -t {output.tmp} \
+    -a {output.annot}
+    """
+
+rule callpeaks_pitupaired:
+    input:
+        frags='datasets/pitupaired/smpl.frags.tsv.gz',
+        annot='datasets/pitupaired/annot.csv',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        tmp=temp(directory(local('datasets/pitupaired/tmp_peaks'))),
+        peaks=temp(local('datasets/pitupaired/peaks.h5ad'))
+    resources:
+        mem_mb=64000,
+    threads: 16
+    shell:
+        """
+        python workflow/scripts/datasets/callpeaks.py \
+        -f {input.frags} \
+        -a {input.annot} \
+        -t {output.tmp} \
+        -o {output.peaks}
+        """
+
+rule annotate_pitupaired:
+    input:
+        annot='datasets/pitupaired/annot.csv',
+        g='gdata/geneids',
+        peaks='datasets/pitupaired/peaks.h5ad',
+        multi='datasets/pitupaired/multiome_original.h5',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        tmp=temp(directory(local('datasets/pitupaired/tmp_annot'))),
+        out='datasets/pitupaired/annotated.h5mu'
+    params:
+        organism=config['datasets']['pitupaired']['organism'],
+    resources:
+        mem_mb=32000,
+    shell:
+        """
+        python workflow/scripts/datasets/pitupaired/pitupaired.py \
+        -a {output.tmp} \
+        -b {input.annot} \
+        -c {input.g} \
+        -d {params.organism} \
+        -e {input.peaks} \
+        -f {output.out} \
+        -g {input.multi}
+        """
+
+# pituUnpaired
+rule download_pituunpaired:
+    output:
+        multi=temp(local('datasets/pituunpaired/multiome_original.h5')),
+        frags=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz'))
+    params:
+        multi=config['datasets']['pituunpaired']['url']['multi'],
+        frags=config['datasets']['pituunpaired']['url']['frags'],
+    shell:
+        """
+        wget '{params.frags}' -O '{output.frags}'
+        wget '{params.multi}' -O '{output.multi}'
+        """
+
+    rule prcannot_pituunpaired:
+output:
+    tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
+    annot=temp(local('datasets/pituunpaired/annot.csv')),
+shell:
+    """
+    python workflow/scripts/datasets/pituunpaired/prc_annot.py \
+    -t {output.tmp} \
+    -a {output.annot}
+    """
+
+rule callpeaks_pituunpaired:
+    input:
+        frags='datasets/pituunpaired/smpl.frags.tsv.gz',
+        annot='datasets/pituunpaired/annot.csv',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        tmp=temp(directory(local('datasets/pituunpaired/tmp_peaks'))),
+        peaks=temp(local('datasets/pituunpaired/peaks.h5ad'))
+    resources:
+        mem_mb=64000,
+    threads: 16
+    shell:
+        """
+        python workflow/scripts/datasets/callpeaks.py \
+        -f {input.frags} \
+        -a {input.annot} \
+        -t {output.tmp} \
+        -o {output.peaks}
+        """
+
+rule annotate_pituunpaired:
+    input:
+        annot='datasets/pituunpaired/annot.csv',
+        g='gdata/geneids',
+        peaks='datasets/pituunpaired/peaks.h5ad',
+        multi='datasets/pituunpaired/multiome_original.h5',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        tmp=temp(directory(local('datasets/pituunpaired/tmp_annot'))),
+        out='datasets/pituunpaired/annotated.h5mu'
+    params:
+        organism=config['datasets']['pituunpaired']['organism'],
+    resources:
+        mem_mb=32000,
+    shell:
+        """
+        python workflow/scripts/datasets/pituunpaired/pituunpaired.py \
+        -a {output.tmp} \
+        -b {input.annot} \
+        -c {input.g} \
+        -d {params.organism} \
+        -e {input.peaks} \
+        -f {output.out} \
+        -g {input.multi}
         """
