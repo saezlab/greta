@@ -243,16 +243,16 @@ rule download_pitupaired:
         wget '{params.multi}' -O '{output.multi}'
         """
 
-    rule prcannot_pitupaired:
-output:
-    tmp=temp(directory(local('datasets/pitupaired/tmp'))),
-    annot=temp(local('datasets/pitupaired/annot.csv')),
-shell:
-    """
-    python workflow/scripts/datasets/pitupaired/prc_annot.py \
-    -t {output.tmp} \
-    -a {output.annot}
-    """
+rule prcannot_pitupaired:
+    output:
+        tmp=temp(directory(local('datasets/pitupaired/tmp'))),
+        annot=temp(local('datasets/pitupaired/annot.csv')),
+    shell:
+        """
+        python workflow/scripts/datasets/pitupaired/prc_annot.py \
+        -t {output.tmp} \
+        -a {output.annot}
+        """
 
 rule callpeaks_pitupaired:
     input:
@@ -316,16 +316,16 @@ rule download_pituunpaired:
         wget '{params.multi}' -O '{output.multi}'
         """
 
-    rule prcannot_pituunpaired:
-output:
-    tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
-    annot=temp(local('datasets/pituunpaired/annot.csv')),
-shell:
-    """
-    python workflow/scripts/datasets/pituunpaired/prc_annot.py \
-    -t {output.tmp} \
-    -a {output.annot}
-    """
+rule prcannot_pituunpaired:
+    output:
+        tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
+        annot=temp(local('datasets/pituunpaired/annot.csv')),
+    shell:
+        """
+        python workflow/scripts/datasets/pituunpaired/prc_annot.py \
+        -t {output.tmp} \
+        -a {output.annot}
+        """
 
 rule callpeaks_pituunpaired:
     input:
@@ -374,3 +374,4 @@ rule annotate_pituunpaired:
         -f {output.out} \
         -g {input.multi}
         """
+
