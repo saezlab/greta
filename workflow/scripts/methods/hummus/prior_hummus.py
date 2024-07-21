@@ -5,7 +5,7 @@ os.environ[ 'NUMBA_CACHE_DIR' ] = '/tmp/'
 import pandas as pd
 import muon as mu
 
-import atacnet as an
+import circe as ci
 
 from distributed import LocalCluster, Client
 from arboreto.algo import grnboost2
@@ -56,12 +56,12 @@ if __name__ == '__main__':
     rna_network.to_csv(path_grnboost2)
 
     # Create the atacnet network
-    an.add_region_infos(mudata["atac"], sep=(':', '-'))
-    an.compute_atac_network(
+    ci.add_region_infos(mudata["atac"], sep=(':', '-'))
+    ci.compute_atac_network(
         mudata["atac"],
         window_size=distance_threshold)
 
-    atac_network = an.extract_atac_links(mudata["atac"])
+    atac_network = ci.extract_atac_links(mudata["atac"])
     atac_network.to_csv(path_atacnet)
 
 
