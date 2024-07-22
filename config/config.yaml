@@ -28,11 +28,21 @@ datasets:
                 celltypes: 'CD4 TCM;CD4 Naive;CD8 Naive;Treg;CD4 TEM;MAIT;CD8 TEM_1;CD8 TEM_2;gdT;CD8 TEM_2'
                 n_hvg: 2048
                 n_hvr: 16384
+            tem:
+                celltypes: 'CD8 Naive;CD8 TEM_1;CD8 TEM_2'
+                n_hvg: 4096
+                n_hvr: 16384
+                root: 'CD8 Naive'
             bcell:
                 celltypes: 'Naive B;Intermediate B;Memory B'
                 n_hvg: 4096
                 n_hvr: 16384
                 root: 'Naive B'
+            mono:
+                celltypes: 'CD14 Mono;CD16 Mono'
+                n_hvg: 4096
+                n_hvr: 16384
+                root: 'CD14 Mono'
             test:
                 celltypes: 'Naive B;Intermediate B;Memory B'
                 n_hvg: 2048

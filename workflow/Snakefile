@@ -2,15 +2,23 @@ from snakemake.utils import min_version
 
 min_version('7.29.0')
 
+path = 'datasets/pbmc10k/cases/all/'
+mthds = ['celloracle', 'pando', 'granie', 'figr']
+
 def make_combs():
     from itertools import product
-    mthds = ['celloracle', 'pando', 'granie', 'figr']
-    s = 'datasets/pbmc10k/cases/tcell/runs/{0}.{1}.{2}.{3}.mdl.csv'
+    s = path + 'runs/{0}.{1}.{2}.{3}.grn.csv'
     combinations = product(mthds, repeat=4)
     strings = []
     for combo in combinations:
         formatted_string = s.format(*combo)
         strings.append(formatted_string)
+    s = path + 'runs/{0}.src.csv'
+    for m in mthds:
+        formatted_string = s.format(m)
+        strings.append(formatted_string)
+    s = path + 'runs/random.random.random.random.grn.csv'
+    strings.append(s)
     return strings
 
 configfile: 'config/config.yaml'
@@ -22,9 +30,20 @@ include: 'rules/methods/pando.smk'
 include: 'rules/methods/granie.smk'
 include: 'rules/methods/figr.smk'
 include: 'rules/methods/hummus.smk'
+include: 'rules/methods/grn.smk'
+include: 'rules/methods/random.smk'
+
+include: 'rules/analysis/prior.smk'
+
+f_scores = [
+'analsyis/prior/tfbind/unibind.csv', 'analsyis/prior/tfbind/remap2022.csv', 'analsyis/prior/tfbind/chipatlas.csv',
+'analsyis/prior/cre/encode.csv', 'analsyis/prior/cre/zhang21.csv', 'analsyis/prior/evo/phastcons.csv',
+'analsyis/prior/eqtl/eqtlcatalogue.csv', 'analsyis/prior/snp/gwascatalogue.csv',
+'analsyis/prior/tfm/tfmdb.csv', 'analsyis/prior/tfm/hpa.csv',
+]
 
 rule all:
     input:
-        make_combs()
+        f_scores #make_combs()
 
 # snakemake --profile config/slurm/ ...
