@@ -60,7 +60,9 @@ From: ubuntu:20.04
     dill \
     macs3 \
     scrublet \
-    decoupler-py==1.6.0
+    decoupler-py==1.6.0 \
+    py-xgboost \
+    pyranges
 
     conda activate env
     pip install mofapy2 marsilea==0.3.2 snapatac2==2.6.0 celloracle==0.18.0 scipy==1.12.0
