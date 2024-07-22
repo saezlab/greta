@@ -19,6 +19,8 @@ rule pre_scenicplus:
     output:
         d = 'datasets/{dataset}/cases/{case}/runs/scenicplus.pre.h5mu',
         tmp_scenicplus = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp')))
+    singularity:
+        'workflow/envs/scenicplus.sif'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores = 32

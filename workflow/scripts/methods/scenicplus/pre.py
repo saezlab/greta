@@ -22,8 +22,8 @@ import argparse
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--frags', required=True)
-parser.add_argument('-m', '--mudata', required=True)
-parser.add_argument('-d', '--output', required=True)
+parser.add_argument('-i', '--mudata', required=True)
+parser.add_argument('-o', '--output', required=True)
 parser.add_argument('-t', '--tmp_scenicplus', required=True)
 parser.add_argument('-g', '--organism', required=True)
 parser.add_argument('-n', '--njobs', required=True)
@@ -224,8 +224,6 @@ annot["Strand"] = annot["Strand"].replace({1: "+", -1: "-"})
 annot.Start = annot.Start.astype(np.int32)
 annot = pl.DataFrame(annot)
 
-
-from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Literal
 import polars as pl
