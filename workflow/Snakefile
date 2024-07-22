@@ -22,6 +22,7 @@ include: 'rules/methods/pando.smk'
 include: 'rules/methods/granie.smk'
 include: 'rules/methods/figr.smk'
 include: 'rules/methods/hummus.smk'
+include: 'rules/methods/scenicplus.smk'
 
 rule all:
     input:
