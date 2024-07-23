@@ -118,7 +118,7 @@ rule src_figr:
         thr_score=1,
     resources:
         mem_mb=256000,
-        runtime=180,
+        runtime=720,
     shell:
         """
         Rscript workflow/scripts/methods/figr/src.R \
