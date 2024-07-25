@@ -90,7 +90,6 @@ From: ubuntu:20.04
     r-argparse \
     r-brio \
     r-bslib \
-    r-cairo \
     r-checkmate \
     r-cli \
     r-data.table \
@@ -107,7 +106,6 @@ From: ubuntu:20.04
     r-filelock \
     r-foreign \
     r-ggrastr \
-    r-glasso \
     r-grr \
     r-gtools \
     r-htmltable \
@@ -117,7 +115,6 @@ From: ubuntu:20.04
     r-lme4 \
     r-lubridate \
     r-matrix \
-    r-monocle3 \
     r-nlme \
     r-plotly \
     r-pracma \

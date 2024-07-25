@@ -56,7 +56,10 @@ if __name__ == '__main__':
     rna_network.to_csv(path_grnboost2)
 
     # Create the atacnet network
-    ci.add_region_infos(mudata["atac"], sep=(':', '-'))
+    atac = ci.add_region_infos(mudata["atac"], sep=(':', '-'))
+    mudata = mu.MuData(
+        {"rna": mudata["rna"],
+         "atac": atac})
     ci.compute_atac_network(
         mudata["atac"],
         window_size=distance_threshold)
