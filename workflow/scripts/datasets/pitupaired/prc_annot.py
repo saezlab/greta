@@ -7,11 +7,13 @@ import argparse
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-t','--path_tmp', required=True)
-parser.add_argument('-a','--path_annot', required=True)
+parser.add_argument('-a','--path_tmp', required=True)
+parser.add_argument('-b','--path_data', required=True)
+parser.add_argument('-c','--path_annot', required=True)
 args = vars(parser.parse_args())
 
 path_tmp = args['path_tmp']
+path_data = args['path_data']
 path_annot = args['path_annot']
 
 # Change default cache dir
@@ -64,7 +66,8 @@ sc.tl.umap(adata)
 sc.tl.leiden(adata, resolution=0.3)
 
 
-# annotate cell types 
+## annotate cell types 
+# manually annotated with decoupler based on cell type markers provided in the paper
 annotation_dict = {
  '0': 'Gonadotropes',
  '1': 'Stem cells',

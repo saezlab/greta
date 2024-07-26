@@ -57,10 +57,12 @@ rna.obs_names = [sample_id + '_' + o.split('-1')[0] for o in rna.obs_names]
 ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
 msk = ensmbls != ''
 rna = rna[:, msk].copy()
+
 # Basic QC
 sc.pp.filter_cells(rna, min_genes=100)
 sc.pp.filter_genes(rna, min_cells=3)
 del rna.obs['n_genes']
+
 # Remove duplicated genes based on num of cells
 to_remove = []
 for dup in rna.var.index[rna.var.index.duplicated()]:
