@@ -68,7 +68,7 @@ genome_annot <- get_genome_annotations(
 Signac::Annotation(hummus@assays$peaks) <- genome_annot
 rm(annot)
 
-rna_network <- read.csv2(rna_network_path, sep = ",")
+rna_network <- read.csv(rna_network_path, sep = ",")
 rna_network <- rna_network[1:grn_number_edges,]
 # Add external networks
 hummus <- add_network(
@@ -79,7 +79,7 @@ hummus <- add_network(
     weighted = TRUE)
 
 
-atac_network <- read.csv2(atac_network_path, sep = ",")
+atac_network <- read.csv(atac_network_path, sep = ",")
 #atac_network[,'peak1'] <- stringr::str_replace_all(atac_network[,'peak1'], '-', '_')
 #atac_network[,'peak2'] <- stringr::str_replace_all(atac_network[,'peak2'], '-', '_')
 

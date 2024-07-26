@@ -18,6 +18,7 @@ parser.add_argument('-a', '--path_atacnet', required=True)
 parser.add_argument('-t', '--distance_threshold', required=True, type=int)
 parser.add_argument('-c', '--n_cores', required=True, type=int)
 parser.add_argument('-n', '--tf_names', required=True)
+parser.add_argument('-o', '--organism')
 args = vars(parser.parse_args())
 
 
@@ -41,6 +42,10 @@ path_atacnet = args['path_atacnet']
 distance_threshold = args['distance_threshold']
 n_cores = args['n_cores']
 tf_names = args['tf_names']
+if args['organism'] =='hg38':
+    organism = 'human'
+elif args['organism'] == 'mm10':
+    organism = 'mouse'
 
 # Load the data
 mudata = mu.read_h5mu(path_mudata)
@@ -53,7 +58,7 @@ if __name__ == '__main__':
         expression_data=mudata["rna"].to_df(),
         tf_names=tf_names,
         n_cores=n_cores)
-    rna_network.to_csv(path_grnboost2)
+    rna_network.to_csv(path_grnboost2, index=False)
 
     # Create the atacnet network
     atac = ci.add_region_infos(mudata["atac"], sep=(':', '-'))
@@ -62,10 +67,11 @@ if __name__ == '__main__':
          "atac": atac})
     ci.compute_atac_network(
         mudata["atac"],
-        window_size=distance_threshold)
+        organism=organism)
 
     atac_network = ci.extract_atac_links(mudata["atac"])
-    atac_network.to_csv(path_atacnet)
+    atac_network = atac_network[atac_network["score"]>0]
+    atac_network.to_csv(path_atacnet, index=False)
 
 
 
