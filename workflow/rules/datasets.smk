@@ -146,7 +146,7 @@ rule annotate_reprofibro:
     output:
         'datasets/reprofibro/annotated.h5mu'
     params:
-        organism=config['datasets']['reprofibro']['organism'],
+        organism=config['datasets']['reprofibro']['organism']
     shell:
         """
         python workflow/scripts/datasets/reprofibro/reprofibro.py \
@@ -315,7 +315,7 @@ rule download_pituunpaired:
         gex=temp(local('datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5')),
         peaks=temp(local('datasets/pituunpaired/peaks.original.h5')),
         frags=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz')),
-        frag.index=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz.tbi'))
+        fragIndex=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz.tbi'))
     params:
         gex=config['datasets']['pituunpaired']['url']['rna_mtx'],
         peaks=config['datasets']['pituunpaired']['url']['peaks'],
@@ -334,17 +334,17 @@ rule download_pituunpaired:
 
 rule coembedd_pituunpaired:
     input:
-    gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
-    peaks='datasets/pituunpaired/peaks.h5ad',
-    frags='datasets/pituunpaired/smpl.frags.tsv.gz',
+        gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
+        peaks='datasets/pituunpaired/peaks.h5ad',
+        frags='datasets/pituunpaired/smpl.frags.tsv.gz'
 
     
     output:
-    tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
-    annot=temp(local('datasets/pituunpaired/annot.csv')),
-    exprMat=temp(local('datasets/pituunpaired/exprMat.rds')),
-    atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
-    cca=temp(local('datasets/pituunpaired/cca.rds'))
+        tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
+        annot=temp(local('datasets/pituunpaired/annot.csv')),
+        exprMat=temp(local('datasets/pituunpaired/exprMat.rds')),
+        atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
+        cca=temp(local('datasets/pituunpaired/cca.rds'))
 
     shell:
         """

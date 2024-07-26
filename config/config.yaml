@@ -83,7 +83,6 @@ datasets:
         url: 
             frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
             multi: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-            annot: 
 
     pituunpaired:
         organism: 'hg38'
