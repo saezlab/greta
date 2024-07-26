@@ -102,7 +102,7 @@ rule mdl_pando:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
     resources:
         mem_mb=256000,
-        runtime=720,
+        runtime=210,
     shell:
         """
         Rscript workflow/scripts/methods/pando/mdl.R \
@@ -125,7 +125,7 @@ rule src_pando:
         'datasets/{dataset}/cases/{case}/runs/pando.src.csv'
     resources:
         mem_mb=256000,
-        runtime=180,
+        runtime=720,
     params:
         exclude_exons='TRUE',
         ext=500000,

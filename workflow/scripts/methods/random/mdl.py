@@ -35,6 +35,7 @@ if name != 'random.random.random':
 # Join
 df = pd.merge(tfb[['tf', 'cre']], p2g[['cre', 'gene']], how='inner', on='cre')[['tf', 'gene']]
 df = df.sort_values(['tf', 'gene']).rename(columns={'tf': 'source', 'gene': 'target'}).drop_duplicates(['source', 'target'])
+df['score'] = 1.
 
 # Write
 df.to_csv(out_path, index=False)

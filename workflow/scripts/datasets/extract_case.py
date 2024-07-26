@@ -12,6 +12,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--path_input', required=True)
 parser.add_argument('-c','--celltypes', required=True)
+parser.add_argument('-s','--n_sample', required=True)
+parser.add_argument('-d','--seed', required=True)
 parser.add_argument('-g','--n_hvg', required=True)
 parser.add_argument('-r','--n_hvr', required=True)
 parser.add_argument('-t','--root', required=True)
@@ -20,6 +22,8 @@ args = vars(parser.parse_args())
 
 path_input = args['path_input']
 celltypes = args['celltypes']
+n_sample = int(args['n_sample'])
+seed = int(args['seed'])
 n_hvg = int(args['n_hvg'])
 n_hvr = int(args['n_hvr'])
 root = args['root']
@@ -34,9 +38,18 @@ if celltypes != 'all':
     mdata = mdata[np.isin(mdata.obs['celltype'], celltypes)].copy()
 mdata.obs['celltype'] = mdata.obs['celltype'].cat.remove_unused_categories()
 
+# Downsample
+if n_sample > 0:
+    barcodes = mdata.obs.sample(n=n_sample, random_state=seed, replace=False).index
+    mdata = mdata[barcodes, :].copy()
+
 # Extract
 rna = mdata.mod['rna']
 atac = mdata.mod['atac']
+
+# Make sure enough features
+rna = rna[:, np.sum(rna.X.toarray() != 0., axis=0) > 3].copy()
+atac = atac[:, np.sum(atac.X.toarray() != 0., axis=0) > 3].copy()
 
 # Normalize
 rna.layers['counts'] = rna.X.copy()

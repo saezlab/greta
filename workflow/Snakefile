@@ -2,15 +2,23 @@ from snakemake.utils import min_version
 
 min_version('7.29.0')
 
+path = 'datasets/pbmc10k/cases/all/'
+mthds = ['celloracle', 'figr', 'granie', 'pando']
+
 def make_combs():
     from itertools import product
-    mthds = ['celloracle', 'pando', 'granie', 'figr']
-    s = 'datasets/pbmc10k/cases/tcell/runs/{0}.{1}.{2}.{3}.mdl.csv'
+    s = path + 'runs/{0}.{1}.{2}.{3}.grn.csv'
     combinations = product(mthds, repeat=4)
     strings = []
     for combo in combinations:
         formatted_string = s.format(*combo)
         strings.append(formatted_string)
+    #s = path + 'runs/{0}.src.csv'
+    #for m in mthds:
+    #    formatted_string = s.format(m)
+    #    strings.append(formatted_string)
+    s = path + 'runs/random.random.random.random.grn.csv'
+    strings.append(s)
     return strings
 
 configfile: 'config/config.yaml'
@@ -23,9 +31,39 @@ include: 'rules/methods/granie.smk'
 include: 'rules/methods/figr.smk'
 include: 'rules/methods/hummus.smk'
 include: 'rules/methods/scenicplus.smk'
+include: 'rules/methods/grn.smk'
+include: 'rules/methods/random.smk'
+
+include: 'rules/analysis/prior.smk'
+
+f_scores = [
+'analsyis/prior/tfbind/unibind.csv', 'analsyis/prior/tfbind/remap2022.csv', 'analsyis/prior/tfbind/chipatlas.csv',
+'analsyis/prior/cre/encode.csv', 'analsyis/prior/cre/zhang21.csv', 'analsyis/prior/evo/phastcons.csv',
+'analsyis/prior/eqtl/eqtlcatalogue.csv', 'analsyis/prior/snp/gwascatalogue.csv',
+'analsyis/prior/tfm/tfmdb.csv', 'analsyis/prior/tfm/hpa.csv',
+]
+
+# Update config with grid search
+n_cells = [1024, 2048, 4096, 8192, 16384]
+n_genes = [1024, 2048, 4096, 8192, 16384]
+seeds = [0, 1, 2]
+stab_runs = []
+for n_cell in n_cells:
+    for n_gene in n_genes:
+        for seed in seeds:
+            n_cre = n_gene * 4
+            name = 'pbmc10k_{n_cell}_{n_gene}_{seed}'.format(n_cell=n_cell, n_gene=n_gene, seed=seed)
+            config['datasets']['pbmc10k']['cases'][name] = dict()
+            config['datasets']['pbmc10k']['cases'][name]['celltypes'] = 'all'
+            config['datasets']['pbmc10k']['cases'][name]['n_sample'] = n_cell
+            config['datasets']['pbmc10k']['cases'][name]['seed'] = seed
+            config['datasets']['pbmc10k']['cases'][name]['n_hvg'] = n_gene
+            config['datasets']['pbmc10k']['cases'][name]['n_hvr'] = n_cre
+            for mth in mthds:
+                stab_runs.append('datasets/pbmc10k/cases/{name}/runs/{mth}.src.csv'.format(name=name, mth=mth))
 
 rule all:
     input:
-        make_combs()
+        stab_runs
 
 # snakemake --profile config/slurm/ ...

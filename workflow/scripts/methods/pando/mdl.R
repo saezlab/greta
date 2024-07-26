@@ -2,6 +2,7 @@ library(tidyverse)
 library(rhdf5)
 library(Pando)
 library(doParallel)
+library(R.utils)
 
 nCores <- 64
 cat("N cores: ", nCores, '\n')
@@ -43,6 +44,8 @@ h5closeAll()
 p2g$gene = stringr::str_replace_all(p2g$gene, '-', '_')
 features <- unique(p2g$gene)
 cat("Number of target genes to fit: ", length(features), '\n')
+
+run_mdl <- function(){
 model_fits <- Pando::map_par(features, function(g){
     # Subset scaffold
     print(g)
@@ -135,6 +138,21 @@ mutate(
     source=stringr::str_replace_all(source, '_', '-'),
     target=stringr::str_replace_all(target, '_', '-'),
 )
+return(grn)
+}
 
+get_grn_timeout <- function(timeout){
+    tryCatch({
+    setTimeLimit(elapsed = timeout, transient = TRUE)
+    return(run_mdl())
+    setTimeLimit(cpu = Inf, elapsed = Inf)
+    }, error = function(ex) {
+    setTimeLimit(cpu = Inf, elapsed = Inf)
+    grn <- data.frame(source=character(), target=character(), score=numeric(), pval=numeric())
+    return(grn)
+})
+}
+
+grn <- get_grn_timeout(timeout=10800)
 # Write
 write.csv(x = grn, file = path_out, row.names=FALSE)

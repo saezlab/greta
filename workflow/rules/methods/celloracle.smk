@@ -150,6 +150,9 @@ rule src_celloracle:
         p=0.001,
         n=2000,
         k=20,
+    resources:
+        mem_mb=256000,
+        runtime=720,
     shell:
         """
         Rscript workflow/scripts/methods/celloracle/src.R \
