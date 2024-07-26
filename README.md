@@ -69,7 +69,7 @@ snakemake resources/neurips2021/small/pando/tri.csv
 ```
 
 ### 4. Setting up a singularity container
-To handle multiple dependencies across methods we need to build a singularity image container per method. Here are the instructions on [how to install singularity](https://docs.sylabs.io/guides/3.0/user-guide/installation.html) in case you don't have it.
+To handle multiple dependencies across methods we need to build a singularity image container per method. Here are the instructions on [how to install singularity](https://apptainer.org/docs/user/latest/) in case you don't have it.
 
 To create a singularity image file (`.sif`), first you need to manually write a definition file (`.def`) that contains all the instructions to install the necessary dependencies. Please do it inside `workflow/envs` and name it `namemethod.def`.
 
