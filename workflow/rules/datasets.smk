@@ -232,12 +232,12 @@ rule annotate_pbmc10k:
         -e {input.peaks} \
         -f {output.out}
         """
-
+# TO DO: Put temp flag back after testing!
 # pituPaired
 rule download_pitupaired:
     output:
-        multi=temp(local('datasets/pitupaired/multiome_original.h5')),
-        frags=temp(local('datasets/pitupaired/smpl.frags.tsv.gz'))
+        multi=local('datasets/pitupaired/multiome_original.h5'),
+        frags=local('datasets/pitupaired/smpl.frags.tsv.gz')
     params:
         multi=config['datasets']['pitupaired']['url']['multi'],
         frags=config['datasets']['pitupaired']['url']['frags'],
@@ -246,13 +246,15 @@ rule download_pitupaired:
         wget '{params.frags}' -O '{output.frags}'
         wget '{params.multi}' -O '{output.multi}'
         """
-
+# TO DO: Put temp flag back after testing!
 rule prcannot_pitupaired:
     input:
         multi='datasets/pitupaired/multiome_original.h5'
     output:
-        tmp=temp(directory(local('datasets/pitupaired/tmp'))),
-        annot=temp(local('datasets/pitupaired/annot.csv')),
+        tmp=directory(local('datasets/pitupaired/tmp')),
+        annot=local('datasets/pitupaired/annot.csv')
+    singularity:
+        'workflow/envs/gretabench.sif'
     shell:
         """
         python workflow/scripts/datasets/pitupaired/prc_annot.py \
@@ -261,6 +263,7 @@ rule prcannot_pitupaired:
         -c {output.annot}
         """
 
+# TO DO: Put temp flag back after testing!
 rule callpeaks_pitupaired:
     input:
         frags='datasets/pitupaired/smpl.frags.tsv.gz',
@@ -268,8 +271,8 @@ rule callpeaks_pitupaired:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=temp(directory(local('datasets/pitupaired/tmp_peaks'))),
-        peaks=temp(local('datasets/pitupaired/peaks.h5ad'))
+        tmp=directory(local('datasets/pitupaired/tmp_peaks')),
+        peaks=local('datasets/pitupaired/peaks.h5ad')
     resources:
         mem_mb=64000,
     threads: 16
