@@ -233,6 +233,7 @@ rule annotate_pbmc10k:
         -f {output.out}
         """
 # TO DO: Put temp flag back after testing!
+# Successfully tested!
 # pituPaired
 rule download_pitupaired:
     output:
@@ -247,6 +248,7 @@ rule download_pitupaired:
         wget '{params.multi}' -O '{output.multi}'
         """
 # TO DO: Put temp flag back after testing!
+# Successfully tested!
 rule prcannot_pitupaired:
     input:
         multi='datasets/pitupaired/multiome_original.h5'
