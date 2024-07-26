@@ -45,7 +45,6 @@ rule prior_hummus:
         -d {input.d} \
         -r {output.rna_network} \
         -a {output.atac_network} \
-        -t {params.distance_threshold_atacnet} \
         -c {params.n_cores} \
         -n {output.tf_list} \
         -o {params.organism}

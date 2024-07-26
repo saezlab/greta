@@ -14,8 +14,7 @@ from arboreto.algo import grnboost2
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--path_mudata', required=True)
 parser.add_argument('-r', '--path_grnboost2', required=True)
-parser.add_argument('-a', '--path_atacnet', required=True)
-parser.add_argument('-t', '--distance_threshold', required=True, type=int)
+parser.add_argument('-a', '--path_circe', required=True)
 parser.add_argument('-c', '--n_cores', required=True, type=int)
 parser.add_argument('-n', '--tf_names', required=True)
 parser.add_argument('-o', '--organism')
@@ -38,8 +37,7 @@ def run_grnboost2(expression_data, tf_names, n_cores=1):
 
 path_mudata = args['path_mudata']
 path_grnboost2 = args['path_grnboost2']
-path_atacnet = args['path_atacnet']
-distance_threshold = args['distance_threshold']
+path_atacnet = args['path_circe']
 n_cores = args['n_cores']
 tf_names = args['tf_names']
 if args['organism'] =='hg38':
