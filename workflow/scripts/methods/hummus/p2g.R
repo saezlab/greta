@@ -9,10 +9,13 @@ hummus_object_f <- args[6]
 organism <- args[7]
 extend <- as.numeric(args[8])
 n_cores <- args[9]
+n_cores <- if (n_cores == 'NULL') 1 else as.numeric(n_cores)
 path_out <- args[10]
 multilayer_f <- args[11]
 print(extend)
 print(multilayer_f)
+print("n_cores of type")
+print(class(n_cores))
 
 # Set genome
 if (organism == 'hg38'){
@@ -53,11 +56,9 @@ save_multilayer(
   hummus,
   folder_name = multilayer_f)
 
-
 # Run HuMMuS enhancers search
 enhancers <- define_enhancers(
   hummus,
-#  gene_list = list("ATF2"),
   multilayer_f = multilayer_f,
   njobs = n_cores
   )

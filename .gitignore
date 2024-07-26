@@ -139,3 +139,10 @@ dmypy.json
 workflow/.DS_Store
 workflow/scripts/.DS_Store
 workflow/scripts/methods/.DS_Store
+
+
+.snakemake/
+benchmarks/
+datasets/
+gdata/
+workflow/scripts/methods/scenic+/s1.py

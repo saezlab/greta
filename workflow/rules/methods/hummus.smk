@@ -29,7 +29,6 @@ rule prior_hummus:
         hummus_object = temp('datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS'),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        distance_threshold_atacnet = 500000,
         grn_number_edges = 50000,
         tf_layer_method = None,
         n_cores = 2,
@@ -48,7 +47,8 @@ rule prior_hummus:
         -a {output.atac_network} \
         -t {params.distance_threshold_atacnet} \
         -c {params.n_cores} \
-        -n {output.tf_list}
+        -n {output.tf_list} \
+        -o {params.organism}
 
         Rscript workflow/scripts/methods/hummus/prior_hummus.R \
         {input.d} \

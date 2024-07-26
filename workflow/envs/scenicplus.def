@@ -17,6 +17,7 @@ From: ubuntu:20.04
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
     apt install -y build-essential  \
                    gcc \
+                   libstdc++6 \
                    cmake \
                    wget \
                    curl \
@@ -41,9 +42,9 @@ From: ubuntu:20.04
     python=3.11.0 \
     pip \
     numpy \
-    numba==0.59.0 \
+    numba \
     macs2 \
-    cython==0.29.37 \
+    cython \
     fit-sne \
     papermill \
     bs4 \
@@ -55,8 +56,8 @@ From: ubuntu:20.04
     velocyto.py \
     pygam \
     fa2 \
-    scanpy==1.8.2 \
-    muon \
+    muon==0.1.5 \
+    scanpy==1.9.8 \
     polars \
     pyfaidx \
     loompy \
@@ -77,18 +78,25 @@ From: ubuntu:20.04
     gseapy \
     snakemake==8.5.5 \
     tqdm \
-    jupyterlab==3.6.7 \
-    scikit-learn==1.3.2 \
-    scipy==1.12.0 \
-    joblib==1.3.2 \
- 
+    jupyterlab \
+    scikit-learn \
+    scipy \
+    joblib \
+    gcc=12.3.0 \
+    gxx=12.3.0 \
+    libgcc
 
     # Install scenic+
     conda activate env
-    pip install \
+    pip install muon \
     igv-jupyter \
-    loomxpy \
-    git+https://github.com/aertslab/scenicplus
+    loomxpy
+
+    git clone https://github.com/aertslab/scenicplus.git
+    cd scenicplus
+    pip install .
+
+    pip install polars==1.0.0 git+https://github.com/aertslab/pycisTopic.git@a40e47c2a90e792e8643992da36e900ed1c7708b   
 
     # Remove cache for lighter containers
     pip cache purge
