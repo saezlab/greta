@@ -146,7 +146,7 @@ rule annotate_reprofibro:
     output:
         'datasets/reprofibro/annotated.h5mu'
     params:
-        organism=config['datasets']['reprofibro']['organism'],
+        organism=config['datasets']['reprofibro']['organism']
     shell:
         """
         python workflow/scripts/datasets/reprofibro/reprofibro.py \
@@ -232,12 +232,13 @@ rule annotate_pbmc10k:
         -e {input.peaks} \
         -f {output.out}
         """
-
+# TO DO: Put temp flag back after testing!
+# Successfully tested!
 # pituPaired
 rule download_pitupaired:
     output:
-        multi=temp(local('datasets/pitupaired/multiome_original.h5')),
-        frags=temp(local('datasets/pitupaired/smpl.frags.tsv.gz'))
+        multi=local('datasets/pitupaired/multiome_original.h5'),
+        frags=local('datasets/pitupaired/smpl.frags.tsv.gz')
     params:
         multi=config['datasets']['pitupaired']['url']['multi'],
         frags=config['datasets']['pitupaired']['url']['frags'],
@@ -246,18 +247,25 @@ rule download_pitupaired:
         wget '{params.frags}' -O '{output.frags}'
         wget '{params.multi}' -O '{output.multi}'
         """
-
+# TO DO: Put temp flag back after testing!
+# Successfully tested!
 rule prcannot_pitupaired:
+    input:
+        multi='datasets/pitupaired/multiome_original.h5'
     output:
-        tmp=temp(directory(local('datasets/pitupaired/tmp'))),
-        annot=temp(local('datasets/pitupaired/annot.csv')),
+        tmp=directory(local('datasets/pitupaired/tmp')),
+        annot=local('datasets/pitupaired/annot.csv')
+    singularity:
+        'workflow/envs/gretabench.sif'
     shell:
         """
         python workflow/scripts/datasets/pitupaired/prc_annot.py \
-        -t {output.tmp} \
-        -a {output.annot}
+        -a {output.tmp} \
+        -b {input.multi} \
+        -c {output.annot}
         """
 
+# TO DO: Put temp flag back after testing!
 rule callpeaks_pitupaired:
     input:
         frags='datasets/pitupaired/smpl.frags.tsv.gz',
@@ -265,8 +273,8 @@ rule callpeaks_pitupaired:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=temp(directory(local('datasets/pitupaired/tmp_peaks'))),
-        peaks=temp(local('datasets/pitupaired/peaks.h5ad'))
+        tmp=directory(local('datasets/pitupaired/tmp_peaks')),
+        peaks=local('datasets/pitupaired/peaks.h5ad')
     resources:
         mem_mb=64000,
     threads: 16
@@ -309,27 +317,70 @@ rule annotate_pitupaired:
 # pituUnpaired
 rule download_pituunpaired:
     output:
-        multi=temp(local('datasets/pituunpaired/multiome_original.h5')),
-        frags=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz'))
+        gex=temp(local('datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5')),
+        peaks=temp(local('datasets/pituunpaired/peaks.original.h5')),
+        frags=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz')),
+        fragIndex=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz.tbi'))
     params:
-        multi=config['datasets']['pituunpaired']['url']['multi'],
-        frags=config['datasets']['pituunpaired']['url']['frags'],
+        gex=config['datasets']['pituunpaired']['url']['rna_mtx'],
+        peaks=config['datasets']['pituunpaired']['url']['peaks'],
+        frags=config['datasets']['pituunpaired']['url']['atac_frags'],
+        meta=config['datasets']['pituunpaired']['url']['atac_meta']
     shell:
         """
+        wget '{params.gex}' -O '{output.gex}'
+        wget '{params.peaks}' -O '{output.peaks}'
         wget '{params.frags}' -O '{output.frags}'
-        wget '{params.multi}' -O '{output.multi}'
+        wget '{params.meta}' -O '{output.meta}'
+        gzip -d {output.frags}
+        bgzip {output.frags}
+        tabix -p bed {output.frags}
         """
 
-rule prcannot_pituunpaired:
+rule coembedd_pituunpaired:
+    input:
+        gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
+        peaks='datasets/pituunpaired/peaks.h5ad',
+        frags='datasets/pituunpaired/smpl.frags.tsv.gz'
+
+    
     output:
         tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
         annot=temp(local('datasets/pituunpaired/annot.csv')),
+        exprMat=temp(local('datasets/pituunpaired/exprMat.rds')),
+        atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
+        cca=temp(local('datasets/pituunpaired/cca.rds'))
+
     shell:
         """
-        python workflow/scripts/datasets/pituunpaired/prc_annot.py \
-        -t {output.tmp} \
-        -a {output.annot}
+        Rscript workflow/scripts/datasets/pituunpaired/coembedd.R \
+        {input.gex} \
+        {input.peaks} \
+        {input.frags} \
+        {output.annot} \
+        {output.exprMat} \
+        {output.atacSE} \
+        {output.cca} 
         """
+
+rule pairCells_pituunpaired:
+    input:
+        exprMat='datasets/pituunpaired/exprMat.rds',
+        atacSE='datasets/pituunpaired/atac.se.rds',
+        cca='datasets/pituunpaired/cca.rds',
+    output:
+        tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
+        barMap=temp(local('datasets/pituunpaired/barMap.csv')),
+
+    shell:
+        """
+        Rscript workflow/scripts/datasets/pituunpaired/pairCells.R \
+        {input.exprMat} \
+        {input.atacSE} \
+        {input.cca} \
+        {output.barMap} \
+        """
+
 
 rule callpeaks_pituunpaired:
     input:

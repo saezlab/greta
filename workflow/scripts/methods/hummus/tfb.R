@@ -11,8 +11,8 @@ organism <- args[8]
 n_cores <- args[9]
 path_out <- args[10]
 multilayer_f <- args[11]
-
-
+p2g <- args[12]
+print(p2g)
 # Set genome
 if (organism == 'hg38'){
     genome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
@@ -24,9 +24,21 @@ if (organism == 'hg38'){
 hummus <- readRDS(hummus_object_f)
 
 #load p2g bipartite, to be added to this hummus_object
-p2g <- read.csv(p2g_f)
-print(p2g)
-p2g <- p2g[, c("gene", "cre", "score")]
+if (p2g != "hummus"){
+    p2g <- read.csv(p2g_f)
+    p2g <- p2g[, c("gene", "cre", "score")]
+    hummus@multilayer@bipartites['atac_rna'] <- new("bipartite",
+                           "network" = p2g,
+                           "multiplex_left" = "RNA",
+                           "multiplex_right" = "peaks")
+} else {
+    hummus <- bipartite_peaks2genes(
+                      hummus_object = hummus,
+                      gene_assay = "RNA",
+                      peak_assay = "peaks",
+                      store_network = FALSE,
+                      )
+}
 
 # Add bipartites from hummus method
 hummus <- bipartite_tfs2peaks(
@@ -37,12 +49,6 @@ hummus <- bipartite_tfs2peaks(
               tf_multiplex_name = "TF",
               genome = genome,
               )
-
-hummus@multilayer@bipartites['atac_rna'] <- new("bipartite",
-                           "network" = p2g,
-                           "multiplex_left" = "RNA",
-                           "multiplex_right" = "peaks")
-
 
 # Save the multilayer, necessary since multixrank uses locally saved files
 save_multilayer(

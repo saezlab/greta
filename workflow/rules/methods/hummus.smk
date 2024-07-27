@@ -1,3 +1,4 @@
+
 rule pre_hummus:
     input:
         d='datasets/{dataset}/cases/{case}/mdata.h5mu',
@@ -31,7 +32,7 @@ rule prior_hummus:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         grn_number_edges = 50000,
         tf_layer_method = None,
-        n_cores = 2,
+        n_cores = 2
     singularity:
         'workflow/envs/hummus.sif'
     shell:
@@ -45,7 +46,6 @@ rule prior_hummus:
         -d {input.d} \
         -r {output.rna_network} \
         -a {output.atac_network} \
-        -t {params.distance_threshold_atacnet} \
         -c {params.n_cores} \
         -n {output.tf_list} \
         -o {params.organism}
@@ -108,7 +108,8 @@ rule tfb_hummus:
         multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.multilayer")),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        n_cores = 32
+        n_cores = 32,
+        p2g = lambda w: w.p2g
     shell:
         """
         Rscript workflow/scripts/methods/hummus/tfb.R \
@@ -118,6 +119,7 @@ rule tfb_hummus:
         {params.n_cores} \
         {output.tfb} \
         {output.multilayer_f} \
+        {params.p2g}
         """
 
 
@@ -135,7 +137,11 @@ rule mdl_hummus:
         mdl = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.hummus.mdl.csv',
         multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.multilayer")),
     params:
-        n_cores = 32
+        n_cores = 32,
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        p2g = lambda w: w.p2g,
+        tfb = lambda w: w.tfb
+
     shell:
         """
         Rscript workflow/scripts/methods/hummus/mdl.R \
@@ -145,4 +151,7 @@ rule mdl_hummus:
         {params.n_cores} \
         {output.mdl} \
         {output.multilayer_f} \
+        {params.p2g} \
+        {params.tfb} \
+        {params.organism}
         """

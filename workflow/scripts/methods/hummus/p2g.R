@@ -27,6 +27,7 @@ if (organism == 'hg38'){
 
 #load {pre}.hummus_object, containing formatted preprocessed data
 hummus <- readRDS(hummus_object_f)
+print("HuMMuS object:")
 print(hummus)
 
 # Add bipartites from hummus method
@@ -50,12 +51,12 @@ hummus <- bipartite_peaks2genes(
                       downstream = extend
                       )
 
-intersect(unique(hummus@multilayer@multiplex$peaks@networks$AtacNet$peak2), unique(hummus@multilayer@bipartites$atac_rna@network$peak))
 # Save the multilayer, necessary since multixrank uses locally saved files
 save_multilayer(
   hummus,
   folder_name = multilayer_f)
 
+print("Calculating peak-to-gene scores")
 # Run HuMMuS enhancers search
 enhancers <- define_enhancers(
   hummus,
@@ -67,6 +68,7 @@ enhancers <- define_enhancers(
 enhancers <- enhancers[, c("gene", "peak", "score")]
 colnames(enhancers) <- c("gene", "cre", "score")
 
+print("Saving peak-to-gene results")
 # Write
 write.csv(
     x = enhancers,
