@@ -47,10 +47,8 @@ rna = sc.read_10x_h5(path_multi, genome="GRCh38", gex_only=True)
 del rna.obs
 rna.var.index.name = None
 
-# Add celltype annotation
+# Rename barcodes RNA
 sample_id = 'smpl'
-rna.obs['celltype'] = obs[obs['batch'] == sample_id]['celltype']
-rna.obs['batch'] = sample_id
 rna.obs_names = [sample_id + '_' + o.split('-1')[0] for o in rna.obs_names]
 
 # Filter faulty gene symbols
@@ -70,15 +68,25 @@ for dup in rna.var.index[rna.var.index.duplicated()]:
     max_idx = tmp.set_index('gene_ids')['n_cells'].idxmax()
     to_remove.extend(tmp['gene_ids'][tmp['gene_ids'] != max_idx].values)
 rna = rna[:, ~rna.var['gene_ids'].isin(to_remove)].copy()
-del rna.obs
 del rna.var
 
 # Read atac data
 atac = ad.read_h5ad(path_peaks)
-atac = atac[rna.obs_names].copy()
+
+# Filter annotation and RNA data based on ATAC barcodes
+obs = obs[obs.index.isin(atac.obs_names)]
+rna = rna[rna.obs_names.isin(atac.obs_names)]
+
+# Add celltype annotation to ATAC data
+rna.obs['celltype'] = obs['celltype']
+rna.obs['batch'] = obs['batch']
+rna.obs_names = obs.index
+
+atac.obs['celltype'] = obs['celltype']
+atac.obs['batch'] = obs['batch']
+atac.obs_names = obs.index
 
 # Create mdata
-obs.index = [sample_id + '_' + b.split('-1')[0] for b in obs.index]
 mdata = md.MuData(
     {'rna': rna, 'atac': atac,},
     obs=obs

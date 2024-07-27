@@ -266,6 +266,7 @@ rule prcannot_pitupaired:
         """
 
 # TO DO: Put temp flag back after testing!
+# Successfully tested!
 rule callpeaks_pitupaired:
     input:
         frags='datasets/pitupaired/smpl.frags.tsv.gz',
@@ -296,18 +297,18 @@ rule annotate_pitupaired:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=temp(directory(local('datasets/pitupaired/tmp_annot'))),
+        tmp=directory(local('datasets/pitupaired/tmp_annot')),
         out='datasets/pitupaired/annotated.h5mu'
     params:
         organism=config['datasets']['pitupaired']['organism'],
     resources:
-        mem_mb=32000,
+        mem_mb=8000,
     shell:
         """
         python workflow/scripts/datasets/pitupaired/pitupaired.py \
         -a {output.tmp} \
         -b {input.annot} \
-        -c {input.g} \
+        -c {input.g}
         -d {params.organism} \
         -e {input.peaks} \
         -f {output.out} \
