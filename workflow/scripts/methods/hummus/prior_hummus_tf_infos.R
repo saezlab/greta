@@ -1,7 +1,6 @@
 library(tidyverse)
 library(rhdf5)
 library(HuMMuS)
-
 # Parse args
 args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
