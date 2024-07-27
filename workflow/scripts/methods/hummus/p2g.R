@@ -51,7 +51,6 @@ hummus <- bipartite_peaks2genes(
                       downstream = extend
                       )
 
-intersect(unique(hummus@multilayer@multiplex$peaks@networks$AtacNet$peak2), unique(hummus@multilayer@bipartites$atac_rna@network$peak))
 # Save the multilayer, necessary since multixrank uses locally saved files
 save_multilayer(
   hummus,
