@@ -317,7 +317,7 @@ rule annotate_pitupaired:
         -g {input.multi}
         """
 
-# TO DO: Put temp flag back after testing!
+
 # Successfully tested!
 # pituUnpaired
 rule download_pituunpaired:
