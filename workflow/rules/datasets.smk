@@ -232,13 +232,13 @@ rule annotate_pbmc10k:
         -e {input.peaks} \
         -f {output.out}
         """
-# TO DO: Put temp flag back after testing!
+
 # Successfully tested!
 # pituPaired
 rule download_pitupaired:
     output:
-        multi=local('datasets/pitupaired/multiome_original.h5'),
-        frags=local('datasets/pitupaired/smpl.frags.tsv.gz')
+        multi=temp(local('datasets/pitupaired/multiome_original.h5')),
+        frags=temp(local('datasets/pitupaired/smpl.frags.tsv.gz'))
     params:
         multi=config['datasets']['pitupaired']['url']['multi'],
         frags=config['datasets']['pitupaired']['url']['frags'],
@@ -247,14 +247,14 @@ rule download_pitupaired:
         wget '{params.frags}' -O '{output.frags}'
         wget '{params.multi}' -O '{output.multi}'
         """
-# TO DO: Put temp flag back after testing!
+
 # Successfully tested!
 rule prcannot_pitupaired:
     input:
         multi='datasets/pitupaired/multiome_original.h5'
     output:
-        tmp=directory(local('datasets/pitupaired/tmp')),
-        annot=local('datasets/pitupaired/annot.csv')
+        tmp=temp(directory(local('datasets/pitupaired/tmp'))),
+        annot=temp(local('datasets/pitupaired/annot.csv'))
     singularity:
         'workflow/envs/gretabench.sif'
     shell:
@@ -265,7 +265,7 @@ rule prcannot_pitupaired:
         -c {output.annot}
         """
 
-# TO DO: Put temp flag back after testing!
+
 # Successfully tested!
 rule callpeaks_pitupaired:
     input:
@@ -274,8 +274,8 @@ rule callpeaks_pitupaired:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=directory(local('datasets/pitupaired/tmp_peaks')),
-        peaks=local('datasets/pitupaired/peaks.h5ad')
+        tmp=temp(directory(local('datasets/pitupaired/tmp_peaks'))),
+        peaks=temp(local('datasets/pitupaired/peaks.h5ad'))
     resources:
         mem_mb=64000,
     threads: 16
@@ -288,6 +288,8 @@ rule callpeaks_pitupaired:
         -o {output.peaks}
         """
 
+
+# Successfully tested!
 rule annotate_pitupaired:
     input:
         annot='datasets/pitupaired/annot.csv',
@@ -297,8 +299,8 @@ rule annotate_pitupaired:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=directory(local('datasets/pitupaired/tmp_annot')),
-        out='datasets/pitupaired/annotated.h5mu'
+        tmp=temp(directory(local('datasets/pitupaired/tmp_annot'))),
+        out=temp('datasets/pitupaired/annotated.h5mu')
     params:
         organism=config['datasets']['pitupaired']['organism'],
     resources:
@@ -315,6 +317,8 @@ rule annotate_pitupaired:
         -g {input.multi}
         """
 
+# TO DO: Put temp flag back after testing!
+# Successfully tested!
 # pituUnpaired
 rule download_pituunpaired:
     output:
@@ -326,17 +330,19 @@ rule download_pituunpaired:
         gex=config['datasets']['pituunpaired']['url']['rna_mtx'],
         peaks=config['datasets']['pituunpaired']['url']['peaks'],
         frags=config['datasets']['pituunpaired']['url']['atac_frags'],
-        meta=config['datasets']['pituunpaired']['url']['atac_meta']
+        unzip=local('datasets/pituunpaired/smpl.frags.tsv')
+
     shell:
         """
         wget '{params.gex}' -O '{output.gex}'
         wget '{params.peaks}' -O '{output.peaks}'
         wget '{params.frags}' -O '{output.frags}'
-        wget '{params.meta}' -O '{output.meta}'
-        gzip -d {output.frags}
-        bgzip {output.frags}
+        gunzip -d {output.frags}
+        bgzip {params.unzip}
         tabix -p bed {output.frags}
         """
+
+
 
 rule coembedd_pituunpaired:
     input:
