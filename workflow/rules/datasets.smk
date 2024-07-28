@@ -344,6 +344,8 @@ rule download_pituunpaired:
 
 
 
+# Successfully tested!
+# pituUnpaired
 rule coembedd_pituunpaired:
     input:
         gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
@@ -358,8 +360,8 @@ rule coembedd_pituunpaired:
         atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
         cca=temp(local('datasets/pituunpaired/cca.rds'))
 
-    singularity: 
-        'workflow/envs/figr.sif'
+    conda: 
+        '../../workflow/envs/figr.yaml'
 
     shell:
         """
@@ -381,7 +383,10 @@ rule pairCells_pituunpaired:
         cca='datasets/pituunpaired/cca.rds',
     output:
         tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
-        barMap=temp(local('datasets/pituunpaired/barMap.csv')),
+        barMap=local('datasets/pituunpaired/barMap.csv')
+
+    singularity:
+        'workflow/envs/figr.sif'
 
     shell:
         """
@@ -392,7 +397,8 @@ rule pairCells_pituunpaired:
         {output.barMap} \
         """
 
-
+# Successfully tested!
+# pituUnpaired
 rule callpeaks_pituunpaired:
     input:
         frags='datasets/pituunpaired/smpl.frags.tsv.gz',
