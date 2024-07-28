@@ -5,6 +5,8 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 library(SingleCellExperiment)
+library(hdf5r)
+
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
@@ -23,7 +25,7 @@ nCores <- 4
 # Load RNA and ATAC seq matrix
 ## NEEDS to be changed to the correct path
 rna <- Read10X_h5(path_gex)
-atac = Read10X_h5(path_peaks)
+atac <- Read10X_h5(path_peaks)
 
 
 # Add annotation to peaks 
@@ -69,11 +71,11 @@ data.rna <- RunUMAP(data.rna, dims = 1:30)
 
 # Annotate RNA clusters and remove unwanted clusters
 ## Manual annotation based on markers provided in paper, to be replaced with ground truth annotation as provided by authors (if available)
-cells_to_remove <- WhichCells(data.rna, idents = c(6, 10))
+cells_to_remove <- WhichCells(data.rna, idents = c(5, 6))
 data.rna <- subset(data.rna, cells = setdiff(Cells(data.rna), cells_to_remove))
 
-new.cluster.ids <- c("Gonadotropes", "Somatotropes", "Stem cells", "Lactotropes", "Thyrotropes", "Pituicytes", "Corticotropes", "Somatotropes", 
-    "Stem cells", "Immune cells", "Pericytes", "Endothelial cells", "T cells")
+new.cluster.ids <- c("Gonadotropes", "Stem cells", "Somatotropes", "Lactotropes", "Thyrotropes", "Pituicytes", "Stem cells", "Pericytes", "Corticotropes", 
+    "Endothelial cells", "Immune cells", "Gonadotropes")
 
 ## Rename clusters
 names(new.cluster.ids) <- levels(data.rna)
@@ -145,7 +147,7 @@ data.atac <- AddMetaData(data.atac, metadata = celltype.predictions)
 data.atac$celltype <- data.atac$predicted.id
 
 ## Create annotation df
-annot <- data.frame(celltype = data.atac.sub$celltype)
+annot <- data.frame(celltype = data.atac$celltype)
 annot$batch <- "smpl"
 annot$barcodes <- rownames(annot)
 
