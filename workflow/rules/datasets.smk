@@ -322,10 +322,10 @@ rule annotate_pitupaired:
 # pituUnpaired
 rule download_pituunpaired:
     output:
-        gex=temp(local('datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5')),
-        peaks=temp(local('datasets/pituunpaired/peaks.original.h5')),
-        frags=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz')),
-        fragIndex=temp(local('datasets/pituunpaired/smpl.frags.tsv.gz.tbi'))
+        gex=local('datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5'),
+        peaks=local('datasets/pituunpaired/peaks.original.h5'),
+        frags=local('datasets/pituunpaired/smpl.frags.tsv.gz'),
+        fragIndex=local('datasets/pituunpaired/smpl.frags.tsv.gz.tbi')
     params:
         gex=config['datasets']['pituunpaired']['url']['rna_mtx'],
         peaks=config['datasets']['pituunpaired']['url']['peaks'],
@@ -347,16 +347,19 @@ rule download_pituunpaired:
 rule coembedd_pituunpaired:
     input:
         gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
-        peaks='datasets/pituunpaired/peaks.h5ad',
+        peaks='datasets/pituunpaired/peaks.original.h5',
         frags='datasets/pituunpaired/smpl.frags.tsv.gz'
 
     
     output:
         tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
-        annot=temp(local('datasets/pituunpaired/annot.csv')),
+        annot=local('datasets/pituunpaired/annot.csv'),
         exprMat=temp(local('datasets/pituunpaired/exprMat.rds')),
         atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
         cca=temp(local('datasets/pituunpaired/cca.rds'))
+
+    singularity: 
+        'workflow/envs/figr.sif'
 
     shell:
         """
@@ -369,6 +372,7 @@ rule coembedd_pituunpaired:
         {output.atacSE} \
         {output.cca} 
         """
+
 
 rule pairCells_pituunpaired:
     input:
