@@ -11,14 +11,16 @@ rule download_motifs:
         wget -O {output.m} {input.url_m}
         """
 
-rule download_genome_annotations:
+rule download_gene_annotations:
     output:
         h = "aertslab/genomes/hg38/hg38_ensdb_v86.csv",
         m = "aertslab/genomes/mm10/mm10_ensdb_v79.csv"
+    singularity:
+        "workflow/envs/scenicplus.sif"
     shell:
         """
-        python workflow/scripts/methods/scenicplus/download_genome_annot.py \
-        -h {output.h} \
+        python workflow/scripts/methods/scenicplus/download_gene_annot.py \
+        -j {output.h} \
         -m {output.m} 
         """
 
@@ -54,7 +56,7 @@ rule pre_scenicplus:
         -f {input.frags} \
         -i {input.mudata} \
         -m {input.chrom_sizes_m} \
-        -h {input.chrom_sizes_h} \
+        -j {input.chrom_sizes_h} \
         -o {output.d} \
         -t {output.tmp_scenicplus} \
         -g {params.organism} \
@@ -66,15 +68,14 @@ rule pre_scenicplus:
 rule p2g_scenicplus:
     input:
         data='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
+        chrom_sizes_m = "aertslab/genomes/mm10/mm10.chrom.sizes",
+        chrom_sizes_h = "aertslab/genomes/hg38/hg38.chrom.sizes"
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
-        annot_m = "aertslab/genomes/mm10/mm10_ensdb_v79.csv",
-        annot_h = "aertslab/genomes/hg38/hg38_ensdb_v86.csv",
-        chrom_sizes_m = "aertslab/genomes/mm10/mm10.chrom.sizes",
-        chrom_sizes_h = "aertslab/genomes/hg38/hg38.chrom.sizes",
         temp_dir = temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus_tmp'))),
         n_cores = 32,
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
         # Minimum and maximum (up until another gene) number of bps upstream to include in the search space.
         # cf : scenicplus.data_wrangling.gene_search_space.get_search_space
         search_space_upstream = "1000 150000",
@@ -91,19 +92,18 @@ rule p2g_scenicplus:
     shell:
         """
         python workflow/scripts/methods/scenicplus/p2g.py \
-        -d {input.data} \
+        -i {input.data} \
         -c {params.n_cores} \
         -t {params.temp_dir} \
         -m {input.chrom_sizes_m} \
-        -h {input.chrom_sizes_h} \
-        -a {input.annot_m} \
-        -b {input.annot_h}
+        -j {input.chrom_sizes_h} \
         -o {output.pg} \
-        -u {params.search_space_upstream} \
-        -d {params.search_space_downstream} \
-        -e {params.search_space_extend_tss} \
+        -u "{params.search_space_upstream}" \
+        -d "{params.search_space_downstream}" \
+        -e "{params.search_space_extend_tss}" \
         -r {params.remove_promoters} \
-        -g {params.use_gene_boundaries} \
+        -g {params.organism} \
+        -z {params.use_gene_boundaries} \
         -p {params.region_to_gene_importance_method} \
         -s {params.region_to_gene_correlation_method}
         """
