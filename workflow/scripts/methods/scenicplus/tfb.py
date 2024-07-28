@@ -115,12 +115,3 @@ run_motif_enrichment_cistarget(
 
 
 pd.read_hdf(os.path.join(scenicplus_tmp_dir, "cistarget_results.h5"), key='cistarget_results')
-#calculate_regions_to_genes_relationships(
-#        df_exp_mtx = mdata["scRNA"].to_df(),
-#        df_acc_mtx = mdata["scATAC"].to_df(),
-#        search_space = search_space,
-#        temp_dir = temp_dir,
-#        mask_expr_dropout = mask_expr_dropout,
-#        importance_scoring_method = importance_scoring_method,
-#        correlation_scoring_method = correlation_scoring_method,
-#        n_cpu = n_cpu)

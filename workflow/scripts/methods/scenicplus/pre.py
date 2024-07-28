@@ -1,3 +1,4 @@
+import logging
 import joblib
 import scipy as sp
 import os
@@ -16,9 +17,9 @@ import polars as pl
 from pycisTopic.pseudobulk_peak_calling import export_pseudobulk
 from typing import Dict
 import pathlib
-from typing import List
-from typing import Literal
+from typing import (List, Literal, TYPE_CHECKING)
 import argparse
+from pathlib import Path
 
 # Init args
 parser = argparse.ArgumentParser()
@@ -28,34 +29,46 @@ parser.add_argument('-o', '--output', required=True)
 parser.add_argument('-t', '--tmp_scenicplus', required=True)
 parser.add_argument('-g', '--organism', required=True)
 parser.add_argument('-n', '--njobs', required=True, type=int)
+parser.add_argument('-m', '--chrom_sizes_m', required=True)
+parser.add_argument('-j', '--chrom_sizes_h', required=True)
+parser.add_argument('-a', '--annot_human', required=True)
+parser.add_argument('-b', '--annot_mouse', required=True)
 args = vars(parser.parse_args())
 
 frags = args['frags']
-mudata = args['mudata']
-output = args['output']
+mudata_file = args['mudata']
+output_fname = args['output']
 tmp_scenicplus = args['tmp_scenicplus']
-ray_tmp_dir = os.path.join(tmp_scenicplus, 'ray_tmp')
+# ray_tmp_dir = os.path.join(tmp_scenicplus, 'ray_tmp')
 ray_tmp_dir = "/local/scratch/tmp"
+njobs = args['njobs']
+output = args['output']
+
 
 organism = args['organism']
-njobs = args['njobs']
+if organism == 'hg38':
+    organism = "hsapiens"
+    chromsizes_fname = args['chrom_sizes_h']
+    annot_fname = args['annot_human']
+elif organism == 'mm10':
+    organism = "mmusculus"
+    chromsizes_fname = args['chrom_sizes_m']
+    annot_fname = args['annot_mouse']
+
+annot = pd.read_csv(annot_fname)
+annot.Start = annot.Start.astype(np.int32)
+annot.Gene = annot.Gene.astype(str)
+print(annot)
+annot = pl.DataFrame(annot)
+print(annot)
 
 ##################
 # Set parameters #
 ##################
-organism = 'hsapiens'
 dataset_name = 'pbmc10k'
 
-# Set file names
-mudata_file = os.path.join(
-    "datasets/{dataset}/annotated.h5mu".format(
-        dataset=dataset_name))
 fragments_files = {
-    'smpl':
-    os.path.join("datasets/{dataset}_smpl_fragments.tsv.gz".format(
-        dataset=dataset_name))}
-# Set temp output file
-output_filename = os.path.join(tmp_scenicplus, 'scenicplus.h5mu')
+    'smpl': frags}
 
 # SCENIC+ paths
 # cisTopic paths
@@ -81,12 +94,6 @@ os.makedirs(quality_control_dir, exist_ok=True)
 os.makedirs(macs_folder, exist_ok=True)
 os.makedirs(bed_folder, exist_ok=True)
 os.makedirs(bigwig_folder, exist_ok=True)
-
-if organism == 'hsapiens':
-    chromsizes_url = 'http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes'
-if organism == 'mmusculus':
-    chromsizes_url = 'http://hgdownload.cse.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes'
-
 
 # Celltype annotations from MuData object
 # Replace spaces with underscores
@@ -115,7 +122,7 @@ cell_data.head(3)
 
 # Get chromosome sizes (for hg38 here)
 #chromsizes = pd.read_csv(chromsizes_url, sep='\t', header=None)
-chromsizes = pd.read_csv("tmp/hg38.chrom.sizes", sep='\t', header=None)
+chromsizes = pd.read_csv(chromsizes_fname, sep='\t', header=None)
 
 chromsizes.columns = ['Chromosome', 'End']
 chromsizes['Start'] = [0]*chromsizes.shape[0]
@@ -205,36 +212,12 @@ consensus_peaks = pl.DataFrame(consensus_peaks)
 ##################
 # Get annotation #
 ##################
-#import pybiomart as pbm
-#if organism == 'hsapiens':
-#    dataset = pbm.Dataset(name='hsapiens_gene_ensembl',  host='http://www.ensembl.org')
-#
-#if organism == 'mmusculus':
-#    dataset = pbm.Dataset(name='mmusculus_gene_ensembl',  host='http://www.ensembl.org')
-#
-#annot = dataset.query(
-#    attributes=[
-#        'chromosome_name',
-#        'transcription_start_site',
-#        'strand', 'external_gene_name',
-#        'transcript_biotype'
-#        ])
-#annot['Chromosome/scaffold name'] = annot['Chromosome/scaffold name'].to_numpy(dtype = str)
-#filter = annot['Chromosome/scaffold name'].str.contains('CHR|GL|JH|MT')
-#annot = annot[~filter]
-#annot['Chromosome/scaffold name'] = annot['Chromosome/scaffold name'].str.replace(r'(\b\S)', r'chr\1')
-#annot.columns=['Chromosome', 'Start', 'Strand', 'Gene', 'Transcript_type']
-#annot = annot[annot.Transcript_type == 'protein_coding']
-#annot["Strand"] = annot["Strand"].replace({1: "+", -1: "-"})
-#annot.Start = annot.Start.astype(np.int32)
-#annot = pl.DataFrame(annot)
-annot = pl.DataFrame("tmp/annot.csv")
-
-from __future__ import annotations
-import os
-from typing import TYPE_CHECKING, Literal
-import polars as pl
-from pathlib import Path
+annot = pd.read_csv(annot_fname)
+annot.Start = annot.Start.astype(np.int32)
+annot.Gene = annot.Gene.astype(str)
+annot = pl.DataFrame(annot)
+print(annot)
+print(chromsizes)
 # Enable Polars global string cache so all categoricals are created with the same
 # string cache.
 pl.enable_string_cache()
@@ -1244,7 +1227,7 @@ models = pycisTopic.lda_models.run_cgs_models(
     alpha_by_topic=True,
     eta=0.1,
     eta_by_topic=False,
-    save_path=tmp_scenicplus,
+    save_path=cis_topic_tmp_dir,
     _temp_dir=ray_tmp_dir
 )
 
@@ -1382,4 +1365,4 @@ pre_atac.var_names = \
      "-" + pre_atac.var["End"].astype(str)).values
 pre_mudata = mu.MuData({"rna": new_mudata["scRNA"], "atac": pre_atac})
 
-pre_mudata.write_h5mu(output_filename)
+pre_mudata.write_h5mu(output_fname)

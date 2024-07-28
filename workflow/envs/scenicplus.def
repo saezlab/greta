@@ -67,7 +67,7 @@ From: ubuntu:20.04
     ipympl \
     leidenalg \
     pyopenssl \
-    pandas\
+    pandas \
     pybedtools \
     pyranges \
     pybigwig \
@@ -84,20 +84,21 @@ From: ubuntu:20.04
     joblib \
     gcc=12.3.0 \
     gxx=12.3.0 \
-    libgcc
+    libgcc \
+    matplotlib \
+    kiwisolver
 
     # Install scenic+
     conda activate env
-    pip install muon \
-    igv-jupyter \
-    loomxpy
+    pip install  igv-jupyter loomxpy
 
     git clone https://github.com/aertslab/scenicplus.git
     cd scenicplus
     pip install .
 
     pip install polars==1.0.0 git+https://github.com/aertslab/pycisTopic.git@a40e47c2a90e792e8643992da36e900ed1c7708b   
-
+    pip uninstall padnas
+    conda install pandas
     # Remove cache for lighter containers
     pip cache purge
     conda clean -a -y
