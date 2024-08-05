@@ -4,15 +4,15 @@ rule download_tfbs:
         m=directory('gdata/tfbs/mm10'),
     shell:
         """
-        wget 'https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_hg38_PWMScan_HOCOMOCOv11.tar.gz' -O {output.h}.tar.gz
-        wget 'https://www.embl.de/download/zaugg/diffTF/TFBS/TFBS_mm10_PWMScan_HOCOMOCOv10.tar.gz' -O {output.m}.tar.gz
+        wget 'https://s3.embl.de/zaugg-web/GRaNIE/TFBS/hg38/PWMScan_HOCOMOCOv12_H12INVIVO.tar.gz' -O {output.h}.tar.gz
+        wget 'https://s3.embl.de/zaugg-web/GRaNIE/TFBS/mm10/PWMScan_HOCOMOCOv12_H12INVIVO.tar.gz' -O {output.m}.tar.gz
         mkdir {output.h} {output.m}
         tar -xvf {output.h}.tar.gz -C {output.h}
         tar -xvf {output.m}.tar.gz -C {output.m}
         rm {output.h}.tar.gz {output.m}.tar.gz
-        mv {output.h}/*/* {output.h}
+        mv {output.h}/*/*/* {output.h}
         mv {output.m}/*/* {output.m}
-        rm -r {output.h}/PWMScan_* {output.m}/PWMScan_*
+        rm -r {output.h}/PWMScan_* {output.m}/pwmscan_*
         """
 
 rule pre_granie:
@@ -49,6 +49,7 @@ rule p2g_granie:
         ext=500000,
     resources:
         mem_mb=128000,
+        runtime=720,
     shell:
         """
         Rscript workflow/scripts/methods/granie/p2g.R \
@@ -107,6 +108,7 @@ rule mdl_granie:
         thr_fdr=0.2,
     resources:
         mem_mb=128000,
+        runtime=720,
     shell:
         """
         Rscript workflow/scripts/methods/granie/mdl.R \
