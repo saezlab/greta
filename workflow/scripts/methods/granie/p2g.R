@@ -125,7 +125,7 @@ model_p2g <- function(GRN, overlaps.sub.filt.df, nCores=nCores, chunksize=50000)
     res.df = dplyr::arrange(res.df, peak.ID)
     return(res.df)
 }
-p2g <- model_p2g(GRN, overlaps.sub.filt.df, nCores=nCores, chunksize=50000)
+p2g <- model_p2g(GRN, overlaps.sub.filt.df, nCores=nCores, chunksize=1000000)
 
 # Process
 p2g <- dplyr::mutate(p2g, pval=stats::p.adjust(peak_gene.p_raw, method = 'BH'))
