@@ -40,6 +40,7 @@ mdata.obs['celltype'] = mdata.obs['celltype'].cat.remove_unused_categories()
 
 # Downsample
 if n_sample > 0:
+    n_sample = np.min([n_sample, mdata.obs.shape[0]])
     barcodes = mdata.obs.sample(n=n_sample, random_state=seed, replace=False).index
     mdata = mdata[barcodes, :].copy()
 
