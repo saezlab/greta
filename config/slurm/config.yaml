@@ -1,7 +1,7 @@
 
 cluster-sidecar: "slurm-sidecar.py"
 cluster-cancel: "scancel"
-restart-times: "2"
+restart-times: "4"
 jobscript: "slurm-jobscript.sh"
 cluster: "slurm-submit.py"
 cluster-status: "slurm-status.py"

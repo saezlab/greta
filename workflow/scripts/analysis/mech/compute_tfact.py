@@ -1,0 +1,81 @@
+import pandas as pd
+import numpy as np
+import decoupler as dc
+import mudata as mu
+import os
+import argparse
+
+
+# Init args
+parser = argparse.ArgumentParser()
+parser.add_argument('-i','--grn_path', required=True)
+parser.add_argument('-b','--bnc_path', required=True)
+parser.add_argument('-c','--cats', required=True, nargs='+')
+parser.add_argument('-o','--out_path', required=True)
+args = vars(parser.parse_args())
+
+grn_path = args['grn_path']
+bnc_path = args['bnc_path']
+cats = args['cats']
+out_path = args['out_path']
+
+# Extract names and path
+grn_name = os.path.basename(grn_path).replace('.grn.csv', '')
+data_path = os.path.join(os.path.dirname(os.path.dirname(grn_path)), 'mdata.h5mu')
+
+# Read GRN
+grn = pd.read_csv(grn_path)
+grn = grn.drop_duplicates(['source', 'target'], keep='first')
+
+if grn.shape[0] > 0:
+    # Read dataset
+    rna = mu.read(os.path.join(data_path, 'mod', 'rna'))
+
+    # Read benchmark data
+    mat = pd.read_csv(os.path.join(bnc_path, 'log2fcs.csv'), index_col=0)
+    obs = pd.read_csv(os.path.join(bnc_path, 'meta.csv'), index_col=0)
+    
+    # Subset bench data to dataset
+    msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
+    obs = obs.loc[msk, :]
+    mat = mat.loc[msk, :]
+
+    # Compute TF activities
+    acts = []
+    pvals = []
+    for dataset in obs.index:
+        tf = obs.loc[dataset, 'TF']
+        tf_mat = mat.loc[[dataset], :]
+        tf_grn = grn[grn['source'] == tf]
+        try:
+            act, pval = dc.run_ulm(
+                mat=tf_mat,
+                net=tf_grn,
+                weight='score',
+                min_n=3,
+            )
+            act, pval = act.values[0, 0], pval.values[0, 0]
+            acts.append(act)
+            pvals.append(pval)
+        except:
+            pass
+
+    # Compute recall
+    acts = np.array(acts)
+    pvals = np.array(pvals)
+    padj = dc.p_adjust_fdr(pvals)
+    tp = np.sum((acts < 0) & (padj < 0.05))
+    if tp > 0:
+        prc = tp / acts.size
+        rcl = tp / obs.shape[0]
+        beta = 0.1
+        f01 = ((1 - beta**2) * prc * rcl) / ((prc * beta**2) + rcl)
+    else:
+        prc, rcl, f01 = 0., 0., 0.
+
+    df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
+else:
+    df = pd.DataFrame([[grn_name, np.nan, np.nan, np.nan]], columns=['name', 'prc', 'rcl', 'f01'])
+
+# Write
+df.to_csv(out_path, index=False)

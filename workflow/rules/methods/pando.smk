@@ -101,7 +101,7 @@ rule mdl_pando:
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
     resources:
-        mem_mb=256000,
+        mem_mb=512000,
         runtime=210,
     shell:
         """
@@ -124,7 +124,7 @@ rule src_pando:
     output:
         'datasets/{dataset}/cases/{case}/runs/pando.src.csv'
     resources:
-        mem_mb=256000,
+        mem_mb=512000,
         runtime=720,
     params:
         exclude_exons='TRUE',

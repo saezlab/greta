@@ -80,13 +80,17 @@ From: ubuntu:20.04
     bioconductor-rhdf5 \
     r-irkernel \
     mudata \
-    decoupler \
+    decoupler-py==1.7.0 \
     jupyterlab \
-    r-tidyverse
+    r-tidyverse \
+    bioconductor-org.hs.eg.db \
+    bioconductor-txdb.hsapiens.ucsc.hg38.knowngene \
+    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
+    numba==0.59.1
 
     # Install granie
     conda activate env
-    Rscript -e "devtools::install_gitlab('grp-zaugg/GRaNIE@a674074cc0b2ff13b8abc3146e92347b58d54398', host = 'git.embl.de', subdir = 'src/GRaNIE', upgrade = 'never')"
+    Rscript -e "devtools::install_gitlab('grp-zaugg/GRaNIE@2f640172215798a0d8d8c67338b2543459822371', host = 'git.embl.de', subdir = 'src/GRaNIE', upgrade = 'never')"
 
     # Remove cache for lighter containers
     pip cache purge
