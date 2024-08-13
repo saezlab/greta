@@ -29,7 +29,7 @@ rule p2g_figr:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=500000,
         thr_p2g_pval=0.1,
-        ncres=3,  # TODO: change to 10
+        ncres=10,
     resources:
         mem_mb=128000,
         runtime=360,
@@ -57,7 +57,7 @@ rule tfb_figr:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         cellK=10,
-        dorcK=3,  # TODO: change to 30
+        dorcK=10,
     resources:
         mem_mb=128000,
     shell:
@@ -84,7 +84,7 @@ rule mdl_figr:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
     params:
         cellK=10,
-        thr_score=1,
+        thr_score=2,
     resources:
         mem_mb=256000,
         runtime=180,
@@ -113,9 +113,9 @@ rule src_figr:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=500000,
         thr_p2g_pval=0.1,
-        ncres=3,
-        dorcK=3,
-        thr_score=1,
+        ncres=10,
+        dorcK=10,
+        thr_score=2,
     resources:
         mem_mb=256000,
         runtime=720,

@@ -13,10 +13,10 @@ def make_combs():
     for combo in combinations:
         formatted_string = s.format(*combo)
         strings.append(formatted_string)
-    #s = path + 'runs/{0}.src.csv'
-    #for m in mthds:
-    #    formatted_string = s.format(m)
-    #    strings.append(formatted_string)
+    s = path + 'runs/{0}.src.csv'
+    for m in mthds:
+        formatted_string = s.format(m)
+        strings.append(formatted_string)
     s = path + 'runs/random.random.random.random.grn.csv'
     strings.append(s)
     return strings
@@ -37,6 +37,7 @@ include: 'rules/methods/random.smk'
 include: 'rules/analysis/prior.smk'
 include: 'rules/analysis/pred.smk'
 include: 'rules/analysis/mech.smk'
+include: 'rules/analysis/stab.smk'
 
 f_scores = [
 'analysis/mech/prtrb/knocktf/pbmc10k.all.scores.csv',
@@ -59,25 +60,6 @@ f_scores = [
 'analysis/prior/cre/zhang21/pbmc10k.all.scores.csv',
 'analysis/prior/eqtl/eqtlcatalogue/pbmc10k.all.scores.csv',
 ]
-
-# Update config with grid search
-n_cells = [1024, 2048, 4096, 8192, 16384]
-n_genes = [1024, 2048, 4096, 8192, 16384]
-seeds = [0, 1, 2]
-stab_runs = []
-for n_cell in n_cells:
-    for n_gene in n_genes:
-        for seed in seeds:
-            n_cre = n_gene * 4
-            name = 'pbmc10k_{n_cell}_{n_gene}_{seed}'.format(n_cell=n_cell, n_gene=n_gene, seed=seed)
-            config['datasets']['pbmc10k']['cases'][name] = dict()
-            config['datasets']['pbmc10k']['cases'][name]['celltypes'] = 'all'
-            config['datasets']['pbmc10k']['cases'][name]['n_sample'] = n_cell
-            config['datasets']['pbmc10k']['cases'][name]['seed'] = seed
-            config['datasets']['pbmc10k']['cases'][name]['n_hvg'] = n_gene
-            config['datasets']['pbmc10k']['cases'][name]['n_hvr'] = n_cre
-            for mth in mthds:
-                stab_runs.append('datasets/pbmc10k/cases/{name}/runs/{mth}.src.csv'.format(name=name, mth=mth))
 
 rule all:
     input:
