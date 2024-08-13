@@ -61,8 +61,8 @@ datasets:
         cases:
             all:
                 celltypes: 'all'
-                n_hvg: 4096
-                n_hvr: 16384
+                n_hvg: 8192
+                n_hvr: 32768
                 root: 'Fibroblast-like'
 
     pitupaired:
