@@ -41,6 +41,8 @@ top_n = int(args['top_n'])
 k = int(args['knn'])
 path_out = args['path_out']
 
+n_jobs = 32
+
 if __name__ == '__main__':
     # Load scATAC-seq peak list
     peaks = pd.read_csv(path_all_peaks, index_col=0).x.values.astype('U')
@@ -153,7 +155,7 @@ if __name__ == '__main__':
         fpr=fpr,
         motifs=None,
         verbose=True,
-        n_cpus=32,
+        n_cpus=n_jobs,
     )
     
     # Do filtering
@@ -216,7 +218,7 @@ if __name__ == '__main__':
         balanced=True,
         b_sight=k*8,
         b_maxl=k*4,
-        n_jobs=32,
+        n_jobs=n_jobs,
     )
     oracle.import_TF_data(TF_info_matrix=base_grn)
     
@@ -225,7 +227,7 @@ if __name__ == '__main__':
     links = oracle.get_links(
         cluster_name_for_GRN_unit="cluster",
         alpha=alpha,
-        n_jobs=32,
+        n_jobs=n_jobs,
     )
     print('Modeling Done!')
     print('Filtering links...')

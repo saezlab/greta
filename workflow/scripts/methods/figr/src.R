@@ -18,7 +18,7 @@ dorcK <- as.numeric(args[12])
 thr_score <- as.numeric(args[13])
 path_out <- args[14]
 
-nCores <- 4
+nCores <- 32
 
 # Read data
 print('Open object')
@@ -92,7 +92,7 @@ runFigRGRN <- function(ATAC.se, # SE of scATAC peak counts. Needed for chromVAR 
                        dorcMat, # Expect smoothed
                        rnaMat, # Expect smoothed
                        dorcGenes=NULL, # If only running on a subset of genes
-                       nCores=1
+                       nCores=nCores
 ){
   # Must be matched data
   stopifnot(all.equal(ncol(dorcMat),ncol(rnaMat)))
