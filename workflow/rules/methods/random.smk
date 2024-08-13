@@ -1,29 +1,3 @@
-rule pre_random:
-    input:
-        'datasets/{dataset}/cases/{case}/mdata.h5mu'
-    singularity:
-        'workflow/envs/gretabench.sif'
-    output:
-        'datasets/{dataset}/cases/{case}/runs/random.pre.h5mu'
-    shell:
-        """
-        python workflow/scripts/methods/random/pre.py \
-        -i {input} \
-        -o {output}
-        """
-
-rule p2g_random:
-    input:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu'
-    singularity:
-        'workflow/envs/gretabench.sif'
-    output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.random.p2g.csv'
-    shell:
-        """
-        python workflow/scripts/methods/random/p2g.py -i {input} -o {output}
-        """
-
 rule download_lambert:
     output:
         'gdata/tfs/lambert.csv'
@@ -34,36 +8,30 @@ rule download_lambert:
     shell:
         "wget '{params.url}' -O {output}"
 
-rule tfb_random:
-    input:
-        data='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        tfs='gdata/tfs/lambert.csv',
-    singularity:
-        'workflow/envs/gretabench.sif'
-    output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.random.tfb.csv'
-    shell:
-        """
-        python workflow/scripts/methods/random/tfb.py \
-        -i {input.data} \
-        -t {input.tfs} \
-        -p {input.p2g} \
-        -o {output}
-        """
 
-rule mdl_random:
+rule grn_random:
     input:
-        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        tfb='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+        data='datasets/{dataset}/cases/{case}/mdata.h5mu',
+        tf='gdata/tfs/lambert.csv',
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.random.mdl.csv'
+        'datasets/{dataset}/cases/{case}/runs/random.grn.csv'
+    benchmark:
+        'benchmarks/{dataset}.{case}.random.grn.txt'
+    params:
+        g_perc=0.25,
+        scale=1,
+        tf_g_ratio=0.10,
+        seed=42,
     shell:
         """
-        python workflow/scripts/methods/random/mdl.py \
-        -p {input.p2g} \
-        -t {input.tfb} \
+        python workflow/scripts/methods/random/src.py \
+        -i {input.data} \
+        -t {input.tf} \
+        -g {params.g_perc} \
+        -n {params.scale} \
+        -r {params.tf_g_ratio} \
+        -s {params.seed} \
         -o {output}
         """
