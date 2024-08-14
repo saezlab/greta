@@ -80,13 +80,12 @@ From: ubuntu:20.04
     bioconductor-rhdf5 \
     r-irkernel \
     mudata \
-    decoupler-py==1.7.0 \
+    decoupler-py==1.8.0 \
     jupyterlab \
     r-tidyverse \
     bioconductor-org.hs.eg.db \
     bioconductor-txdb.hsapiens.ucsc.hg38.knowngene \
-    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
-    numba==0.59.1
+    bioconductor-bsgenome.hsapiens.ucsc.hg38
 
     # Install granie
     conda activate env
