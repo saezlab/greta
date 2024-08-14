@@ -13,7 +13,7 @@ path_p2g <- args[8]
 cellK <- as.numeric(args[9])
 dorcK <- as.numeric(args[10])
 path_out <- args[11]
-nCores <- 4
+nCores <- 32
 n_bg <- 50
 
 # Read data

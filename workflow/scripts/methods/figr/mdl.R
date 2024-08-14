@@ -13,7 +13,7 @@ path_tfb <- args[8]
 cellK <- as.numeric(args[9])
 score_thr <- as.numeric(args[10])
 path_out <- args[11]
-nCores <- 4
+nCores <- 32
 
 # Read data
 print('Open object')

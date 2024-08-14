@@ -4,6 +4,7 @@ library(SummarizedExperiment)
 library(dplyr)
 library(Matrix)
 library(chromVAR)
+library(doParallel)
 
 
 # Parse args

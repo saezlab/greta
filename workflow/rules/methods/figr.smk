@@ -32,7 +32,7 @@ rule p2g_figr:
         ncres=10,
     resources:
         mem_mb=128000,
-        runtime=360,
+        runtime=1440,
     shell:
         """
         Rscript workflow/scripts/methods/figr/p2g.R \
@@ -118,7 +118,7 @@ rule src_figr:
         thr_score=2,
     resources:
         mem_mb=256000,
-        runtime=720,
+        runtime=1440,
     shell:
         """
         Rscript workflow/scripts/methods/figr/src.R \

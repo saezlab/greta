@@ -4,6 +4,7 @@ library(SummarizedExperiment)
 library(dplyr)
 library(Matrix)
 library(chromVAR)
+library(doParallel)
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
@@ -14,7 +15,7 @@ thr_pval <- as.numeric(args[9])
 ncres <- as.numeric(args[10])
 path_out <- args[11]
 
-nCores <- 4
+nCores <- 32
 
 # Read data
 print('Open object')
