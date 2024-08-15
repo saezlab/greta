@@ -26,26 +26,12 @@ atac_data <- Matrix::sparseMatrix(
 colnames(atac_data) <- indata$obs$`_index`
 rownames(atac_data) <- indata$mod$atac$var$`_index`
 
-# Dim reduction
-#lsi <- indata$obsm$X_spectral
-#colnames(lsi) <- colnames(rna_data)
-#rownames(lsi) <- paste0("SPL_", 1:nrow(lsi))
-
 # Normalize ATAC data
 atac_data <- as.matrix(FigR::centerCounts(atac_data, chunkSize = 100000))
 colnames(atac_data) <- as.character(colnames(atac_data))
 rownames(atac_data) <- as.character(rownames(atac_data))
 
-# Find KNN based on LSI
-#cellknn <- FNN::get.knn(t(lsi), k = k)$nn.index
-#rownames(cellknn) <- colnames(rna_data)
-
-# KNN impute
-#rna_data <- as.matrix(FigR::smoothScoresNN(NNmat = cellknn, mat = rna_data, nCores = nCores))
-#atac_data <- as.matrix(FigR::smoothScoresNN(NNmat = cellknn, mat = atac_data, nCores = nCores))
-
 # Write
-#h5write(rna_data, name="mod/rna/X", file=indata)
 h5write(atac_data, name="mod/atac/X", file=indata)
 
 # Close
