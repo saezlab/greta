@@ -44,8 +44,8 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
 
 # Store as df
 df = pd.DataFrame()
-df['names_a'] = names_a
-df['names_b'] = names_b
+df['name_a'] = names_a
+df['name_b'] = names_b
 df['tf_oc'] = tf_coefs
 df['edge_oc'] = edge_coefs
 df['target_oc'] = target_coefs
