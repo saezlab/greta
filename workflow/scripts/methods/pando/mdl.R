@@ -4,7 +4,7 @@ library(Pando)
 library(doParallel)
 library(R.utils)
 
-nCores <- 64
+nCores <- 32
 cat("N cores: ", nCores, '\n')
 registerDoParallel(nCores)
 
@@ -13,9 +13,12 @@ args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 path_p2g <- args[7]
 path_tfb = args[8]
-thr_cor = 0.05
-thr_rsq = 0.05
-path_out = args[9]
+thr_corr = as.numeric(args[9])
+p_thresh = as.numeric(args[10])
+thr_rsq = as.numeric(args[11])
+nvar_thresh = as.numeric(args[12])
+min_genes_per_module = as.numeric(args[13])
+path_out = args[14]
 
 # Read dfs
 p2g <- read.csv(path_p2g)[, c('cre', 'gene')]
@@ -128,9 +131,9 @@ network_obj <- new(
 grn <- find_modules(
     network_obj,
     rsq_thresh = thr_rsq,
-    p_thresh = 0.1,
-    nvar_thresh = 2,
-    min_genes_per_module = 3
+    p_thresh = p_thresh,
+    nvar_thresh = nvar_thresh,
+    min_genes_per_module = min_genes_per_module
 )@modules@meta %>%
 select(tf, target, estimate, padj) %>%
 rename(source=tf, score=estimate, pval=padj) %>%

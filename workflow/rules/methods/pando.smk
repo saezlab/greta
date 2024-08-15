@@ -25,7 +25,7 @@ rule pre_pando:
         d='datasets/{dataset}/cases/{case}/runs/pando.pre.h5mu'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        exclude_exons='TRUE',
+        exclude_exons=config['methods']['pando']['exclude_exons'],
     shell:
         """
         Rscript workflow/scripts/methods/pando/pre.R \
@@ -56,7 +56,7 @@ rule p2g_pando:
         'datasets/{dataset}/cases/{case}/runs/{pre}.pando.p2g.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=500000,
+        ext=config['methods']['pando']['ext'],
     shell:
         """
         Rscript workflow/scripts/methods/pando/p2g.R \
@@ -103,12 +103,23 @@ rule mdl_pando:
     resources:
         mem_mb=512000,
         runtime=210,
+    params:
+        thr_corr=config['methods']['pando']['thr_corr'],
+        p_thresh=config['methods']['pando']['p_thresh'],
+        rsq_thresh=config['methods']['pando']['rsq_thresh'],
+        nvar_thresh=config['methods']['pando']['nvar_thresh'],
+        min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
     shell:
         """
         Rscript workflow/scripts/methods/pando/mdl.R \
         {input.d} \
         {input.p} \
         {input.t} \
+        {params.thr_corr} \
+        {params.p_thresh} \
+        {params.rsq_thresh} \
+        {params.nvar_thresh} \
+        {params.min_genes_per_module} \
         {output}
         """
 
@@ -127,14 +138,14 @@ rule src_pando:
         mem_mb=512000,
         runtime=720,
     params:
-        exclude_exons='TRUE',
-        ext=500000,
-        thr_corr=0.05,
-        p_thresh=0.1,
-        rsq_thresh=0.05,
-        nvar_thresh=2,
-        min_genes_per_module=3,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
+        exclude_exons=config['methods']['pando']['exclude_exons'],
+        ext=config['methods']['pando']['ext'],
+        thr_corr=config['methods']['pando']['thr_corr'],
+        p_thresh=config['methods']['pando']['p_thresh'],
+        rsq_thresh=config['methods']['pando']['rsq_thresh'],
+        nvar_thresh=config['methods']['pando']['nvar_thresh'],
+        min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
     shell:
         """
         Rscript workflow/scripts/methods/pando/src.R \

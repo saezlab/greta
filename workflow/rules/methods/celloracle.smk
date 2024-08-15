@@ -8,7 +8,7 @@ rule pre_celloracle:
     output:
         'datasets/{dataset}/cases/{case}/runs/celloracle.pre.h5mu'
     params:
-        k=20
+        k=config['methods']['celloracle']['k']
     shell:
         """
         python workflow/scripts/methods/celloracle/pre.py \
@@ -42,8 +42,8 @@ rule p2g_celloracle:
         pg='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.p2g.csv',
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        thr_coaccess=0.8,
-        ext=500000
+        thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
+        ext=config['methods']['celloracle']['ext']
     shell:
         """
         Rscript workflow/scripts/methods/celloracle/p2g.R \
@@ -86,9 +86,9 @@ rule tfb_celloracle:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.celloracle.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        fpr=0.02,
-        blen=200,
-        tfb_thr=10,
+        fpr=config['methods']['celloracle']['fpr'],
+        blen=config['methods']['celloracle']['blen'],
+        tfb_thr=config['methods']['celloracle']['tfb_thr']
     shell:
         """
         python workflow/scripts/methods/celloracle/tfb.py \
@@ -113,9 +113,9 @@ rule mdl_celloracle:
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.mdl.csv'
     params:
-        a=10,
-        p=0.001,
-        n=2000,
+        a=config['methods']['celloracle']['a'],
+        p=config['methods']['celloracle']['p'],
+        n=config['methods']['celloracle']['n'],
     shell:
         """
         python workflow/scripts/methods/celloracle/mdl.py \
@@ -141,15 +141,15 @@ rule src_celloracle:
         gr='datasets/{dataset}/cases/{case}/runs/celloracle.src.csv',
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=500000,
-        thr_coaccess=0.8,
-        fpr=0.02,
-        blen=200,
-        tfb_thr=10,
-        a=10,
-        p=0.001,
-        n=2000,
-        k=20,
+        k=config['methods']['celloracle']['k']
+        thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
+        ext=config['methods']['celloracle']['ext'],
+        fpr=config['methods']['celloracle']['fpr'],
+        blen=config['methods']['celloracle']['blen'],
+        tfb_thr=config['methods']['celloracle']['tfb_thr'],
+        a=config['methods']['celloracle']['a'],
+        p=config['methods']['celloracle']['p'],
+        n=config['methods']['celloracle']['n'],
     resources:
         mem_mb=256000,
         runtime=720,

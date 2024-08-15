@@ -27,9 +27,9 @@ rule p2g_figr:
         'datasets/{dataset}/cases/{case}/runs/{pre}.figr.p2g.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=500000,
-        thr_p2g_pval=0.1,
-        ncres=10,
+        ext=config['methods']['figr']['ext'],
+        thr_p2g_pval=config['methods']['figr']['thr_p2g_pval'],
+        ncres=config['methods']['figr']['ncres'],
     resources:
         mem_mb=128000,
         runtime=1440,
@@ -56,8 +56,8 @@ rule tfb_figr:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        cellK=10,
-        dorcK=10,
+        cellK=config['methods']['figr']['cellK'],
+        dorcK=config['methods']['figr']['dorcK'],
     resources:
         mem_mb=128000,
     shell:
@@ -83,8 +83,8 @@ rule mdl_figr:
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
     params:
-        cellK=10,
-        thr_score=2,
+        cellK=config['methods']['figr']['cellK'],
+        thr_score=config['methods']['figr']['thr_score'],
     resources:
         mem_mb=256000,
         runtime=180,
@@ -109,13 +109,13 @@ rule src_figr:
     output:
         'datasets/{dataset}/cases/{case}/runs/figr.src.csv'
     params:
-        cellK=10,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=500000,
-        thr_p2g_pval=0.1,
-        ncres=10,
-        dorcK=10,
-        thr_score=2,
+        ext=config['methods']['figr']['ext'],
+        thr_p2g_pval=config['methods']['figr']['thr_p2g_pval'],
+        ncres=config['methods']['figr']['ncres'],
+        cellK=config['methods']['figr']['cellK'],
+        dorcK=config['methods']['figr']['dorcK'],
+        thr_score=config['methods']['figr']['thr_score'],
     resources:
         mem_mb=256000,
         runtime=1440,

@@ -46,7 +46,7 @@ rule p2g_granie:
         p='datasets/{dataset}/cases/{case}/runs/{pre}.granie.p2g.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=500000,
+        ext=config['methods']['granie']['ext'],
     resources:
         mem_mb=128000,
         runtime=720,
@@ -105,7 +105,7 @@ rule mdl_granie:
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        thr_fdr=0.2,
+        thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
         mem_mb=128000,
         runtime=720,
@@ -137,8 +137,8 @@ rule src_granie:
         p='datasets/{dataset}/cases/{case}/runs/granie.src.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=500000,
-        thr_fdr=0.2,
+        ext=config['methods']['granie']['ext'],
+        thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
         mem_mb=128000,
     shell:
