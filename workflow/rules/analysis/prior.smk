@@ -12,14 +12,14 @@ def make_combs(path):
 
 rule aggr_type_task_resource:
     input:
-        make_combs(path='analysis/{type}/{task}/{resource}/')
+        make_combs(path='analysis/metrics/{type}/{task}/{resource}/')
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        'analysis/{type}/{task}/{resource}/{dataset}.{case}.scores.csv'
+        'analysis/metrics/{type}/{task}/{resource}/{dataset}.{case}.scores.csv'
     shell:
         """
-        python workflow/scripts/analysis/pred/aggregate.py \
+        python workflow/scripts/analysis/metrics/aggregate.py \
         -i {input} \
         -o {output}
         """
@@ -32,10 +32,10 @@ rule prior_tfm:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/prior/tfm/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        temp(local('analysis/metrics/prior/tfm/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
     shell:
         """
-        python workflow/scripts/analysis/prior/compute_tfm.py \
+        python workflow/scripts/analysis/metrics/prior/compute_tfm.py \
         -a {input.grn} \
         -b {input.resource} \
         -c {input.cats} \
@@ -50,12 +50,12 @@ rule prior_tfbind:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/prior/tfbind/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        temp(local('analysis/metrics/prior/tfbind/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
     params:
         grp='source',
     shell:
         """
-        python workflow/scripts/analysis/prior/compute_gnm.py \
+        python workflow/scripts/analysis/metrics/prior/compute_gnm.py \
         -a {input.grn} \
         -b {input.resource} \
         -c {input.cats} \
@@ -71,10 +71,10 @@ rule prior_cre:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/prior/cre/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        temp(local('analysis/metrics/prior/cre/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
     shell:
         """
-        python workflow/scripts/analysis/prior/compute_gnm.py \
+        python workflow/scripts/analysis/metrics/prior/compute_gnm.py \
         -a {input.grn} \
         -b {input.resource} \
         -c {input.cats} \
@@ -89,12 +89,12 @@ rule prior_eqtl:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/prior/eqtl/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        temp(local('analysis/metrics/prior/eqtl/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
     params:
         grp='target',
     shell:
         """
-        python workflow/scripts/analysis/prior/compute_gnm.py \
+        python workflow/scripts/analysis/metrics/prior/compute_gnm.py \
         -a {input.grn} \
         -b {input.resource} \
         -c {input.cats} \
