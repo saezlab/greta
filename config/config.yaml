@@ -6,7 +6,7 @@ methods:
         fpr: 0.02
         blen: 200
         tfb_thr: 10
-        a: 10,
+        a: 10
         p: 0.001
         n: 2000
     figr:

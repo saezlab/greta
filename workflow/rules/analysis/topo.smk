@@ -1,6 +1,8 @@
+datasets = ['pbmc10k']
+cases = ['all']
 rule topo_mult:
     input:
-        expand(['datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'], pre=mthds, p2g=mthds, tfb=mthds, mdl=mthds)
+        expand(['datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'], dataset=datasets, case=cases, pre=mthds, p2g=mthds, tfb=mthds, mdl=mthds)
     output:
         stats='analysis/topo/{dataset}.{case}.stats_mult.csv',
         sims='analysis/topo/{dataset}.{case}.sims_mult.csv',
@@ -14,7 +16,7 @@ rule topo_mult:
 
 rule topo_single:
     input:
-        expand(['datasets/{dataset}/cases/{case}/runs/{mth}.src.csv'], mth=mthds) + ['datasets/{dataset}/cases/{case}/runs/random.grn.csv']
+        expand(['datasets/{dataset}/cases/{case}/runs/{mth}.src.csv'], dataset=datasets, case=cases, mth=mthds) + ['datasets/{dataset}/cases/{case}/runs/random.grn.csv']
     output:
         stats='analysis/topo/{dataset}.{case}.stats_single.csv',
         sims='analysis/topo/{dataset}.{case}.sims_single.csv',
@@ -28,7 +30,8 @@ rule topo_single:
 
 rule topo_orign:
     input:
-        expand(['datasets/{dataset}/cases/{case}/runs/{mth}.src.csv'], mth=mthds) + expand(['datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'], zip, pre=mthds, p2g=mthds, tfb=mthds, mdl=mthds)
+        expand(['datasets/{dataset}/cases/{case}/runs/{mth}.src.csv'], dataset=datasets, case=cases, mth=mthds) + \
+        expand(['datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'], zip, dataset=datasets, case=cases, pre=mthds, p2g=mthds, tfb=mthds, mdl=mthds)
     output:
         stats='analysis/topo/{dataset}.{case}.stats_orign.csv',
         sims='analysis/topo/{dataset}.{case}.sims_orign.csv',

@@ -141,7 +141,7 @@ rule src_celloracle:
         gr='datasets/{dataset}/cases/{case}/runs/celloracle.src.csv',
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        k=config['methods']['celloracle']['k']
+        k=config['methods']['celloracle']['k'],
         thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
         ext=config['methods']['celloracle']['ext'],
         fpr=config['methods']['celloracle']['fpr'],

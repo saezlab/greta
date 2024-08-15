@@ -2,27 +2,28 @@ from snakemake.utils import min_version
 
 min_version('7.29.0')
 
+configfile: 'config/config.yaml'
+container: 'workflow/envs/gretabench.sif'
 
 def make_combs(path, mthds, name, add_src):
     from itertools import product
-    s = path + '{0}.{1}.{2}.{3}.' + name + '.csv'
+    s = '{0}.{1}.{2}.{3}.' + name + '.csv'
     combinations = product(mthds, repeat=4)
     strings = []
     for combo in combinations:
-        formatted_string = s.format(*combo)
+        formatted_string = path + s.format(*combo)
         strings.append(formatted_string)
     s = path + 'random.' + name + '.csv'
     strings.append(s)
 
     if add_src:
-        s = path + '{0}.src.csv'
+        s = '{0}.src.csv'
         for m in mthds:
-            formatted_string = s.format(m)
+            formatted_string = path + s.format(m)
             strings.append(formatted_string)
     return strings
 
-configfile: 'config/config.yaml'
-container: 'workflow/envs/gretabench.sif'
+mthds = list(config['methods'].keys())
 
 include: 'rules/datasets.smk'
 include: 'rules/methods/celloracle.smk'
@@ -38,9 +39,10 @@ include: 'rules/analysis/prior.smk'
 include: 'rules/analysis/pred.smk'
 include: 'rules/analysis/mech.smk'
 include: 'rules/analysis/stab.smk'
+include: 'rules/analysis/topo.smk'
 
 
-mthds = list(config['methods'].keys())
+
 
 
 f_scores = [

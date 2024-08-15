@@ -1,5 +1,3 @@
-make_combs(path, mthds, name, add_src):
-
 rule aggr_type_task_resource:
     input:
         make_combs(

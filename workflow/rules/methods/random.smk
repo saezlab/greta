@@ -26,7 +26,7 @@ rule grn_random:
         seed=42,
     shell:
         """
-        python workflow/scripts/methods/random/src.py \
+        python workflow/scripts/methods/random/grn.py \
         -i {input.data} \
         -t {input.tf} \
         -g {params.g_perc} \
