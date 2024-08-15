@@ -93,15 +93,26 @@ GRN@annotation$TFs <- data.frame(
 )
 
 # Add tfb predictions
+clean_peaks <- function(peaks) {
+  parts <- strsplit(peaks, "[:-]")[[1]]
+  # Ensure that start and end are not in scientific notation
+  chromosome <- parts[1]
+  start <- format(as.numeric(parts[2]), scientific = FALSE)
+  end <- format(as.numeric(parts[3]), scientific = FALSE)
+  fpeaks <- paste0(chromosome, ":", start, "-", end)
+  return(fpeaks)
+}
+
 row_idx <- as.factor(tfb$cre)
 col_idx <- as.factor(tfb$tf)
+rnames <- sapply(rownames(GRN@data$peaks$counts), clean_peaks)
 GRN@data$TFs$TF_peak_overlap <- Matrix::sparseMatrix(
   i = as.integer(row_idx),
   j = as.integer(col_idx),
   x = 1,
   dims = c(length(levels(row_idx)), length(levels(col_idx))),
   dimnames = list(levels(row_idx), levels(col_idx))
-)[rownames(GRN@data$peaks$counts), ]
+)[rnames, ]
 GRN@data$TFs$TF_peak_overlap <- cbind(GRN@data$TFs$TF_peak_overlap, isFiltered = 0)
 
 # Compute tf-cre corrs
