@@ -139,5 +139,16 @@ p2g <- dplyr::mutate(
 p2g <- dplyr::select(p2g, cre, gene, score, pval)
 p2g <- dplyr::arrange(p2g, desc(score))
 
+clean_peaks <- function(peaks) {
+  parts <- strsplit(peaks, "[:-]")[[1]]
+  # Ensure that start and end are not in scientific notation
+  chromosome <- parts[1]
+  start <- format(as.numeric(parts[2]), scientific = FALSE)
+  end <- format(as.numeric(parts[3]), scientific = FALSE)
+  fpeaks <- paste0(chromosome, "-", start, "-", end)
+  return(fpeaks)
+}
+p2g$cre <- sapply(p2g$cre, clean_peaks)
+
 # Write
 write.csv(x = p2g, file = path_out, row.names=FALSE)

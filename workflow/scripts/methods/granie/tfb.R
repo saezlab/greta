@@ -107,5 +107,16 @@ tfb <- dplyr::mutate(tfb,
 tfb <- dplyr::summarize(tfb, score = dplyr::n(), .by=c(cre, tf))
 tfb <- dplyr::arrange(tfb, cre, desc(score))
 
+clean_peaks <- function(peaks) {
+  parts <- strsplit(peaks, "[:-]")[[1]]
+  # Ensure that start and end are not in scientific notation
+  chromosome <- parts[1]
+  start <- format(as.numeric(parts[2]), scientific = FALSE)
+  end <- format(as.numeric(parts[3]), scientific = FALSE)
+  fpeaks <- paste0(chromosome, "-", start, "-", end)
+  return(fpeaks)
+}
+tfb$cre <- clean_peaks(tfb$cre)
+
 # Write
 write.csv(x = tfb, file = path_out, row.names=FALSE)
