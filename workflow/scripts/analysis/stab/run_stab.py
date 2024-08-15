@@ -5,7 +5,7 @@ import argparse
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-m','--mthds', required=True)
+parser.add_argument('-m','--mthds', required=True, nargs='+')
 parser.add_argument('-o','--out_path', required=True)
 args = vars(parser.parse_args())
 
@@ -13,7 +13,6 @@ mthds = args['mthds']
 out_path = args['out_path']
 
 # Process
-mthds = mthds.split(';')
 dataset = os.path.basename(out_path).replace('.csv', '')
 
 def over_coef(df_a, df_b, source='source', target='target'):

@@ -33,10 +33,10 @@ rule run_stab:
     output:
         'analysis/stab/{dataset}.csv'
     params:
-        m=';'.join(mthds)
+        m=mthds
     shell:
         """
         python workflow/scripts/analysis/stab/run_stab.py \
-        -m {params.m}
+        -m {params.m} \
         -o {output}
         """
