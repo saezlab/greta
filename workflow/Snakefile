@@ -2,23 +2,23 @@ from snakemake.utils import min_version
 
 min_version('7.29.0')
 
-path = 'datasets/pbmc10k/cases/all/'
-mthds = ['celloracle', 'figr', 'granie', 'pando']
 
-def make_combs():
+def make_combs(path, mthds, name, add_src):
     from itertools import product
-    s = path + 'runs/{0}.{1}.{2}.{3}.grn.csv'
+    s = path + '{0}.{1}.{2}.{3}.' + name + '.csv'
     combinations = product(mthds, repeat=4)
     strings = []
     for combo in combinations:
         formatted_string = s.format(*combo)
         strings.append(formatted_string)
-    s = path + 'runs/{0}.src.csv'
-    for m in mthds:
-        formatted_string = s.format(m)
-        strings.append(formatted_string)
-    s = path + 'runs/random.random.random.random.grn.csv'
+    s = path + 'random.' + name + '.csv'
     strings.append(s)
+
+    if add_src:
+        s = path + '{0}.src.csv'
+        for m in mthds:
+            formatted_string = s.format(m)
+            strings.append(formatted_string)
     return strings
 
 configfile: 'config/config.yaml'
@@ -39,6 +39,10 @@ include: 'rules/analysis/pred.smk'
 include: 'rules/analysis/mech.smk'
 include: 'rules/analysis/stab.smk'
 
+
+mthds = list(config['methods'].keys())
+
+
 f_scores = [
 'analysis/mech/prtrb/knocktf/pbmc10k.all.scores.csv',
 'analysis/mech/tfact/knocktf/pbmc10k.all.scores.csv',
@@ -57,7 +61,7 @@ f_scores = [
 'analysis/prior/cre/gwascatalogue/pbmc10k.all.scores.csv',
 'analysis/prior/cre/phastcons/pbmc10k.all.scores.csv',
 'analysis/prior/cre/zhang21/pbmc10k.all.scores.csv',
-'analysis/prior/cre/zhang21/pbmc10k.all.scores.csv',
+'analysis/prior/cre/promoters/pbmc10k.all.scores.csv',
 'analysis/prior/eqtl/eqtlcatalogue/pbmc10k.all.scores.csv',
 ]
 

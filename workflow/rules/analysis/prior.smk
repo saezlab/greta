@@ -1,18 +1,13 @@
-def make_combs(path):
-    mthds = ['celloracle', 'figr', 'granie', 'pando']
-    from itertools import product
-    s = '{0}.{1}.{2}.{3}.scores.csv'
-    combinations = product(mthds, repeat=4)
-    strings = []
-    for combo in combinations:
-        strings.append(path + '{dataset}.{case}.' + s.format(*combo))
-    s = path + '{dataset}.{case}.random.random.random.random.scores.csv'
-    strings.append(s)
-    return strings
+make_combs(path, mthds, name, add_src):
 
 rule aggr_type_task_resource:
     input:
-        make_combs(path='analysis/metrics/{type}/{task}/{resource}/')
+        make_combs(
+            path='analysis/metrics/{type}/{task}/{resource}/{dataset}.{case}',
+            mthds=mthds,
+            name='scores',
+            add_src=False
+        )
     singularity:
         'workflow/envs/gretabench.sif'
     output:
