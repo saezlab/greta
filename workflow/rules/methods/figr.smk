@@ -60,6 +60,7 @@ rule tfb_figr:
         dorcK=config['methods']['figr']['dorcK'],
     resources:
         mem_mb=128000,
+        runtime=1440,
     shell:
         """
         Rscript workflow/scripts/methods/figr/tfb.R \
