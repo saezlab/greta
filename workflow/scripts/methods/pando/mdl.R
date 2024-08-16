@@ -13,7 +13,7 @@ args <- commandArgs(trailingOnly = F)
 path_data <- args[6]
 path_p2g <- args[7]
 path_tfb = args[8]
-thr_corr = as.numeric(args[9])
+thr_cor = as.numeric(args[9])
 p_thresh = as.numeric(args[10])
 thr_rsq = as.numeric(args[11])
 nvar_thresh = as.numeric(args[12])
@@ -156,6 +156,7 @@ get_grn_timeout <- function(timeout){
 })
 }
 
-grn <- get_grn_timeout(timeout=10800)
+grn <- run_mdl() #get_grn_timeout(timeout=10800)
+
 # Write
 write.csv(x = grn, file = path_out, row.names=FALSE)
