@@ -22,7 +22,7 @@ def get_stab_paths(config, mthds, datasets):
                     m_lst.append(mth)
         n_gene = ns[-1]
         n_cre = n_gene * 4
-        for n_cell in ns[:-1]:
+        for n_cell in ns:
             for seed in seeds:
                 case = '{n_cell}_{n_gene}_{seed}'.format(n_cell=n_cell, n_gene=n_gene, seed=seed)
                 config['datasets'][dataset]['cases'][case] = dict()
@@ -46,12 +46,15 @@ rule run_stab:
     input:
         expand(['datasets/{dataset}/cases/{case}/runs/{mth}.src.csv'], zip, dataset=d_lst, case=c_lst, mth=m_lst)
     output:
-        'analysis/stab/{dataset}.csv'
+        tmp=temp('analysis/stab/tmp_{dataset}.csv'),
+        res='analysis/stab/{dataset}.csv',
     params:
         m=mthds
     shell:
         """
+        sacct -S 2024-08-15 -E $(date -d "23:59:59 today" +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
+        awk '/^ +src_/ {jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}' > {output.tmp}
         python workflow/scripts/analysis/stab/run_stab.py \
-        -m {params.m} \
-        -o {output}
+        -i {output.tmp} \
+        -o {output.res}
         """

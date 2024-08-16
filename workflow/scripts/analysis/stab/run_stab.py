@@ -1,25 +1,37 @@
 import pandas as pd
 import numpy as np
-import os
 import argparse
+import os
+import re
+from tqdm import tqdm
+from ..utils import ocoeff
+
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-m','--mthds', required=True, nargs='+')
+parser.add_argument('-i','--inp_path', required=True)
 parser.add_argument('-o','--out_path', required=True)
 args = vars(parser.parse_args())
 
-mthds = args['mthds']
+inp_path = args['inp_path']
 out_path = args['out_path']
 
-# Process
-dataset = os.path.basename(out_path).replace('.csv', '')
+def time_to_hours(time_str):
+    h, m, s = map(int, time_str.split(':'))
+    return h + (m / 60) + (s / 60 / 60)
 
-def over_coef(df_a, df_b, source='source', target='target'):
-    pairs_a = (df_a[source] + '|' + df_a[target]).values.astype('U')
-    pairs_b = (df_b[source] + '|' + df_b[target]).values.astype('U')
-    inter = np.intersect1d(pairs_a, pairs_b)
-    return inter.size / np.min([pairs_a.size, pairs_b.size])
+
+def memory_to_gb(memory_str):
+    unit = memory_str[-1]
+    value = int(memory_str[:-1])
+    if unit == 'K':
+        return value / 1048576.0
+    elif unit == 'M':
+        return value / 1024.0
+    elif unit == 'G':
+        return float(value)
+    else:
+        raise ValueError("Unsupported memory unit. Please use K, M, or G.")
 
 
 def get_grn_stats(df):
@@ -27,53 +39,55 @@ def get_grn_stats(df):
     n_e = df.shape[0]
     n_t = df['target'].unique().size
     n_r = df.groupby(['source']).count()['target'].mean()
+    if np.isnan(n_r):
+        n_r = 0.
     return n_s, n_e, n_t, n_r
 
 
-def read_mth_cat(dataset, mth, fix_ncells):
-    ns = [10, 11, 12, 13, 14]
-    seeds = [0, 1, 2]
-    dfs = []
-    ref = pd.read_csv('datasets/{dataset}/cases/{n_cell}_{n_gene}_{seed}/runs/{mth}.src.csv'.
-                      format(dataset=dataset, n_cell=2 ** ns[-1], n_gene=2 ** ns[-1], seed=seeds[0], mth=mth))
-    for n in ns:
-        n = 2 ** n
-        fixed_n = 2 ** 14
-        for seed in seeds:
-            if fix_ncells:
-                n_cell = fixed_n
-                n_gene = n
-                cat = 'fixed_ncells'
-            else:
-                n_cell = n
-                n_gene = fixed_n
-                cat = 'fixed_ngenes'
-            
-            df = pd.read_csv('benchmarks/{dataset}.{n_cell}_{n_gene}_{seed}.{mth}.src.txt'.
-                             format(dataset=dataset, n_cell=n_cell, n_gene=n_gene, seed=seed, mth=mth), sep='\t')
-            df = df[['s', 'max_rss']]
-            df['s'] = df['s'] / 60 / 60
-            df['mth'] = mth
-            df['n'] = n
-            df['cat'] = cat
-            df = df.rename(columns={'s': 'h', 'max_rss': 'mbs'})
-            df = df[['mth', 'cat', 'n', 'h', 'mbs']]
-            
-            net = pd.read_csv('datasets/{dataset}/cases/{n_cell}_{n_gene}_{seed}/runs/{mth}.src.csv'.
-                              format(dataset=dataset, n_cell=n_cell, n_gene=n_gene, seed=seed, mth=mth))
-            df['ocoeff'] = over_coef(ref, net)
-            df[['n_sources', 'n_edges', 'n_targets', 'r_size']] = get_grn_stats(net)
-            dfs.append(df)
-    dfs = pd.concat(dfs)
-    return dfs
+# Read
+df = pd.read_csv(inp_path, sep=' ', header=None)
+dataset = os.path.basename(out_path).replace('.csv', '')
+res = []
+for _, row in tqdm(list(df.iterrows())):
+    s, time, mem = row[0], row[1], row[2]
+    mth = re.search(r'src_(.*?)_dataset=', s).group(1)
+    ds = re.search(r'_dataset=(.*?).case=', s).group(1)
+    case = re.search(r'case=([\w_]+)', s).group(1)
+    if case.startswith('16384'):
+        cat = 'fixed_ncells'
+        _, n, seed = case.split('_')
+        ncells, ngenes = 16384, n
+    elif '_16384_' in case:
+        cat = 'fixed_ngenes'
+        n, _, seed = case.split('_')
+        ncells, ngenes = n, 16384
+    else:
+        continue
+    ref = pd.read_csv('datasets/{dataset}/cases/16384_16384_0/runs/{mth}.src.csv'.
+                      format(dataset=ds, mth=mth))
+    net = pd.read_csv('datasets/{dataset}/cases/{ncells}_{ngenes}_{seed}/runs/{mth}.src.csv'.
+                      format(dataset=ds, ncells=ncells, ngenes=ngenes, seed=seed, mth=mth))
+    tmp = pd.DataFrame(index=[0])
+    tmp['dataset'] = ds
+    tmp['mth'] = mth
+    tmp['cat'] = cat
+    tmp['n'] = int(n)
+    tmp['seed'] = int(seed)
+    tmp['h'] = time_to_hours(time)
+    tmp['gb'] = memory_to_gb(mem)
+    tmp['ocoeff'] = ocoeff(ref, net)
+    tmp[['n_sources', 'n_edges', 'n_targets', 'r_size']] = get_grn_stats(net)
+    res.append(tmp)
+res = pd.concat(res)
 
+# Drop potential duplicates from sacct
+res = res.drop_duplicates(['dataset', 'mth', 'cat', 'n', 'seed'], keep='first')
 
-df = []
-for i, mth in enumerate(mthds):
-    n_cells = read_mth_cat(dataset=dataset, mth=mth, fix_ncells=True)
-    n_genes = read_mth_cat(dataset=dataset, mth=mth, fix_ncells=False)
-    df.append(pd.concat([n_cells, n_genes]))
-df = pd.concat(df)
+# Filter for dataset
+res = res[res['dataset'] == dataset].drop(columns='dataset')
+
+# Sort
+res = res.sort_values(['mth', 'cat', 'n', 'seed']).reset_index(drop=True)
 
 # Write
-df.to_csv(out_path, index=False)
+res.to_csv(out_path, index=False)
