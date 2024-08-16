@@ -10,6 +10,7 @@ tmp_dir <- args[9]
 path_motifs <- args[10]
 path_p2g <- args[11]
 path_out <- args[12]
+nCores <- 32
 
 format_peaks <- function(peaks){
     split_strings <- strsplit(peaks, "-")
@@ -88,7 +89,7 @@ GRN = GRaNIE::addTFBS(
 # Overlap with peaks
 GRN = GRaNIE::overlapPeaksAndTFBS(
     GRN,
-    nCores = 32,
+    nCores = nCores,
     forceRerun = TRUE
 )
 
