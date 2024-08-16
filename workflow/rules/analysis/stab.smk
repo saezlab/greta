@@ -20,6 +20,21 @@ def get_stab_paths(config, mthds, datasets):
                     d_lst.append(dataset)
                     c_lst.append(case)
                     m_lst.append(mth)
+        n_gene = ns[-1]
+        n_cre = n_gene * 4
+        for n_cell in ns[:-1]:
+            for seed in seeds:
+                case = '{n_cell}_{n_gene}_{seed}'.format(n_cell=n_cell, n_gene=n_gene, seed=seed)
+                config['datasets'][dataset]['cases'][case] = dict()
+                config['datasets'][dataset]['cases'][case]['celltypes'] = 'all'
+                config['datasets'][dataset]['cases'][case]['n_sample'] = n_cell
+                config['datasets'][dataset]['cases'][case]['seed'] = seed
+                config['datasets'][dataset]['cases'][case]['n_hvg'] = n_gene
+                config['datasets'][dataset]['cases'][case]['n_hvr'] = n_cre
+                for mth in mthds:
+                    d_lst.append(dataset)
+                    c_lst.append(case)
+                    m_lst.append(mth)
         return d_lst, c_lst, m_lst
 
 
