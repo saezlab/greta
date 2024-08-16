@@ -116,7 +116,7 @@ clean_peaks <- function(peaks) {
   fpeaks <- paste0(chromosome, "-", start, "-", end)
   return(fpeaks)
 }
-tfb$cre <- clean_peaks(tfb$cre)
+tfb$cre <- sapply(tfb$cre, clean_peaks)
 
 # Write
 write.csv(x = tfb, file = path_out, row.names=FALSE)
