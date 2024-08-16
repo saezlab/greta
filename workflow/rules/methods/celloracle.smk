@@ -116,6 +116,8 @@ rule mdl_celloracle:
         a=config['methods']['celloracle']['a'],
         p=config['methods']['celloracle']['p'],
         n=config['methods']['celloracle']['n'],
+    resources:
+        runtime=720,
     shell:
         """
         python workflow/scripts/methods/celloracle/mdl.py \

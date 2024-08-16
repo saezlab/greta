@@ -59,7 +59,7 @@ rule tfb_figr:
         cellK=config['methods']['figr']['cellK'],
         dorcK=config['methods']['figr']['dorcK'],
     resources:
-        mem_mb=128000,
+        mem_mb=256000,
         runtime=1440,
     shell:
         """
@@ -88,7 +88,7 @@ rule mdl_figr:
         thr_score=config['methods']['figr']['thr_score'],
     resources:
         mem_mb=256000,
-        runtime=180,
+        runtime=720,
     shell:
         """
         Rscript workflow/scripts/methods/figr/mdl.R \

@@ -24,7 +24,7 @@ rule prc_prior_grn:
     output:
         'datasets/{dataset}/cases/{case}/runs/{grn_name}.grn.csv'
     resources:
-        mem_mb=16000
+        mem_mb=32000
     shell:
         """
         python workflow/scripts/methods/prc_prior_grn.py \
