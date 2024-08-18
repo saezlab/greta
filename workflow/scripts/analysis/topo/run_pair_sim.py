@@ -49,7 +49,7 @@ stats = pd.DataFrame()
 stats['name'] = names
 stats['n_tfs'] = n_srcs
 stats['n_edges'] = n_edgs
-stats['n_targets'] = n_targets
+stats['n_targets'] = n_trgs
 stats['mean_reg_size'] = n_regs
 
 print('Computing pairwise overlap coefficients...')
