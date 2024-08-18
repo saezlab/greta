@@ -146,17 +146,16 @@ return(grn)
 
 get_grn_timeout <- function(timeout){
     tryCatch({
-    setTimeLimit(elapsed = timeout, transient = TRUE)
-    return(run_mdl())
-    setTimeLimit(cpu = Inf, elapsed = Inf)
-    }, error = function(ex) {
-    setTimeLimit(cpu = Inf, elapsed = Inf)
-    grn <- data.frame(source=character(), target=character(), score=numeric(), pval=numeric())
-    return(grn)
-})
+        grn <- withTimeout(run_mdl(), timeout = timeout)
+        return(grn)
+    }, TimeoutException = function(ex) {
+        message("Timeout reached.")
+        grn <- data.frame(source=character(), target=character(), score=numeric(), pval=numeric())
+        return(grn)
+    })
 }
 
-grn <- run_mdl() #get_grn_timeout(timeout=10800)
+grn <- get_grn_timeout(timeout=129600)  # Set limit of 1 day an a half
 
 # Write
 write.csv(x = grn, file = path_out, row.names=FALSE)

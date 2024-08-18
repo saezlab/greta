@@ -102,7 +102,7 @@ rule mdl_pando:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
     resources:
         mem_mb=512000,
-        runtime=1440,
+        runtime=2880,
     params:
         thr_corr=config['methods']['pando']['thr_corr'],
         p_thresh=config['methods']['pando']['p_thresh'],
