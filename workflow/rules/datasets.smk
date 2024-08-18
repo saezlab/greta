@@ -173,7 +173,7 @@ rule download_pbmc10k:
         atac_frags=config['datasets']['pbmc10k']['url']['atac_frags'],
     shell:
         """
-        wget '{params.atac_frags}' -O {output.atac_frags}
+        wget '{params.atac_frags}' -O '{output.atac_frags}'
         """
 
 rule prcannot_pbmc10k:
@@ -322,15 +322,15 @@ rule annotate_pitupaired:
 # pituUnpaired
 rule download_pituunpaired:
     output:
-        gex=local('datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5'),
-        peaks=local('datasets/pituunpaired/peaks.original.h5'),
-        frags=local('datasets/pituunpaired/smpl.frags.tsv.gz'),
-        fragIndex=local('datasets/pituunpaired/smpl.frags.tsv.gz.tbi')
+        gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
+        peaks='datasets/pituunpaired/peaks.original.h5',
+        frags='datasets/pituunpaired/smpl.frags.tsv.gz',
+        fragIndex='datasets/pituunpaired/smpl.frags.tsv.gz.tbi'
     params:
         gex=config['datasets']['pituunpaired']['url']['rna_mtx'],
         peaks=config['datasets']['pituunpaired']['url']['peaks'],
         frags=config['datasets']['pituunpaired']['url']['atac_frags'],
-        unzip=local('datasets/pituunpaired/smpl.frags.tsv')
+        unzip='datasets/pituunpaired/smpl.frags.tsv'
 
     shell:
         """
@@ -355,13 +355,13 @@ rule coembedd_pituunpaired:
     
     output:
         tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
-        annot=local('datasets/pituunpaired/annot.csv'),
-        exprMat=temp(local('datasets/pituunpaired/exprMat.rds')),
-        atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
-        cca=temp(local('datasets/pituunpaired/cca.rds'))
+        annot='datasets/pituunpaired/annot.csv',
+        exprMat='datasets/pituunpaired/exprMat.rds',
+        atacSE='datasets/pituunpaired/atac.se.rds',
+        cca='datasets/pituunpaired/cca.rds'
 
-    conda: 
-        '../../workflow/envs/figr.yaml'
+    singularity: 
+        'workflow/envs/seurat.sif'
 
     shell:
         """
@@ -407,10 +407,10 @@ rule callpeaks_pituunpaired:
         'workflow/envs/gretabench.sif'
     output:
         tmp=temp(directory(local('datasets/pituunpaired/tmp_peaks'))),
-        peaks=temp(local('datasets/pituunpaired/peaks.h5ad'))
+        peaks=local('datasets/pituunpaired/peaks.h5ad')
     resources:
-        mem_mb=64000,
-    threads: 16
+        mem_mb=4000,
+    threads: 4
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \

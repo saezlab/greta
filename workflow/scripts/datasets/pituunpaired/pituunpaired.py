@@ -1,7 +1,5 @@
 import os
 import scanpy as sc
-import snapatac2 as snap
-from snapatac2.datasets import _datasets, datasets
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -18,7 +16,7 @@ parser.add_argument('-c','--path_geneids', required=True)
 parser.add_argument('-d','--organism', required=True)
 parser.add_argument('-e','--path_peaks', required=True)
 parser.add_argument('-f','--path_output', required=True)
-parser.add_argument('-g','--path_multi', required=True)
+parser.add_argument('-g','--path_expr', required=True)
 parser.add_argument('-h', '--path_barmap', required=True)
 args = vars(parser.parse_args())
 
@@ -29,7 +27,7 @@ path_geneids = args['path_geneids']
 organism = args['organism']
 path_peaks = args['path_peaks']
 path_output = args['path_output']
-path_multi = args['path_multi']
+path_expr = args['path_expr']
 
 # Read gene ids
 path_geneids = os.path.join(path_geneids, organism + '.csv')
@@ -50,7 +48,7 @@ barmap = pd.read_csv(path_barmap)
 obs = obs[obs.index.isin(barmap['ATAC'])]
 
 # Read data
-rna = sc.read_10x_h5(path_multi, genome="GRCh38", gex_only=True)
+rna = sc.read_10x_h5(path_expr, genome="GRCh38", gex_only=True)
 del rna.obs
 rna.var.index.name = None
 

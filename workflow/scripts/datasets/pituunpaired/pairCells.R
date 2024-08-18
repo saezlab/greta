@@ -1,9 +1,10 @@
 library(doParallel)
-library(SingleCellExperiment)
 library(FigR)
 library(BSgenome.Hsapiens.UCSC.hg38)
+library(SingleCellExperiment)
 
 options("optmatch_max_problem_size" = Inf)
+
 
 # Parse args
 args <- commandArgs(trailingOnly = F)

@@ -1,11 +1,10 @@
+#library(Signac)
+#library(EnsDb.Hsapiens.v86)
+#library(ggplot2)
+#library(cowplot)
+#library(dplyr)
+#library(SingleCellExperiment)
 library(Seurat)
-library(Signac)
-library(EnsDb.Hsapiens.v86)
-library(ggplot2)
-library(cowplot)
-library(dplyr)
-library(SingleCellExperiment)
-library(hdf5r)
 
 
 # Parse args
@@ -19,8 +18,6 @@ path_atac.se_out <- args[6]
 path_cca_out <- args[7]
 
 nCores <- 4
-
-
 
 # Load RNA and ATAC seq matrix
 ## NEEDS to be changed to the correct path

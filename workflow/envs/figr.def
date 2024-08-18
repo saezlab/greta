@@ -41,7 +41,7 @@ From: ubuntu:20.04
     r-base==4.3 \
     r-matrix \
     bioconductor-summarizedexperiment \
-    bioconductor-singlecellexperiment
+    bioconductor-singlecellexperiment \
     bioconductor-genomicranges \
     r-dplyr \
     r-ggplot2 \

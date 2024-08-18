@@ -1,0 +1,116 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+
+%environment
+    export HDF5_USE_FILE_LOCKING=FALSE
+    export PATH=/opt/:$PATH
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate env
+
+%post
+
+    # update apt
+    apt update -y
+
+    # basic packages (~2 min)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    apt install -y build-essential  \
+                   gcc \
+                   cmake \
+                   wget \
+                   curl \
+                   libcurl4-openssl-dev \
+                   libssl-dev \
+                   libxml2-dev \
+                   libcairo2-dev \
+                   libxt-dev \
+                   libopenblas-dev \
+                   bedtools \
+                   libhdf5-dev
+
+    # conda
+    wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+    bash Miniforge3.sh -b -p "/opt/conda"
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate
+
+ # Create env
+    mamba create -y -n=env -c conda-forge -c bioconda \
+    python=3.10 \
+    r-base==4.3.3 \
+    r-tidyverse \
+    r-signac==1.11.0 \
+    bioconductor-matrixgenerics \
+    bioconductor-motifmatchr \
+    r-glmnetutils \
+    r-bayestestr \
+    r-ggpointdensity \
+    r-ggraph \
+    r-tidygraph \
+    bioconductor-sparsematrixstats \
+    r-uwot \
+    r-grr \
+    r-devtools \
+    r-deldir \
+    r-spatstat.utils \
+    r-tensor \
+    r-abind \
+    r-goftest \
+    r-ggplot2 \
+    r-dplyr \
+    r-spatstat \
+    r-spatstat.sparse \
+    r-spatstat.random \
+    r-spatstat.geom \
+    r-parallelly \
+    r-listenv \
+    r-globals \
+    r-seuratobject \
+    r-sctransform \
+    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
+    bioconductor-bsgenome.mmusculus.ucsc.mm10 \
+    bioconductor-ensdb.hsapiens.v86 \
+    bioconductor-ensdb.mmusculus.v79 \
+    bioconductor-biovizbase \
+    bioconductor-singlecellexperiment \
+    r-scattermore \
+    r-rtsne \
+    r-rann \
+    r-cluster \
+    r-reticulate \
+    r-lmtest \
+    r-kernsmooth \
+    r-fastmatch \
+    r-patchwork \
+    r-pbapply \
+    r-leiden \
+    r-ica \
+    r-ggridges \
+    r-fitdistrplus \
+    r-cowplot \
+    r-conflicted \
+    r-doparallel \
+    r-gplots \
+    r-rocr \
+    r-plotly \
+    r-seurat==4.3.0 \
+    r-seuratobject==4.1.4 \
+    r-rcpphnsw \
+    r-igraph==1.5.1 \
+    jupyterlab \
+    r-irkernel \
+    r-fastdummies \
+    r-matrix==1.6.1.1 \
+    mudata
+
+    # Install hdf5r
+    conda activate env
+    Rscript -e "install.packages('hdf5r', repos='https://cran.uni-muenster.de/')"
+    export HDF5_USE_FILE_LOCKING=FALSE
+    
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y
