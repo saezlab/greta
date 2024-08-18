@@ -6,7 +6,7 @@ rule get_grn:
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'
     resources:
-        mem_mb=16000,
+        mem_mb=32000,
     shell:
         """
         python workflow/scripts/methods/grn.py \

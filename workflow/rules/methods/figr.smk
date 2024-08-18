@@ -87,8 +87,8 @@ rule mdl_figr:
         cellK=config['methods']['figr']['cellK'],
         thr_score=config['methods']['figr']['thr_score'],
     resources:
-        mem_mb=256000,
-        runtime=720,
+        mem_mb=512000,
+        runtime=2160,
     shell:
         """
         Rscript workflow/scripts/methods/figr/mdl.R \
@@ -119,7 +119,7 @@ rule src_figr:
         thr_score=config['methods']['figr']['thr_score'],
     resources:
         mem_mb=256000,
-        runtime=1440,
+        runtime=2160,
     shell:
         """
         Rscript workflow/scripts/methods/figr/src.R \
