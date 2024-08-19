@@ -56,9 +56,14 @@ for _, row in tqdm(list(df.iterrows())):
     ds = re.search(r'_dataset=(.*?).case=', s).group(1)
     case = re.search(r'case=([\w_]+)', s).group(1)
     if case.startswith('16384'):
-        cat = 'fixed_ncells'
-        _, n, seed = case.split('_')
-        ncells, ngenes = 16384, n
+        if case.startswith('16384_16384_'):
+            cat = 'full'
+            ncells, ngenes, seed = case.split('_')
+            n = 16384
+        else:
+            cat = 'fixed_ncells'
+            _, n, seed = case.split('_')
+            ncells, ngenes = 16384, n
     elif '_16384_' in case:
         cat = 'fixed_ngenes'
         n, _, seed = case.split('_')
