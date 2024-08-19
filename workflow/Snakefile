@@ -31,6 +31,7 @@ include: 'rules/datasets/pbmc10k.smk'
 include: 'rules/datasets/reprofibro.smk'
 include: 'rules/datasets/pitupair.smk'
 include: 'rules/datasets/pitunpair.smk'
+include: 'rules/datasets/heartatlas.smk'
 
 # Methods
 include: 'rules/methods/celloracle.smk'

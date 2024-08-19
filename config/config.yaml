@@ -81,3 +81,68 @@ datasets:
             peaks: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
             rna_mtx: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391775/suppl/GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             atac_meta: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
+
+    heartatlas:
+        organism: 'hg38'
+        url:
+            frags: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/fragments.tar'
+            anndata: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Global_raw.h5ad'
+        batchIDs:
+            - HCAHeart9508627_HCAHeart9508819
+            - HCAHeart9508628_HCAHeart9508820
+            - HCAHeart9508629_HCAHeart9508821
+            - HCAHeart9845431_HCAHeart9917173
+            - HCAHeart9845432_HCAHeart9917174
+            - HCAHeart9845433_HCAHeart9917175
+            - HCAHeart9845434_HCAHeart9917176
+            - HCAHeart9845435_HCAHeart9917177
+            - HCAHeart9845436_HCAHeart9917178
+            - HCAHeartST10773165_HCAHeartST10781062
+            - HCAHeartST10773166_HCAHeartST10781063
+            - HCAHeartST10773167_HCAHeartST10781064
+            - HCAHeartST10773168_HCAHeartST10781065
+            - HCAHeartST10773169_HCAHeartST10781446
+            - HCAHeartST10773170_HCAHeartST10781447
+            - HCAHeartST10773171_HCAHeartST10781448
+            - HCAHeartST11064574_HCAHeartST11023239
+            - HCAHeartST11064575_HCAHeartST11023240
+            - HCAHeartST11064576_HCAHeartST11023241
+            - HCAHeartST11064577_HCAHeartST11023242
+            - HCAHeartST11350184_HCAHeartST11121842
+            - HCAHeartST11350186_HCAHeartST11121844
+            - HCAHeartST11350187_HCAHeartST11121845
+            - HCAHeartST11350192_HCAHeartST11445769
+            - HCAHeartST11350193_HCAHeartST11445770
+            - HCAHeartST11350194_HCAHeartST11445771
+            - HCAHeartST11350195_HCAHeartST11445772
+            - HCAHeartST11350196_HCAHeartST11445773
+            - HCAHeartST11350197_HCAHeartST11445774
+            - HCAHeartST11350198_HCAHeartST11445775
+            - HCAHeartST13146201_HCAHeartST13129134
+            - HCAHeartST13146202_HCAHeartST13129135
+            - HCAHeartST13146203_HCAHeartST13129136
+            - HCAHeartST13146204_HCAHeartST13129137
+            - HCAHeartST13146205_HCAHeartST13129138
+            - HCAHeartST13146206_HCAHeartST13129139
+            - HCAHeartST13146207_HCAHeartST13129140
+            - HCAHeartST13146208_HCAHeartST13129141
+            - HCAHeartST13168796_HCAHeartST13167740
+            - HCAHeartST13180615_HCAHeartST13177112
+            - HCAHeartST13180616_HCAHeartST13177113
+            - HCAHeartST13180617_HCAHeartST13177114
+            - HCAHeartST13180618_HCAHeartST13177115
+            - HCAHeartST13180619_HCAHeartST13177116
+            - HCAHeartST13189995_HCAHeartST13188800
+            - HCAHeartST13189996_HCAHeartST13188801
+            - HCAHeartST13189997_HCAHeartST13188802
+            - HCAHeartST13189998_HCAHeartST13188803
+            - HCAHeartST13189999_HCAHeartST13188804
+            - HCAHeartST13190000_HCAHeartST13188805
+            - HCAHeartST13190001_HCAHeartST13188806
+            - HCAHeartST13190002_HCAHeartST13188807
+            - HCAHeartST13190003_HCAHeartST13188808
+            - HCAHeartST13190004_HCAHeartST13188809
+            - HCAHeartST13190005_HCAHeartST13188810
+            - HCAHeartST13190006_HCAHeartST13188811
+            - HCAHeartST13190007_HCAHeartST13188812
+            - HCAHeartST13190008_HCAHeartST13188813
