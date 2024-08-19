@@ -3,7 +3,10 @@ import pandas as pd
 import numpy as np
 import os
 from tqdm import tqdm
-from ..utils import ocoeff, parallel_ocoeff
+from functools import partial
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import ocoeff, parallel_ocoeff
 import argparse
 
 
@@ -35,7 +38,7 @@ n_edgs = []
 n_trgs = []
 n_regs = []
 for path in tqdm(paths):
-    names.append(os.path.basename(path).replace('.grn.csv', ''))
+    names.append(os.path.basename(path).replace('.grn.csv', '').replace('.csv', ''))
     df = pd.read_csv(path).drop_duplicates(['source', 'target'], keep='first')
     dfs.append(df)
     n_s, n_e, n_t, n_r = get_grn_stats(df)
@@ -59,8 +62,9 @@ names_b = []
 tf_coefs = []
 edge_coefs = []
 target_coefs = []
+parallel_ocoeff_with_dfs = partial(parallel_ocoeff, dfs=dfs)
 with concurrent.futures.ProcessPoolExecutor() as executor:
-    for res in tqdm(executor.map(parallel_ocoeff, index_pairs), total=len(index_pairs)):
+    for res in tqdm(executor.map(parallel_ocoeff_with_dfs, index_pairs), total=len(index_pairs)):
         i, j, tf_coef, edge_coef, target_coef = res
         names_a.append(names[i])
         names_b.append(names[j])
