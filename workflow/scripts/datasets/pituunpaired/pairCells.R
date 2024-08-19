@@ -8,10 +8,10 @@ options("optmatch_max_problem_size" = Inf)
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
-path_exprMat <- args[1]
-path_atacSE <- args[2]
-path_cca <- args[3]
-path_barMap_out <- args[4]
+path_exprMat <- args[6]
+path_atacSE <- args[7]
+path_cca <- args[8]
+path_barMap_out <- args[9]
 
 
 

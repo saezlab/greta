@@ -304,7 +304,7 @@ rule annotate_pitupaired:
     params:
         organism=config['datasets']['pitupaired']['organism'],
     resources:
-        mem_mb=8000,
+        mem_mb=32000,
     shell:
         """
         python workflow/scripts/datasets/pitupaired/pitupaired.py \
@@ -354,11 +354,10 @@ rule coembedd_pituunpaired:
 
     
     output:
-        tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
-        annot='datasets/pituunpaired/annot.csv',
-        exprMat='datasets/pituunpaired/exprMat.rds',
-        atacSE='datasets/pituunpaired/atac.se.rds',
-        cca='datasets/pituunpaired/cca.rds'
+        annot=temp(local('datasets/pituunpaired/annot.csv')),
+        exprMat=temp(local('datasets/pituunpaired/exprMat.rds')),
+        atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
+        cca=temp(local('datasets/pituunpaired/cca.rds'))
 
     singularity: 
         'workflow/envs/seurat.sif'
@@ -375,14 +374,14 @@ rule coembedd_pituunpaired:
         {output.cca} 
         """
 
-
+# Successfully tested!
+# pituUnpaired
 rule pairCells_pituunpaired:
     input:
-        exprMat='datasets/pituunpaired/exprMat.rds',
-        atacSE='datasets/pituunpaired/atac.se.rds',
-        cca='datasets/pituunpaired/cca.rds',
+        exprMat=temp(local('datasets/pituunpaired/exprMat.rds')),
+        atacSE=temp(local('datasets/pituunpaired/atac.se.rds')),
+        cca=temp(local('datasets/pituunpaired/cca.rds'))
     output:
-        tmp=temp(directory(local('datasets/pituunpaired/tmp'))),
         barMap=local('datasets/pituunpaired/barMap.csv')
 
     singularity:
@@ -409,8 +408,8 @@ rule callpeaks_pituunpaired:
         tmp=temp(directory(local('datasets/pituunpaired/tmp_peaks'))),
         peaks=local('datasets/pituunpaired/peaks.h5ad')
     resources:
-        mem_mb=4000,
-    threads: 4
+        mem_mb=32000,
+    threads: 16
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \
@@ -420,10 +419,12 @@ rule callpeaks_pituunpaired:
         -o {output.peaks}
         """
 
+# Successfully tested!
+# pituUnpaired
 rule annotate_pituunpaired:
     input:
         annot='datasets/pituunpaired/annot.csv',
-        #g='gdata/geneids',
+        g='gdata/geneids',
         peaks='datasets/pituunpaired/peaks.h5ad',
         gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
         barmap='datasets/pituunpaired/barMap.csv'
@@ -435,17 +436,16 @@ rule annotate_pituunpaired:
     params:
         organism=config['datasets']['pituunpaired']['organism'],
     resources:
-        mem_mb=4000,
+        mem_mb=32000,
     shell:
         """
         python workflow/scripts/datasets/pituunpaired/pituunpaired.py \
         -a {output.tmp} \
         -b {input.annot} \
+        -c {input.g} \
         -d {params.organism} \
         -e {input.peaks} \
         -f {output.out} \
         -g {input.gex} \
         -i {input.barmap}
         """
-
-#         -c {input.g} \

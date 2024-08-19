@@ -1,26 +1,27 @@
-#library(Signac)
-#library(EnsDb.Hsapiens.v86)
-#library(ggplot2)
-#library(cowplot)
-#library(dplyr)
-#library(SingleCellExperiment)
+library(Signac)
+library(EnsDb.Hsapiens.v86)
+library(ggplot2)
+library(cowplot)
+library(dplyr)
 library(Seurat)
 
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
-path_gex <- args[1]
-path_peaks <- args[2]
-path_frags <- args[3]
-path_annot_out <- args[4]
-path_gex_out <- args[5]
-path_atac.se_out <- args[6]
-path_cca_out <- args[7]
+path_gex <- args[6]
+path_peaks <- args[7]
+path_frags <- args[8]
+path_annot_out <- args[9]
+path_gex_out <- args[10]
+path_atac.se_out <- args[11]
+path_cca_out <- args[12]
 
 nCores <- 4
 
+print(args)
+
+
 # Load RNA and ATAC seq matrix
-## NEEDS to be changed to the correct path
 rna <- Read10X_h5(path_gex)
 atac <- Read10X_h5(path_peaks)
 
@@ -86,6 +87,7 @@ exprMat <- GetAssayData(object = data.rna, assay = "RNA", slot = "data")
 saveRDS(exprMat, file = path_gex_out)
 
 #------------------------------------------
+library(SingleCellExperiment)
 
 # ATAC preprocessing
 data.atac <- RunTFIDF(data.atac)
@@ -149,4 +151,4 @@ annot$batch <- "smpl"
 annot$barcodes <- rownames(annot)
 
 ## Save annotation df
-write.csv(annot, file = path_annot)
+write.csv(annot, file = path_annot_out)
