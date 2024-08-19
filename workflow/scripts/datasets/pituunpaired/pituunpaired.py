@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import anndata as ad
 import mudata as md
+from snapatac2.datasets import _datasets, datasets
 import argparse
 
 
@@ -17,12 +18,12 @@ parser.add_argument('-d','--organism', required=True)
 parser.add_argument('-e','--path_peaks', required=True)
 parser.add_argument('-f','--path_output', required=True)
 parser.add_argument('-g','--path_expr', required=True)
-parser.add_argument('-h', '--path_barmap', required=True)
+parser.add_argument('-i', '--path_barmap', required=True)
 args = vars(parser.parse_args())
 
 path_tmp = args['path_tmp']
 path_annot = args['path_annot']
-path_barap = args['path_barmap']
+path_barmap = args['path_barmap']
 path_geneids = args['path_geneids']
 organism = args['organism']
 path_peaks = args['path_peaks']

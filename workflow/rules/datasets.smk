@@ -423,9 +423,10 @@ rule callpeaks_pituunpaired:
 rule annotate_pituunpaired:
     input:
         annot='datasets/pituunpaired/annot.csv',
-        g='gdata/geneids',
+        #g='gdata/geneids',
         peaks='datasets/pituunpaired/peaks.h5ad',
-        multi='datasets/pituunpaired/multiome_original.h5',
+        gex='datasets/pituunpaired/smpl.filtered_feature_bc_matrix.h5',
+        barmap='datasets/pituunpaired/barMap.csv'
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -434,16 +435,17 @@ rule annotate_pituunpaired:
     params:
         organism=config['datasets']['pituunpaired']['organism'],
     resources:
-        mem_mb=32000,
+        mem_mb=4000,
     shell:
         """
         python workflow/scripts/datasets/pituunpaired/pituunpaired.py \
         -a {output.tmp} \
         -b {input.annot} \
-        -c {input.g} \
         -d {params.organism} \
         -e {input.peaks} \
         -f {output.out} \
-        -g {input.multi}
+        -g {input.gex} \
+        -i {input.barmap}
         """
 
+#         -c {input.g} \
