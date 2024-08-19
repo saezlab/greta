@@ -5,21 +5,15 @@ import pandas as pd
 #import decoupler as dc --> error when trying to import 
 import argparse
 
-# TO DO: Change plot back to annot
+
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-a','--path_tmp', required=True)
 parser.add_argument('-b','--path_data', required=True)
 parser.add_argument('-c','--path_annot', required=True)
 args = vars(parser.parse_args())
 
-path_tmp = args['path_tmp']
 path_data = args['path_data']
 path_annot = args['path_annot']
-
-# Change default cache dir
-if not os.path.exists(path_tmp):
-    os.mkdir(path_tmp)
 
 # Download
 adata = sc.read_10x_h5((path_data), genome="GRCh38", gex_only=True)
@@ -40,7 +34,6 @@ adata = adata[adata.obs.pct_counts_mt < 5, :]
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 adata.layers['log_norm'] = adata.X.copy()
-
 
 # Identify the highly variable genes
 sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
@@ -64,8 +57,7 @@ sc.tl.umap(adata)
 # Run leiden clustering algorithm
 sc.tl.leiden(adata, resolution=0.3)
 
-
-## annotate cell types 
+## annotate cell types
 # manually annotated with decoupler based on cell type markers provided in the paper
 annotation_dict = {
  '0': 'Gonadotropes',

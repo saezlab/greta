@@ -12,7 +12,6 @@ import argparse
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-a','--path_tmp', required=True)
 parser.add_argument('-b','--path_annot', required=True)
 parser.add_argument('-c','--path_geneids', required=True)
 parser.add_argument('-d','--organism', required=True)
@@ -21,7 +20,6 @@ parser.add_argument('-f','--path_output', required=True)
 parser.add_argument('-g','--path_multi', required=True)
 args = vars(parser.parse_args())
 
-path_tmp = args['path_tmp']
 path_annot = args['path_annot']
 path_geneids = args['path_geneids']
 organism = args['organism']
@@ -32,12 +30,6 @@ path_multi = args['path_multi']
 # Read gene ids
 path_geneids = os.path.join(path_geneids, organism + '.csv')
 geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
-
-# Change default cache dir
-if not os.path.exists(path_tmp):
-    os.mkdir(path_tmp)
-_datasets = datasets()
-_datasets.path = Path(path_tmp)
 
 # Read annots
 obs = pd.read_csv(path_annot, index_col=0)
