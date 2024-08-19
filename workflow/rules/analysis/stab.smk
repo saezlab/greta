@@ -50,10 +50,11 @@ rule run_stab:
         res='analysis/stab/{dataset}.csv',
     params:
         m=mthds
+    container: None
     shell:
         """
-        sacct -S 2024-08-15 -E $(date -d '23:59:59 today' +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
-        awk '/^ +src_/ {jobname=$1; getline; if ($1 == batch) print jobname, $2, $3}' > {output.tmp}
+        /usr/bin/sacct -S 2024-08-15 -E $(date -d '23:59:59 today' +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
+        awk '/^ +src_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.tmp}
         python workflow/scripts/analysis/stab/run_stab.py \
         -i {output.tmp} \
         -o {output.res}

@@ -4,7 +4,9 @@ import argparse
 import os
 import re
 from tqdm import tqdm
-from ..utils import ocoeff
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import ocoeff
 
 
 # Init args
