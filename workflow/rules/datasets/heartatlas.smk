@@ -1,9 +1,9 @@
 # heartatlas
 rule download_heartatlas:
     output:
-        tar=temp(local('datasets/heartatlas/fragments.tar')),
-        frag=expand(temp(local('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz')), batchID=config['datasets']['heartatlas']['batchIDs']),
-        anndata=temp(local('datasets/heartatlas/multiome_raw.h5ad'))
+        tar=local('datasets/heartatlas/fragments.tar'),
+        frag=local(expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs'])),
+        anndata=local('datasets/heartatlas/multiome_raw.h5ad')
     params:
         tar=config['datasets']['heartatlas']['url']['tar'],
         anndata=config['datasets']['heartatlas']['url']['anndata']
@@ -27,7 +27,7 @@ rule prcannot_heartatlas:
         """
         python workflow/scripts/datasets/heartatlas/heart_annot.py \
         -h {input.h5ad} \
-        -a {input.annot}
+        -a {output.annot}
         """
 
 rule callpeaks_heartatlas:
@@ -37,8 +37,8 @@ rule callpeaks_heartatlas:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=temp(directory(local('datasets/heartatlas/tmp_peaks'))),
-        peaks=temp(local('datasets/heartatlas/peaks.h5ad'))
+        tmp=directory(local('datasets/heartatlas/tmp_peaks')),
+        peaks=local('datasets/heartatlas/peaks.h5ad')
     resources:
         mem_mb=64000,
     threads: 16
