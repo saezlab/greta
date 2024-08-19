@@ -17,7 +17,8 @@ rule topo_mult:
 
 rule topo_single:
     input:
-        expand(['datasets/{{dataset}}/cases/{{case}}/runs/{mth}.src.csv'], mth=mthds) + ['datasets/{dataset}/cases/{case}/runs/random.grn.csv']
+        expand(['datasets/{{dataset}}/cases/{{case}}/runs/{mth}.src.csv'], mth=mthds) + \
+        ['datasets/{dataset}/cases/{case}/runs/random.grn.csv', 'datasets/{dataset}/cases/{case}/runs/collectri.grn.csv', 'datasets/{dataset}/cases/{case}/runs/dorothea.grn.csv']
     output:
         stats='analysis/topo/{dataset}.{case}.stats_single.csv',
         sims='analysis/topo/{dataset}.{case}.sims_single.csv',
@@ -33,7 +34,7 @@ rule topo_orign:
     input:
         expand(['datasets/{{dataset}}/cases/{{case}}/runs/{mth}.src.csv'], mth=mthds) + \
         expand(['datasets/{{dataset}}/cases/{{case}}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'], zip, pre=mthds, p2g=mthds, tfb=mthds, mdl=mthds) + \
-        ['datasets/{dataset}/cases/{case}/runs/random.grn.csv']
+        ['datasets/{dataset}/cases/{case}/runs/random.grn.csv', 'datasets/{dataset}/cases/{case}/runs/collectri.grn.csv', 'datasets/{dataset}/cases/{case}/runs/dorothea.grn.csv']
     output:
         stats='analysis/topo/{dataset}.{case}.stats_orign.csv',
         sims='analysis/topo/{dataset}.{case}.sims_orign.csv',
