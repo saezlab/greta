@@ -48,18 +48,20 @@ barmap = pd.read_csv(path_barmap)
 obs = obs[obs.index.isin(barmap['ATAC'])]
 
 # Read data
-rna = sc.read_10x_h5(path_expr, genome="GRCh38", gex_only=True)
+rna = sc.read_10x_h5(path_expr, genome="GRCh38")
 del rna.obs
 rna.var.index.name = None
 
 # Filter RNA data based on barmap
 rna = rna[rna.obs_names.isin(barmap['RNA'])]
 barmap = barmap.sort_values(by='RNA')
+rna = rna[rna.obs_names.sort_values(), :]
 rna.obs_names = barmap['ATAC']
 
 # Rename barcodes RNA
 sample_id = 'smpl'
 rna.obs_names = [sample_id + '_' + o.split('-1')[0] for o in rna.obs_names]
+obs.index = [sample_id + '_' + o.split('-1')[0] for o in obs.index]
 
 # Filter faulty gene symbols
 ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
@@ -83,19 +85,21 @@ del rna.var
 # Read atac data
 atac = ad.read_h5ad(path_peaks)
 
-# Filter ATAC data based on barmap
-atac = atac[atac.obs_names.isin(barmap['ATAC'])]
+# Filter ATAC data based on barmap and RNA
+atac = atac[atac.obs_names.isin(rna.obs_names)]
 
-# TO DO: Make sure barcodes match in RNA add ATAC before merging to mudata
+#Make sure barcodes match in RNA add ATAC before merging to mudata
+rna = rna[rna.obs_names.sort_values(), :]
+atac = atac[atac.obs_names.sort_values()]
 
-# Add celltype annotation to ATAC data
+# Add celltype annotation to RNA data
 rna.obs['celltype'] = obs['celltype']
 rna.obs['batch'] = obs['batch']
-rna.obs_names = obs.index
 
+# Add celltype annotation to ATAC data
 atac.obs['celltype'] = obs['celltype']
 atac.obs['batch'] = obs['batch']
-atac.obs_names = obs.index
+
 
 # Create mdata
 mdata = md.MuData(
