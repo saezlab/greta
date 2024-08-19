@@ -143,6 +143,6 @@ workflow/scripts/methods/.DS_Store
 
 .snakemake/
 benchmarks/
-datasets/
+/datasets/
 gdata/
 workflow/scripts/methods/scenic+/s1.py

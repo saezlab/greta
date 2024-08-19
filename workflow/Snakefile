@@ -25,7 +25,14 @@ def make_combs(path, mthds, name, add_src):
 
 mthds = list(config['methods'].keys())
 
-include: 'rules/datasets.smk'
+# Datasets
+include: 'rules/datasets/general.smk'
+include: 'rules/datasets/pbmc10k.smk'
+include: 'rules/datasets/reprofibro.smk'
+include: 'rules/datasets/pitupair.smk'
+include: 'rules/datasets/pitunpair.smk'
+
+# Methods
 include: 'rules/methods/celloracle.smk'
 include: 'rules/methods/pando.smk'
 include: 'rules/methods/granie.smk'
@@ -35,40 +42,16 @@ include: 'rules/methods/scenicplus.smk'
 include: 'rules/methods/grn.smk'
 include: 'rules/methods/random.smk'
 
-include: 'rules/analysis/prior.smk'
-include: 'rules/analysis/pred.smk'
-include: 'rules/analysis/mech.smk'
+# Analyses
+include: 'rules/analysis/metrics/prior.smk'
+include: 'rules/analysis/metrics/pred.smk'
+include: 'rules/analysis/metrics/mech.smk'
+include: 'rules/analysis/metrics/utils.smk'
 include: 'rules/analysis/stab.smk'
 include: 'rules/analysis/topo.smk'
 
-
-
-
-
-f_scores = [
-'analysis/mech/prtrb/knocktf/pbmc10k.all.scores.csv',
-'analysis/mech/tfact/knocktf/pbmc10k.all.scores.csv',
-'analysis/pred/omics/gtf/pbmc10k.all.scores.csv',
-'analysis/pred/omics/cretf/pbmc10k.all.scores.csv',
-'analysis/pred/omics/gcre/pbmc10k.all.scores.csv',
-'analysis/pred/pathway/kegg/pbmc10k.all.scores.csv',
-'analysis/pred/pathway/hall/pbmc10k.all.scores.csv',
-'analysis/pred/pathway/reac/pbmc10k.all.scores.csv',
-'analysis/prior/tfm/hpa/pbmc10k.all.scores.csv',
-'analysis/prior/tfm/tfmdb/pbmc10k.all.scores.csv',
-'analysis/prior/tfbind/chipatlas/pbmc10k.all.scores.csv',
-'analysis/prior/tfbind/remap2022/pbmc10k.all.scores.csv',
-'analysis/prior/tfbind/unibind/pbmc10k.all.scores.csv',
-'analysis/prior/cre/encode/pbmc10k.all.scores.csv',
-'analysis/prior/cre/gwascatalogue/pbmc10k.all.scores.csv',
-'analysis/prior/cre/phastcons/pbmc10k.all.scores.csv',
-'analysis/prior/cre/zhang21/pbmc10k.all.scores.csv',
-'analysis/prior/cre/promoters/pbmc10k.all.scores.csv',
-'analysis/prior/eqtl/eqtlcatalogue/pbmc10k.all.scores.csv',
-]
-
 rule all:
     input:
-        f_scores
+        ''
 
 # snakemake --profile config/slurm/ ...

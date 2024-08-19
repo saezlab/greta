@@ -30,22 +30,6 @@ methods:
 
 # Datasets
 datasets:
-    neurips2021:
-        organism: 'hg38'
-        url: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE194122&format=file&file=GSE194122%5Fopenproblems%5Fneurips2021%5Fmultiome%5FBMMC%5Fprocessed%2Eh5ad%2Egz'
-        cases:
-            blood:
-                celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
-                n_hvg: 2048
-                n_hvr: 8192
-            all:
-                celltypes: 'all'
-                n_hvg: 2048
-                n_hvr: 16384
-            small:
-                celltypes: 'HSC;MK/E prog;Proerythroblast;Erythroblast;Normoblast'
-                n_hvg: 512
-                n_hvr: 1024
     pbmc10k:
         organism: 'hg38'
         url:
@@ -85,19 +69,15 @@ datasets:
                 n_hvg: 8192
                 n_hvr: 32768
                 root: 'Fibroblast-like'
-
-    pitupaired:
+    pitupair:
         organism: 'hg38'
-        url: 
+        url:
             frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
             multi: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-
-    pituunpaired:
+    pitunpair:
         organism: 'hg38'
         url:
             atac_frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffragments%2Etsv%2Egz'
             peaks: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
             rna_mtx: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391775/suppl/GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             atac_meta: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
-        cases:
-            all: 
