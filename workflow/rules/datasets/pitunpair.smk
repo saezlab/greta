@@ -1,41 +1,63 @@
-rule download_pitunpair:
+rule download_pitunpaired:
     output:
-        gex=temp(local('datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
-        peaks=temp(local('datasets/pitunpair/peaks.original.h5')),
-        frags=temp(local('datasets/pitunpair/smpl.frags.tsv.gz')),
-        fragIndex=temp(local('datasets/pitunpair/smpl.frags.tsv.gz.tbi'))
+        gex='datasets/pitunpaired/smpl.filtered_feature_bc_matrix.h5',
+        peaks='datasets/pitunpaired/peaks.original.h5',
+        frags='datasets/pitunpaired/smpl.frags.tsv.gz',
+        fragIndex='datasets/pitunpaired/smpl.frags.tsv.gz.tbi'
     params:
-        gex=config['datasets']['pitunpair']['url']['rna_mtx'],
-        peaks=config['datasets']['pitunpair']['url']['peaks'],
-        frags=config['datasets']['pitunpair']['url']['atac_frags'],
-        unzip='datasets/pitunpair/smpl.frags.tsv'
+        gex=config['datasets']['pitunpaired']['url']['rna_mtx'],
+        peaks=config['datasets']['pitunpaired']['url']['peaks'],
+        frags=config['datasets']['pitunpaired']['url']['atac_frags'],
+        unzip='datasets/pitunpaired/smpl.frags.tsv'
+
     shell:
         """
         wget '{params.gex}' -O '{output.gex}'
         wget '{params.peaks}' -O '{output.peaks}'
         wget '{params.frags}' -O '{output.frags}'
-        gunzip -d {output.frags}
-        bgzip {params.unzip}
-        tabix -p bed {output.frags}
         """
 
-
-rule coembedd_pitunpair:
+rule index_frags:
     input:
-        gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
-        peaks='datasets/pitunpair/peaks.original.h5',
-        frags='datasets/pitunpair/smpl.frags.tsv.gz'
+        frags='datasets/pitunpaired/smpl.frags.tsv.gz'
     output:
-        annot=temp(local('datasets/pitunpair/annot.csv')),
-        exprMat=temp(local('datasets/pitunpair/exprMat.rds')),
-        atacSE=temp(local('datasets/pitunpair/atac.se.rds')),
-        cca=temp(local('datasets/pitunpair/cca.rds'))
-    singularity: 
-        'workflow/envs/figr.sif'
+        index='datasets/pitunpaired/smpl.frags.tsv.gz.tbi'
+    params:
+        unzip='datasets/pitunpaired/smpl.frags.tsv'
+
+    singularity:
+        'workflow/envs/gretabench.sif'
+    
     shell:
         """
-        Rscript workflow/scripts/datasets/pitunpair/coembedd.R \
+        gunzip -d {input.frags}
+        bgzip {params.unzip}
+        tabix -p bed {input.frags}
+        """
+
+
+rule coembedd_pitunpaired:
+    input:
+        gex='datasets/pitunpaired/smpl.filtered_feature_bc_matrix.h5',
+        celltypes='workflow/scripts/datasets/pitunpaired/celltypes.csv',
+        peaks='datasets/pitunpaired/peaks.original.h5',
+        frags='datasets/pitunpaired/smpl.frags.tsv.gz'
+
+    
+    output:
+        annot=temp(local('datasets/pitunpaired/annot.csv'))
+        exprMat=temp(local('datasets/pitunpaired/exprMat.rds')),
+        atacSE=temp(local('datasets/pitunpaired/atac.se.rds')),
+        cca=temp(local('datasets/pitunpaired/cca.rds'))
+
+    singularity: 
+        'workflow/envs/seurat.sif'
+
+    shell:
+        """
+        Rscript workflow/scripts/datasets/pitunpaired/coembedd.R \
         {input.gex} \
+        {input.celltypes} \
         {input.peaks} \
         {input.frags} \
         {output.annot} \
@@ -45,35 +67,38 @@ rule coembedd_pitunpair:
         """
 
 
-rule paircells_pitunpair:
+rule pairCells_pitunpaired:
     input:
-        exprMat='datasets/pitunpair/exprMat.rds',
-        atacSE='datasets/pitunpair/atac.se.rds',
-        cca='datasets/pitunpair/cca.rds'
+        exprMat=local('datasets/pitunpaired/exprMat.rds'),
+        atacSE=local('datasets/pitunpaired/atac.se.rds'),
+        cca=local('datasets/pitunpaired/cca.rds')
     output:
-        barMap=temp(local('datasets/pitunpair/barMap.csv'))
+        barMap=local('datasets/pitunpaired/barMap.csv')
+
     singularity:
         'workflow/envs/figr.sif'
+
     shell:
         """
-        Rscript workflow/scripts/datasets/pitunpair/pairCells.R \
+        Rscript workflow/scripts/datasets/pitunpaired/pairCells.R \
         {input.exprMat} \
         {input.atacSE} \
         {input.cca} \
-        {output.barMap}
+        {output.barMap} \
         """
 
-
-rule callpeaks_pitunpair:
-    threads: 32
+rule callpeaks_pitunpaired:
     input:
-        frags='datasets/pitunpair/smpl.frags.tsv.gz',
-        annot='datasets/pitunpair/annot.csv',
+        frags='datasets/pitunpaired/smpl.frags.tsv.gz',
+        annot='datasets/pitunpaired/annot.csv',
+    singularity:
+        'workflow/envs/gretabench.sif'
     output:
-        tmp=temp(directory(local('datasets/pitunpair/tmp_peaks'))),
-        peaks=temp(local('datasets/pitunpair/peaks.h5ad'))
+        tmp=temp(directory(local('datasets/pitunpaired/tmp_peaks'))),
+        peaks=local('datasets/pitunpaired/peaks.h5ad')
     resources:
         mem_mb=32000,
+    threads: 16
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \
@@ -83,24 +108,25 @@ rule callpeaks_pitunpair:
         -o {output.peaks}
         """
 
-
-rule annotate_pitunpair:
+rule annotate_pitunpaired:
     input:
-        annot='datasets/pitunpair/annot.csv',
+        annot='workflow/scripts/datasets/pitunpaired/annot.csv',
         g='gdata/geneids',
-        peaks='datasets/pitunpair/peaks.h5ad',
-        gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
-        barmap='datasets/pitunpair/barMap.csv'
+        peaks='datasets/pitunpaired/peaks.h5ad',
+        gex='datasets/pitunpaired/smpl.filtered_feature_bc_matrix.h5',
+        barmap='datasets/pitunpaired/barMap.csv'
+    singularity:
+        'workflow/envs/gretabench.sif'
     output:
-        tmp=temp(directory(local('datasets/pitunpair/tmp_annot'))),
-        out='datasets/pitunpair/annotated.h5mu'
+        tmp=temp(directory(local('datasets/pitunpaired/tmp_annot'))),
+        out='datasets/pitunpaired/annotated.h5mu'
     params:
-        organism=config['datasets']['pitunpair']['organism'],
+        organism=config['datasets']['pitunpaired']['organism'],
     resources:
         mem_mb=32000,
     shell:
         """
-        python workflow/scripts/datasets/pitunpair/pitunpair.py \
+        python workflow/scripts/datasets/pitunpaired/pitunpaired.py \
         -a {output.tmp} \
         -b {input.annot} \
         -c {input.g} \
@@ -110,3 +136,4 @@ rule annotate_pitunpair:
         -g {input.gex} \
         -i {input.barmap}
         """
+

@@ -9,14 +9,15 @@ library(Seurat)
 # Parse args
 args <- commandArgs(trailingOnly = F)
 path_gex <- args[6]
-path_peaks <- args[7]
-path_frags <- args[8]
-path_annot_out <- args[9]
-path_gex_out <- args[10]
-path_atac.se_out <- args[11]
-path_cca_out <- args[12]
+path_celltypes <- args[7]
+path_peaks <- args[8]
+path_frags <- args[9]
+path_annot_out <- args[10]
+path_gex_out <- args[11]
+path_atac.se_out <- args[12]
+path_cca_out <- args[13]
 
-nCores <- 32
+nCores <- 4
 
 print(args)
 
@@ -69,18 +70,12 @@ data.rna <- RunUMAP(data.rna, dims = 1:30)
 
 # Annotate RNA clusters and remove unwanted clusters
 ## Manual annotation based on markers provided in paper, to be replaced with ground truth annotation as provided by authors (if available)
-cells_to_remove <- WhichCells(data.rna, idents = c(5, 6))
+celltypes <- read.csv(path_celltypes)
+
+cells_to_remove <- Cells(data.rna)[!Cells(data.rna) %in% celltypes$X]
 data.rna <- subset(data.rna, cells = setdiff(Cells(data.rna), cells_to_remove))
 
-new.cluster.ids <- c("Gonadotropes", "Stem cells", "Somatotropes", "Lactotropes", "Thyrotropes", "Pituicytes", "Stem cells", "Pericytes", "Corticotropes", 
-    "Endothelial cells", "Immune cells", "Gonadotropes")
-
-## Rename clusters
-names(new.cluster.ids) <- levels(data.rna)
-data.rna <- RenameIdents(data.rna, new.cluster.ids)
-
-## Save RNA clusters to metadata
-data.rna$celltype <- Idents(object = data.rna)
+data.rna$celltype <- celltypes$celltype
 
 ## Extract gene expression data and save as sparse matrix
 exprMat <- GetAssayData(object = data.rna, assay = "RNA", slot = "data")
