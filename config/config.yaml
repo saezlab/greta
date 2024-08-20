@@ -69,12 +69,12 @@ datasets:
                 n_hvg: 8192
                 n_hvr: 32768
                 root: 'Fibroblast-like'
-    pitupaired:
+    pitupair:
         organism: 'hg38'
         url:
             frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
             multi: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-    pituunpaired:
+    pitunpair:
         organism: 'hg38'
         url:
             atac_frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffragments%2Etsv%2Egz'
