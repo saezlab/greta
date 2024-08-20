@@ -80,7 +80,6 @@ adata = adata[adata.obs['celltype'] != 'NA']
 sample_id = 'smpl'
 adata.obs['batch'] = sample_id
 annot = adata.obs[['batch', 'celltype']]
-annot.index = [sample_id + '_' + o.split('-1')[0] for o in annot.index]
 
 # Write
 annot.to_csv(path_annot)
