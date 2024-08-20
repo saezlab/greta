@@ -26,6 +26,7 @@ rule prcannot_pitupair:
 
 
 rule callpeaks_pitupair:
+    threads: 32
     input:
         frags='datasets/pitupair/smpl.frags.tsv.gz',
         annot='datasets/pitupair/annot.csv',
@@ -34,7 +35,6 @@ rule callpeaks_pitupair:
         peaks=temp(local('datasets/pitupair/peaks.h5ad'))
     resources:
         mem_mb=64000,
-    threads: 16
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \
@@ -61,7 +61,7 @@ rule annotate_pitupair:
         """
         python workflow/scripts/datasets/pitupair/pitupair.py \
         -b {input.annot} \
-        -c {input.g}
+        -c {input.g} \
         -d {params.organism} \
         -e {input.peaks} \
         -f {output} \

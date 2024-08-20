@@ -2,6 +2,7 @@ import numpy as np
 
 
 rule topo_mult:
+    threads: 32
     input:
         expand(['datasets/{{dataset}}/cases/{{case}}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'], pre=mthds, p2g=mthds, tfb=mthds, mdl=mthds)
     output:

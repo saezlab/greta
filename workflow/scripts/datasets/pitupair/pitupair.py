@@ -33,6 +33,8 @@ geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
 
 # Read annots
 obs = pd.read_csv(path_annot, index_col=0)
+sample_id = 'smpl'
+obs.index = [sample_id + '_' + o.split('-1')[0] for o in obs.index]
 
 # Read data
 rna = sc.read_10x_h5(path_multi, genome="GRCh38", gex_only=True)
@@ -61,6 +63,7 @@ for dup in rna.var.index[rna.var.index.duplicated()]:
     to_remove.extend(tmp['gene_ids'][tmp['gene_ids'] != max_idx].values)
 rna = rna[:, ~rna.var['gene_ids'].isin(to_remove)].copy()
 del rna.var
+del rna.obs
 
 # Read atac data
 atac = ad.read_h5ad(path_peaks)
@@ -68,15 +71,6 @@ atac = ad.read_h5ad(path_peaks)
 # Filter annotation and RNA data based on ATAC barcodes
 obs = obs[obs.index.isin(atac.obs_names)]
 rna = rna[rna.obs_names.isin(atac.obs_names)]
-
-# Add celltype annotation to ATAC data
-rna.obs['celltype'] = obs['celltype']
-rna.obs['batch'] = obs['batch']
-rna.obs_names = obs.index
-
-atac.obs['celltype'] = obs['celltype']
-atac.obs['batch'] = obs['batch']
-atac.obs_names = obs.index
 
 # Create mdata
 mdata = md.MuData(
