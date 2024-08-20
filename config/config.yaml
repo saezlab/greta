@@ -69,23 +69,22 @@ datasets:
                 n_hvg: 8192
                 n_hvr: 32768
                 root: 'Fibroblast-like'
-    pitupair:
+    pitupaired:
         organism: 'hg38'
         url:
             frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
             multi: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-    pitunpair:
+    pituunpaired:
         organism: 'hg38'
         url:
             atac_frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffragments%2Etsv%2Egz'
             peaks: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
             rna_mtx: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391775/suppl/GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             atac_meta: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
-
     heartatlas:
         organism: 'hg38'
         url:
-            frags: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/fragments.tar'
+            tar: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/fragments.tar'
             anndata: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Global_raw.h5ad'
         batchIDs:
             - HCAHeart9508627_HCAHeart9508819
@@ -135,14 +134,4 @@ datasets:
             - HCAHeartST13189995_HCAHeartST13188800
             - HCAHeartST13189996_HCAHeartST13188801
             - HCAHeartST13189997_HCAHeartST13188802
-            - HCAHeartST13189998_HCAHeartST13188803
-            - HCAHeartST13189999_HCAHeartST13188804
-            - HCAHeartST13190000_HCAHeartST13188805
-            - HCAHeartST13190001_HCAHeartST13188806
-            - HCAHeartST13190002_HCAHeartST13188807
-            - HCAHeartST13190003_HCAHeartST13188808
-            - HCAHeartST13190004_HCAHeartST13188809
-            - HCAHeartST13190005_HCAHeartST13188810
-            - HCAHeartST13190006_HCAHeartST13188811
-            - HCAHeartST13190007_HCAHeartST13188812
-            - HCAHeartST13190008_HCAHeartST13188813
+
