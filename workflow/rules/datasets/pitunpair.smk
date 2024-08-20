@@ -31,7 +31,7 @@ rule coembedd_pitunpair:
         atacSE=temp(local('datasets/pitunpair/atac.se.rds')),
         cca=temp(local('datasets/pitunpair/cca.rds'))
     singularity: 
-        'workflow/envs/seurat.sif'
+        'workflow/envs/figr.sif'
     shell:
         """
         Rscript workflow/scripts/datasets/pitunpair/coembedd.R \
@@ -65,6 +65,7 @@ rule paircells_pitunpair:
 
 
 rule callpeaks_pitunpair:
+    threads: 32
     input:
         frags='datasets/pitunpair/smpl.frags.tsv.gz',
         annot='datasets/pitunpair/annot.csv',
@@ -73,7 +74,6 @@ rule callpeaks_pitunpair:
         peaks=temp(local('datasets/pitunpair/peaks.h5ad'))
     resources:
         mem_mb=32000,
-    threads: 16
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \
