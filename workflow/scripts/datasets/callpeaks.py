@@ -25,7 +25,7 @@ path_output = args['path_output']
 print(path_frags)
 
 if __name__ == '__main__':
-    n_jobs = 16
+    n_jobs = 32
     print('N of cores:', n_jobs)
     
     # Change default cache dir
@@ -45,6 +45,7 @@ if __name__ == '__main__':
         file=tmp_files,
         tempdir=path_tmp,
         sorted_by_barcode=False,
+        n_jobs=n_jobs
     )
     del _
 
