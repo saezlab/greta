@@ -17,7 +17,7 @@ path_gex_out <- args[11]
 path_atac.se_out <- args[12]
 path_cca_out <- args[13]
 
-nCores <- 4
+nCores <- 32
 
 print(args)
 
