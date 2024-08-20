@@ -34,6 +34,7 @@ rule download_reprofibro:
 
 
 rule callpeaks_reprofibro:
+    threads: 32
     input:
         frags=['datasets/reprofibro/D1M.frag.bed.gz', 'datasets/reprofibro/D2M.frag.bed.gz'],
         annot='datasets/reprofibro/annot.csv',
@@ -42,7 +43,6 @@ rule callpeaks_reprofibro:
         peaks=temp(local('datasets/reprofibro/peaks.h5ad'))
     resources:
         mem_mb=64000,
-    threads: 16
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \
