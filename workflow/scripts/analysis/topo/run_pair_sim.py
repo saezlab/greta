@@ -6,7 +6,7 @@ from tqdm import tqdm
 from functools import partial
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import ocoeff, parallel_ocoeff
+from utils import ocoeff, parallel_ocoeff, parallel_ocoeff_chunk
 import argparse
 
 
@@ -56,21 +56,28 @@ stats['n_targets'] = n_trgs
 stats['mean_reg_size'] = n_regs
 
 print('Computing pairwise overlap coefficients...')
+chunk_size = 100  # Adjust based on profiling
 index_pairs = [(i, j) for i in range(len(names)) for j in range(i + 1, len(names))]
+index_pairs_chunks = [index_pairs[i:i + chunk_size] for i in range(0, len(index_pairs), chunk_size)]
 names_a = []
 names_b = []
 tf_coefs = []
 edge_coefs = []
 target_coefs = []
-parallel_ocoeff_with_dfs = partial(parallel_ocoeff, dfs=dfs)
-with concurrent.futures.ProcessPoolExecutor() as executor:
-    for res in tqdm(executor.map(parallel_ocoeff_with_dfs, index_pairs), total=len(index_pairs)):
-        i, j, tf_coef, edge_coef, target_coef = res
-        names_a.append(names[i])
-        names_b.append(names[j])
-        tf_coefs.append(tf_coef)
-        edge_coefs.append(edge_coef)
-        target_coefs.append(target_coef)
+total_pairs = len(index_pairs)
+processed_pairs = 0
+with tqdm(total=total_pairs, desc="Processing", unit="pair") as pbar:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=64) as executor:
+        for chunk_result in tqdm(executor.map(partial(parallel_ocoeff_chunk, dfs=dfs), index_pairs_chunks)):
+            for res in chunk_result:
+                i, j, tf_coef, edge_coef, target_coef = res
+                names_a.append(names[i])
+                names_b.append(names[j])
+                tf_coefs.append(tf_coef)
+                edge_coefs.append(edge_coef)
+                target_coefs.append(target_coef)
+            processed_pairs += len(chunk_result)
+            pbar.update(len(chunk_result))
 
 # Store as df
 sims = pd.DataFrame()

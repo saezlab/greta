@@ -1,4 +1,5 @@
 rule pre_figr:
+    threads: 32
     input:
         'datasets/{dataset}/cases/{case}/mdata.h5mu'
     singularity:
@@ -17,6 +18,7 @@ rule pre_figr:
         """
 
 rule p2g_figr:
+    threads: 32
     input:
         'datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu'
     singularity:
@@ -45,6 +47,7 @@ rule p2g_figr:
         """
 
 rule tfb_figr:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
@@ -73,6 +76,7 @@ rule tfb_figr:
         """
 
 rule mdl_figr:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
@@ -101,6 +105,7 @@ rule mdl_figr:
         """
 
 rule src_figr:
+    threads: 32
     input:
         'datasets/{dataset}/cases/{case}/mdata.h5mu',
     singularity:

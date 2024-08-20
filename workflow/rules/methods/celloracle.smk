@@ -1,4 +1,5 @@
 rule pre_celloracle:
+    threads: 32
     input:
         'datasets/{dataset}/cases/{case}/mdata.h5mu'
     singularity:
@@ -29,6 +30,7 @@ rule download_genomesizes:
         """
 
 rule p2g_celloracle:
+    threads: 32
     input:
         data='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         sizes='gdata/sizes/',
@@ -74,6 +76,7 @@ rule download_genomes:
         """
 
 rule tfb_celloracle:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
@@ -102,6 +105,7 @@ rule tfb_celloracle:
         """
 
 rule mdl_celloracle:
+    threads: 32
     input:
         pre='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
@@ -131,6 +135,7 @@ rule mdl_celloracle:
         """
 
 rule src_celloracle:
+    threads: 32
     input:
         'datasets/{dataset}/cases/{case}/mdata.h5mu',
     singularity:

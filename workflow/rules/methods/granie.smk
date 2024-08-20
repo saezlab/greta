@@ -16,6 +16,7 @@ rule download_tfbs:
         """
 
 rule pre_granie:
+    threads: 32
     input:
         'datasets/{dataset}/cases/{case}/mdata.h5mu'
     singularity:
@@ -34,6 +35,7 @@ rule pre_granie:
         """
 
 rule p2g_granie:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         g='gdata/geneids',
@@ -62,6 +64,7 @@ rule p2g_granie:
         """
 
 rule tfb_granie:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
@@ -91,6 +94,7 @@ rule tfb_granie:
         """
 
 rule mdl_granie:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
@@ -123,6 +127,7 @@ rule mdl_granie:
         """
 
 rule src_granie:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/mdata.h5mu',
         g='gdata/geneids',

@@ -15,7 +15,6 @@ rule aggr_type_task_resource:
         -o {output}
         """
 
-f_scores = 
 
 rule summary:
     input:
