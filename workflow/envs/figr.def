@@ -26,7 +26,8 @@ From: ubuntu:20.04
                    libcairo2-dev \
                    libxt-dev \
                    libopenblas-dev \
-                   bedtools
+                   bedtools \
+                   tabix
 
     # conda
     wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
@@ -38,18 +39,76 @@ From: ubuntu:20.04
     # Create env
     mamba create -y -n=env -c conda-forge -c bioconda \
     python=3.10 \
-    r-base==4.3 \
-    r-matrix \
-    bioconductor-summarizedexperiment \
-    bioconductor-singlecellexperiment \
-    bioconductor-genomicranges \
-    r-dplyr \
+    r-base==4.3.3 \
+    r-tidyverse \
+    r-signac==1.11.0 \
+    r-glmnetutils \
+    r-bayestestr \
+    r-ggpointdensity \
+    r-ggraph \
+    r-tidygraph \
+    r-uwot \
+    r-grr \
+    r-devtools \
+    r-deldir \
+    r-spatstat.utils \
+    r-tensor \
+    r-abind \
+    r-goftest \
     r-ggplot2 \
-    bioconductor-chromvar \
-    r-doparallel \
-    r-dosnow \
-    r-ggrepel \
+    r-dplyr \
+    r-spatstat \
+    r-spatstat.sparse \
+    r-spatstat.random \
+    r-spatstat.geom \
+    r-parallelly \
+    r-listenv \
+    r-globals \
+    r-seuratobject==4.1.4 \
+    r-seurat==4.3.0 \
+    r-sctransform \
+    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
+    bioconductor-bsgenome.mmusculus.ucsc.mm10 \
+    bioconductor-ensdb.hsapiens.v86 \
+    bioconductor-ensdb.mmusculus.v79 \
+    bioconductor-biovizbase \
+    bioconductor-singlecellexperiment \
     bioconductor-complexheatmap \
+    bioconductor-sparsematrixstats \
+    bioconductor-matrixgenerics \
+    bioconductor-motifmatchr \
+    bioconductor-summarizedexperiment \
+    bioconductor-genomicranges \
+    bioconductor-chromvar \
+    bioconductor-rhdf5 \
+    bioconductor-tfbstools \
+    r-scattermore \
+    r-rtsne \
+    r-rann \
+    r-cluster \
+    r-reticulate \
+    r-lmtest \
+    r-kernsmooth \
+    r-fastmatch \
+    r-patchwork \
+    r-pbapply \
+    r-leiden \
+    r-ica \
+    r-ggridges \
+    r-fitdistrplus \
+    r-cowplot \
+    r-conflicted \
+    r-doparallel \
+    r-gplots \
+    r-rocr \
+    r-plotly \
+    r-rcpphnsw \
+    r-igraph==1.5.1 \
+    jupyterlab \
+    r-irkernel \
+    r-fastdummies \
+    r-matrix==1.6.1.1 \
+    mudata \
     r-pbmcapply \
     r-tibble \
     r-scales \
@@ -57,26 +116,20 @@ From: ubuntu:20.04
     r-rmpfr \
     r-optmatch \
     r-fnn \
-    r-cowplot \
-    bioconductor-motifmatchr \
     r-networkd3 \
     r-knitr \
     r-rmarkdown \
     r-ggrastr \
-    r-uwot \
     r-mass \
-    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
-    bioconductor-bsgenome.mmusculus.ucsc.mm10 \
-    jupyterlab \
-    r-irkernel \
-    mudata \
-    r-devtools \
-    bioconductor-rhdf5
+    r-dosnow \
+    r-hdf5r \
+    r-biocmanager
 
     # Install figr
     conda activate env
     Rscript -e "devtools::install_github('caleblareau/BuenColors@f1bc8e640d129ef319a0db49b169a64b00026e00', upgrade = 'never')"
     Rscript -e "devtools::install_github('buenrostrolab/FigR@094f5aa036aa9dc09b85d60c13dd9ead7da416fd', upgrade = 'never')"
+    Rscript -e "BiocManager::install('TFBSTools', type = 'source', force = TRUE)"
 
     # Remove cache for lighter containers
     pip cache purge
