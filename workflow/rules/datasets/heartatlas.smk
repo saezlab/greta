@@ -1,18 +1,33 @@
 # heartatlas
-rule download_heartatlas:
+rule download_fragments:
     output:
-        tar=local('datasets/heartatlas/fragments.tar'),
-        frag=local(expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs'])),
+        tar=temp(local('datasets/heartatlas/fragments.tar')),
+        frag=local(expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs']))
+    params:
+        tar=config['datasets']['heartatlas']['url']['tar']
+    shell:
+        """
+        data_path=$(dirname "{output.tar}")
+        echo "Data path: $data_path"
+
+        echo "Downloading tar file from {params.tar} to {output.tar}"
+        wget '{params.tar}' -O '{output.tar}'
+
+        echo "Extracting tar file to $data_path"
+        tar -xvf '{output.tar}' -C "$data_path"
+
+        echo "Removing .tbi files"
+        rm "$data_path"/*.tbi
+        """
+
+rule download_anndata:
+    output:
         anndata=local('datasets/heartatlas/multiome_raw.h5ad')
     params:
-        tar=config['datasets']['heartatlas']['url']['tar'],
         anndata=config['datasets']['heartatlas']['url']['anndata']
     shell:
         """
-        data_path=$(dirname {output.tar})
-        wget '{params.tar}' -O '{output.tar}'
-        tar -xvf {output.tar} -C $data_path
-        rm $data_path/*.tbi
+        echo "Downloading anndata file from {params.anndata} to {output.anndata}"
         wget '{params.anndata}' -O '{output.anndata}'
         """
 
@@ -26,7 +41,7 @@ rule prcannot_heartatlas:
     shell:
         """
         python workflow/scripts/datasets/heartatlas/heart_annot.py \
-        -h {input.h5ad} \
+        -i {input.h5ad} \
         -a {output.annot}
         """
 
