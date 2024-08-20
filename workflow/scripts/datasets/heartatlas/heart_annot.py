@@ -3,7 +3,7 @@ import argparse
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-h','--path_h5ad', required=True)
+parser.add_argument('-i','--path_h5ad', required=True)
 parser.add_argument('-a','--path_annot', required=True)
 args = vars(parser.parse_args())
 
