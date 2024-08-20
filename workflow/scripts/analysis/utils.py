@@ -21,3 +21,7 @@ def parallel_ocoeff(index_pair, dfs):
     edge_oc = ocoeff(dfs[i], dfs[j], on=['source', 'target'])
     target_oc = ocoeff(dfs[i], dfs[j], on=['target'])
     return i, j, tf_oc, edge_oc, target_oc
+
+
+def parallel_ocoeff_chunk(index_pairs_chunk, dfs):
+    return [parallel_ocoeff(pair, dfs) for pair in index_pairs_chunk]
