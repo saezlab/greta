@@ -23,6 +23,7 @@ rule prcannot_pbmc10k:
 
 
 rule callpeaks_pbmc10k:
+    threads: 32
     input:
         frags='datasets/pbmc10k/smpl.frags.tsv.gz',
         annot='datasets/pbmc10k/annot.csv',
@@ -31,7 +32,6 @@ rule callpeaks_pbmc10k:
         peaks=temp(local('datasets/pbmc10k/peaks.h5ad'))
     resources:
         mem_mb=64000,
-    threads: 16
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \

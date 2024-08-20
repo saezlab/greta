@@ -1,4 +1,5 @@
 rule extract_case:
+    threads: 32
     input:
         'datasets/{dataset}/annotated.h5mu'
     singularity:

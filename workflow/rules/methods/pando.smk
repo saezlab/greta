@@ -11,6 +11,7 @@ rule download_granges:
         """
 
 rule pre_pando:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/mdata.h5mu',
         h='gdata/granges/hg38_ensdb_v86.csv',
@@ -44,6 +45,7 @@ rule pre_pando:
         """
 
 rule p2g_pando:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         h='gdata/granges/hg38_ensdb_v86.csv',
@@ -69,6 +71,7 @@ rule p2g_pando:
         """
 
 rule tfb_pando:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv'
@@ -90,6 +93,7 @@ rule tfb_pando:
         """
 
 rule mdl_pando:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
@@ -124,6 +128,7 @@ rule mdl_pando:
         """
 
 rule src_pando:
+    threads: 32
     input:
         d='datasets/{dataset}/cases/{case}/mdata.h5mu',
         h='gdata/granges/hg38_ensdb_v86.csv',
