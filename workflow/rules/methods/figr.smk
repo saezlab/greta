@@ -33,7 +33,7 @@ rule p2g_figr:
         thr_p2g_pval=config['methods']['figr']['thr_p2g_pval'],
         ncres=config['methods']['figr']['ncres'],
     resources:
-        mem_mb=128000,
+        mem_mb=256000,
         runtime=1440,
     shell:
         """
