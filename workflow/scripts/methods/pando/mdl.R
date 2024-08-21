@@ -43,8 +43,13 @@ colnames(atac_X) <- indata$obs$`_index`
 rownames(atac_X) <- stringr::str_replace_all(indata$mod$atac$var$`_index`, '-', '_')
 h5closeAll()
 
-# Run per feature
+# Update strings
 p2g$gene = stringr::str_replace_all(p2g$gene, '-', '_')
+p2g$cre = stringr::str_replace_all(p2g$cre, '-', '_')
+tfb$tf = stringr::str_replace_all(tfb$tf, '-', '_')
+tfb$cre = stringr::str_replace_all(tfb$cre, '-', '_')
+
+# Run per feature
 features <- unique(p2g$gene)
 cat("Number of target genes to fit: ", length(features), '\n')
 
@@ -55,10 +60,6 @@ model_fits <- Pando::map_par(features, function(g){
     g_scaff_grn <- inner_join(p2g[p2g$gene == g, ], tfb, by = 'cre') %>%
         filter(tf != gene) # Remove self regulation
 
-    # Update strings
-    g_scaff_grn$cre = stringr::str_replace_all(g_scaff_grn$cre, '-', '_')
-    g_scaff_grn$tf = stringr::str_replace_all(g_scaff_grn$tf, '-', '_')
-    
     # Extract data for given gene
     g_gex <- t(rna_X[c(g, unique(g_scaff_grn$tf)), , drop=FALSE])
     g_acc <- t(atac_X[unique(g_scaff_grn$cre), , drop=FALSE])
