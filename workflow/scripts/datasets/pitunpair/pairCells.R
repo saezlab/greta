@@ -11,7 +11,8 @@ args <- commandArgs(trailingOnly = F)
 path_exprMat <- args[6]
 path_atacSE <- args[7]
 path_cca <- args[8]
-path_barMap_out <- args[9]
+path_celltypes <- args[9]
+path_barMap_out <- args[10]
 
 
 
@@ -40,14 +41,20 @@ pairing <- pairing[order(pairing$dist, decreasing = FALSE), ]
 pairingClean <- pairing[!duplicated(pairing$ATAC),]
 pairingClean <- pairingClean[c("ATAC","RNA")]
 pairingClean <- data.frame(lapply(pairingClean, function(x) {gsub("_.*", "", x)}))
+
+# Create annotation
+celltypes <- read.csv(path_celltypes)
+
+celltypes <- celltypes[celltypes$X %in% pairingClean$RNA,]
+celltypes <- celltypes[order(celltypes$X), ]
+pairingClean <- pairingClean[order(pairingClean$RNA),] 
+pairingClean$celltype <- celltypes$celltype
+
+# Format and rename
+rownames(pairingClean) <- pairingClean$ATAC
+barmap$pairingClean <- c("smpl")
+colnames(pairingClean) <- c("barcodes", "RNA", "celltype", "batch")
+
+
 write.csv(pairingClean, path_barMap_out, row.names = FALSE)
 
-
-# Optional: Filter data based on pairing
-# Adapt colnames
-#colnames(ATAC.se) <- paste0(colnames(ATAC.se), "_2")
-#colnames(RNAmat) <- paste0(colnames(RNAmat), "_1")
-
-# Filter data based on pairing
-#ATAC.se.paired <- ATAC.se[,pairingClean$ATAC]
-#RNAmat.paired <- RNAmat[,pairingClean$RNA]

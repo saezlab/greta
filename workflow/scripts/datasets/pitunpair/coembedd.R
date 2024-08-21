@@ -12,10 +12,9 @@ path_gex <- args[6]
 path_celltypes <- args[7]
 path_peaks <- args[8]
 path_frags <- args[9]
-path_annot_out <- args[10]
-path_gex_out <- args[11]
-path_atac.se_out <- args[12]
-path_cca_out <- args[13]
+path_gex_out <- args[10]
+path_atac.se_out <- args[11]
+path_cca_out <- args[12]
 
 nCores <- 32
 
@@ -123,27 +122,3 @@ data.cca <- RunCCA(
 CCA_PCs <- Embeddings(data.cca, reduction = "cca")
 saveRDS(CCA_PCs, file = path_cca_out)
 
-
-#------------------------------------------
-# Transfer cell type annotations from RNA to ATAC
-
-## Identify anchors via CCA
-transfer.anchors <- FindTransferAnchors(reference = data.rna, query = data.atac, features = VariableFeatures(object = data.rna),
-    reference.assay = "RNA", query.assay = "ACTIVITY", reduction = "cca")
-
-## Annotate cells via label transfer
-celltype.predictions <- TransferData(anchorset = transfer.anchors, refdata = data.rna$celltype,
-    weight.reduction = data.atac[["lsi"]], dims = 2:30)
-
-data.atac <- AddMetaData(data.atac, metadata = celltype.predictions)
-
-## Save ATAC clusters to metadata
-data.atac$celltype <- data.atac$predicted.id
-
-## Create annotation df
-annot <- data.frame(celltype = data.atac$celltype)
-annot$batch <- "smpl"
-annot$barcodes <- rownames(annot)
-
-## Save annotation df
-write.csv(annot, file = path_annot_out)

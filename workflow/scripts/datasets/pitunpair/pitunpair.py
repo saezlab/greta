@@ -12,7 +12,6 @@ import argparse
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-a','--path_tmp', required=True)
-parser.add_argument('-b','--path_annot', required=True)
 parser.add_argument('-c','--path_geneids', required=True)
 parser.add_argument('-d','--organism', required=True)
 parser.add_argument('-e','--path_peaks', required=True)
@@ -22,7 +21,6 @@ parser.add_argument('-i', '--path_barmap', required=True)
 args = vars(parser.parse_args())
 
 path_tmp = args['path_tmp']
-path_annot = args['path_annot']
 path_barmap = args['path_barmap']
 path_geneids = args['path_geneids']
 organism = args['organism']
@@ -40,13 +38,10 @@ if not os.path.exists(path_tmp):
 _datasets = datasets()
 _datasets.path = Path(path_tmp)
 
-# Read annots
-obs = pd.read_csv(path_annot, index_col=0)
+
 # Read barmap
 barmap = pd.read_csv(path_barmap)
 
-# Filter annotation and RNA data based on ATAC barcodes
-obs = obs[obs.index.isin(barmap['ATAC'])]
 
 # Read data
 rna = sc.read_10x_h5(path_expr, genome="GRCh38")
@@ -57,12 +52,12 @@ rna.var.index.name = None
 rna = rna[rna.obs_names.isin(barmap['RNA'])]
 barmap = barmap.sort_values(by='RNA')
 rna = rna[rna.obs_names.sort_values(), :]
-rna.obs_names = barmap['ATAC']
+rna.obs_names = barmap['barcodes']
 
 # Rename barcodes RNA
 sample_id = 'smpl'
 rna.obs_names = [sample_id + '_' + o.split('-1')[0] for o in rna.obs_names]
-obs.index = [sample_id + '_' + o.split('-1')[0] for o in obs.index]
+barmap.index = [sample_id + '_' + o.split('-1')[0] for o in barmap.index]
 
 # Filter faulty gene symbols
 ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
@@ -94,12 +89,12 @@ rna = rna[rna.obs_names.sort_values(), :]
 atac = atac[atac.obs_names.sort_values()]
 
 # Add celltype annotation to RNA data
-rna.obs['celltype'] = obs['celltype']
-rna.obs['batch'] = obs['batch']
+rna.obs['celltype'] = barmap['celltype']
+rna.obs['batch'] = barmap['batch']
 
 # Add celltype annotation to ATAC data
-atac.obs['celltype'] = obs['celltype']
-atac.obs['batch'] = obs['batch']
+atac.obs['celltype'] = barmap['celltype']
+atac.obs['batch'] = barmap['batch']
 
 
 # Create mdata

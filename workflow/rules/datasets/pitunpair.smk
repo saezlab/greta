@@ -43,8 +43,7 @@ rule coembedd_pitunpair:
     output:
         exprMat=temp(local('datasets/pitunpair/exprMat.rds')),
         atacSE=temp(local('datasets/pitunpair/atac.se.rds')),
-        cca=temp(local('datasets/pitunpair/cca.rds')),
-        annot=temp(local('datasets/pitunpair/annot.csv'))
+        cca=temp(local('datasets/pitunpair/cca.rds'))
     singularity: 
         'workflow/envs/figr.sif'
     shell:
@@ -54,7 +53,6 @@ rule coembedd_pitunpair:
         {input.celltypes} \
         {input.peaks} \
         {input.frags} \
-        {output.annot} \
         {output.exprMat} \
         {output.atacSE} \
         {output.cca}
@@ -65,7 +63,8 @@ rule pairCells_pitunpair:
     input:
         exprMat=local('datasets/pitunpair/exprMat.rds'),
         atacSE=local('datasets/pitunpair/atac.se.rds'),
-        cca=local('datasets/pitunpair/cca.rds')
+        cca=local('datasets/pitunpair/cca.rds'),
+        celltypes='datasets/pitunpair/celltypes.csv',
     output:
         barMap=local('datasets/pitunpair/barMap.csv')
     singularity:
@@ -76,6 +75,7 @@ rule pairCells_pitunpair:
         {input.exprMat} \
         {input.atacSE} \
         {input.cca} \
+        {input.celltypes} \
         {output.barMap} \
         """
 
@@ -83,7 +83,7 @@ rule callpeaks_pitunpair:
     threads: 32
     input:
         frags='datasets/pitunpair/smpl.frags.tsv.gz',
-        annot='datasets/pitunpair/annot.csv',
+        annot='datasets/pitunpair/barMap.csv',
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -102,7 +102,6 @@ rule callpeaks_pitunpair:
 
 rule annotate_pitunpair:
     input:
-        annot='datasets/pitunpair/annot.csv',
         g='gdata/geneids',
         peaks='datasets/pitunpair/peaks.h5ad',
         gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
@@ -120,7 +119,6 @@ rule annotate_pitunpair:
         """
         python workflow/scripts/datasets/pitunpair/pitunpair.py \
         -a {output.tmp} \
-        -b {input.annot} \
         -c {input.g} \
         -d {params.organism} \
         -e {input.peaks} \
