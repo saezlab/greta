@@ -46,17 +46,18 @@ rule prcannot_heartatlas:
         """
 
 rule callpeaks_heartatlas:
+    threads: 32
     input:
         frags=expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs']),
         annot='datasets/heartatlas/annot.csv',
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=directory(local('datasets/heartatlas/tmp_peaks')),
+        tmp=temp(directory(local('datasets/heartatlas/tmp_peaks'))),
         peaks=local('datasets/heartatlas/peaks.h5ad')
     resources:
         mem_mb=64000,
-    threads: 16
+        runtime=2160,
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \
@@ -64,4 +65,25 @@ rule callpeaks_heartatlas:
         -a {input.annot} \
         -t {output.tmp} \
         -o {output.peaks}
+        """
+
+rule annotate_heartatlas:
+    input:
+        path_h5ad='datasets/heartatlas/multiome_raw.h5ad',
+        path_peaks='datasets/heartatlas/peaks.h5ad',
+        path_annot='datasets/heartatlas/annot.csv',
+        path_geneids='gdata/geneids/',
+    output:
+        'datasets/heartatlas/annotated.h5mu'
+    params:
+        organism=config['datasets']['reprofibro']['organism']
+    shell:
+        """
+        python workflow/scripts/datasets/reprofibro/reprofibro.py \
+        -a {input.path_h5ad} \
+        -b {input.path_annot} \
+        -c {input.path_geneids} \
+        -d {params.organism} \
+        -e {input.path_peaks} \
+        -f {output}
         """
