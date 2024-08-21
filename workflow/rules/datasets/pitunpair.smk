@@ -34,6 +34,17 @@ rule index_frags:
         tabix -p bed {input.frags}
         """
 
+rule download_celltypes:
+    output:
+        celltypes='datasets/pitunpaired/celltypes.csv'
+    params:
+        celltypes=config['datasets']['pitunpaired']['url']['celltypes']
+
+    shell:
+        """
+        wget '{params.celltypes}' -O '{output.celltypes}'
+        """
+        
 
 rule coembedd_pitunpair:
     input:

@@ -81,7 +81,7 @@ datasets:
             peaks: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
             rna_mtx: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391775/suppl/GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             atac_meta: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
-            annot: 'url_to_annot_with_batch_and_celltype'
+            celltypes: 'https://heibox.uni-heidelberg.de/f/d36511f7f94947859564/?dl=1'
     heartatlas:
         organism: 'hg38'
         url:
