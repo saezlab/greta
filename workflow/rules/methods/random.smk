@@ -16,9 +16,7 @@ rule grn_random:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/random.grn.csv'
-    benchmark:
-        'benchmarks/{dataset}.{case}.random.grn.txt'
+        'datasets/{dataset}/cases/{case}/runs/random.random.random.random.grn.csv'
     params:
         g_perc=0.25,
         scale=1,

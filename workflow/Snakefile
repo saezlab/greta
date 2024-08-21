@@ -5,7 +5,7 @@ min_version('7.29.0')
 configfile: 'config/config.yaml'
 container: 'workflow/envs/gretabench.sif'
 
-def make_combs(path, mthds, name, add_src):
+def make_combs(path, mthds, name):
     from itertools import product
     s = '{0}.{1}.{2}.{3}.' + name + '.csv'
     combinations = product(mthds, repeat=4)
@@ -13,14 +13,21 @@ def make_combs(path, mthds, name, add_src):
     for combo in combinations:
         formatted_string = path + s.format(*combo)
         strings.append(formatted_string)
-    s = path + 'random.' + name + '.csv'
+
+    # Add src
+    s = '{m}.{m}.{m}.{m}.' + name + '.csv'
+    for m in mthds:
+        formatted_string = path + s.format(m='o_' + m)
+        strings.append(formatted_string)
+
+    # Add indv nets
+    s = path + 'random.random.random.random.' + name + '.csv'
+    strings.append(s)
+    s = path + 'collectri.collectri.collectri.collectri.' + name + '.csv'
+    strings.append(s)
+    s = path + 'dorothea.dorothea.dorothea.dorothea.' + name + '.csv'
     strings.append(s)
 
-    if add_src:
-        s = '{0}.src.csv'
-        for m in mthds:
-            formatted_string = path + s.format(m)
-            strings.append(formatted_string)
     return strings
 
 mthds = list(config['methods'].keys())

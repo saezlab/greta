@@ -1,6 +1,7 @@
 def get_stab_paths(config, mthds, datasets):
     ns = [1024, 2048, 4096, 8192, 16384]
     seeds = [0, 1, 2]
+    mthds = ['o_' + m for m in mthds]
     d_lst = []
     c_lst = []
     m_lst = []
@@ -44,7 +45,7 @@ d_lst, c_lst, m_lst = get_stab_paths(config, mthds, datasets)
 
 rule run_stab:
     input:
-        expand(['datasets/{dataset}/cases/{case}/runs/{mth}.src.csv'], zip, dataset=d_lst, case=c_lst, mth=m_lst)
+        expand(['datasets/{dataset}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'], zip, dataset=d_lst, case=c_lst, mth=m_lst)
     output:
         tmp=temp('analysis/stab/tmp_{dataset}.csv'),
         res='analysis/stab/{dataset}.csv',

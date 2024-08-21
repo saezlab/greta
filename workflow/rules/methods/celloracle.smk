@@ -4,8 +4,6 @@ rule pre_celloracle:
         'datasets/{dataset}/cases/{case}/mdata.h5mu'
     singularity:
         'workflow/envs/celloracle.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.celloracle.pre.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/celloracle.pre.h5mu'
     params:
@@ -36,8 +34,6 @@ rule p2g_celloracle:
         sizes='gdata/sizes/',
     singularity:
         'workflow/envs/celloracle.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.celloracle.p2g.txt'
     output:
         pp=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.peaks.csv')),
         pc=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.conns.csv')),
@@ -83,8 +79,6 @@ rule tfb_celloracle:
         g='gdata/genomes',
     singularity:
         'workflow/envs/celloracle.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.celloracle.tfb.txt',
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.celloracle.tfb.csv'
     params:
@@ -112,8 +106,6 @@ rule mdl_celloracle:
         tfb='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
     singularity:
         'workflow/envs/celloracle.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.celloracle.mdl.txt',
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.mdl.csv'
     params:
@@ -140,12 +132,10 @@ rule src_celloracle:
         'datasets/{dataset}/cases/{case}/mdata.h5mu',
     singularity:
         'workflow/envs/celloracle.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.celloracle.src.txt',
     output:
         pp=temp(local('datasets/{dataset}/cases/{case}/runs/celloracle.src.peaks.csv')),
         pc=temp(local('datasets/{dataset}/cases/{case}/runs/celloracle.src.conns.csv')),
-        gr='datasets/{dataset}/cases/{case}/runs/celloracle.src.csv',
+        gr='datasets/{dataset}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.grn.csv',
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         k=config['methods']['celloracle']['k'],

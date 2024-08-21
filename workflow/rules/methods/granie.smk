@@ -21,8 +21,6 @@ rule pre_granie:
         'datasets/{dataset}/cases/{case}/mdata.h5mu'
     singularity:
         'workflow/envs/granie.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.granie.pre.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/granie.pre.h5mu'
     shell:
@@ -41,8 +39,6 @@ rule p2g_granie:
         g='gdata/geneids',
     singularity:
         'workflow/envs/granie.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.granie.p2g.txt'
     output:
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.granie_tmp'))),
         p='datasets/{dataset}/cases/{case}/runs/{pre}.granie.p2g.csv'
@@ -72,8 +68,6 @@ rule tfb_granie:
         t='gdata/tfbs',
     singularity:
         'workflow/envs/granie.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.granie.tfb.txt'
     output:
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie_tmp'))),
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
@@ -102,8 +96,6 @@ rule mdl_granie:
         g='gdata/geneids',
     singularity:
         'workflow/envs/granie.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.granie.mdl.txt'
     output:
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie_tmp'))),
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
@@ -134,12 +126,10 @@ rule src_granie:
         t='gdata/tfbs',
     singularity:
         'workflow/envs/granie.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.granie.src.txt'
     output:
         h=temp(local('datasets/{dataset}/cases/{case}/runs/pre.granie.src.h5mu')),
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/granie_tmp.src'))),
-        p='datasets/{dataset}/cases/{case}/runs/granie.src.csv'
+        p='datasets/{dataset}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.grn.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['granie']['ext'],

@@ -18,8 +18,6 @@ rule pre_pando:
         m='gdata/granges/mm10_ensdb_v79.csv',
     singularity:
         'workflow/envs/pando.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.pando.pre.txt'
     output:
         p=temp(local('datasets/{dataset}/cases/{case}/runs/pando.peaks.csv')),
         m=temp(local('datasets/{dataset}/cases/{case}/runs/pando.matches.csv')),
@@ -52,8 +50,6 @@ rule p2g_pando:
         m='gdata/granges/mm10_ensdb_v79.csv',
     singularity:
         'workflow/envs/pando.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.pando.p2g.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.pando.p2g.csv'
     params:
@@ -77,8 +73,6 @@ rule tfb_pando:
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv'
     singularity:
         'workflow/envs/pando.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.pando.tfb.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.pando.tfb.csv'
     params:
@@ -100,8 +94,6 @@ rule mdl_pando:
         t='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv'
     singularity:
         'workflow/envs/pando.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.pando.mdl.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
     resources:
@@ -135,10 +127,8 @@ rule src_pando:
         m='gdata/granges/mm10_ensdb_v79.csv',
     singularity:
         'workflow/envs/pando.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.pando.src.txt'
     output:
-        'datasets/{dataset}/cases/{case}/runs/pando.src.csv'
+        'datasets/{dataset}/cases/{case}/runs/o_pando.o_pando.o_pando.o_pando.grn.csv'
     resources:
         mem_mb=512000,
         runtime=720,

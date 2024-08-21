@@ -4,8 +4,6 @@ rule pre_figr:
         'datasets/{dataset}/cases/{case}/mdata.h5mu'
     singularity:
         'workflow/envs/figr.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.figr.pre.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/figr.pre.h5mu'
     resources:
@@ -23,8 +21,6 @@ rule p2g_figr:
         'datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu'
     singularity:
         'workflow/envs/figr.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.figr.p2g.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.figr.p2g.csv'
     params:
@@ -53,8 +49,6 @@ rule tfb_figr:
         p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
     singularity:
         'workflow/envs/figr.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.figr.tfb.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
     params:
@@ -83,8 +77,6 @@ rule mdl_figr:
         t='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
     singularity:
         'workflow/envs/figr.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.figr.mdl.txt'
     output:
         'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
     params:
@@ -110,10 +102,8 @@ rule src_figr:
         'datasets/{dataset}/cases/{case}/mdata.h5mu',
     singularity:
         'workflow/envs/figr.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.figr.src.txt'
     output:
-        'datasets/{dataset}/cases/{case}/runs/figr.src.csv'
+        'datasets/{dataset}/cases/{case}/runs/o_figr.o_figr.o_figr.o_figr.grn.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['figr']['ext'],

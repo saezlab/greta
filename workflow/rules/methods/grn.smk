@@ -22,7 +22,7 @@ rule prc_prior_grn:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{grn_name}.grn.csv'
+        'datasets/{dataset}/cases/{case}/runs/{grn_name}.{grn_name}.{grn_name}.{grn_name}.grn.csv'
     resources:
         mem_mb=32000
     shell:
