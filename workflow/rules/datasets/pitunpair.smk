@@ -3,19 +3,18 @@ rule download_pitunpair:
         gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
         peaks='datasets/pitunpair/peaks.original.h5',
         frags='datasets/pitunpair/smpl.frags.tsv.gz',
-        fragIndex='datasets/pitunpair/smpl.frags.tsv.gz.tbi',
-        annot='datasets/pitunpair/annot.csv'
+        celltypes='datasets/pitunpair/celltypes.csv'
     params:
         gex=config['datasets']['pitunpair']['url']['rna_mtx'],
         peaks=config['datasets']['pitunpair']['url']['peaks'],
         frags=config['datasets']['pitunpair']['url']['atac_frags'],
-        annot=config['datasets']['pitunpair']['url']['annot'],
+        celltypes=config['datasets']['pitunpair']['url']['celltypes']
     shell:
         """
         wget '{params.gex}' -O '{output.gex}'
         wget '{params.peaks}' -O '{output.peaks}'
         wget '{params.frags}' -O '{output.frags}'
-        wget '{params.annot}' -O '{output.annot}'
+        wget '{params.celltypes}' -O '{output.celltypes}'
         """
 
 rule index_frags:
@@ -34,37 +33,28 @@ rule index_frags:
         tabix -p bed {input.frags}
         """
 
-rule download_celltypes:
-    output:
-        celltypes='datasets/pitunpaired/celltypes.csv'
-    params:
-        celltypes=config['datasets']['pitunpaired']['url']['celltypes']
-
-    shell:
-        """
-        wget '{params.celltypes}' -O '{output.celltypes}'
-        """
-        
-
 rule coembedd_pitunpair:
     input:
         gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
-        celltypes='datasets/pitunpair/annot.csv',
+        celltypes='datasets/pitunpair/celltypes.csv',
         peaks='datasets/pitunpair/peaks.original.h5',
-        frags='datasets/pitunpair/smpl.frags.tsv.gz'
+        frags='datasets/pitunpair/smpl.frags.tsv.gz',
+        index='datasets/pitunpair/smpl.frags.tsv.gz.tbi'
     output:
         exprMat=temp(local('datasets/pitunpair/exprMat.rds')),
         atacSE=temp(local('datasets/pitunpair/atac.se.rds')),
-        cca=temp(local('datasets/pitunpair/cca.rds'))
+        cca=temp(local('datasets/pitunpair/cca.rds')),
+        annot=temp(local('datasets/pitunpair/annot.csv'))
     singularity: 
         'workflow/envs/figr.sif'
     shell:
         """
         Rscript workflow/scripts/datasets/pitunpair/coembedd.R \
         {input.gex} \
-        {input.annot} \
+        {input.celltypes} \
         {input.peaks} \
         {input.frags} \
+        {output.annot} \
         {output.exprMat} \
         {output.atacSE} \
         {output.cca}
