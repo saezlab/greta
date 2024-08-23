@@ -35,9 +35,9 @@ if __name__ == '__main__':
     _datasets.path = Path(path_tmp)
     
     # Find sample_ids
-    sample_ids = [os.path.basename(p).split('.')[0] for p in path_frags]
+    sample_ids = [os.path.basename(p).split('.')[0].replace('_atac_fragments', '') for p in path_frags]
     tmp_files = [os.path.join(path_tmp, p + '.frags.h5ad') for p in sample_ids]
-    
+
     # Read and create h5ad fragment files
     _ = snap.pp.import_data(
         path_frags,
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     lst_frags = []
     for sample_id, tmp_file in zip(sample_ids, tmp_files):
         tmp = ad.read_h5ad(tmp_file, backed='r')
-        tmp.obs.index = [sample_id + '_' + barcode.split('-1')[0] for barcode in tmp.obs.index]
+        tmp.obs.index = [sample_id + '_' + barcode.split('-1')[0].replace('_atac_fragments', '') for barcode in tmp.obs.index]
         # Filter by annotation
         obs = pd.merge(tmp.obs, annot, left_index=True, right_index=True)
         # Add uns
