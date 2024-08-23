@@ -28,15 +28,18 @@ path_output = args['path_output']
 
 # Read gene ids
 path_geneids = os.path.join(path_geneids, organism + '.csv')
-geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
+geneids = pd.read_csv(path_geneids).dropna().set_index('id')['symbol'].to_dict()
 
 # Load rna data
 rna = sc.read_h5ad(path_h5ad)
+rna.var['gene_ids'] = rna.var_names
 
 # Filter faulty gene symbols
 ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
 msk = ensmbls != ''
 rna = rna[:, msk].copy()
+rna.var_names = ensmbls[msk]
+
 # Basic QC
 sc.pp.filter_cells(rna, min_genes=100)
 sc.pp.filter_genes(rna, min_cells=3)
@@ -67,6 +70,3 @@ mdata = md.MuData(
 
 # Write
 mdata.write(path_output)
-
-
-
