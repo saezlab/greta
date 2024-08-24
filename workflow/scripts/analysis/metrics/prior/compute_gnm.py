@@ -36,12 +36,15 @@ resource_name = os.path.basename(resource_path).replace('.bed', '')
 
 def read_grn(grn_path, grp=None):
     grn = pd.read_csv(grn_path)
-    if grn.shape[0] > 0:
-        grn[['Chromosome', 'Start', 'End']] = grn['cre'].str.split('-', n=2, expand=True)
-        if grp is not None:
-            grn = grn[['Chromosome', 'Start', 'End', grp]].rename(columns={grp: 'Name'})
+    if 'cre' in grn.columns:
+        if grn.shape[0] > 0:
+            grn[['Chromosome', 'Start', 'End']] = grn['cre'].str.split('-', n=2, expand=True)
+            if grp is not None:
+                grn = grn[['Chromosome', 'Start', 'End', grp]].rename(columns={grp: 'Name'})
+            else:
+                grn = grn[['Chromosome', 'Start', 'End']]
         else:
-            grn = grn[['Chromosome', 'Start', 'End']]
+            grn = None
     else:
         grn = None
     return pr.PyRanges(grn)
