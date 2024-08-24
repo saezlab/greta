@@ -30,7 +30,7 @@ rule compute_prtrb_knocktf:
         cats=['Blood', 'Haematopoietic_and_lymphoid_tissue', 'Haematopoietic_and_lymphoid_tissue_Blood']
     resources:
         mem_mb=64000,
-        runtime=360,
+        runtime=1440,
     shell:
         """
         python workflow/scripts/analysis/metrics/mech/compute_prtrb.py \
