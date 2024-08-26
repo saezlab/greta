@@ -22,10 +22,12 @@ from pycisTopic.diff_features import (
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--mudata', required=True)
+parser.add_argument('-p', '--p2g', required=True)
 parser.add_argument('-o', '--output', required=True)
 parser.add_argument('-g', '--organism', required=True)
 parser.add_argument('-s', '--cistarget_scores', required=True)
 parser.add_argument('-r', '--cistarget_rankings', required=True)
+parser.add_argument('-c', '--njobs', required=True, type=int)
 args = parser.parse_args()
 
 mudata_path = args.mudata
@@ -33,6 +35,8 @@ cistarget_scores_fname = args.cistarget_scores
 cistarget_ranking_fname = args.cistarget_rankings
 cistarget_results_path = args.output
 organism = args.organism
+njobs = args.njobs
+
 if organism == "human":
     annotation_version = "hg38"
 elif organism == "mouse":
@@ -47,6 +51,28 @@ cistopic_obj = pycisTopic.cistopic_class.create_cistopic_object(
     )
 
 # Rerun cistopic
+import pycisTopic.lda_models
+# Run models
+models = pycisTopic.lda_models.run_cgs_models(
+    cistopic_obj,
+    n_topics=[2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+    n_cpu=njobs,
+    n_iter=150,
+    random_state=555,
+    alpha=50,
+    alpha_by_topic=True,
+    eta=0.1,
+    eta_by_topic=False,
+    save_path="/tmp",
+    _temp_dir="/tmp"
+)
+model = pycisTopic.lda_models.evaluate_models(
+    models,
+    select_model=None,
+    return_model=True
+)
+cistopic_obj.add_LDA_model(model)
+
 imputed_acc_obj = impute_accessibility(
     cistopic_obj,
     selected_cells=None,
