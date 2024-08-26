@@ -374,9 +374,10 @@ else:
         "Chrosomome sizes was not found, please provide this information manually.")
 
 # Calculate search space
-mdata["atac"].var_names = mdata["atac"].var_names.str.split('-', 1).str[0] + ':' + mdata["atac"].var_names.str.split('-', 1).str[1]
-mdata["rna"][:,mdata["rna"].X.sum(0)!=0]
-mdata["atac"][:,mdata["atac"].X.sum(0)!=0]
+mdata["atac"].var_names = mdata["atac"].var_names.str.split('-', 1).str[0]\
+    + ':' + mdata["atac"].var_names.str.split('-', 1).str[1]
+mdata["rna"][:, mdata["rna"].X.sum(0) != 0]
+mdata["atac"][:, mdata["atac"].X.sum(0) != 0]
 
 print(mdata["atac"].var_names)
 search_space = scenicplus.data_wrangling.gene_search_space.get_search_space(
@@ -401,10 +402,10 @@ p2g = calculate_regions_to_genes_relationships(
         correlation_scoring_method=correlation_scoring_method,
         n_cpu=njobs,)
 
-p2g = p2g[p2g["importance"]!=0]
+p2g = p2g[p2g["importance"] != 0]
 p2g = p2g.loc[:, ["target", "region", "importance_x_rho"]]
 p2g.columns = ["gene", "cre", "score"]
-p2g = p2g[p2g["score"]!=0]
+p2g = p2g[p2g["score"] != 0]
 print(p2g)
 
 p2g.to_csv(args.output)
