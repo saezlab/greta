@@ -69,7 +69,7 @@ Signac::Annotation(hummus@assays$peaks) <- genome_annot
 rm(annot)
 
 rna_network <- read.csv(rna_network_path, sep = ",")
-rna_network <- rna_network[1:grn_number_edges,]
+rna_network <- rna_network[1:grn_number_edges, ]
 # Add external networks
 hummus <- add_network(
     hummus,
@@ -92,7 +92,6 @@ hummus <- add_network(
     weighted = TRUE)
 
 # Connect TF to peaks !!!!!TODO: to move in tf2p
-hummus@motifs_db <- get_tf2motifs() # TF motif DB # by default human motifs
 hummus <- compute_tf_network(hummus, method = tf_layer_method)
 
 
