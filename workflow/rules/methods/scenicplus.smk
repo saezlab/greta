@@ -34,6 +34,27 @@ rule download_chrom_sizes:
         wget -O {output.h} http://hgdownload.cse.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes
         """
 
+
+rule download_cistarget:
+    output:
+        human_rankings = "aertslab/cistarget/human_motif_SCREEN_rankings.feather",
+        human_scores = "aertslab/cistarget/human_motif_SCREEN_scores.feather",
+        mouse_rankings = "aertslab/cistarget/mouse_motif_SCREEN_rankings.feather",
+        mouse_scores = "aertslab/cistarget/mouse_motif_SCREEN_scores.feather"
+    params:
+        human_rankings_url = "https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/screen/mc_v10_clust/region_based/hg38_screen_v10_clust.regions_vs_motifs.rankings.feather",
+        human_scores_url = "https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/screen/mc_v10_clust/region_based/hg38_screen_v10_clust.regions_vs_motifs.scores.feather",
+        mouse_rankings_url = "https://resources.aertslab.org/cistarget/databases/mus_musculus/mm10/screen/mc_v10_clust/region_based/mm10_screen_v10_clust.regions_vs_motifs.rankings.feather",
+        mouse_scores_url = "https://resources.aertslab.org/cistarget/databases/mus_musculus/mm10/screen/mc_v10_clust/region_based/mm10_screen_v10_clust.regions_vs_motifs.scores.feather"
+    shell:
+        """
+        wget -O {output.human_rankings} {params.human_rankings_url}
+        wget -O {output.human_scores} {params.human_scores_url}
+        wget -O {output.mouse_rankings} {params.mouse_rankings_url}
+        wget -O {output.mouse_scores} {params.mouse_scores_url}
+        """
+
+
 rule pre_scenicplus:
     input:
         frags = 'datasets/{dataset}/smpl.frags.tsv.gz',
@@ -108,7 +129,28 @@ rule p2g_scenicplus:
         -s {params.region_to_gene_correlation_method}
         """
 
-
+rule tfb_scenicplus:
+    input:
+        pre = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu",
+        p2g = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv",
+        cistarget_rankings_human = "aertslab/cistarget/human_motif_SCREEN_rankings.feather",
+        cistarget_scores_human = "aertslab/cistarget/human_motif_SCREEN_scores.feather",
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+    output:
+        tfb = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv"
+    singularity:
+        'workflow/envs/scenicplus.sif'
+    shell:
+        """
+        python workflow/scripts/methods/scenicplus/tfb.py \
+        -i {input.pre} \
+        -p {input.p2g} \
+        -r {input.cistarget_rankings_human} \
+        -s {input.cistarget_scores_human} \
+        -g {params.organism} \
+        -o {output.tfb}
+        """
 # motif_enrichment_cistarget
 # download_genome_annotations
 # motif_enrichment_dem, prepare_menr, get_search_space, region_to_gene  
