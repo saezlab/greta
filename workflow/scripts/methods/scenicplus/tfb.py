@@ -45,7 +45,7 @@ elif organism == "mouse":
 # Load the data
 mudata = mu.read_h5mu(mudata_path)
 cistopic_obj = pycisTopic.cistopic_class.create_cistopic_object(
-    mudata["atac"].X.T,
+    mudata["atac"].layers["counts"].T.toarray(),
     cell_names=mudata["atac"].obs_names.values.tolist(),
     region_names=mudata["atac"].var_names.values.tolist()
     )

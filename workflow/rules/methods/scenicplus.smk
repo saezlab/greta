@@ -136,6 +136,7 @@ rule tfb_scenicplus:
         cistarget_rankings_human = "aertslab/cistarget/human_motif_SCREEN_rankings.feather",
         cistarget_scores_human = "aertslab/cistarget/human_motif_SCREEN_scores.feather",
     params:
+        n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     output:
         tfb = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv"
@@ -149,7 +150,8 @@ rule tfb_scenicplus:
         -r {input.cistarget_rankings_human} \
         -s {input.cistarget_scores_human} \
         -g {params.organism} \
-        -o {output.tfb}
+        -o {output.tfb} \
+        -c {params.n_cores}
         """
 # motif_enrichment_cistarget
 # download_genome_annotations
