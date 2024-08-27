@@ -131,6 +131,7 @@ rule p2g_scenicplus:
 
 rule tfb_scenicplus:
     input:
+        raw = "datasets/{dataset}/cases/{case}/mdata.h5mu",
         pre = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu",
         p2g = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv",
         cistarget_rankings_human = "aertslab/cistarget/human_motif_SCREEN_rankings.feather",
@@ -147,6 +148,7 @@ rule tfb_scenicplus:
         python workflow/scripts/methods/scenicplus/tfb.py \
         -i {input.pre} \
         -p {input.p2g} \
+        -d {input.raw} \
         -r {input.cistarget_rankings_human} \
         -s {input.cistarget_scores_human} \
         -g {params.organism} \

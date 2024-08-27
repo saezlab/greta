@@ -403,7 +403,7 @@ def compute_qc_stats(
     fragments_in_peaks_df_pl = get_fragments_in_peaks(
         fragments_df_pl=fragments_df_pl,
         regions_df_pl=regions_df_pl,
-    ).rename({"by":"CB"})
+    ).rename({"by": "CB"})
     # Add fragment counts per region to fragments statistics per cell barcode.
     logger.info(
         "Add fragment counts per region to fragments statistics per cell barcode."

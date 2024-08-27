@@ -8,6 +8,7 @@ import os
 import joblib
 os.environ["NUMBA_CACHE_DIR"] = "/tmp"
 import muon as mu
+import pandas as pd
 import polars as pl
 import pyranges as pr
 import pycisTopic.cistopic_class
@@ -23,6 +24,7 @@ from pycisTopic.diff_features import (
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--mudata', required=True)
 parser.add_argument('-p', '--p2g', required=True)
+parser.add_argument('-d', '--raw_data', required=True)
 parser.add_argument('-o', '--output', required=True)
 parser.add_argument('-g', '--organism', required=True)
 parser.add_argument('-s', '--cistarget_scores', required=True)
@@ -34,6 +36,8 @@ mudata_path = args.mudata
 cistarget_scores_fname = args.cistarget_scores
 cistarget_ranking_fname = args.cistarget_rankings
 cistarget_results_path = args.output
+raw_data = args.raw_data
+p2g = args.p2g
 organism = args.organism
 njobs = args.njobs
 
@@ -42,13 +46,26 @@ if organism == "human":
 elif organism == "mouse":
     annotation_version = "mm10"
 
-# Load the data
+# Keep peaks contained in enhancers only
+p2g = pd.read_csv(p2g)
+regions = p2g['cre'].unique()
+
+# Load the (raw) data and filter regions
 mudata = mu.read_h5mu(mudata_path)
+# mask columns in regions
+mask = mudata["atac"].var_names.isin(regions)
 cistopic_obj = pycisTopic.cistopic_class.create_cistopic_object(
-    mudata["atac"].layers["counts"].T.toarray(),
-    cell_names=mudata["atac"].obs_names.values.tolist(),
-    region_names=mudata["atac"].var_names.values.tolist()
+    mudata["atac"].layers["counts"][:, mask].T.toarray(),
+    cell_names=mudata["atac"][:, mask].obs_names.values.tolist(),
+    region_names=mudata["atac"][:, mask].var_names.values.tolist()
     )
+
+# Load the celltype annotations
+mudata = mu.read_h5mu(dataset_file)
+cell_data = mudata.obs
+cell_data['celltype'] = cell_data['celltype'].astype(str) 
+cell_data['celltype'] = cell_data['celltype'].str.replace(' ', '_')
+cistopic_obj.add_cell_data(cell_data, split_pattern='-')
 
 # Rerun cistopic
 import pycisTopic.lda_models
