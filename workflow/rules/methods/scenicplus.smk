@@ -37,10 +37,10 @@ rule download_chrom_sizes:
 
 rule download_cistarget:
     output:
-        human_rankings = "aertslab/cistarget/human_motif_SCREEN_rankings.feather",
-        human_scores = "aertslab/cistarget/human_motif_SCREEN_scores.feather",
-        mouse_rankings = "aertslab/cistarget/mouse_motif_SCREEN_rankings.feather",
-        mouse_scores = "aertslab/cistarget/mouse_motif_SCREEN_scores.feather"
+        human_rankings = "aertslab/cistarget/human_motif_SCREEN.regions_vs_motifs.rankings.feather",
+        human_scores = "aertslab/cistarget/human_motif_SCREEN.regions_vs_motifs.scores.feather",
+        mouse_rankings = "aertslab/cistarget/mouse_motif_SCREEN.regions_vs_motifs.rankings.feather",
+        mouse_scores = "aertslab/cistarget/mouse_motif_SCREEN.regions_vs_motifs.scores.feather"
     params:
         human_rankings_url = "https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/screen/mc_v10_clust/region_based/hg38_screen_v10_clust.regions_vs_motifs.rankings.feather",
         human_scores_url = "https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/screen/mc_v10_clust/region_based/hg38_screen_v10_clust.regions_vs_motifs.scores.feather",
@@ -134,8 +134,8 @@ rule tfb_scenicplus:
         raw = "datasets/{dataset}/cases/{case}/mdata.h5mu",
         pre = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu",
         p2g = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv",
-        cistarget_rankings_human = "aertslab/cistarget/human_motif_SCREEN_rankings.feather",
-        cistarget_scores_human = "aertslab/cistarget/human_motif_SCREEN_scores.feather",
+        cistarget_rankings_human = "aertslab/cistarget/human_motif_SCREEN.regions_vs_motifs.rankings.feather",
+        cistarget_scores_human = "aertslab/cistarget/human_motif_SCREEN.regions_vs_motifs.scores.feather",
     params:
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
