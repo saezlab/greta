@@ -264,26 +264,6 @@ def run_motif_enrichment_cistarget(
                 mode="a"
             )
 
-
-# Run cistarget
-run_motif_enrichment_cistarget(
-    region_sets,
-    cistarget_db,
-    save_path=os.path.join(cistarget_results_path),
-    n_cpu=1,
-    fraction_overlap_w_cistarget_database=0.4,
-    auc_threshold=0.005,
-    nes_threshold=3,
-    rank_threshold=0.05,
-    path_to_motif_annotations="path_to_motif_annotations",
-    annotation_version=annotation_version,
-    motif_similarity_fdr=0.05,
-    orthologous_identity_threshold=0.8,
-    temp_dir="/tmp",
-    species=organism,
-    annotations_to_use=["motif", "orthologous"]
-)
-
 # Run DEM
 run_motif_enrichment_dem(
     region_sets,
@@ -304,6 +284,26 @@ run_motif_enrichment_dem(
     annotations_to_use=["motif", "orthologous"],
     write_html=False
 )
+
+# Run cistarget
+run_motif_enrichment_cistarget(
+    region_sets,
+    cistarget_db,
+    save_path=os.path.join(cistarget_results_path),
+    n_cpu=1,
+    fraction_overlap_w_cistarget_database=0.4,
+    auc_threshold=0.005,
+    nes_threshold=3,
+    rank_threshold=0.05,
+    path_to_motif_annotations="path_to_motif_annotations",
+    annotation_version=annotation_version,
+    motif_similarity_fdr=0.05,
+    orthologous_identity_threshold=0.8,
+    temp_dir="/tmp",
+    species=organism,
+    annotations_to_use=["motif", "orthologous"]
+)
+
 
 prepare_motif_enrichment_results(
     paths_to_motif_enrichment_results=[dem_results_path, cistarget_results_path],
