@@ -140,6 +140,11 @@ rule tfb_scenicplus:
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     output:
+        cistarget_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.cistarget.h5"),
+        dem_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.dem.h5"),
+        annotation_direct_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.annotation_direct.h5ad"),
+        annotation_extended_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.annotation_extended.h5ad"),
+        tf_names_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt"),
         tfb = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv"
     singularity:
         'workflow/envs/scenicplus.sif'
@@ -152,8 +157,13 @@ rule tfb_scenicplus:
         -r {input.cistarget_rankings_human} \
         -s {input.cistarget_scores_human} \
         -g {params.organism} \
+        -t {output.cistarget_results}
+        -u {output.dem_results}
         -o {output.tfb} \
         -c {params.n_cores}
+        --annotation_direct_path
+        --annotation_extended_path
+        --tf_names_path
         """
 # motif_enrichment_cistarget
 # download_genome_annotations

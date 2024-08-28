@@ -33,6 +33,9 @@ parser.add_argument('-g', '--organism', required=True)
 parser.add_argument('-s', '--dem_scores', required=True)
 parser.add_argument('-r', '--cistarget_rankings', required=True)
 parser.add_argument('-c', '--njobs', required=True, type=int)
+parser.add_argument('-a', '--annotation_direct_path', required=True)
+parser.add_argument('-b', '--annotation_extended_path', required=True)
+parser.add_argument('-n', '--tf_names_path', required=True)
 args = parser.parse_args()
 
 mudata_path = args.mudata
@@ -44,6 +47,10 @@ raw_data = args.raw_data
 p2g = args.p2g
 organism = args.organism
 njobs = args.njobs
+
+output_cistromes_annotations_direct = args.annotation_direct_path
+output_cistromes_annotations_extended = args.annotation_extended_path
+output_tf_names = args.tf_names_path
 
 if organism == "hg38":
     annotation_version = "hg38"
@@ -300,7 +307,7 @@ run_motif_enrichment_cistarget(
 
 prepare_motif_enrichment_results(
     paths_to_motif_enrichment_results=[dem_results_path, cistarget_results_path],
-    multiome_mudata_fname=mudata_path
+    multiome_mudata_fname=mudata_path,
     out_file_direct_annotation=output_cistromes_annotations_direct,
     out_file_extended_annotation=output_cistromes_annotions_extended,
     out_file_tf_names=output_tf_names,
