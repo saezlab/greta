@@ -285,7 +285,7 @@ run_motif_enrichment_cistarget(
 )
 
 # Run DEM
-run_motif_enrichment_cistarget(
+run_motif_enrichment_dem(
     region_sets,
     dem_db_fname=dem_scores_fname,
     output_fname_dem_result=dem_results_path,
