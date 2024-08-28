@@ -172,15 +172,6 @@ for topic in region_bin_topics_top_3k:
         )
 
 
-# Run cisTarget
-import pycistarget.motif_enrichment_cistarget
-cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
-    cistarget_rankings_fname,
-    region_sets=region_sets,
-    name="cistarget",
-    fraction_overlap=0.4)
-
-
 # changed to accept cistarget_db directly opened
 def _run_cistarget_single_region_set(
         ctx_db,
@@ -284,6 +275,14 @@ run_motif_enrichment_dem(
     annotations_to_use=["motif", "orthologous"],
     write_html=False
 )
+
+# Run cisTarget
+import pycistarget.motif_enrichment_cistarget
+cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
+    cistarget_rankings_fname,
+    region_sets=region_sets,
+    name="cistarget",
+    fraction_overlap=0.4)
 
 # Run cistarget
 run_motif_enrichment_cistarget(
