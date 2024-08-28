@@ -74,7 +74,7 @@ cistopic_obj = pycisTopic.cistopic_class.create_cistopic_object(
     )
 
 # Load the celltype annotations
-mudata = mu.read_h5mu(dataset_file)
+mudata = mu.read_h5mu(raw_data)
 cell_data = mudata.obs
 cell_data['celltype'] = cell_data['celltype'].astype(str) 
 cell_data['celltype'] = cell_data['celltype'].str.replace(' ', '_')
