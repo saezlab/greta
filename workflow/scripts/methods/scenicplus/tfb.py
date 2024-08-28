@@ -20,31 +20,37 @@ from pycisTopic.diff_features import (
     find_highly_variable_features,
     find_diff_features
 )
+from scenicplus.cli.commands import run_motif_enrichment_dem
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--mudata', required=True)
 parser.add_argument('-p', '--p2g', required=True)
 parser.add_argument('-d', '--raw_data', required=True)
+parser.add_argument('-t', '--cistarget_results', required=True)
+parser.add_argument('-u', '--dem_results', required=True)
 parser.add_argument('-o', '--output', required=True)
 parser.add_argument('-g', '--organism', required=True)
-parser.add_argument('-s', '--cistarget_scores', required=True)
+parser.add_argument('-s', '--dem_scores', required=True)
 parser.add_argument('-r', '--cistarget_rankings', required=True)
 parser.add_argument('-c', '--njobs', required=True, type=int)
 args = parser.parse_args()
 
 mudata_path = args.mudata
-cistarget_scores_fname = args.cistarget_scores
-cistarget_ranking_fname = args.cistarget_rankings
-cistarget_results_path = args.output
+cistarget_rankings_fname = args.cistarget_rankings
+dem_scores_fname = args.dem_scores
+cistarget_results_path = args.cistarget_results
+dem_results_path = args.dem_results
 raw_data = args.raw_data
 p2g = args.p2g
 organism = args.organism
 njobs = args.njobs
 
-if organism == "human":
+if organism == "hg38":
     annotation_version = "hg38"
-elif organism == "mouse":
+elif organism == "mm10":
     annotation_version = "mm10"
+else:
+    raise ValueError("Invalid organism")
 
 # Keep peaks contained in enhancers only
 p2g = pd.read_csv(p2g)
@@ -61,7 +67,7 @@ cistopic_obj = pycisTopic.cistopic_class.create_cistopic_object(
     )
 
 # Load the celltype annotations
-mudata = mu.read_h5mu(raw_data)
+mudata = mu.read_h5mu(dataset_file)
 cell_data = mudata.obs
 cell_data['celltype'] = cell_data['celltype'].astype(str) 
 cell_data['celltype'] = cell_data['celltype'].str.replace(' ', '_')
@@ -158,10 +164,11 @@ for topic in region_bin_topics_top_3k:
             )
         )
 
+
 # Run cisTarget
 import pycistarget.motif_enrichment_cistarget
 cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
-    cistarget_ranking_fname,
+    cistarget_rankings_fname,
     region_sets=region_sets,
     name="cistarget",
     fraction_overlap=0.4)
@@ -251,10 +258,11 @@ def run_motif_enrichment_cistarget(
             )
 
 
+# Run cistarget
 run_motif_enrichment_cistarget(
     region_sets,
     cistarget_db,
-    os.path.join(cistarget_results_path),
+    save_path=os.path.join(cistarget_results_path),
     n_cpu=1,
     fraction_overlap_w_cistarget_database=0.4,
     auc_threshold=0.005,
@@ -269,5 +277,33 @@ run_motif_enrichment_cistarget(
     annotations_to_use=["motif", "orthologous"]
 )
 
+# Run DEM
+run_motif_enrichment_cistarget(
+    region_sets,
+    dem_db_fname=dem_scores_fname,
+    output_fname_dem_result=dem_results_path,
+    output_fname_dem_html="",
+    n_cpu=1,
+    fraction_overlap_w_cistarget_database=0.4,
+    auc_threshold=0.005,
+    nes_threshold=3,
+    rank_threshold=0.05,
+    path_to_motif_annotations="path_to_motif_annotations",
+    annotation_version=annotation_version,
+    motif_similarity_fdr=0.05,
+    orthologous_identity_threshold=0.8,
+    temp_dir="/tmp",
+    species=organism,
+    annotations_to_use=["motif", "orthologous"],
+    write_html=False
+)
 
-#pd.read_hdf(os.path.join(scenicplus_tmp_dir, "cistarget_results.h5"), key='cistarget_results')
+prepare_motif_enrichment_results(
+    paths_to_motif_enrichment_results=[dem_results_path, cistarget_results_path],
+    multiome_mudata_fname=mudata_path
+    out_file_direct_annotation=output_cistromes_annotations_direct,
+    out_file_extended_annotation=output_cistromes_annotions_extended,
+    out_file_tf_names=output_tf_names,
+    direct_annotation="Direct_annot",
+    extended_annotation="Orthology_annot")
+
