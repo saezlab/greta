@@ -403,7 +403,7 @@ cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
 run_motif_enrichment_cistarget(
     region_sets,
     cistarget_db,
-    save_path=os.path.join(cistarget_results_path),
+    output_fname_cistarget_result=os.path.join(cistarget_results_path),
     n_cpu=1,
     fraction_overlap_w_cistarget_database=0.4,
     auc_threshold=0.005,
