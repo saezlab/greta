@@ -27,11 +27,13 @@ path_peaks = args['path_peaks']
 path_output = args['path_output']
 
 # Read gene ids
+obs = pd.read_csv(path_annot, index_col=0)
 path_geneids = os.path.join(path_geneids, organism + '.csv')
 geneids = pd.read_csv(path_geneids).dropna().set_index('id')['symbol'].to_dict()
 
 # Load rna data
 rna = sc.read_h5ad(path_h5ad)
+rna.obs_names = [b.split('-1')[0] for b in rna.obs_names]
 rna.var['gene_ids'] = rna.var_names
 
 # Filter faulty gene symbols
@@ -59,10 +61,11 @@ del rna.var
 
 # Read atac data
 atac = ad.read_h5ad(path_peaks)
+rna = rna[atac.obs_names].copy()
 atac = atac[rna.obs_names].copy()
 
 # Create mdata
-obs.index = [sample_id + '_' + b.split('-1')[0] for b in obs.index]
+obs.index = [f"{batch}_{index_value.split('-1')[0]}" for index_value, batch in zip(obs.index, obs['batch'])]
 mdata = md.MuData(
     {'rna': rna, 'atac': atac,},
     obs=obs
