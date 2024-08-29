@@ -257,6 +257,14 @@ def run_motif_enrichment_cistarget(
                 mode="a"
             )
 
+
+dem_max_bg_regions = 500
+dem_balance_number_of_promoters = True
+dem_promoter_space = 1_000
+dem_adj_pval_thr = 0.05
+dem_log2fc_thr = 1.0
+dem_mean_fg_thr = 0.0
+dem_motif_hit_thr = 3.0
 # Run DEM
 run_motif_enrichment_dem(
     region_sets,
@@ -264,18 +272,23 @@ run_motif_enrichment_dem(
     output_fname_dem_result=dem_results_path,
     output_fname_dem_html="",
     n_cpu=1,
-    fraction_overlap_w_cistarget_database=0.4,
-    auc_threshold=0.005,
-    nes_threshold=3,
-    rank_threshold=0.05,
+    temp_dir="/tmp",
+    species=organism,
+    fraction_overlap_w_dem_database=0.4,
     path_to_motif_annotations="path_to_motif_annotations",
     annotation_version=annotation_version,
     motif_similarity_fdr=0.05,
     orthologous_identity_threshold=0.8,
-    temp_dir="/tmp",
-    species=organism,
     annotations_to_use=["motif", "orthologous"],
-    write_html=False
+    write_html=False,
+    max_bg_regions=dem_max_bg_regions,
+    balance_number_of_promoters=dem_balance_number_of_promoters,
+    promoter_space=dem_promoter_space,
+    adjpval_thr=dem_adj_pval_thr,
+    log2fc_thr=dem_log2fc_thr,
+    mean_fg_thr=dem_mean_fg_thr,
+    motif_hit_thr=dem_motif_hit_thr,
+    seed=555,
 )
 
 # Run cisTarget
