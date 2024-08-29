@@ -20,7 +20,11 @@ from pycisTopic.diff_features import (
     find_highly_variable_features,
     find_diff_features
 )
-from scenicplus.cli.commands import prepare_motif_enrichment_results
+from scenicplus.cli.commands import (
+    prepare_motif_enrichment_results,
+    _run_dem_single_region_set,
+    _get_foreground_background
+)
 import pycistarget.motif_enrichment_cistarget
 
 
@@ -297,7 +301,6 @@ def run_motif_enrichment_dem(
         DEM,
     )
     region_set_dict: Dict[str, pr.PyRanges] = {}
-    log.info(f"Reading region sets from: {region_set_folder}")
 
     # Read genome annotation, if needed
     if path_to_genome_annotation is not None:
@@ -333,10 +336,10 @@ def run_motif_enrichment_dem(
             motif_similarity_fdr=motif_similarity_fdr,
             orthologous_identity_threshold=orthologous_identity_threshold
         )
-        for name, foreground_region_sets, background_region_sets in _get_foreground_background(region_set_dict)
+        for name, foreground_region_sets, background_region_sets
+        in _get_foreground_background(region_set_dict)
     )
     if write_html:
-        log.info(f"Writing html to: {output_fname_dem_html}")
         all_motif_enrichment_df = pd.concat(
             ctx_result.motif_enrichment for ctx_result in dem_results
         )
@@ -345,7 +348,6 @@ def run_motif_enrichment_dem(
             escape = False,
             col_space = 80
         )
-    log.info(f"Writing output to: {output_fname_dem_result}")
     for dem_result in dem_results:
         if len(dem_result.motif_enrichment) > 0:
             dem_result.write_hdf5(
