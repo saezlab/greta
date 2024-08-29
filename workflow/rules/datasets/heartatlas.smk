@@ -76,10 +76,10 @@ rule annotate_heartatlas:
     output:
         'datasets/heartatlas/annotated.h5mu'
     params:
-        organism=config['datasets']['reprofibro']['organism']
+        organism=config['datasets']['heartatlas']['organism']
     shell:
         """
-        python workflow/scripts/datasets/reprofibro/reprofibro.py \
+        python workflow/scripts/datasets/heartatlas/heartatlas.py \
         -a {input.path_h5ad} \
         -b {input.path_annot} \
         -c {input.path_geneids} \
