@@ -366,6 +366,7 @@ dem_mean_fg_thr = 0.0
 dem_motif_hit_thr = 3.0
 
 # Run DEM
+print(dem_region_sets)
 print("Running DEM")
 run_motif_enrichment_dem(
     dem_region_sets,
