@@ -363,7 +363,9 @@ dem_adj_pval_thr = 0.05
 dem_log2fc_thr = 1.0
 dem_mean_fg_thr = 0.0
 dem_motif_hit_thr = 3.0
+
 # Run DEM
+print("Running DEM")
 run_motif_enrichment_dem(
     region_sets,
     dem_db_fname=dem_scores_fname,
@@ -390,6 +392,7 @@ run_motif_enrichment_dem(
 )
 
 # Run cisTarget
+print("Running cistarget")
 cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
     cistarget_rankings_fname,
     region_sets=region_sets,
