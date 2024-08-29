@@ -369,7 +369,7 @@ dem_motif_hit_thr = 3.0
 print(dem_region_sets)
 print("Running DEM")
 
-print(_get_foreground_background(dem_region_sets))
+print([i for i in _get_foreground_background(dem_region_sets)])
 
 run_motif_enrichment_dem(
     dem_region_sets,
