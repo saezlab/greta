@@ -368,7 +368,7 @@ dem_motif_hit_thr = 3.0
 # Run DEM
 print("Running DEM")
 run_motif_enrichment_dem(
-    region_sets,
+    dem_region_sets,
     dem_db_fname=dem_scores_fname,
     output_fname_dem_result=dem_results_path,
     output_fname_dem_html="",
