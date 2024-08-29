@@ -20,7 +20,7 @@ from pycisTopic.diff_features import (
     find_highly_variable_features,
     find_diff_features
 )
-from scenicplus.cli.commands import (run_motif_enrichment_dem, prepare_motif_enrichment_results)
+from scenicplus.cli.commands import prepare_motif_enrichment_results
 import pycistarget.motif_enrichment_cistarget
 
 
@@ -173,6 +173,11 @@ for topic in region_bin_topics_top_3k:
             )
         )
 
+dem_region_sets = {
+    "top3k": region_bin_topics_top_3k,
+    "otsu": region_bin_topics_otsu,
+    "markers_dict": markers_dict
+    }
 
 # changed to accept cistarget_db directly opened
 def _run_cistarget_single_region_set(
@@ -255,6 +260,97 @@ def run_motif_enrichment_cistarget(
             cistarget_result.write_hdf5(
                 path=output_fname_cistarget_result,
                 mode="a"
+            )
+
+
+def run_motif_enrichment_dem(
+        region_set_dict: Dict[str, pr.PyRanges],
+        dem_db_fname: pathlib.Path,
+        output_fname_dem_html: pathlib.Path,
+        output_fname_dem_result: pathlib.Path,
+        n_cpu: int,
+        temp_dir: pathlib.Path,
+        species: Literal[
+                "homo_sapiens", "mus_musculus", "drosophila_melanogaster"],
+        fraction_overlap_w_dem_database: float = 0.4,
+        max_bg_regions: Optional[int] = None,
+        path_to_genome_annotation: Optional[str] = None,
+        balance_number_of_promoters: bool = True,
+        promoter_space: int = 1_000,
+        adjpval_thr: float = 0.05,
+        log2fc_thr: float = 1.0,
+        mean_fg_thr: float = 0.0,
+        motif_hit_thr: Optional[float] = None,
+        path_to_motif_annotations: Optional[str] = None,
+        annotation_version: str = "v10nr_clust",
+        annotations_to_use: tuple = ("Direct_annot", "Orthology_annot"),
+        motif_similarity_fdr: float = 0.001,
+        orthologous_identity_threshold: float = 0.0,
+        seed: int = 555,
+        write_html: bool = True):
+    """
+    Run motif enrichment using DEM algorithm.
+
+    region_set_folder --> replaced to region_set_dictionary
+    """
+    from pycistarget.motif_enrichment_dem import (
+        DEM,
+    )
+    region_set_dict: Dict[str, pr.PyRanges] = {}
+    log.info(f"Reading region sets from: {region_set_folder}")
+
+    # Read genome annotation, if needed
+    if path_to_genome_annotation is not None:
+        genome_annotation = pd.read_table(path_to_genome_annotation)
+    else:
+        genome_annotation = None
+
+    dem_results: List[DEM] = joblib.Parallel(
+        n_jobs=n_cpu,
+        temp_folder=temp_dir
+    )(
+        joblib.delayed(
+            _run_dem_single_region_set
+        )(
+            foreground_region_sets=foreground_region_sets,
+            background_region_sets=background_region_sets,
+            name=name,
+            dem_db_fname=dem_db_fname,
+            max_bg_regions=max_bg_regions,
+            genome_annotation=genome_annotation,
+            balance_number_of_promoters=balance_number_of_promoters,
+            promoter_space=promoter_space,
+            seed=seed,
+            fraction_overlap_w_dem_database=fraction_overlap_w_dem_database,
+            species=species,
+            adjpval_thr=adjpval_thr,
+            log2fc_thr=log2fc_thr,
+            mean_fg_thr=mean_fg_thr,
+            motif_hit_thr=motif_hit_thr,
+            path_to_motif_annotations=path_to_motif_annotations,
+            annotation_version=annotation_version,
+            annotations_to_use=annotations_to_use,
+            motif_similarity_fdr=motif_similarity_fdr,
+            orthologous_identity_threshold=orthologous_identity_threshold
+        )
+        for name, foreground_region_sets, background_region_sets in _get_foreground_background(region_set_dict)
+    )
+    if write_html:
+        log.info(f"Writing html to: {output_fname_dem_html}")
+        all_motif_enrichment_df = pd.concat(
+            ctx_result.motif_enrichment for ctx_result in dem_results
+        )
+        all_motif_enrichment_df.to_html(
+            buf = output_fname_dem_html,
+            escape = False,
+            col_space = 80
+        )
+    log.info(f"Writing output to: {output_fname_dem_result}")
+    for dem_result in dem_results:
+        if len(dem_result.motif_enrichment) > 0:
+            dem_result.write_hdf5(
+                path = output_fname_dem_result,
+                mode = "a"
             )
 
 
