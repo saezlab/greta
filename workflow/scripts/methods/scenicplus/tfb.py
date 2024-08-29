@@ -20,7 +20,9 @@ from pycisTopic.diff_features import (
     find_highly_variable_features,
     find_diff_features
 )
-from scenicplus.cli.commands import run_motif_enrichment_dem
+from scenicplus.cli.commands import (run_motif_enrichment_dem, prepare_motif_enrichment_results)
+import pycistarget.motif_enrichment_cistarget
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--mudata', required=True)
@@ -277,7 +279,6 @@ run_motif_enrichment_dem(
 )
 
 # Run cisTarget
-import pycistarget.motif_enrichment_cistarget
 cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
     cistarget_rankings_fname,
     region_sets=region_sets,
@@ -303,7 +304,6 @@ run_motif_enrichment_cistarget(
     annotations_to_use=["motif", "orthologous"]
 )
 
-
 prepare_motif_enrichment_results(
     paths_to_motif_enrichment_results=[dem_results_path, cistarget_results_path],
     multiome_mudata_fname=mudata_path,
@@ -312,4 +312,3 @@ prepare_motif_enrichment_results(
     out_file_tf_names=output_tf_names,
     direct_annotation="Direct_annot",
     extended_annotation="Orthology_annot")
-
