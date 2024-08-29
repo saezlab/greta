@@ -339,6 +339,7 @@ def run_motif_enrichment_dem(
         for name, foreground_region_sets, background_region_sets
         in _get_foreground_background(region_set_dict)
     )
+    print(dem_results)
     if write_html:
         all_motif_enrichment_df = pd.concat(
             ctx_result.motif_enrichment for ctx_result in dem_results
