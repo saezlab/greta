@@ -395,8 +395,8 @@ def _run_dem_single_region_set(
         promoter_space = promoter_space,
         seed = seed)
     print("test run_dem_single_region_set")
-    print(foreground_regions)
-    print(background_regions)
+    #print(foreground_regions)
+    #print(background_regions)
     # Load DEM database
     dem_db = DEMDatabase(
         dem_db_fname,
