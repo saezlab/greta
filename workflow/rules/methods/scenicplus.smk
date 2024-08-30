@@ -140,8 +140,8 @@ rule tfb_scenicplus:
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     output:
-        cistarget_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.cistarget.h5"),
-        dem_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.dem.h5"),
+        cistarget_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.cistarget.hdf5"),
+        dem_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.dem.hdf5"),
         annotation_direct_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.annotation_direct.h5ad"),
         annotation_extended_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.annotation_extended.h5ad"),
         tf_names_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt"),
