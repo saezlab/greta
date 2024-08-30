@@ -22,7 +22,6 @@ from pycisTopic.diff_features import (
 )
 from scenicplus.cli.commands import (
     prepare_motif_enrichment_results,
-    _run_dem_single_region_set,
     _get_foreground_background
 )
 import pycistarget.motif_enrichment_cistarget
