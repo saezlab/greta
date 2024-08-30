@@ -357,6 +357,67 @@ def run_motif_enrichment_dem(
             )
 
 
+def _run_dem_single_region_set(
+        foreground_region_sets,
+        background_region_sets,
+        dem_db_fname,
+        max_bg_regions,
+        genome_annotation,
+        balance_number_of_promoters,
+        promoter_space,
+        seed,
+        fraction_overlap_w_dem_database,
+        name,
+        species,
+        adjpval_thr,
+        log2fc_thr,
+        mean_fg_thr,
+        motif_hit_thr,
+        path_to_motif_annotations,
+        annotation_version,
+        annotations_to_use,
+        motif_similarity_fdr,
+        orthologous_identity_threshold) -> DEM:
+    """Helper function to run DEM on a single region set."""
+    from pycistarget.motif_enrichment_dem import (
+        DEMDatabase,
+        get_foreground_and_background_regions,
+    )
+    # Get foreground and background regions for DEM analysis
+    foreground_regions, background_regions = get_foreground_and_background_regions(
+        foreground_region_sets = foreground_region_sets,
+        background_region_sets = background_region_sets,
+        max_bg_regions = max_bg_regions,
+        genome_annotation = genome_annotation,
+        balance_number_of_promoters = balance_number_of_promoters,
+        promoter_space = promoter_space,
+        seed = seed)
+    print(foreground_regions)
+    print(background_regions)
+    # Load DEM database
+    dem_db = DEMDatabase(
+        dem_db_fname,
+        fraction_overlap=fraction_overlap_w_dem_database)
+    # Setup DEM analysis
+    dem_result = DEM(
+        foreground_regions = foreground_regions,
+        background_regions = background_regions,
+        name = name,
+        species = species,
+        adjpval_thr = adjpval_thr,
+        log2fc_thr = log2fc_thr,
+        mean_fg_thr = mean_fg_thr,
+        motif_hit_thr = motif_hit_thr,
+        path_to_motif_annotations = path_to_motif_annotations,
+        annotation_version = annotation_version,
+        annotation_to_use = annotations_to_use,
+        motif_similarity_fdr = motif_similarity_fdr,
+        orthologous_identity_threshold = orthologous_identity_threshold)
+    # Run DEM analysis
+    dem_result.run(dem_db)
+    return dem_result
+
+
 dem_max_bg_regions = 500
 dem_balance_number_of_promoters = True
 dem_promoter_space = 1_000
@@ -366,7 +427,6 @@ dem_mean_fg_thr = 0.0
 dem_motif_hit_thr = 3.0
 
 # Run DEM
-print(dem_region_sets)
 print("Running DEM")
 
 print([i for i in _get_foreground_background(dem_region_sets)])
@@ -376,7 +436,7 @@ run_motif_enrichment_dem(
     dem_db_fname=dem_scores_fname,
     output_fname_dem_result=dem_results_path,
     output_fname_dem_html="",
-    n_cpu=1,
+    n_cpu=32,
     temp_dir="/tmp",
     species=organism,
     fraction_overlap_w_dem_database=0.4,
@@ -409,7 +469,7 @@ run_motif_enrichment_cistarget(
     region_sets,
     cistarget_db,
     output_fname_cistarget_result=os.path.join(cistarget_results_path),
-    n_cpu=1,
+    n_cpu=32,
     fraction_overlap_w_cistarget_database=0.4,
     auc_threshold=0.005,
     nes_threshold=3,
