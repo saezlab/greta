@@ -394,6 +394,7 @@ def _run_dem_single_region_set(
         balance_number_of_promoters = balance_number_of_promoters,
         promoter_space = promoter_space,
         seed = seed)
+    print("test run_dem_single_region_set")
     print(foreground_regions)
     print(background_regions)
     # Load DEM database
