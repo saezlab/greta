@@ -212,7 +212,7 @@ consensus_peaks = pl.DataFrame(consensus_peaks)
 ##################
 # Get annotation #
 ##################
-annot = pd.read_csv(annot_fname)
+annot = pd.read_csv(annot_fname, sep='\t')
 annot.Start = annot.Start.astype(np.int32)
 annot.Gene = annot.Gene.astype(str)
 annot = pl.DataFrame(annot)

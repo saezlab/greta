@@ -31,4 +31,4 @@ for organism in organisms:
     annot = annot[annot.Transcript_type == 'protein_coding']
     annot["Strand"] = annot["Strand"].replace({1: "+", -1: "-"})
     annot.Start = annot.Start.astype(np.int32)
-    annot.to_csv(organisms[organism], index=False)
+    annot.to_csv(organisms[organism], sep="\t", index=False)
