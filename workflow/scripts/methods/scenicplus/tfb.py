@@ -356,6 +356,9 @@ def run_motif_enrichment_dem(
                 mode = "a"
             )
 
+from pycistarget.motif_enrichment_dem import (
+        DEM,
+    )
 
 def _run_dem_single_region_set(
         foreground_region_sets,
@@ -484,10 +487,11 @@ run_motif_enrichment_cistarget(
 )
 
 prepare_motif_enrichment_results(
-    paths_to_motif_enrichment_results=[dem_results_path, cistarget_results_path],
+    paths_to_motif_enrichment_results=[
+        dem_results_path, cistarget_results_path],
     multiome_mudata_fname=mudata_path,
     out_file_direct_annotation=output_cistromes_annotations_direct,
-    out_file_extended_annotation=output_cistromes_annotions_extended,
+    out_file_extended_annotation=output_cistromes_annotations_extended,
     out_file_tf_names=output_tf_names,
     direct_annotation="Direct_annot",
     extended_annotation="Orthology_annot")
