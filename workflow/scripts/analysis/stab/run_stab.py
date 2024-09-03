@@ -70,9 +70,9 @@ for _, row in tqdm(list(df.iterrows())):
         ncells, ngenes = n, 16384
     else:
         continue
-    ref = pd.read_csv('datasets/{dataset}/cases/16384_16384_0/runs/{mth}.src.csv'.
+    ref = pd.read_csv('datasets/{dataset}/cases/16384_16384_0/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.csv'.
                       format(dataset=ds, mth=mth))
-    net = pd.read_csv('datasets/{dataset}/cases/{ncells}_{ngenes}_{seed}/runs/{mth}.src.csv'.
+    net = pd.read_csv('datasets/{dataset}/cases/{ncells}_{ngenes}_{seed}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.csv'.
                       format(dataset=ds, ncells=ncells, ngenes=ngenes, seed=seed, mth=mth))
     tmp = pd.DataFrame(index=[0])
     tmp['dataset'] = ds
