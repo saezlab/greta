@@ -41,7 +41,7 @@ proms = proms.df[['cre', 'Name']].rename(columns={'Name': 'target'})
 
 # Merge
 grn = pd.merge(grn, proms, how='inner')[['source', 'cre', 'target', 'weight']]
-grn = grn.sort_values(['source', 'target', 'cre'])
+grn = grn.sort_values(['source', 'target', 'cre']).rename(columns={'weight': 'score'})
 
 # Write
 grn.to_csv(out_path, index=False)
