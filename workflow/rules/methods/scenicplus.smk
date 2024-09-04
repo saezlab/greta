@@ -1,5 +1,5 @@
 rule download_motifs:
-    input:
+    params:
         url_h = "https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl",
         url_m = "https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.mgi-m0.001-o0.0.tbl"
     output:
@@ -7,8 +7,8 @@ rule download_motifs:
         m = "aertslab/motifs-v10nr_clust/nr.mgi-m0.001-o0.0.tbl"
     shell:
         """
-        wget -O {output.h} {input.url_h}
-        wget -O {output.m} {input.url_m}
+        wget -O {output.h} {params.url_h}
+        wget -O {output.m} {params.url_m}
         """
 
 rule download_gene_annotations:
@@ -136,12 +136,14 @@ rule tfb_scenicplus:
         p2g = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv",
         cistarget_rankings_human = "aertslab/cistarget/human_motif_SCREEN.regions_vs_motifs.rankings.feather",
         cistarget_scores_human = "aertslab/cistarget/human_motif_SCREEN.regions_vs_motifs.scores.feather",
+        path_to_motif_annotations_human = "aertslab/motifs-v10nr_clust/nr.hgnc-m0.001-o0.0.tbl",
+        path_to_motif_annotations_mouse = "aertslab/motifs-v10nr_clust/nr.mgi-m0.001-o0.0.tbl"
     params:
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     output:
-        cistarget_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.cistarget.h5"),
-        dem_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.dem.h5"),
+        cistarget_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.cistarget.hdf5"),
+        dem_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.dem.hdf5"),
         annotation_direct_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.annotation_direct.h5ad"),
         annotation_extended_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.annotation_extended.h5ad"),
         tf_names_path = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt"),
@@ -157,13 +159,15 @@ rule tfb_scenicplus:
         -r {input.cistarget_rankings_human} \
         -s {input.cistarget_scores_human} \
         -g {params.organism} \
-        -t {output.cistarget_results}
-        -u {output.dem_results}
+        -t {output.cistarget_results} \
+        -u {output.dem_results} \
         -o {output.tfb} \
-        -c {params.n_cores}
-        --annotation_direct_path
-        --annotation_extended_path
-        --tf_names_path
+        -c {params.n_cores} \
+        --annotation_direct_path {output.annotation_direct_path}\
+        --annotation_extended_path {output.annotation_extended_path}\
+        --tf_names_path {output.tf_names_path}\
+        --path_to_motif_annotations_human {input.path_to_motif_annotations_human}\
+        --path_to_motif_annotations_mouse {input.path_to_motif_annotations_mouse}
         """
 # motif_enrichment_cistarget
 # download_genome_annotations
