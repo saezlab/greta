@@ -12,18 +12,18 @@ import pandas as pd
 
 
 parser = argparse.ArgumentParser()
+# input
 parser.add_argument('-i', '--multiome_mudata_path', required=True)
 parser.add_argument('-t', '--tfb_path', required=True)
 parser.add_argument('-p', '--p2g_path', required=True)
 parser.add_argument('-l', '--cistarget_db_path_human', required=True)
 parser.add_argument('-k', '--cistarget_db_path_mouse', required=True)
-#parser.add_argument('-t', '--tf_names_path', required=True)
+# params
 parser.add_argument('-m', '--method', required=True)
 parser.add_argument('-c', '--n_cpu', required=True, type=int)
-parser.add_argument('-s', '--tf_to_gene_prior_path', required=True)
 parser.add_argument('-d', '--temp_dir', required=True)
-parser.add_argument('-o', '--mdl_path', required=True)
 parser.add_argument('-g', '--organism', required=True)
+parser.add_argument('-o', '--mdl_path', required=True)
 parser.add_argument('-j', '--eRegulon_out_fname', required=True)
 parser.add_argument('--order_regions_to_genes_by', required=True)
 parser.add_argument('--order_TFs_to_genes_by', required=True)
