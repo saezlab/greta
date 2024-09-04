@@ -173,3 +173,51 @@ rule tfb_scenicplus:
 # download_genome_annotations
 # motif_enrichment_dem, prepare_menr, get_search_space, region_to_gene  
 # tf_to_gene, eGRN_direct, eGRN_extended
+
+rule mdl_scenicplus:
+    input:
+        mdata = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu",
+        p2g = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv",
+        tfb = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv",
+        #tf_names_path = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt",
+        method_mdl = "SGB",
+        n_cores = 32,
+    ouput:
+        tf_gene_prior_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_gene_prior.csv"),
+        mdl = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.mdl.csv"
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        temp_dir = "/tmp",
+        order_regions_to_genes_by="importance",
+        order_TFs_to_genes_by="importance",
+        gsea_n_perm=1000,
+        quantile_thresholds_region_to_gene="0.85 0.90 0.95",
+        top_n_regionTogenes_per_gene="5 10 15",
+        top_n_regionTogenes_per_region="",
+        min_regions_per_gene=0,
+        rho_threshold=0.05,
+        min_target_genes=10,
+    shell:
+        """
+        python workflow/scripts/methods/scenicplus/mdl.py \
+        -i {input.mdata} \
+        -p {input.p2g} \
+        -t {input.tfb} \
+        -l {input.cistarget_rankings_human} \
+        -k {input.cistarget_rankings_mouse} \
+        -m {input.method_mdl} \
+        -o {output.mdl} \
+        -c {params.n_cores} \
+        -g {params.organism} \
+        --temp_dir {params.temp_dir} \
+        --order_regions_to_genes_by {params.order_regions_to_genes_by} \
+        --order_TFs_to_genes_by {params.order_TFs_to_genes_by} \
+        --gsea_n_perm {params.gsea_n_perm} \
+        --quantile_thresholds_region_to_gene {params.quantile_thresholds_region_to_gene} \
+        --top_n_regionTogenes_per_gene {params.top_n_regionTogenes_per_gene} \
+        --top_n_regionTogenes_per_region {params.top_n_regionTogenes_per_region} \
+        --min_regions_per_gene {params.min_regions_per_gene} \
+        --rho_threshold {params.rho_threshold} \
+        --min_target_genes {params.min_target_genes}
+        """
+
