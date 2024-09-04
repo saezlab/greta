@@ -307,9 +307,9 @@ def run_motif_enrichment_cistarget(
                 mode="a"
             )
 
+print([i for i in _get_foreground_background(dem_region_sets)])
 
 def run_motif_enrichment_dem(
-        bb,
         region_set_dict: Dict[str, pr.PyRanges],
         dem_db_fname: pathlib.Path,
         output_fname_dem_html: pathlib.Path,
@@ -342,7 +342,6 @@ def run_motif_enrichment_dem(
     from pycistarget.motif_enrichment_dem import (
         DEM,
     )
-    region_set_dict: Dict[str, pr.PyRanges] = {}
 
     # Read genome annotation, if needed
     if path_to_genome_annotation is not None:
@@ -380,9 +379,8 @@ def run_motif_enrichment_dem(
             motif_similarity_fdr=motif_similarity_fdr,
             orthologous_identity_threshold=orthologous_identity_threshold
         )
-        for name, foreground_region_sets, background_region_sets in bb)
- #       in _get_foreground_background(region_set_dict)
- #   )
+        for name, foreground_region_sets, background_region_sets in _get_foreground_background(region_set_dict)
+    )
     if write_html:
         all_motif_enrichment_df = pd.concat(
             ctx_result.motif_enrichment for ctx_result in dem_results
@@ -540,12 +538,10 @@ dem_motif_hit_thr = 3.0
 
 # Run DEM
 print("Running DEM")
-
 print([i for i in _get_foreground_background(dem_region_sets)])
-bb =  _get_foreground_background(dem_region_sets)
+
 
 run_motif_enrichment_dem(
-    bb,
     dem_region_sets,
     dem_db_fname=dem_scores_fname,
     output_fname_dem_result=dem_results_path,
@@ -571,7 +567,7 @@ run_motif_enrichment_dem(
     seed=555,
 )
 
-# Run cisTarget
+# Open cisTarget database
 print("Running cistarget")
 cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
     cistarget_rankings_fname,
@@ -598,7 +594,8 @@ run_motif_enrichment_cistarget(
     annotations_to_use=["Direct_annot", "Orthology_annot"]
 )
 
-
+# Reformat cistromes results, merging DEM and Cistarget pairs
+# Giving Direct and Extended cistromes
 prepare_motif_enrichment_results(
     paths_to_motif_enrichment_results=[
         dem_results_path, cistarget_results_path],
@@ -614,37 +611,37 @@ import anndata as ad
 import pandas as pd
 import polars as pl
 
+# Open cistromes direct and extended
 direct_h5ad = ad.read_h5ad(output_cistromes_annotations_direct)
 direct_h5ad.var["motifs"] = direct_h5ad.var["motifs"].astype(str)+","
 extended_h5ad = ad.read_h5ad(output_cistromes_annotations_extended)
 extended_h5ad.var["motifs"] = extended_h5ad.var["motifs"].astype(str)+","
+
+# Concat cistromes
+## Group motif per TF in var["motifs"]
 all_var = pd.concat([direct_h5ad.var, extended_h5ad.var]).reset_index().groupby("index").apply(lambda x: x.sum())
 all_var["motifs"] = all_var["motifs"].str.strip(",")
-
+## Sum anndata.X slots
 all_h5ad = ad.concat([direct_h5ad, extended_h5ad], join="outer")
-print("Above doesn't haev to be unique names")
-
 all_tfb = all_h5ad.to_df().reset_index().groupby("index").sum()
 all_h5ad = ad.AnnData(all_tfb)
-print("Here has to be unique names")
-print(len(all_h5ad.var_names.unique()), len(all_h5ad.var_names))
-print(all_h5ad.var_names)
+## Assert all regions are present only once
+assert len(all_h5ad.var_names.unique())==len(all_h5ad.var_names)
 all_h5ad.var = all_var
 print(all_h5ad.var_names)
 
+# Get max rankof motifs -- will give scenicplus TF-region score
 from scenicplus.triplet_score import get_max_rank_of_motif_for_each_TF
 max_rank = get_max_rank_of_motif_for_each_TF(all_h5ad, cistarget_rankings_fname)
 
+# Keep only actual TF-region pairs
 tfb_matrix = max_rank * all_h5ad.X.astype(bool)
+
+# Stack and rename columns
 tfb = tfb_matrix.stack().reset_index()
-print(tfb)
 tfb.columns = ["cre", "tf", "score"]
 tfb = tfb[tfb["score"]>0]
 tfb["score"] = 1/tfb["score"]
 
-#for tf, region in tfb["tf", "cre"]].to_pandas().values.T:
-#    pass
-
+# Save
 tfb.to_csv(output_tfb)
-
-
