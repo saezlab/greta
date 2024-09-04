@@ -23,17 +23,28 @@ parser.add_argument('-m', '--method', required=True)
 parser.add_argument('-c', '--n_cpu', required=True, type=int)
 parser.add_argument('-d', '--temp_dir', required=True)
 parser.add_argument('-g', '--organism', required=True)
+parser.add_argument('--order_regions_to_genes_by', type=str, required=False,
+        default="importance")
+parser.add_argument('--order_TFs_to_genes_by', type=str, required=False,
+        default="importance")
+parser.add_argument('--gsea_n_perm', type=int, required=False,
+        default=1000)
+parser.add_argument('--quantile_thresholds_region_to_gene', type=float, required=False,
+        nargs="*", default=[0.85, 0.90, 0.95])
+parser.add_argument('--top_n_regionTogenes_per_gene', type=int, required=False,
+        nargs="*", default=[5, 10, 15])
+parser.add_argument('--top_n_regionTogenes_per_region', type=int, required=False,
+        nargs="*", default=[])
+parser.add_argument('--min_regions_per_gene', required=True, type=int)
+parser.add_argument('--rho_threshold', type=float, required=False,
+        default=0.05,)
+parser.add_argument('--min_target_genes', type=int, required=False,
+        default=10,)
+
+# output
+parser.add_argument('-s', '--tf_to_gene_prior_path', required=True)
 parser.add_argument('-o', '--mdl_path', required=True)
 parser.add_argument('-j', '--eRegulon_out_fname', required=True)
-parser.add_argument('--order_regions_to_genes_by', required=True)
-parser.add_argument('--order_TFs_to_genes_by', required=True)
-parser.add_argument('--gsea_n_perm', required=True, type=int)
-parser.add_argument('--quantile_thresholds_region_to_gene', required=True, type=float)
-parser.add_argument('--top_n_regionTogenes_per_gene', required=True, type=int)
-parser.add_argument('--top_n_regionTogenes_per_region', required=True, type=int)
-parser.add_argument('--min_regions_per_gene', required=True, type=int)
-parser.add_argument('--rho_threshold', required=True, type=float)
-parser.add_argument('--min_target_genes', required=True, type=int)
 
 args = parser.parse_args()
 
@@ -218,7 +229,7 @@ infer_grn(
         rho_dichotomize_tf2g=True,
         rho_dichotomize_r2g=True,
         rho_dichotomize_eregulon=True,
-        keep_only_activating=True,
+        keep_only_activating=False,
         rho_threshold=args.rho_threshold,
         min_target_genes=args.min_target_genes,
         n_cpu=n_cpu)
