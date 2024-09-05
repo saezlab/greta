@@ -25,7 +25,7 @@ def time_to_hours(time_str):
 
 def memory_to_gb(memory_str):
     unit = memory_str[-1]
-    value = int(memory_str[:-1])
+    value = int(np.ceil(float(memory_str[:-1])))
     if unit == 'K':
         return value / 1048576.0
     elif unit == 'M':
@@ -70,9 +70,9 @@ for _, row in tqdm(list(df.iterrows())):
         ncells, ngenes = n, 16384
     else:
         continue
-    ref = pd.read_csv('datasets/{dataset}/cases/16384_16384_0/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.csv'.
+    ref = pd.read_csv('datasets/{dataset}/cases/16384_16384_0/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
                       format(dataset=ds, mth=mth))
-    net = pd.read_csv('datasets/{dataset}/cases/{ncells}_{ngenes}_{seed}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.csv'.
+    net = pd.read_csv('datasets/{dataset}/cases/{ncells}_{ngenes}_{seed}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
                       format(dataset=ds, ncells=ncells, ngenes=ngenes, seed=seed, mth=mth))
     tmp = pd.DataFrame(index=[0])
     tmp['dataset'] = ds
