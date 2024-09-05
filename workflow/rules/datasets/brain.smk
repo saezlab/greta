@@ -1,3 +1,6 @@
+SAMPLES = glob_wildcards('datasets/brain/{sample}.frags.tsv.gz').sample
+print(SAMPLES)
+
 rule download_brain:
     output:
         multi_smpl1=local('datasets/brain/multiome_original_C16007.h5'),
@@ -42,3 +45,25 @@ rule prc_annot:
         -c {input.sample_dir} 
         """
 
+
+rule callpeaks_brain:
+    threads: 4
+    input:
+        frags=expand('datasets/brain/{sample}.frags.tsv.gz', sample=SAMPLES),
+        annot='datasets/brain/annot.csv',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        tmp=temp(directory(local('datasets/brain/tmp_peaks'))),
+        peaks=local('datasets/brain/peaks.h5ad')
+    resources:
+        mem_mb=8000,
+        runtime=2160,
+    shell:
+        """
+        python workflow/scripts/datasets/callpeaks.py \
+        -f {input.frags} \
+        -a {input.annot} \
+        -t {output.tmp} \
+        -o {output.peaks}
+        """

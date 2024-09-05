@@ -23,4 +23,8 @@ samples = [x.split('.')[0] for x in samples]
 
 annot = pd.read_csv(inpath_annot)
 
-annot[annot['batch'].isin(samples)].to_csv(outpath_annot)
+annot = annot[annot['batch'].isin(samples)]
+
+annot.index = annot['barcode']
+
+annot.to_csv(outpath_annot, header=True)
