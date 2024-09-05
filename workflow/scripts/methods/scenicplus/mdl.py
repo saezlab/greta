@@ -6,12 +6,13 @@ import argparse
 import pathlib
 import numpy as np
 import os
-import joblib
 os.environ["NUMBA_CACHE_DIR"] = "/tmp"
+import joblib
 import muon as mu
 import mudata
 import pandas as pd
 import logging
+from scenicplus.cli.commands import _format_egrns
 
 log = logging.getLogger("SCENIC+")
 
@@ -169,16 +170,17 @@ def infer_grn(
         eRegulons=eRegulons,
         tf_to_gene=tf_to_gene)
 
+    print(eRegulon_metadata)
     log.info("Calculating triplet ranking.")
-    eRegulon_metadata = calculate_triplet_score(
-        cistromes=cistromes,
-        eRegulon_metadata=eRegulon_metadata,
-        ranking_db_fname=ranking_db_fname)
+#    eRegulon_metadata = calculate_triplet_score(
+ #       cistromes=cistromes,
+  #      eRegulon_metadata=eRegulon_metadata,
+   #     ranking_db_fname=ranking_db_fname)
 
     log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
-    eRegulon_metadata.to_csv(
-        eRegulon_out_fname,
-        sep="\t", header=True, index=False)
+    return eRegulon_metadata #.to_csv(
+        #eRegulon_out_fname,
+        #sep="\t", header=True, index=False)
 
 from scenicplus.utils import p_adjust_bh
 from scenicplus.grn_builder.modules import (
@@ -200,7 +202,7 @@ def build_grn(
         quantiles=(0.85, 0.90),
         top_n_regionTogenes_per_gene=(5, 10, 15),
         top_n_regionTogenes_per_region=(),
-        binarize_using_basc=False,
+        binarize_using_basc=True,
         min_regions_per_gene=0,
         rho_dichotomize_tf2g=True,
         rho_dichotomize_r2g=True,
@@ -247,6 +249,7 @@ def build_grn(
         pos_TFs = pos_TFs[c >= min_target_genes]
         neg_TFs, c = np.unique(TF2G_adj_relevant_neg["TF"], return_counts=True)
         neg_TFs = neg_TFs[c >= min_target_genes]
+        print(len(pos_TFs), len(neg_TFs))
         # The expression below will fail if there is only a single target gene (after thresholding on rho)
         # TF2G_adj_relevant_pos/neg.loc[TF] will return a pd.Series instead of dataframe
         # This should never be the case though (if min_target_genes > 1)
@@ -389,7 +392,7 @@ print(p2g.head())
 print(tf_to_gene_prior.head())
 
 # Infer eGRN
-infer_grn(
+mdl = infer_grn(
         TF_to_gene_adj=tf_to_gene_prior,
         region_to_gene_adj=p2g,
         cistromes=cistromes,
@@ -405,10 +408,12 @@ infer_grn(
         top_n_regionTogenes_per_region=args.top_n_regionTogenes_per_region,
         binarize_using_basc=True,
         min_regions_per_gene=args.min_regions_per_gene,
-        rho_dichotomize_tf2g=False,
-        rho_dichotomize_r2g=False,
+        rho_dichotomize_tf2g=True,
+        rho_dichotomize_r2g=True,
         rho_dichotomize_eregulon=True,
         keep_only_activating=False,
         rho_threshold=args.rho_threshold,
         min_target_genes=args.min_target_genes,
-        n_cpu=n_cpu)
+        n_cpu=1)
+
+mdl
