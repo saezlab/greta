@@ -178,14 +178,17 @@ rule mdl_scenicplus:
     input:
         mdata = "datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu",
         p2g = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv",
-        tfb = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv",
+        tfb = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv",
+        cistarget_rankings_human = "aertslab/cistarget/human_motif_SCREEN.regions_vs_motifs.rankings.feather",
+        cistarget_rankings_mouse = "aertslab/cistarget/mouse_motif_SCREEN.regions_vs_motifs.rankings.feather",
         #tf_names_path = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt",
-        method_mdl = "SGB",
-        n_cores = 32,
-    ouput:
-        tf_gene_prior_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_gene_prior.csv"),
-        mdl = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.mdl.csv"
+    output:
+        tf_gene_prior_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.tf_gene_prior.csv"),
+        eRegulon_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.eRegulon.csv"),
+        mdl = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv"
     params:
+        method_mdl = "GBM",
+        n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         temp_dir = "/tmp",
         order_regions_to_genes_by="importance",
@@ -197,6 +200,8 @@ rule mdl_scenicplus:
         min_regions_per_gene=0,
         rho_threshold=0.05,
         min_target_genes=10,
+    singularity:
+        'workflow/envs/scenicplus.sif'
     shell:
         """
         python workflow/scripts/methods/scenicplus/mdl.py \
@@ -205,8 +210,10 @@ rule mdl_scenicplus:
         -t {input.tfb} \
         -l {input.cistarget_rankings_human} \
         -k {input.cistarget_rankings_mouse} \
-        -m {input.method_mdl} \
+        -s {output.eRegulon_output} \
+        -j {output.tf_gene_prior_output} \
         -o {output.mdl} \
+        -m {params.method_mdl} \
         -c {params.n_cores} \
         -g {params.organism} \
         --temp_dir {params.temp_dir} \

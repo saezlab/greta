@@ -1,5 +1,6 @@
-from scenicplus.cli.commands import infer_TF_to_gene
+import kiwisolver
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from typing import List, Literal, Optional, Tuple, Set, Dict, Union
 import argparse
 import pathlib
@@ -8,8 +9,11 @@ import os
 import joblib
 os.environ["NUMBA_CACHE_DIR"] = "/tmp"
 import muon as mu
+import mudata
 import pandas as pd
+import logging
 
+log = logging.getLogger("SCENIC+")
 
 parser = argparse.ArgumentParser()
 # input
@@ -40,7 +44,6 @@ parser.add_argument('--rho_threshold', type=float, required=False,
         default=0.05,)
 parser.add_argument('--min_target_genes', type=int, required=False,
         default=10,)
-
 # output
 parser.add_argument('-s', '--tf_to_gene_prior_path', required=True)
 parser.add_argument('-o', '--mdl_path', required=True)
@@ -55,16 +58,18 @@ p2g_path = pathlib.Path(args.p2g_path)
 #tf_names_path = pathlib.Path(args.tf_names_path)
 method = args.method
 n_cpu = args.n_cpu
-tf_to_gene_prior_path = pathlib.Path(args.adj_out_fname)
+tf_to_gene_prior_path = pathlib.Path(args.tf_to_gene_prior_path)
 temp_dir = pathlib.Path(args.temp_dir)
 eRegulon_out_fname = pathlib.Path(args.eRegulon_out_fname)
 mdl_path = pathlib.Path(args.mdl_path)
 seed = 1
-if args.organism == "human":
-    ranking_db_fname = pathlib.Path(args.cistarget_db_path_human)
-elif args.organism == "mouse":
-    ranking_db_fname = pathlib.Path(args.cistarget_db_path_mouse)
 
+if args.organism == "hg38":
+    ranking_db_fname = pathlib.Path(args.cistarget_db_path_human)
+elif args.organism == "mm10":
+    ranking_db_fname = pathlib.Path(args.cistarget_db_path_mouse)
+else:
+    raise ValueError("Invalid organism")
 
 def infer_TF_to_gene(
         multiome_mudata_fname: pathlib.Path,
@@ -90,9 +95,11 @@ def infer_TF_to_gene(
         n_cpu = n_cpu,
         seed = seed)
     log.info(f"Saving TF to gene adjacencies to: {adj_out_fname.__str__()}")
-    adj.to_csv(
-        adj_out_fname,
-        sep="\t", header = True, index = False)
+
+    return adj
+#    adj.to_csv(
+ #       adj_out_fname,
+  #      sep="\t", header = True, index = False)
 
 
 def infer_grn(
@@ -180,7 +187,7 @@ multiome_mudata = mu.read(multiome_mudata_path)
 tfb = pd.read_csv(tfb_path)
 p2g = pd.read_csv(p2g_path)
 
-tf_names = list(p2g["tf"].unique())
+tf_names = list(tfb["tf"].unique())
 
 # TF to gene relationships
 tf_to_gene_prior = infer_TF_to_gene(
@@ -192,6 +199,7 @@ tf_to_gene_prior = infer_TF_to_gene(
         n_cpu=n_cpu,
         seed=seed)
 
+tf_to_gene_prior.to_csv("a.csv")
 
 # Format p2g
 p2g = p2g.rename(columns={
@@ -199,15 +207,29 @@ p2g = p2g.rename(columns={
     "gene": "target",
     "score": "importance_x_rho",
     })
+p2g["importance_x_rho"][:100] = p2g["importance_x_rho"][:100]*(-1)
 p2g["rho"] = np.sign(p2g["importance_x_rho"])
 p2g["importance_x_abs_rho"] = np.abs(p2g["importance_x_rho"])
 p2g["importance"] = p2g["importance_x_rho"]
 
-p2g = p2g[["region", "target", "tf", "importance", "rho", "importance_x_abs_rho"]]
+p2g = p2g[["region", "target", "importance", "rho", "importance_x_rho", "importance_x_abs_rho"]]
 
 
-# Build cistromes from tfb
-cistromes = 
+# Format tfb and build cistromes
+import polars as pl
+import anndata as ad
+tfb = tfb[["cre", "tf", "score"]]
+tfb["cre"] = tfb["cre"].str.replace(":", "-")
+
+tfb.columns = ["region", "tf", "score"]
+cistromes = tfb[["region", "tf", "score"]]
+cistromes = pl.DataFrame(cistromes).pivot(index="region", columns="tf", values="score").to_pandas()
+cistromes = cistromes.set_index("region").astype(bool)
+cistromes = ad.AnnData(cistromes)
+print(cistromes.var_names, cistromes.obs_names)
+
+print(p2g.head())
+print(tf_to_gene_prior.head())
 
 # Infer eGRN
 infer_grn(
@@ -221,13 +243,13 @@ infer_grn(
         order_regions_to_genes_by=args.order_regions_to_genes_by,
         order_TFs_to_genes_by=args.order_TFs_to_genes_by,
         gsea_n_perm=args.gsea_n_perm,
-        quantiles=[int(i) for i in args.quantile_thresholds_region_to_gene.split(" ")],
-        top_n_regionTogenes_per_gene=[int(i) for i in args.top_n_regionTogenes_per_gene.split(" ")],
-        top_n_regionTogenes_per_region=[int(i) for i in args.top_n_regionTogenes_per_region.split(" ")],
+        quantiles=args.quantile_thresholds_region_to_gene,
+        top_n_regionTogenes_per_gene=args.top_n_regionTogenes_per_gene,
+        top_n_regionTogenes_per_region=args.top_n_regionTogenes_per_region,
         binarize_using_basc=True,
         min_regions_per_gene=args.min_regions_per_gene,
-        rho_dichotomize_tf2g=True,
-        rho_dichotomize_r2g=True,
+        rho_dichotomize_tf2g=False,
+        rho_dichotomize_r2g=False,
         rho_dichotomize_eregulon=True,
         keep_only_activating=False,
         rho_threshold=args.rho_threshold,

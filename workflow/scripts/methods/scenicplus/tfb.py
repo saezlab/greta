@@ -642,6 +642,6 @@ tfb = tfb_matrix.stack().reset_index()
 tfb.columns = ["cre", "tf", "score"]
 tfb = tfb[tfb["score"]>0]
 tfb["score"] = 1/tfb["score"]
-
+tfb["cre"] = tfb["cre"].str.replace(":", "-")
 # Save
 tfb.to_csv(output_tfb)
