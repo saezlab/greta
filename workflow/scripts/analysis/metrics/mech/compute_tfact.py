@@ -3,6 +3,7 @@ import numpy as np
 import decoupler as dc
 import mudata as mu
 import os
+import json
 import argparse
 
 
@@ -10,18 +11,21 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--grn_path', required=True)
 parser.add_argument('-b','--bnc_path', required=True)
-parser.add_argument('-c','--cats', required=True, nargs='+')
+parser.add_argument('-c','--cats_path', required=True)
 parser.add_argument('-o','--out_path', required=True)
 args = vars(parser.parse_args())
 
 grn_path = args['grn_path']
 bnc_path = args['bnc_path']
-cats = args['cats']
+cats_path = args['cats_path']
 out_path = args['out_path']
 
 # Extract names and path
 grn_name = os.path.basename(grn_path).replace('.grn.csv', '')
 data_path = os.path.join(os.path.dirname(os.path.dirname(grn_path)), 'mdata.h5mu')
+dataset = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(data_path))))
+case = os.path.basename(os.path.dirname(data_path))
+rsc_name = os.path.basename(bnc_path)
 
 # Read GRN
 grn = pd.read_csv(grn_path)
@@ -36,9 +40,13 @@ if grn.shape[0] > 0:
     obs = pd.read_csv(os.path.join(bnc_path, 'meta.csv'), index_col=0)
     
     # Subset bench data to dataset
-    msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
-    obs = obs.loc[msk, :]
-    mat = mat.loc[msk, :]
+    with open(cats_path) as f:
+        cats = json.load(f)[dataset][case]
+    if rsc_name in cats:
+        cats = cats[rsc_name]
+        msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
+        obs = obs.loc[msk, :]
+        mat = mat.loc[msk, :]
 
     # Compute TF activities
     acts = []
