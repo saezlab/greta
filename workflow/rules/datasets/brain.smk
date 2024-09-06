@@ -1,5 +1,3 @@
-SAMPLES = glob_wildcards('datasets/brain/{sample}.frags.tsv.gz').sample
-print(SAMPLES)
 
 rule download_brain:
     output:
@@ -26,10 +24,14 @@ rule download_brain:
 
         """
 
+SAMPLES = glob_wildcards('datasets/brain/{sample}.frags.tsv.gz').sample
+print(SAMPLES)
+
+
 rule prc_annot:
     input:
         raw_annot=local('datasets/brain/raw_annot.csv'),
-        sample_dir=local(directory('datasets/brain/'))
+        sample_dir=local('datasets/brain/')
     
     output:
         annot=local('datasets/brain/annot.csv')
@@ -66,4 +68,28 @@ rule callpeaks_brain:
         -a {input.annot} \
         -t {output.tmp} \
         -o {output.peaks}
+        """
+
+
+rule annotate_brain:
+    input:
+        path_gex=expand('datasets/brain/multiome_original_{sample}.h5', sample=SAMPLES),
+        path_peaks='datasets/brain/peaks.h5ad',
+        path_annot='datasets/brain/annot.csv',
+        path_geneids='geneids/'
+    output:
+        'datasets/brain/annotated.h5mu'
+    singularity:
+        'workflow/envs/gretabench.sif'
+    params:
+        organism=config['datasets']['brain']['organism']
+    shell:
+        """
+        python workflow/scripts/datasets/brain/brain.py \
+        -a {input.path_gex} \
+        -b {input.path_peaks} \
+        -c {input.path_annot} \
+        -d {input.path_geneids} \
+        -e {params.organism} \
+        -f {output}
         """
