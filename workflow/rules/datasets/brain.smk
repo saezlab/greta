@@ -1,9 +1,9 @@
 
+SAMPLES = config['datasets']['brain']['samples']
+
 rule download_brain:
     output:
-        tar=local('datasets/brain/GSE193688.tar')
-        frags=local('datasets/brain/')
-        multi=local
+        tar=local('datasets/brain/GSE193688.tar'), 
         annot=local('datasets/brain/raw_annot.csv')
 
     params:
@@ -14,13 +14,26 @@ rule download_brain:
     shell:
         """
         data_path=$(dirname {output.tar})
-
+ 
         echo "Downloading tar file"
         wget '{params.full_dataset}' -O '{output.tar}'
         wget '{params.annot}' -O '{output.annot}'
+    
+        """
+
+rule extract_files:
+    input:
+        tar=local('datasets/brain/GSE193688.tar')
+    output:
+        frag=local(expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES)),
+        multi=local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES))
+    shell:
+        """
+        data_path=$(dirname {input.tar})
 
         echo "Extracting files and removing archive"
-        tar -xvf '{output.tar}' -C $data_path
+        tar -xvf '{input.tar}' -C $data_path
+        rm '{input.tar}'
 
         echo "Removing disease samples"
         rm $data_path/*_P* 
@@ -29,22 +42,20 @@ rule download_brain:
         rm $data_path/*peaks.bed.gz
 
         echo "Rename files"
-        (cd $data_path && for x in *; do    mv $x `echo $x | cut -c 12-`; done)
-        
+        (cd $data_path && for x in GSM*; do    mv $x `echo $x | cut -c 12-`; done)
 
         """
-
-SAMPLES = glob_wildcards('datasets/brain/{sample}_atac_fragments.tsv.gz').sample
-print(SAMPLES)
 
 
 rule prc_annot:
     input:
         raw_annot=local('datasets/brain/raw_annot.csv'),
-        sample_dir=local('datasets/brain/')
-    
+        multi=local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES))
     output:
         annot=local('datasets/brain/annot.csv')
+
+    params:
+        sample_dir=local('datasets/brain/')
 
     singularity:
         'workflow/envs/gretabench.sif'
@@ -54,7 +65,7 @@ rule prc_annot:
         python workflow/scripts/datasets/brain/prc_annot.py \
         -a {input.raw_annot} \
         -b {output.annot} \
-        -c {input.sample_dir} 
+        -c {params.sample_dir} 
         """
 
 
@@ -62,7 +73,7 @@ rule callpeaks_brain:
     threads: 4
     input:
         frags=expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES),
-        annot='datasets/brain/annot.csv',
+        annot='datasets/brain/annot.csv'
     singularity:
         'workflow/envs/gretabench.sif'
     output:

@@ -41,8 +41,7 @@ for r in rnas:
     r.obs_names_make_unique()
     r.obs_names = [b.split('-1')[0] for b in r.obs_names]
     
-sample_ids = [x for x in os.listdir(path_gex) if x.endswith(".h5")]
-sample_ids = [x.split('_')[0] for x in sample_ids]
+sample_ids = [os.path.basename(p).split('_')[0]for p in path_gex]
 
 for i in range(0, len(sample_ids)):
     rnas[i].obs_names = sample_ids[i] + '_' + rnas[i].obs_names
