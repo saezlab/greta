@@ -152,8 +152,10 @@ region_bin_topics_otsu = binarize_topics(
     cistopic_obj, method='otsu',
     plot=True, num_columns=5
 )
+
+n_top = int(min(3_000, len(mudata_file["atac"].var_names)/5))
 region_bin_topics_top_3k = binarize_topics(
-    cistopic_obj, method='ntop', ntop=3_000,
+    cistopic_obj, method='ntop', ntop=n_top,
     plot=True, num_columns=5
 )
 
@@ -307,7 +309,6 @@ def run_motif_enrichment_cistarget(
                 mode="a"
             )
 
-print([i for i in _get_foreground_background(dem_region_sets)])
 
 def run_motif_enrichment_dem(
         region_set_dict: Dict[str, pr.PyRanges],
@@ -538,8 +539,6 @@ dem_motif_hit_thr = 3.0
 
 # Run DEM
 print("Running DEM")
-print([i for i in _get_foreground_background(dem_region_sets)])
-
 
 run_motif_enrichment_dem(
     dem_region_sets,
@@ -628,7 +627,6 @@ all_h5ad = ad.AnnData(all_tfb)
 ## Assert all regions are present only once
 assert len(all_h5ad.var_names.unique())==len(all_h5ad.var_names)
 all_h5ad.var = all_var
-print(all_h5ad.var_names)
 
 # Get max rankof motifs -- will give scenicplus TF-region score
 from scenicplus.triplet_score import get_max_rank_of_motif_for_each_TF
