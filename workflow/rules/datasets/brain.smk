@@ -1,30 +1,40 @@
 
 rule download_brain:
     output:
-        multi_smpl1=local('datasets/brain/multiome_original_C16007.h5'),
-        frags_smpl1=local('datasets/brain/C16007.frags.tsv.gz'),
-        multi_smpl2=local('datasets/brain/multiome_original_YC4345.h5'),
-        frags_smpl2=local('datasets/brain/YC4345.frags.tsv.gz'),
+        tar=local('datasets/brain/GSE193688.tar')
+        frags=local('datasets/brain/')
+        multi=local
         annot=local('datasets/brain/raw_annot.csv')
 
     params:
-        multi_smpl1=config['datasets']['brain']['url']['multi_smpl1'],
-        frags_smpl1=config['datasets']['brain']['url']['frags_smpl1'],
-        multi_smpl2=config['datasets']['brain']['url']['multi_smpl2'],
-        frags_smpl2=config['datasets']['brain']['url']['frags_smpl2'],
+        full_dataset=config['datasets']['brain']['url']['full_dataset'],
         annot=config['datasets']['brain']['url']['annot']
+
 
     shell:
         """
-        wget '{params.frags_smpl1}' -O '{output.frags_smpl1}'
-        wget '{params.multi_smpl1}' -O '{output.multi_smpl1}'
-        wget '{params.frags_smpl2}' -O '{output.frags_smpl2}'
-        wget '{params.multi_smpl2}' -O '{output.multi_smpl2}'
+        data_path=$(dirname {output.tar})
+
+        echo "Downloading tar file"
+        wget '{params.full_dataset}' -O '{output.tar}'
         wget '{params.annot}' -O '{output.annot}'
+
+        echo "Extracting files and removing archive"
+        tar -xvf '{output.tar}' -C $data_path
+
+        echo "Removing disease samples"
+        rm $data_path/*_P* 
+
+        echo "Removing peak files"
+        rm $data_path/*peaks.bed.gz
+
+        echo "Rename files"
+        (cd $data_path && for x in *; do    mv $x `echo $x | cut -c 12-`; done)
+        
 
         """
 
-SAMPLES = glob_wildcards('datasets/brain/{sample}.frags.tsv.gz').sample
+SAMPLES = glob_wildcards('datasets/brain/{sample}_atac_fragments.tsv.gz').sample
 print(SAMPLES)
 
 
@@ -51,7 +61,7 @@ rule prc_annot:
 rule callpeaks_brain:
     threads: 4
     input:
-        frags=expand('datasets/brain/{sample}.frags.tsv.gz', sample=SAMPLES),
+        frags=expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES),
         annot='datasets/brain/annot.csv',
     singularity:
         'workflow/envs/gretabench.sif'
@@ -73,7 +83,7 @@ rule callpeaks_brain:
 
 rule annotate_brain:
     input:
-        path_gex=expand('datasets/brain/multiome_original_{sample}.h5', sample=SAMPLES),
+        path_gex=expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES),
         path_peaks='datasets/brain/peaks.h5ad',
         path_annot='datasets/brain/annot.csv',
         path_geneids='geneids/'

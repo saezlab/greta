@@ -18,8 +18,8 @@ path_samples = args['path_samples']
 # Get samples 
 
 samples = [x for x in os.listdir(path_samples) if x.endswith(".h5")]
-samples = [x.split('_')[-1] for x in samples]
-samples = [x.split('.')[0] for x in samples]
+samples = [x.split('_')[0] for x in samples]
+
 
 annot = pd.read_csv(inpath_annot)
 
