@@ -406,6 +406,7 @@ p2g = p2g[p2g["importance"] != 0]
 p2g = p2g.loc[:, ["target", "region", "importance_x_rho"]]
 p2g.columns = ["gene", "cre", "score"]
 p2g = p2g[p2g["score"] != 0]
+p2g["cre"] = p2g["cre"].str.replace(":", "-")
 print(p2g)
 
-p2g.to_csv(args.output)
+p2g.to_csv(args.output, index=False)
