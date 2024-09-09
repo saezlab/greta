@@ -129,7 +129,7 @@ def infer_grn(
     """
     Pass TF_to_gene_adj, region_to_gene_adj, cistromes directly
     """
-    from scenicplus.triplet_score import calculate_triplet_score
+    #from scenicplus.triplet_score import calculate_triplet_score
     log.info("Loading TF to gene adjacencies.")
     tf_to_gene = TF_to_gene_adj
 
@@ -172,10 +172,10 @@ def infer_grn(
 
     print(eRegulon_metadata)
     log.info("Calculating triplet ranking.")
-#    eRegulon_metadata = calculate_triplet_score(
- #       cistromes=cistromes,
-  #      eRegulon_metadata=eRegulon_metadata,
-   #     ranking_db_fname=ranking_db_fname)
+    eRegulon_metadata = calculate_triplet_score(
+        cistromes=cistromes,
+        eRegulon_metadata=eRegulon_metadata,
+        ranking_db_fname=ranking_db_fname)
 
     log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
     return eRegulon_metadata #.to_csv(
@@ -187,6 +187,10 @@ from scenicplus.grn_builder.modules import (
     create_emodules, eRegulon, merge_emodules, RHO_THRESHOLD, TARGET_GENE_NAME)
 from scenicplus.grn_builder.gsea import run_gsea
 from scenicplus.grn_builder.gsea_approach import _run_gsea_for_e_module
+from scenicplus.triplet_score import (
+        get_max_rank_of_motif_for_each_TF,
+        _rank_scores_and_assign_random_ranking_in_range_for_ties,
+        _calculate_cross_species_rank_ratio_with_order_statistics)
 import anndata
 from tqdm import tqdm
 
@@ -342,6 +346,51 @@ def build_grn(
     return e_modules_to_return
 
 
+def calculate_triplet_score(
+        TF_to_region_score: pd.DataFrame,
+        eRegulon_metadata: pd.DataFrame,
+        ) -> pd.DataFrame:
+    """
+        Calculate the triplet score for each eRegulon.
+        Adapted from SCENIC+ to take tfb scores instead of rank comigng from cistarget_db.
+        TF_to_region_score: pd.DataFrame, should contain the following columns: 
+                - tf
+                - cre
+                - score
+    """
+
+    eRegulon_metadata = eRegulon_metadata.copy()
+
+    TF_region_iter = eRegulon_metadata[["TF", "Region"]].to_numpy()
+    TF_to_region_score = np.array([
+        TF_to_region_score[
+            (TF_to_region_score["tf"] == TF) &
+            (TF_to_region_score["cre"] == region)]["score"].values[0]
+        for TF, region in TF_region_iter])
+
+    TF_to_gene_score = eRegulon_metadata["importance_TF2G"].to_numpy()
+    region_to_gene_score = eRegulon_metadata["importance_R2G"].to_numpy()
+    # rank the scores
+    TF_to_region_rank = _rank_scores_and_assign_random_ranking_in_range_for_ties(
+        TF_to_region_score) # positive since higher score is better here
+    TF_to_gene_rank = _rank_scores_and_assign_random_ranking_in_range_for_ties(
+        TF_to_gene_score)
+    region_to_gene_rank = _rank_scores_and_assign_random_ranking_in_range_for_ties(
+        region_to_gene_score)
+    # create rank ratios
+    TF_to_gene_rank_ratio = (TF_to_gene_rank.astype(np.float64) + 1) / TF_to_gene_rank.shape[0]
+    region_to_gene_rank_ratio = (region_to_gene_rank.astype(np.float64) + 1) / region_to_gene_rank.shape[0]
+    TF_to_region_rank_ratio = (TF_to_region_rank.astype(np.float64) + 1) / TF_to_region_rank.shape[0]
+    # create aggregated rank
+    rank_ratios = np.array([
+        TF_to_gene_rank_ratio, region_to_gene_rank_ratio, TF_to_region_rank_ratio])
+    aggregated_rank = np.zeros((rank_ratios.shape[1],), dtype = np.float64)
+    for i in range(rank_ratios.shape[1]):
+        aggregated_rank[i] = _calculate_cross_species_rank_ratio_with_order_statistics(rank_ratios[:, i])
+    eRegulon_metadata["triplet_rank"] = aggregated_rank.argsort().argsort()
+    return eRegulon_metadata
+
+
 # Load data
 multiome_mudata = mu.read(multiome_mudata_path)
 tfb = pd.read_csv(tfb_path)
@@ -351,13 +400,13 @@ tf_names = list(tfb["tf"].unique())
 
 # TF to gene relationships
 tf_to_gene_prior = infer_TF_to_gene(
-        multiome_mudata_fname=multiome_mudata_path,
-        tf_names=tf_names,
-        temp_dir=temp_dir,
-        adj_out_fname=tf_to_gene_prior_path,
-        method=method,
-        n_cpu=n_cpu,
-        seed=seed)
+    multiome_mudata_fname=multiome_mudata_path,
+    tf_names=tf_names,
+    temp_dir=temp_dir,
+    adj_out_fname=tf_to_gene_prior_path,
+    method=method,
+    n_cpu=n_cpu,
+    seed=seed)
 
 tf_to_gene_prior.to_csv("a.csv")
 
@@ -393,27 +442,27 @@ print(tf_to_gene_prior.head())
 
 # Infer eGRN
 mdl = infer_grn(
-        TF_to_gene_adj=tf_to_gene_prior,
-        region_to_gene_adj=p2g,
-        cistromes=cistromes,
-        eRegulon_out_fname=eRegulon_out_fname,
-        ranking_db_fname=ranking_db_fname,
-        is_extended=True,
-        temp_dir=temp_dir,
-        order_regions_to_genes_by=args.order_regions_to_genes_by,
-        order_TFs_to_genes_by=args.order_TFs_to_genes_by,
-        gsea_n_perm=args.gsea_n_perm,
-        quantiles=args.quantile_thresholds_region_to_gene,
-        top_n_regionTogenes_per_gene=args.top_n_regionTogenes_per_gene,
-        top_n_regionTogenes_per_region=args.top_n_regionTogenes_per_region,
-        binarize_using_basc=True,
-        min_regions_per_gene=args.min_regions_per_gene,
-        rho_dichotomize_tf2g=True,
-        rho_dichotomize_r2g=True,
-        rho_dichotomize_eregulon=True,
-        keep_only_activating=False,
-        rho_threshold=args.rho_threshold,
-        min_target_genes=args.min_target_genes,
-        n_cpu=1)
+    TF_to_gene_adj=tf_to_gene_prior,
+    region_to_gene_adj=p2g,
+    cistromes=cistromes,
+    eRegulon_out_fname=eRegulon_out_fname,
+    ranking_db_fname=ranking_db_fname,
+    is_extended=True,
+    temp_dir=temp_dir,
+    order_regions_to_genes_by=args.order_regions_to_genes_by,
+    order_TFs_to_genes_by=args.order_TFs_to_genes_by,
+    gsea_n_perm=args.gsea_n_perm,
+    quantiles=args.quantile_thresholds_region_to_gene,
+    top_n_regionTogenes_per_gene=args.top_n_regionTogenes_per_gene,
+    top_n_regionTogenes_per_region=args.top_n_regionTogenes_per_region,
+    binarize_using_basc=True,
+    min_regions_per_gene=args.min_regions_per_gene,
+    rho_dichotomize_tf2g=True,
+    rho_dichotomize_r2g=True,
+    rho_dichotomize_eregulon=True,
+    keep_only_activating=False,
+    rho_threshold=args.rho_threshold,
+    min_target_genes=args.min_target_genes,
+    n_cpu=1)
 
 mdl
