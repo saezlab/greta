@@ -84,18 +84,9 @@ atac = ad.read_h5ad(path_peaks)
 # Filter ATAC data based on barmap and RNA
 atac = atac[atac.obs_names.isin(rna.obs_names)]
 
-#Make sure barcodes match in RNA add ATAC before merging to mudata
+# Make sure barcodes match in RNA add ATAC before merging to mudata
 rna = rna[rna.obs_names.sort_values(), :]
 atac = atac[atac.obs_names.sort_values()]
-
-# Add celltype annotation to RNA data
-rna.obs['celltype'] = barmap['celltype']
-rna.obs['batch'] = barmap['batch']
-
-# Add celltype annotation to ATAC data
-atac.obs['celltype'] = barmap['celltype']
-atac.obs['batch'] = barmap['batch']
-
 
 # Create mdata
 mdata = md.MuData(
