@@ -1365,4 +1365,8 @@ pre_atac.var_names = \
      "-" + pre_atac.var["End"].astype(str)).values
 pre_mudata = mu.MuData({"rna": new_mudata["scRNA"], "atac": pre_atac})
 
+# Add counts layers
+pre_mudata["atac"].layers["counts"] = pre_mudata["atac"].X.copy()
+pre_mudata["rna"].layers["counts"] = mudata["rna"].X.copy()
+
 pre_mudata.write_h5mu(output_fname)
