@@ -28,6 +28,16 @@ methods:
         nvar_thresh: 2
         min_genes_per_module: 3
 
+colors:
+    nets:
+        celloracle: '#1f77b4'
+        figr: '#ff7f0e'
+        granie: '#2ca02c'
+        pando: '#d62728'
+        random: 'black'
+        collectri: '#9467bd'
+        dorothea: '#8c564b'
+
 # Datasets
 datasets:
     pbmc10k:
@@ -66,14 +76,19 @@ datasets:
         cases:
             all:
                 celltypes: 'all'
-                n_hvg: 8192
-                n_hvr: 32768
+                n_hvg: 16384
+                n_hvr: 65536
                 root: 'Fibroblast-like'
     pitupair:
         organism: 'hg38'
         url:
             frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
             multi: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     pitunpair:
         organism: 'hg38'
         url:
@@ -82,6 +97,11 @@ datasets:
             rna_mtx: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391775/suppl/GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             atac_meta: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
             celltypes: 'https://heibox.uni-heidelberg.de/f/d36511f7f94947859564/?dl=1'
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     heartatlas:
         organism: 'hg38'
         url:
