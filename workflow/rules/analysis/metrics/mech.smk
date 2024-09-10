@@ -5,7 +5,7 @@ rule compute_tfact_knocktf:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/mech/tfact/knocktf/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/mech/tfact/knocktf/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         cats='config/prior_cats.json',
     shell:
@@ -25,7 +25,7 @@ rule compute_prtrb_knocktf:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/mech/prtrb/knocktf/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/mech/prtrb/knocktf/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         cats='config/prior_cats.json',
     resources:

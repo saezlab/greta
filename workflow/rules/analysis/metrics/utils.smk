@@ -1,7 +1,7 @@
 rule aggr_type_task_resource:
     input:
         make_combs(
-            path='analysis/metrics/{type}/{task}/{resource}/{dataset}.{case}.',
+            path='analysis/metrics/{type}/{task}/{resource}/{dataset}.{case}/',
             mthds=mthds,
             name='scores',
         )

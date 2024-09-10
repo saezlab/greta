@@ -4,7 +4,7 @@ rule prior_tfm:
         resource='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/tfm/{resource}/{resource}.csv',
         cats='config/prior_cats.json',
     output:
-        temp(local('analysis/metrics/prior/tfm/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/prior/tfm/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
         """
         python workflow/scripts/analysis/metrics/prior/compute_tfm.py \
@@ -20,7 +20,7 @@ rule prior_tfbind:
         resource='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/tfbind/{resource}/{resource}.bed',
         cats='config/prior_cats.json',
     output:
-        temp(local('analysis/metrics/prior/tfbind/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/prior/tfbind/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         grp='source',
     shell:
@@ -39,7 +39,7 @@ rule prior_cre:
         resource='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/cre/{resource}/{resource}.bed',
         cats='config/prior_cats.json',
     output:
-        temp(local('analysis/metrics/prior/cre/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/prior/cre/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
         """
         python workflow/scripts/analysis/metrics/prior/compute_gnm.py \
@@ -55,7 +55,7 @@ rule prior_eqtl:
         resource='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/eqtl/{resource}/{resource}.bed',
         cats='config/prior_cats.json',
     output:
-        temp(local('analysis/metrics/prior/eqtl/{resource}/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/prior/eqtl/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         grp='target',
     shell:

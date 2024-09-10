@@ -4,7 +4,7 @@ rule pred_omics_gtf:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/pred/omics/gtf/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/pred/omics/gtf/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         col_source='source',
         col_target='target',
@@ -28,7 +28,7 @@ rule pred_omics_cretf:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/pred/omics/cretf/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/pred/omics/cretf/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         col_source='source',
         col_target='cre',
@@ -52,7 +52,7 @@ rule pred_omics_gcre:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/pred/omics/gcre/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/pred/omics/gcre/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         col_source='cre',
         col_target='target',
@@ -76,7 +76,7 @@ rule pred_pathway_kegg:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/pred/pathway/kegg/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/pred/pathway/kegg/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         kegg_path='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/spred/pways/allkegg.csv'
     shell:
@@ -94,7 +94,7 @@ rule pred_pathway_hall:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/pred/pathway/hall/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/pred/pathway/hall/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         hall_path='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/spred/pways/hall.csv'
     shell:
@@ -112,7 +112,7 @@ rule pred_pathway_reac:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        temp(local('analysis/metrics/pred/pathway/reac/{dataset}.{case}.{pre}.{p2g}.{tfb}.{mdl}.scores.csv'))
+        'analysis/metrics/pred/pathway/reac/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         reac_path='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/spred/pways/reac.csv'
     shell:
