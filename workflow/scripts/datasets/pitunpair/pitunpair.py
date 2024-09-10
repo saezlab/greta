@@ -40,7 +40,7 @@ _datasets.path = Path(path_tmp)
 
 
 # Read barmap
-barmap = pd.read_csv(path_barmap)
+barmap = pd.read_csv(path_barmap, index_col=0)
 
 
 # Read data
@@ -52,7 +52,7 @@ rna.var.index.name = None
 rna = rna[rna.obs_names.isin(barmap['RNA'])]
 barmap = barmap.sort_values(by='RNA')
 rna = rna[rna.obs_names.sort_values(), :]
-rna.obs_names = barmap['barcodes']
+rna.obs_names = barmap.index
 
 # Rename barcodes RNA
 sample_id = 'smpl'
@@ -100,7 +100,7 @@ atac.obs['batch'] = barmap['batch']
 # Create mdata
 mdata = md.MuData(
     {'rna': rna, 'atac': atac,},
-    obs=obs
+    obs=barmap
 )
 
 # Write

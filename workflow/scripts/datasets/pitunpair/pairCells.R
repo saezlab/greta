@@ -31,6 +31,9 @@ table(isATAC) # ATAC vs RNA
 ATAC_PCs <- CCA_PCs[isATAC,]
 RNA_PCs <- CCA_PCs[!isATAC,]
 
+library('optmatch')
+setMaxProblemSize(size = Inf)
+
 pairing <- pairCells(ATAC = ATAC_PCs,
             RNA = RNA_PCs,
             keepUnique = TRUE)
@@ -52,7 +55,7 @@ pairingClean$celltype <- celltypes$celltype
 
 # Format and rename
 rownames(pairingClean) <- pairingClean$ATAC
-barmap$pairingClean <- c("smpl")
+pairingClean$batch <- c("smpl")
 colnames(pairingClean) <- c("barcodes", "RNA", "celltype", "batch")
 
 
