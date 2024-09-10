@@ -1,7 +1,7 @@
 rule download_pitunpair:
     output:
-        gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
-        peaks='datasets/pitunpair/peaks.original.h5',
+        gex=temp(local('datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
+        peaks=temp(local('datasets/pitunpair/peaks.original.h5')),
         frags='datasets/pitunpair/smpl.frags.tsv.gz',
         celltypes='datasets/pitunpair/celltypes.csv'
     params:
@@ -61,12 +61,12 @@ rule coembedd_pitunpair:
 
 rule pairCells_pitunpair:
     input:
-        exprMat=local('datasets/pitunpair/exprMat.rds'),
-        atacSE=local('datasets/pitunpair/atac.se.rds'),
-        cca=local('datasets/pitunpair/cca.rds'),
+        exprMat='datasets/pitunpair/exprMat.rds',
+        atacSE='datasets/pitunpair/atac.se.rds',
+        cca='datasets/pitunpair/cca.rds',
         celltypes='datasets/pitunpair/celltypes.csv',
     output:
-        barMap=local('datasets/pitunpair/barMap.csv')
+        barMap='datasets/pitunpair/barMap.csv'
     singularity:
         'workflow/envs/figr.sif'
     shell:
@@ -88,7 +88,7 @@ rule callpeaks_pitunpair:
         'workflow/envs/gretabench.sif'
     output:
         tmp=temp(directory(local('datasets/pitunpair/tmp_peaks'))),
-        peaks=local('datasets/pitunpair/peaks.h5ad')
+        peaks='datasets/pitunpair/peaks.h5ad'
     resources:
         mem_mb=32000,
     shell:
@@ -109,7 +109,6 @@ rule annotate_pitunpair:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        tmp=temp(directory(local('datasets/pitunpair/tmp_annot'))),
         out='datasets/pitunpair/annotated.h5mu'
     params:
         organism=config['datasets']['pitunpair']['organism'],
@@ -118,7 +117,6 @@ rule annotate_pitunpair:
     shell:
         """
         python workflow/scripts/datasets/pitunpair/pitunpair.py \
-        -a {output.tmp} \
         -c {input.g} \
         -d {params.organism} \
         -e {input.peaks} \

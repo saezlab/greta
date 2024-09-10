@@ -1,7 +1,7 @@
 rule download_pitupair:
     output:
         multi=temp(local('datasets/pitupair/multiome_original.h5')),
-        frags=temp(local('datasets/pitupair/smpl.frags.tsv.gz'))
+        frags='datasets/pitupair/smpl.frags.tsv.gz'
     params:
         multi=config['datasets']['pitupair']['url']['multi'],
         frags=config['datasets']['pitupair']['url']['frags'],

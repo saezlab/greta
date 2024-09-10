@@ -5,13 +5,11 @@ import pandas as pd
 import numpy as np
 import anndata as ad
 import mudata as md
-from snapatac2.datasets import _datasets, datasets
 import argparse
 
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-a','--path_tmp', required=True)
 parser.add_argument('-c','--path_geneids', required=True)
 parser.add_argument('-d','--organism', required=True)
 parser.add_argument('-e','--path_peaks', required=True)
@@ -20,7 +18,6 @@ parser.add_argument('-g','--path_expr', required=True)
 parser.add_argument('-i', '--path_barmap', required=True)
 args = vars(parser.parse_args())
 
-path_tmp = args['path_tmp']
 path_barmap = args['path_barmap']
 path_geneids = args['path_geneids']
 organism = args['organism']
@@ -31,13 +28,6 @@ path_expr = args['path_expr']
 # Read gene ids
 path_geneids = os.path.join(path_geneids, organism + '.csv')
 geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
-
-# Change default cache dir
-if not os.path.exists(path_tmp):
-    os.mkdir(path_tmp)
-_datasets = datasets()
-_datasets.path = Path(path_tmp)
-
 
 # Read barmap
 barmap = pd.read_csv(path_barmap, index_col=0)
