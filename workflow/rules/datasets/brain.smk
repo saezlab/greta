@@ -35,9 +35,6 @@ rule extract_files:
         tar -xvf '{input.tar}' -C $data_path
         rm '{input.tar}'
 
-        echo "Removing disease samples"
-        rm $data_path/*_P* 
-
         echo "Removing peak files"
         rm $data_path/*peaks.bed.gz
 
