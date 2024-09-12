@@ -65,10 +65,10 @@ rule pre_scenicplus:
         annot_h = "aertslab/genomes/hg38/hg38_ensdb_v86.csv"
     output:
         d = 'datasets/{dataset}/cases/{case}/runs/scenicplus.pre.h5mu',
-        tmp_scenicplus = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp')))
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
+        tmp_scenicplus = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))), 
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores = 32
     shell:
@@ -79,7 +79,7 @@ rule pre_scenicplus:
         -m {input.chrom_sizes_m} \
         -j {input.chrom_sizes_h} \
         -o {output.d} \
-        -t {output.tmp_scenicplus} \
+        -t {params.tmp_scenicplus} \
         -g {params.organism} \
         -n {params.n_cores} \
         -a {input.annot_m} \
@@ -94,7 +94,7 @@ rule p2g_scenicplus:
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
-        temp_dir = temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus_tmp'))),
+        temp_dir = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp/{pre}'))),
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         # Minimum and maximum (up until another gene) number of bps upstream to include in the search space.
@@ -183,8 +183,8 @@ rule mdl_scenicplus:
         cistarget_rankings_mouse = "aertslab/cistarget/mouse_motif_SCREEN.regions_vs_motifs.rankings.feather",
         #tf_names_path = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt",
     output:
-        tf_gene_prior_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.tf_gene_prior.csv"),
-        eRegulon_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.eRegulon.csv"),
+#        tf_gene_prior_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.tf_gene_prior.csv"),
+#        eRegulon_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.eRegulon.csv"),
         mdl = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv"
     params:
         method_mdl = "GBM",
@@ -210,8 +210,6 @@ rule mdl_scenicplus:
         -t {input.tfb} \
         -l {input.cistarget_rankings_human} \
         -k {input.cistarget_rankings_mouse} \
-        -s {output.eRegulon_output} \
-        -j {output.tf_gene_prior_output} \
         -o {output.mdl} \
         -m {params.method_mdl} \
         -c {params.n_cores} \

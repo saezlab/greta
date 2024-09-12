@@ -46,9 +46,9 @@ parser.add_argument('--rho_threshold', type=float, required=False,
 parser.add_argument('--min_target_genes', type=int, required=False,
         default=10,)
 # output
-parser.add_argument('-s', '--tf_to_gene_prior_path', required=True)
+#parser.add_argument('-s', '--tf_to_gene_prior_path', required=True)
 parser.add_argument('-o', '--mdl_path', required=True)
-parser.add_argument('-j', '--eRegulon_out_fname', required=True)
+#parser.add_argument('-j', '--eRegulon_out_fname', required=True)
 
 args = parser.parse_args()
 
@@ -59,9 +59,9 @@ p2g_path = pathlib.Path(args.p2g_path)
 #tf_names_path = pathlib.Path(args.tf_names_path)
 method = args.method
 n_cpu = args.n_cpu
-tf_to_gene_prior_path = pathlib.Path(args.tf_to_gene_prior_path)
+#tf_to_gene_prior_path = pathlib.Path(args.tf_to_gene_prior_path)
 temp_dir = pathlib.Path(args.temp_dir)
-eRegulon_out_fname = pathlib.Path(args.eRegulon_out_fname)
+#eRegulon_out_fname = pathlib.Path(args.eRegulon_out_fname)
 mdl_path = pathlib.Path(args.mdl_path)
 seed = 1
 
@@ -76,7 +76,6 @@ def infer_TF_to_gene(
         multiome_mudata_fname: pathlib.Path,
         tf_names: pathlib.Path,
         temp_dir: pathlib.Path,
-        adj_out_fname: pathlib.Path,
         method: Literal["GBM", "RF"],
         n_cpu: int,
         seed: int):
@@ -95,7 +94,7 @@ def infer_TF_to_gene(
         method = method,
         n_cpu = n_cpu,
         seed = seed)
-    log.info(f"Saving TF to gene adjacencies to: {adj_out_fname.__str__()}")
+#    log.info(f"Saving TF to gene adjacencies to: {adj_out_fname.__str__()}")
 
     return adj
 #    adj.to_csv(
@@ -104,10 +103,10 @@ def infer_TF_to_gene(
 
 
 def infer_grn(
+        TF_to_region_score: pd.DataFrame,
         TF_to_gene_adj: pathlib.Path,
         region_to_gene_adj: pathlib.Path,
         cistromes: pathlib.Path,
-        eRegulon_out_fname: pathlib.Path,
         ranking_db_fname: str,
         is_extended: bool,
         temp_dir: pathlib.Path,
@@ -172,12 +171,12 @@ def infer_grn(
 
     print(eRegulon_metadata)
     log.info("Calculating triplet ranking.")
+    print(TF_to_region_score)
     eRegulon_metadata = calculate_triplet_score(
-        cistromes=cistromes,
-        eRegulon_metadata=eRegulon_metadata,
-        ranking_db_fname=ranking_db_fname)
+        TF_to_region_score=TF_to_region_score,
+        eRegulon_metadata=eRegulon_metadata)
 
-    log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
+    #log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
     return eRegulon_metadata #.to_csv(
         #eRegulon_out_fname,
         #sep="\t", header=True, index=False)
@@ -355,17 +354,22 @@ def calculate_triplet_score(
         Adapted from SCENIC+ to take tfb scores instead of rank comigng from cistarget_db.
         TF_to_region_score: pd.DataFrame, should contain the following columns: 
                 - tf
-                - cre
+                - region
                 - score
     """
 
     eRegulon_metadata = eRegulon_metadata.copy()
 
     TF_region_iter = eRegulon_metadata[["TF", "Region"]].to_numpy()
+    eRegulon_mask = [(TF_to_region_score["tf"] == TF) &  (TF_to_region_score["region"] == region) for TF, region in TF_region_iter]
+    eRegulon_metadata = eRegulon_metadata.iloc[eRegulon_mask, :]
+    print(eRegulon_metadata)
+
+    TF_region_iter = eRegulon_metadata[["TF", "Region"]].to_numpy()
     TF_to_region_score = np.array([
         TF_to_region_score[
             (TF_to_region_score["tf"] == TF) &
-            (TF_to_region_score["cre"] == region)]["score"].values[0]
+            (TF_to_region_score["region"] == region)]["score"].values[0]
         for TF, region in TF_region_iter])
 
     TF_to_gene_score = eRegulon_metadata["importance_TF2G"].to_numpy()
@@ -403,7 +407,7 @@ tf_to_gene_prior = infer_TF_to_gene(
     multiome_mudata_fname=multiome_mudata_path,
     tf_names=tf_names,
     temp_dir=temp_dir,
-    adj_out_fname=tf_to_gene_prior_path,
+    # adj_out_fname="",#tf_to_gene_prior_path,
     method=method,
     n_cpu=n_cpu,
     seed=seed)
@@ -442,10 +446,10 @@ print(tf_to_gene_prior.head())
 
 # Infer eGRN
 mdl = infer_grn(
+    TF_to_region_score=tfb,
     TF_to_gene_adj=tf_to_gene_prior,
     region_to_gene_adj=p2g,
     cistromes=cistromes,
-    eRegulon_out_fname=eRegulon_out_fname,
     ranking_db_fname=ranking_db_fname,
     is_extended=True,
     temp_dir=temp_dir,
@@ -465,4 +469,4 @@ mdl = infer_grn(
     min_target_genes=args.min_target_genes,
     n_cpu=1)
 
-mdl
+mdl.to_csv(mdl_path)

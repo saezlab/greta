@@ -40,7 +40,7 @@ mudata_file = args['mudata']
 output_fname = args['output']
 tmp_scenicplus = args['tmp_scenicplus']
 # ray_tmp_dir = os.path.join(tmp_scenicplus, 'ray_tmp')
-ray_tmp_dir = "/local/scratch/tmp"
+ray_tmp_dir = "/tmp"
 njobs = args['njobs']
 output = args['output']
 
@@ -55,12 +55,11 @@ elif organism == 'mm10':
     chromsizes_fname = args['chrom_sizes_m']
     annot_fname = args['annot_mouse']
 
-annot = pd.read_csv(annot_fname)
+annot = pd.read_csv(annot_fname, sep="\t")
 annot.Start = annot.Start.astype(np.int32)
 annot.Gene = annot.Gene.astype(str)
-print(annot)
 annot = pl.DataFrame(annot)
-print(annot)
+print(annot.head())
 
 ##################
 # Set parameters #
