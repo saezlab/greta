@@ -24,8 +24,51 @@ import scenicplus.data_wrangling.gene_search_space
 # from scenicplus.enhancer_to_gene import calculate_regions_to_genes_relationships
 import pyranges as pr
 
+
 score_to_keep = "rho"  #"importance_x_rho"
 
+RANDOM_SEED = 666
+
+SKLEARN_REGRESSOR_FACTORY = {
+    'RF': RandomForestRegressor,
+    'ET': ExtraTreesRegressor,
+    'GBM': GradientBoostingRegressor
+}
+
+SCIPY_CORRELATION_FACTORY = {
+    'PR': pearsonr,
+    'SR': spearmanr
+}
+
+# Parameters from arboreto
+# scikit-learn random forest regressor
+RF_KWARGS = {
+    'n_jobs': 1,
+    'n_estimators': 1000,
+    'max_features': 'sqrt'
+}
+
+# scikit-learn extra-trees regressor
+ET_KWARGS = {
+    'n_jobs': 1,
+    'n_estimators': 1000,
+    'max_features': 'sqrt'
+}
+
+# scikit-learn gradient boosting regressor
+GBM_KWARGS = {
+    'learning_rate': 0.01,
+    'n_estimators': 500,
+    'max_features': 0.1
+}
+
+# scikit-learn stochastic gradient boosting regressor
+SGBM_KWARGS = {
+    'learning_rate': 0.01,
+    'n_estimators': 5000,  # can be arbitrarily large
+    'max_features': 0.1,
+    'subsample': 0.9
+}
 
 def _score_regions_to_single_gene(
     acc: np.ndarray,

@@ -27,6 +27,7 @@ parser.add_argument('-f', '--frags', required=True)
 parser.add_argument('-i', '--mudata', required=True)
 parser.add_argument('-o', '--output', required=True)
 parser.add_argument('-t', '--tmp_scenicplus', required=True)
+parser.add_argument('-z', '--ray_tmp_dir', required=True)
 parser.add_argument('-g', '--organism', required=True)
 parser.add_argument('-n', '--njobs', required=True, type=int)
 parser.add_argument('-m', '--chrom_sizes_m', required=True)
@@ -40,7 +41,7 @@ mudata_file = args['mudata']
 output_fname = args['output']
 tmp_scenicplus = args['tmp_scenicplus']
 # ray_tmp_dir = os.path.join(tmp_scenicplus, 'ray_tmp')
-ray_tmp_dir = tmp_scenicplus
+ray_tmp_dir = args['ray_tmp_dir']
 njobs = args['njobs']
 output = args['output']
 
@@ -1350,7 +1351,7 @@ import scenicplus.data_wrangling.adata_cistopic_wrangling
 new_mudata = scenicplus.data_wrangling.adata_cistopic_wrangling.process_multiome_data(
     GEX_anndata=mudata["rna"],
     cisTopic_obj=cistopic_obj,
-    use_raw_for_GEX_anndata=False, # ????
+    use_raw_for_GEX_anndata=False,  # ????
     imputed_acc_kwargs=None,
     bc_transform_func=lambda x: x,
     )
@@ -1364,14 +1365,14 @@ pre_atac.var_names = \
      "-" + pre_atac.var["End"].astype(str)).values
 
 pre_rna = new_mudata["scRNA"].copy()
-pre_atac.layers["counts"] =  sp.sparse.csr_matrix(pre_atac.X.copy())
-pre_rna.layers["counts"] =  sp.sparse.csr_matrix(pre_rna.X.copy())
+pre_atac.layers["counts"] = sp.sparse.csr_matrix(pre_atac.X.copy())
+pre_rna.layers["counts"] = sp.sparse.csr_matrix(pre_rna.X.copy())
 
 
 pre_mudata = mu.MuData({"rna": pre_rna, "atac": pre_atac})
 
 # Add counts layers
-#pre_mudata["atac"].layers["counts"] = pre_mudata["atac"].X.copy()
-#pre_mudata["rna"].layers["counts"] = mudata["rna"].X.copy()
+# pre_mudata["atac"].layers["counts"] = pre_mudata["atac"].X.copy()
+# pre_mudata["rna"].layers["counts"] = mudata["rna"].X.copy()
 
 pre_mudata.write_h5mu(output_fname)

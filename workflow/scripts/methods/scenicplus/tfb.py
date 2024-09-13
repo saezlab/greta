@@ -47,6 +47,7 @@ parser.add_argument('-n', '--tf_names_path', required=True)
 parser.add_argument('-z', '--path_to_motif_annotations_mouse')
 parser.add_argument('-y', '--path_to_motif_annotations_human')
 parser.add_argument('-k', '--temp_dir')
+parser.add_argument('-j', '--ray_tmp_dir')
 args = parser.parse_args()
 
 mudata_path = args.mudata
@@ -60,6 +61,7 @@ output_tfb = args.output
 organism = args.organism
 njobs = args.njobs
 temp_dir = args.temp_dir
+ray_tmp_dir = args.ray_tmp_dir
 
 output_cistromes_annotations_direct = args.annotation_direct_path
 output_cistromes_annotations_extended = args.annotation_extended_path

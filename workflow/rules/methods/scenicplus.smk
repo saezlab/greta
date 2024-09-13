@@ -65,12 +65,13 @@ rule pre_scenicplus:
         annot_h = "aertslab/genomes/hg38/hg38_ensdb_v86.csv"
     output:
         d = 'datasets/{dataset}/cases/{case}/runs/scenicplus.pre.h5mu',
-        # stores many intermediate cistopic files
-        tmp_scenicplus = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp')))
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
+        # stores many intermediate cistopic files
         tmp_scenicplus = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))), 
+        # must be an absolute path, and *SHORT* (ray path check will fail if it's too long)
+        ray_tmp_dir = "\tmp"
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores = 32
     shell:
@@ -85,7 +86,8 @@ rule pre_scenicplus:
         -g {params.organism} \
         -n {params.n_cores} \
         -a {input.annot_m} \
-        -b {input.annot_h}
+        -b {input.annot_h} \
+        --ray_tmp_dir {params.ray_tmp_dir}
         """
 
 rule p2g_scenicplus:
@@ -143,7 +145,8 @@ rule tfb_scenicplus:
     params:
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        temp_dir = temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus_tmp'))),
+        temp_dir = temp(directory(local("datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus_tmp"))),
+        ray_tmp_dir = "/tmp",
     output:
         cistarget_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.cistarget.hdf5"),
         dem_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.dem.hdf5"),
@@ -172,6 +175,7 @@ rule tfb_scenicplus:
         --path_to_motif_annotations_human {input.path_to_motif_annotations_human}\
         --path_to_motif_annotations_mouse {input.path_to_motif_annotations_mouse}\
         --temp_dir {params.temp_dir}
+        --ray_tmp_dir {params.ray_tmp_dir}
         """
 # motif_enrichment_cistarget
 # download_genome_annotations
@@ -191,7 +195,7 @@ rule mdl_scenicplus:
 #        eRegulon_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.eRegulon.csv"),
         mdl = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv"
     params:
-        temp_dir = "/tmp",
+        tmp_dir = "/tmp",
         method_mdl = "GBM",
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
