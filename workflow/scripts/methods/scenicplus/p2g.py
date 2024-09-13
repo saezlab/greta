@@ -24,76 +24,8 @@ import scenicplus.data_wrangling.gene_search_space
 # from scenicplus.enhancer_to_gene import calculate_regions_to_genes_relationships
 import pyranges as pr
 
+score_to_keep = "rho"  #"importance_x_rho"
 
-score_to_keep = "rho" #"importance_x_rho"
-
-RANDOM_SEED = 666
-
-SKLEARN_REGRESSOR_FACTORY = {
-    'RF': RandomForestRegressor,
-    'ET': ExtraTreesRegressor,
-    'GBM': GradientBoostingRegressor
-}
-
-SCIPY_CORRELATION_FACTORY = {
-    'PR': pearsonr,
-    'SR': spearmanr
-}
-
-# Parameters from arboreto
-# scikit-learn random forest regressor
-RF_KWARGS = {
-    'n_jobs': 1,
-    'n_estimators': 1000,
-    'max_features': 'sqrt'
-}
-
-# scikit-learn extra-trees regressor
-ET_KWARGS = {
-    'n_jobs': 1,
-    'n_estimators': 1000,
-    'max_features': 'sqrt'
-}
-
-# scikit-learn gradient boosting regressor
-GBM_KWARGS = {
-    'learning_rate': 0.01,
-    'n_estimators': 500,
-    'max_features': 0.1
-}
-
-# scikit-learn stochastic gradient boosting regressor
-SGBM_KWARGS = {
-    'learning_rate': 0.01,
-    'n_estimators': 5000,  # can be arbitrarily large
-    'max_features': 0.1,
-    'subsample': 0.9
-}
-
-# Interact auto sql definition
-INTERACT_AS = """table interact
-"Interaction between two regions"
-    (
-    string chrom;      "Chromosome (or contig, scaffold, etc.). For interchromosomal, use 2 records"
-    uint chromStart;   "Start position of lower region. For interchromosomal, set to chromStart of this region"
-    uint chromEnd;     "End position of upper region. For interchromosomal, set to chromEnd of this region"
-    string name;       "Name of item, for display.  Usually 'sourceName/targetName' or empty"
-    uint score;        "Score from 0-1000."
-    double value;      "Strength of interaction or other data value. Typically basis for score"
-    string exp;        "Experiment name (metadata for filtering). Use . if not applicable"
-    string color;      "Item color.  Specified as r,g,b or hexadecimal #RRGGBB or html color name, as in //www.w3.org/TR/css3-color/#html4."
-    string sourceChrom;  "Chromosome of source region (directional) or lower region. For non-directional interchromosomal, chrom of this region."
-    uint sourceStart;  "Start position source/lower/this region"
-    uint sourceEnd;    "End position in chromosome of source/lower/this region"
-    string sourceName;  "Identifier of source/lower/this region"
-    string sourceStrand; "Orientation of source/lower/this region: + or -.  Use . if not applicable"
-    string targetChrom; "Chromosome of target region (directional) or upper region. For non-directional interchromosomal, chrom of other region"
-    uint targetStart;  "Start position in chromosome of target/upper/this region"
-    uint targetEnd;    "End position in chromosome of target/upper/this region"
-    string targetName; "Identifier of target/upper/this region"
-    string targetStrand; "Orientation of target/upper/this region: + or -.  Use . if not applicable"
-    )
-"""
 
 def _score_regions_to_single_gene(
     acc: np.ndarray,

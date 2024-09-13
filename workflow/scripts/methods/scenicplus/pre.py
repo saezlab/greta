@@ -40,7 +40,7 @@ mudata_file = args['mudata']
 output_fname = args['output']
 tmp_scenicplus = args['tmp_scenicplus']
 # ray_tmp_dir = os.path.join(tmp_scenicplus, 'ray_tmp')
-ray_tmp_dir = "/tmp"
+ray_tmp_dir = tmp_scenicplus
 njobs = args['njobs']
 output = args['output']
 

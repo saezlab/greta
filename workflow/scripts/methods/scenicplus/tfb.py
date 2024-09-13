@@ -46,6 +46,7 @@ parser.add_argument('-b', '--annotation_extended_path', required=True)
 parser.add_argument('-n', '--tf_names_path', required=True)
 parser.add_argument('-z', '--path_to_motif_annotations_mouse')
 parser.add_argument('-y', '--path_to_motif_annotations_human')
+parser.add_argument('-k', '--temp_dir')
 args = parser.parse_args()
 
 mudata_path = args.mudata
@@ -58,6 +59,7 @@ p2g = args.p2g
 output_tfb = args.output
 organism = args.organism
 njobs = args.njobs
+temp_dir = args.temp_dir
 
 output_cistromes_annotations_direct = args.annotation_direct_path
 output_cistromes_annotations_extended = args.annotation_extended_path
@@ -108,8 +110,8 @@ models = pycisTopic.lda_models.run_cgs_models(
     alpha_by_topic=True,
     eta=0.1,
     eta_by_topic=False,
-    save_path="/tmp",
-    _temp_dir="/tmp"
+    save_path=temp_dir,
+    _temp_dir=temp_dir
 )
 model = pycisTopic.lda_models.evaluate_models(
     models,
@@ -144,7 +146,7 @@ markers_dict = find_diff_features(
     adjpval_thr=0.05,
     log2fc_thr=np.log2(1.5),
     n_cpu=5,
-    _temp_dir="/tmp",
+    _temp_dir=temp_dir,
     split_pattern='-'
 )
 
@@ -282,7 +284,7 @@ def run_motif_enrichment_cistarget(
     """
     cistarget_results = joblib.Parallel(
         n_jobs=n_cpu,
-        temp_folder="/tmp"
+        temp_folder=temp_dir
     )(
         joblib.delayed(
             _run_cistarget_single_region_set
@@ -542,7 +544,7 @@ run_motif_enrichment_dem(
     output_fname_dem_html="",
     n_cpu=32,
     path_to_genome_annotation="aertslab/genomes/hg38/hg38_ensdb_v86.csv",
-    temp_dir="/tmp",
+    temp_dir=temp_dir,
     species=species,
     fraction_overlap_w_dem_database=0.4,
     path_to_motif_annotations=path_to_motif_annotations,
@@ -583,7 +585,7 @@ run_motif_enrichment_cistarget(
     annotation_version=annotation_version,
     motif_similarity_fdr=0.05,
     orthologous_identity_threshold=0.8,
-    temp_dir="/tmp",
+    temp_dir=temp_dir,
     species=species,
     annotations_to_use=["Direct_annot", "Orthology_annot"]
 )
