@@ -1362,10 +1362,16 @@ pre_atac.var_names = \
     (pre_atac.var["Chromosome"] +
      "-" + pre_atac.var["Start"].astype(str) +
      "-" + pre_atac.var["End"].astype(str)).values
-pre_mudata = mu.MuData({"rna": new_mudata["scRNA"], "atac": pre_atac})
+
+pre_rna = new_mudata["scRNA"].copy()
+pre_atac.layers["counts"] =  sp.sparse.csr_matrix(pre_atac.X.copy())
+pre_rna.layers["counts"] =  sp.sparse.csr_matrix(pre_rna.X.copy())
+
+
+pre_mudata = mu.MuData({"rna": pre_rna, "atac": pre_atac})
 
 # Add counts layers
-pre_mudata["atac"].layers["counts"] = pre_mudata["atac"].X.copy()
-pre_mudata["rna"].layers["counts"] = mudata["rna"].X.copy()
+#pre_mudata["atac"].layers["counts"] = pre_mudata["atac"].X.copy()
+#pre_mudata["rna"].layers["counts"] = mudata["rna"].X.copy()
 
 pre_mudata.write_h5mu(output_fname)

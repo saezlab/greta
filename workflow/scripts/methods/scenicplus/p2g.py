@@ -25,6 +25,8 @@ import scenicplus.data_wrangling.gene_search_space
 import pyranges as pr
 
 
+score_to_keep = "rho" #"importance_x_rho"
+
 RANDOM_SEED = 666
 
 SKLEARN_REGRESSOR_FACTORY = {
@@ -403,7 +405,7 @@ p2g = calculate_regions_to_genes_relationships(
         n_cpu=njobs,)
 
 p2g = p2g[p2g["importance"] != 0]
-p2g = p2g.loc[:, ["target", "region", "importance_x_rho"]]
+p2g = p2g.loc[:, ["target", "region", score_to_keep]]
 p2g.columns = ["gene", "cre", "score"]
 p2g = p2g[p2g["score"] != 0]
 p2g["cre"] = p2g["cre"].str.replace(":", "-")

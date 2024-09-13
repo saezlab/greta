@@ -469,4 +469,6 @@ mdl = infer_grn(
     min_target_genes=args.min_target_genes,
     n_cpu=1)
 
-mdl.to_csv(mdl_path)
+mdl = mdl.groupby(["Gene", "TF"])["rho_TF2G"].sum().reset_index()
+mdl = mdl.rename({"TF":"tf", "Gene":"gene", "rho_TF2G":"score"})
+mdl.to_csv(mdl_output, sep=",", index=False)

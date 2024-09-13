@@ -350,8 +350,6 @@ def run_motif_enrichment_dem(
     else:
         genome_annotation = None
 
-    for name, foreground_region_sets, background_region_sets in _get_foreground_background(region_set_dict):
-        print(name)
     dem_results: List[DEM] = joblib.Parallel(
         n_jobs=n_cpu,
         temp_folder=temp_dir
@@ -437,9 +435,7 @@ def _run_dem_single_region_set(
         balance_number_of_promoters = balance_number_of_promoters,
         promoter_space = promoter_space,
         seed = seed)
-    print("test run_dem_single_region_set")
-    #print(foreground_regions)
-    #print(background_regions)
+
     # Load DEM database
     dem_db = DEMDatabase(
         dem_db_fname,
@@ -499,7 +495,6 @@ def prepare_motif_enrichment_results(
     mdata = mudata.read(multiome_mudata_fname.__str__())
     log.info("Getting cistromes.")
     region_names = mdata["atac"].var_names.str.replace('-', ':', n=1)  # replace first '-' by ':'
-    print(region_names)
 
     adata_direct_cistromes, adata_extended_cistromes = get_and_merge_cistromes(
         paths_to_motif_enrichment_results=paths_to_motif_enrichment_results,
@@ -639,7 +634,11 @@ tfb_matrix = max_rank * all_h5ad.X.astype(bool)
 tfb = tfb_matrix.stack().reset_index()
 tfb.columns = ["cre", "tf", "score"]
 tfb = tfb[tfb["score"]>0]
-tfb["score"] = 1/tfb["score"]
+
+# scale rank in a significant pvalue -like range
+min, max = tfb["score"].min(), tfb["score"].max()
+tfb["score"] = (tfb["score"]-min)/(max - min)*(0.04-0.001)+0.001
+tfb["score"] = -np.log10(tfb["score"])
 tfb["cre"] = tfb["cre"].str.replace(":", "-")
 # Save
 tfb.to_csv(output_tfb)
