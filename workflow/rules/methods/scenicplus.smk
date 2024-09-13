@@ -65,6 +65,8 @@ rule pre_scenicplus:
         annot_h = "aertslab/genomes/hg38/hg38_ensdb_v86.csv"
     output:
         d = 'datasets/{dataset}/cases/{case}/runs/scenicplus.pre.h5mu',
+        # stores many intermediate cistopic files
+        tmp_scenicplus = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp')))
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
@@ -109,7 +111,7 @@ rule p2g_scenicplus:
     benchmark:
         'benchmarks/{dataset}.{case}.{pre}.scenicplus.p2g.txt'
     output:
-        pg='datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus.p2g.csv',
+        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus.p2g.csv',
     shell:
         """
         python workflow/scripts/methods/scenicplus/p2g.py \
@@ -118,7 +120,7 @@ rule p2g_scenicplus:
         -t {params.temp_dir} \
         -m {input.chrom_sizes_m} \
         -j {input.chrom_sizes_h} \
-        -o {output.pg} \
+        -o {output.p2g} \
         -u "{params.search_space_upstream}" \
         -d "{params.search_space_downstream}" \
         -e "{params.search_space_extend_tss}" \
@@ -141,6 +143,7 @@ rule tfb_scenicplus:
     params:
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
+        temp_dir = temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus_tmp'))),
     output:
         cistarget_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.cistarget.hdf5"),
         dem_results = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.dem.hdf5"),
@@ -167,7 +170,8 @@ rule tfb_scenicplus:
         --annotation_extended_path {output.annotation_extended_path}\
         --tf_names_path {output.tf_names_path}\
         --path_to_motif_annotations_human {input.path_to_motif_annotations_human}\
-        --path_to_motif_annotations_mouse {input.path_to_motif_annotations_mouse}
+        --path_to_motif_annotations_mouse {input.path_to_motif_annotations_mouse}\
+        --temp_dir {params.temp_dir}
         """
 # motif_enrichment_cistarget
 # download_genome_annotations
@@ -187,10 +191,10 @@ rule mdl_scenicplus:
 #        eRegulon_output = temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.eRegulon.csv"),
         mdl = "datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv"
     params:
+        temp_dir = "/tmp",
         method_mdl = "GBM",
         n_cores = 32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        temp_dir = "/tmp",
         order_regions_to_genes_by="importance",
         order_TFs_to_genes_by="importance",
         gsea_n_perm=1000,
