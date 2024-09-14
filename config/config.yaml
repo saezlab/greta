@@ -155,7 +155,11 @@ datasets:
             - HCAHeartST13189995_HCAHeartST13188800
             - HCAHeartST13189996_HCAHeartST13188801
             - HCAHeartST13189997_HCAHeartST13188802
-
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     brain:
         organism: 'hg38'
         url:
