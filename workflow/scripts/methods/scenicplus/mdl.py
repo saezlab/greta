@@ -172,9 +172,9 @@ def infer_grn(
     print(eRegulon_metadata)
     log.info("Calculating triplet ranking.")
     print(TF_to_region_score)
-    eRegulon_metadata = calculate_triplet_score(
-        TF_to_region_score=TF_to_region_score,
-        eRegulon_metadata=eRegulon_metadata)
+   # eRegulon_metadata = calculate_triplet_score(
+    #    TF_to_region_score=TF_to_region_score,
+     #   eRegulon_metadata=eRegulon_metadata)
 
     #log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
     return eRegulon_metadata #.to_csv(
@@ -469,6 +469,6 @@ mdl = infer_grn(
     min_target_genes=args.min_target_genes,
     n_cpu=1)
 
-mdl = mdl.groupby(["Gene", "TF"])["rho_TF2G"].sum().reset_index()
-mdl = mdl.rename({"TF":"tf", "Gene":"gene", "rho_TF2G":"score"})
+mdl = mdl.groupby(["TF", "Gene"])["rho_TF2G"].sum().reset_index()
+mdl = mdl.rename({"TF":"tf", "Gene":"gene", "rho_TF2G":"score"}, axis=1)
 mdl.to_csv(mdl_path, sep=",", index=False)
