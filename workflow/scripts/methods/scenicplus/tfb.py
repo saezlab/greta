@@ -113,7 +113,7 @@ models = pycisTopic.lda_models.run_cgs_models(
     eta=0.1,
     eta_by_topic=False,
     save_path=temp_dir,
-    _temp_dir=temp_dir
+    _temp_dir=ray_tmp_dir
 )
 model = pycisTopic.lda_models.evaluate_models(
     models,
@@ -148,7 +148,7 @@ markers_dict = find_diff_features(
     adjpval_thr=0.05,
     log2fc_thr=np.log2(1.5),
     n_cpu=5,
-    _temp_dir=temp_dir,
+    _temp_dir=ray_tmp_dir,
     split_pattern='-'
 )
 

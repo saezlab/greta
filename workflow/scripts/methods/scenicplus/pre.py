@@ -41,7 +41,7 @@ mudata_file = args['mudata']
 output_fname = args['output']
 tmp_scenicplus = args['tmp_scenicplus']
 # ray_tmp_dir = os.path.join(tmp_scenicplus, 'ray_tmp')
-ray_tmp_dir = args['ray_tmp_dir']
+ray_tmp_dir = os.path.join(args['ray_tmp_dir'])
 njobs = args['njobs']
 output = args['output']
 
@@ -79,7 +79,7 @@ bigwig_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files")
 bed_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bed_paths.pkl')
 bw_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bw_paths.pkl')
 # MACS paths
-macs_folder = os.path.join(cis_topic_tmp_dir, "MACS")
+macs_folder = os.path.join(ray_tmp_dir, "MACS")
 narrow_peaks_pickle = os.path.join(macs_folder, 'narrow_peaks_dict.pkl')
 # Consensus peaks paths
 consensus_peaks_bed = os.path.join(cis_topic_tmp_dir, 'consensus_region.bed')
@@ -88,7 +88,9 @@ quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
 cistopic_obj_path = os.path.join(cis_topic_tmp_dir, 'cistopic_obj.pkl')
 
 os.makedirs(tmp_scenicplus, exist_ok=True)
-os.makedirs(ray_tmp_dir, exist_ok=True)
+#os.makedirs(ray_tmp_dir, exist_ok=True)
+
+print(ray_tmp_dir)
 os.makedirs(cis_topic_tmp_dir, exist_ok=True)
 os.makedirs(quality_control_dir, exist_ok=True)
 os.makedirs(macs_folder, exist_ok=True)

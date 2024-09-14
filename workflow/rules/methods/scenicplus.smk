@@ -71,7 +71,7 @@ rule pre_scenicplus:
         # stores many intermediate cistopic files
         tmp_scenicplus = temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))), 
         # must be an absolute path, and *SHORT* (ray path check will fail if it's too long)
-        ray_tmp_dir = "\tmp"
+        ray_tmp_dir = "/tmp",
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores = 32
     shell:
@@ -87,7 +87,7 @@ rule pre_scenicplus:
         -n {params.n_cores} \
         -a {input.annot_m} \
         -b {input.annot_h} \
-        --ray_tmp_dir {params.ray_tmp_dir}
+        --ray_tmp_dir '{params.ray_tmp_dir}'
         """
 
 rule p2g_scenicplus:
@@ -174,7 +174,7 @@ rule tfb_scenicplus:
         --tf_names_path {output.tf_names_path}\
         --path_to_motif_annotations_human {input.path_to_motif_annotations_human}\
         --path_to_motif_annotations_mouse {input.path_to_motif_annotations_mouse}\
-        --temp_dir {params.temp_dir}
+        --temp_dir {params.temp_dir} \
         --ray_tmp_dir {params.ray_tmp_dir}
         """
 # motif_enrichment_cistarget
@@ -222,7 +222,7 @@ rule mdl_scenicplus:
         -m {params.method_mdl} \
         -c {params.n_cores} \
         -g {params.organism} \
-        --temp_dir {params.temp_dir} \
+        --temp_dir {params.tmp_dir} \
         --order_regions_to_genes_by {params.order_regions_to_genes_by} \
         --order_TFs_to_genes_by {params.order_TFs_to_genes_by} \
         --gsea_n_perm {params.gsea_n_perm} \
