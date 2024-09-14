@@ -399,9 +399,11 @@ def run_motif_enrichment_dem(
                 path = output_fname_dem_result,
                 mode = "a"
             )
-
 from pycistarget.motif_enrichment_dem import (
-        DEM,
+    # DEM,
+    ranksums_numba_multiple,
+    mean_axis1, get_log2_fc,
+    p_adjust_bh, get_optimal_threshold_roc
     )
 
 def _run_dem_single_region_set(
@@ -527,11 +529,142 @@ def prepare_motif_enrichment_results(
             f"Writing extended cistromes to: {out_file_extended_annotation.__str__()}")
         adata_extended_cistromes.write_h5ad(out_file_extended_annotation.__str__())
 
+class DEM(MotifEnrichmentResult):
+    def __init__(
+        self,
+        foreground_regions: pr.PyRanges,
+        background_regions: pr.PyRanges,
+        name: str,
+        species: Literal[
+                "homo_sapiens", "mus_musculus", "drosophila_melanogaster"],
+        adjpval_thr: float = 0.05,
+        log2fc_thr: float = 1.0,
+        mean_fg_thr: float = 0.0,
+        motif_hit_thr: Optional[float] = None,
+        path_to_motif_annotations: Optional[str] = None,
+        annotation_version: str = 'v10nr_clust',
+        annotation_to_use: list = ['Direct_annot', 'Motif_similarity_annot', 'Orthology_annot', 'Motif_similarity_and_Orthology_annot'],
+        motif_similarity_fdr: float = 0.001,
+        orthologous_identity_threshold: float = 0.0,
+        motifs_to_use: Optional[list] = None):
+        self.foreground_regions = foreground_regions
+        self.background_regions = background_regions
+        self.adjpval_thr = adjpval_thr
+        self.log2fc_thr = log2fc_thr
+        self.mean_fg_thr = mean_fg_thr
+        self.motif_hit_thr = motif_hit_thr
+        super().__init__(
+            name = name,
+            species = species,
+            path_to_motif_annotations = path_to_motif_annotations,
+            annotation_version = annotation_version,
+            annotation_to_use = annotation_to_use,
+            motif_similarity_fdr = motif_similarity_fdr,
+            orthologous_identity_threshold = orthologous_identity_threshold,
+            motifs_to_use = motifs_to_use)
+    
+    def run(self, dem_db: DEMDatabase):
+        # Create logger
+        level    = logging.INFO
+        format   = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        handlers = [logging.StreamHandler(stream=sys.stdout)]
+        logging.basicConfig(level = level, format = format, handlers = handlers)
+        log = logging.getLogger('DEM')
+
+        log.info(f"Running DEM for {self.name}")
+        foreground_region_to_db, foreground_scores = dem_db.get_scores(
+            self.foreground_regions)
+        background_region_to_db, background_scores = dem_db.get_scores(
+            self.background_regions)
+        self.regions_to_db = pd.concat(
+            [foreground_region_to_db, background_region_to_db]) \
+            .drop_duplicates() \
+            .reset_index(drop = True)
+        motif_names = foreground_scores.index
+        background_scores = background_scores.loc[motif_names]
+        foreground_scores_arr = np.array(foreground_scores)
+        background_scores_arr = np.array(background_scores)
+        
+        # Perform Wilcoxon rank sum test
+        stats, pvalues = ranksums_numba_multiple(
+            X = foreground_scores_arr,
+            Y = background_scores_arr)
+        
+        # Calculate log2FC
+        logFC = get_log2_fc(
+            fg_mat = foreground_scores_arr,
+            bg_mat = background_scores_arr
+        )
+        # pvalue correction
+        pvalues_adj = p_adjust_bh(pvalues)
+
+        # Create result dataframe
+        result = pd.DataFrame(
+            data = {
+                "Log2FC": logFC,
+                "Adjusted_pval": pvalues_adj,
+                "Mean_fg": mean_axis1(foreground_scores_arr),
+                "Mean_bg": mean_axis1(background_scores_arr)},
+            index = motif_names)
+
+        if (result["Adjusted_pval"] <= self.adjpval_thr).sum() < 1:
+            print("""
+            WARNING: No significant pvalue, 
+            we'll take the 1% top values to make the analysis go through
+            """)
+            self.adjpval_thr = min(
+                self.adjpval_thr,
+                result["Adjusted_pval"].quantile(0.01))
+
+        # Threshold dataframe
+        result = result.loc[
+            np.logical_and.reduce(
+                (
+                    result["Adjusted_pval"] <= self.adjpval_thr,
+                    result["Log2FC"]        >= self.log2fc_thr,
+                    result["Mean_fg"]       >= self.mean_fg_thr
+                )
+            )
+        ]
+
+        result = result.sort_values([
+            "Log2FC", "Adjusted_pval"], 
+            ascending = [False, True])
+        
+        self.motif_enrichment = result
+        log.info("Adding motif-to-TF annotation")
+        self.add_motif_annotation()
+
+        # Get motif hits
+        result["Motif_hit_thr"] = None
+        result["Motif_hits"] = None
+        significant_motifs = result.index
+        motif_hits = {}
+        for motif in significant_motifs:
+            if self.motif_hit_thr is None:
+                thr = get_optimal_threshold_roc(
+                    foreground_scores.loc[motif].values,
+                    background_scores.loc[motif].values,)
+            else:
+                thr = self.motif_hit_thr 
+            motif_hits[motif] = foreground_scores.loc[motif].loc[
+                    foreground_scores.loc[motif] > thr].index.tolist()
+            result.loc[motif, "Motif_hit_thr"] = thr
+            result.loc[motif, "Motif_hits"] = len(motif_hits[motif])
+        
+        rs_motif_hits = {
+            motif: list(set(
+                self.regions_to_db.loc[
+                    self.regions_to_db["Query"].isin(motif_hits[motif]),
+                    "Target"].tolist()))
+            for motif in motif_hits.keys()}
+        self.motif_hits = {'Database': motif_hits, 'Region_set': rs_motif_hits}
+        self.get_cistromes()
 
 dem_max_bg_regions = 500
 dem_balance_number_of_promoters = True
 dem_promoter_space = 1_000
-dem_adj_pval_thr = 1 #0.05
+dem_adj_pval_thr = 0.05
 dem_log2fc_thr = 1.0
 dem_mean_fg_thr = 0.0
 dem_motif_hit_thr = 3.0
