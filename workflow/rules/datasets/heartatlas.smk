@@ -2,7 +2,7 @@
 rule download_fragments:
     output:
         tar=temp(local('datasets/heartatlas/fragments.tar')),
-        frag=temp(local(expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs'])))
+        frag=expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs'])
     params:
         tar=config['datasets']['heartatlas']['url']['tar']
     shell:
@@ -46,7 +46,7 @@ rule prcannot_heartatlas:
         """
 
 rule callpeaks_heartatlas:
-    threads: 32
+    threads: 16
     input:
         frags=expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs']),
         annot='datasets/heartatlas/annot.csv',
@@ -56,7 +56,7 @@ rule callpeaks_heartatlas:
         tmp=temp(directory(local('datasets/heartatlas/tmp_peaks'))),
         peaks=temp(local('datasets/heartatlas/peaks.h5ad'))
     resources:
-        mem_mb=110000,
+        mem_mb=512000,
         runtime=2160,
     shell:
         """
