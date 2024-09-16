@@ -94,3 +94,6 @@ if __name__ == '__main__':
     
     # Write
     atac.write(path_output)
+
+    print('Done')
+    os._exit(0)  # Add this else it gets stuck
