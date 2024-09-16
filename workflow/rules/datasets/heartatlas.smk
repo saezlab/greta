@@ -22,18 +22,24 @@ rule download_fragments:
 
 rule download_anndata:
     output:
-        anndata=temp(local('datasets/heartatlas/multiome_raw.h5ad'))
+        anndata=temp(local('datasets/heartatlas/multiome_raw.h5ad')),
+        annotation=temp(local('datasets/heartatlas/peaks.h5ad'))
     params:
-        anndata=config['datasets']['heartatlas']['url']['anndata']
+        anndata=config['datasets']['heartatlas']['url']['anndata'],
+        annotation=config['datasets']['heartatlas']['url']['annotation']
     shell:
         """
         echo "Downloading anndata file from {params.anndata} to {output.anndata}"
         wget '{params.anndata}' -O '{output.anndata}'
+
+        echo "Downloading anndata file from {params.annotation} to {output.annotation}"
+        wget '{params.annotation}' -O '{output.annotation}'
         """
 
 rule prcannot_heartatlas:
     input:
-        h5ad='datasets/heartatlas/multiome_raw.h5ad'
+        h5ad='datasets/heartatlas/multiome_raw.h5ad',
+        atac='datasets/heartatlas/peaks.h5ad'
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -42,7 +48,8 @@ rule prcannot_heartatlas:
         """
         python workflow/scripts/datasets/heartatlas/heart_annot.py \
         -i {input.h5ad} \
-        -a {output.annot}
+        -a {input.atac} \
+        -o {output.annot}
         """
 
 rule callpeaks_heartatlas:
