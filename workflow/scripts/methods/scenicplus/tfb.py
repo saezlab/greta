@@ -1,6 +1,8 @@
 # Rerun cistopic, needed for cistarget
 import matplotlib.pyplot as plt
 from typing import List, Literal, Optional, Tuple, Set, Dict, Union
+import sys
+import warnings
 import argparse
 import pathlib
 import numpy as np
@@ -11,6 +13,7 @@ import muon as mu
 import pandas as pd
 import polars as pl
 import pyranges as pr
+import h5py
 import pycisTopic.cistopic_class
 from pycisTopic.topic_binarization import binarize_topics
 from pycisTopic.utils import region_names_to_coordinates
@@ -26,7 +29,9 @@ from scenicplus.cli.commands import (
     _get_foreground_background
 )
 import pycistarget.motif_enrichment_cistarget
-
+from pycistarget.motif_enrichment_result import MotifEnrichmentResult
+from pycistarget.motif_enrichment_dem import (
+        DEMDatabase)
 import logging
 log = logging.getLogger("SCENIC+")
 
@@ -399,6 +404,7 @@ def run_motif_enrichment_dem(
                 path = output_fname_dem_result,
                 mode = "a"
             )
+        warnings.warn("Warning.....................No cistrome selected, you should probably lower dem_adj_pval_thr if you wanna keep cistromes")
 from pycistarget.motif_enrichment_dem import (
     # DEM,
     ranksums_numba_multiple,
@@ -426,7 +432,7 @@ def _run_dem_single_region_set(
         annotation_version,
         annotations_to_use,
         motif_similarity_fdr,
-        orthologous_identity_threshold) -> DEM:
+        orthologous_identity_threshold):  # -> DEM:
     """Helper function to run DEM on a single region set."""
     from pycistarget.motif_enrichment_dem import (
         DEMDatabase,
@@ -562,7 +568,8 @@ class DEM(MotifEnrichmentResult):
             motif_similarity_fdr = motif_similarity_fdr,
             orthologous_identity_threshold = orthologous_identity_threshold,
             motifs_to_use = motifs_to_use)
-    
+
+
     def run(self, dem_db: DEMDatabase):
         # Create logger
         level    = logging.INFO
@@ -607,15 +614,6 @@ class DEM(MotifEnrichmentResult):
                 "Mean_bg": mean_axis1(background_scores_arr)},
             index = motif_names)
 
-        if (result["Adjusted_pval"] <= self.adjpval_thr).sum() < 1:
-            print("""
-            WARNING: No significant pvalue, 
-            we'll take the 1% top values to make the analysis go through
-            """)
-            self.adjpval_thr = min(
-                self.adjpval_thr,
-                result["Adjusted_pval"].quantile(0.01))
-
         # Threshold dataframe
         result = result.loc[
             np.logical_and.reduce(
@@ -630,7 +628,7 @@ class DEM(MotifEnrichmentResult):
         result = result.sort_values([
             "Log2FC", "Adjusted_pval"], 
             ascending = [False, True])
-        
+
         self.motif_enrichment = result
         log.info("Adding motif-to-TF annotation")
         self.add_motif_annotation()
@@ -698,6 +696,7 @@ run_motif_enrichment_dem(
     seed=555,
 )
 
+
 # Open cisTarget database
 print("Running cistarget")
 cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
@@ -727,9 +726,19 @@ run_motif_enrichment_cistarget(
 
 # Reformat cistromes results, merging DEM and Cistarget pairs
 # Giving Direct and Extended cistromes
+if os.path.exists(dem_results_path):
+    paths_to_motif_enrichment_results = [dem_results_path, cistarget_results_path]
+else:
+    # Save empty hdf file to no thave missiong output for snakemake workflow
+    dem_hdf = h5py.File(dem_results_path, 'w')
+    dem_hdf.close()
+
+    paths_to_motif_enrichment_results = [cistarget_results_path]
+    warnings.warn("Warning...........No significant result from DEM, you might want to adjust thresolds.\nHere, only cistarget method results will be kept.")
+
+
 prepare_motif_enrichment_results(
-    paths_to_motif_enrichment_results=[
-        dem_results_path, cistarget_results_path],
+    paths_to_motif_enrichment_results=paths_to_motif_enrichment_results,
     multiome_mudata_fname=mudata_path,
     out_file_direct_annotation=output_cistromes_annotations_direct,
     out_file_extended_annotation=output_cistromes_annotations_extended,
