@@ -25,6 +25,8 @@ import scenicplus.data_wrangling.gene_search_space
 import pyranges as pr
 
 
+score_to_keep = "rho"  #"importance_x_rho"
+
 RANDOM_SEED = 666
 
 SKLEARN_REGRESSOR_FACTORY = {
@@ -67,31 +69,6 @@ SGBM_KWARGS = {
     'max_features': 0.1,
     'subsample': 0.9
 }
-
-# Interact auto sql definition
-INTERACT_AS = """table interact
-"Interaction between two regions"
-    (
-    string chrom;      "Chromosome (or contig, scaffold, etc.). For interchromosomal, use 2 records"
-    uint chromStart;   "Start position of lower region. For interchromosomal, set to chromStart of this region"
-    uint chromEnd;     "End position of upper region. For interchromosomal, set to chromEnd of this region"
-    string name;       "Name of item, for display.  Usually 'sourceName/targetName' or empty"
-    uint score;        "Score from 0-1000."
-    double value;      "Strength of interaction or other data value. Typically basis for score"
-    string exp;        "Experiment name (metadata for filtering). Use . if not applicable"
-    string color;      "Item color.  Specified as r,g,b or hexadecimal #RRGGBB or html color name, as in //www.w3.org/TR/css3-color/#html4."
-    string sourceChrom;  "Chromosome of source region (directional) or lower region. For non-directional interchromosomal, chrom of this region."
-    uint sourceStart;  "Start position source/lower/this region"
-    uint sourceEnd;    "End position in chromosome of source/lower/this region"
-    string sourceName;  "Identifier of source/lower/this region"
-    string sourceStrand; "Orientation of source/lower/this region: + or -.  Use . if not applicable"
-    string targetChrom; "Chromosome of target region (directional) or upper region. For non-directional interchromosomal, chrom of other region"
-    uint targetStart;  "Start position in chromosome of target/upper/this region"
-    uint targetEnd;    "End position in chromosome of target/upper/this region"
-    string targetName; "Identifier of target/upper/this region"
-    string targetStrand; "Orientation of target/upper/this region: + or -.  Use . if not applicable"
-    )
-"""
 
 def _score_regions_to_single_gene(
     acc: np.ndarray,
@@ -374,9 +351,10 @@ else:
         "Chrosomome sizes was not found, please provide this information manually.")
 
 # Calculate search space
-mdata["atac"].var_names = mdata["atac"].var_names.str.split('-', 1).str[0] + ':' + mdata["atac"].var_names.str.split('-', 1).str[1]
-mdata["rna"][:,mdata["rna"].X.sum(0)!=0]
-mdata["atac"][:,mdata["atac"].X.sum(0)!=0]
+mdata["atac"].var_names = mdata["atac"].var_names.str.split('-', 1).str[0]\
+    + ':' + mdata["atac"].var_names.str.split('-', 1).str[1]
+mdata["rna"][:, mdata["rna"].X.sum(0) != 0]
+mdata["atac"][:, mdata["atac"].X.sum(0) != 0]
 
 print(mdata["atac"].var_names)
 search_space = scenicplus.data_wrangling.gene_search_space.get_search_space(
@@ -401,10 +379,11 @@ p2g = calculate_regions_to_genes_relationships(
         correlation_scoring_method=correlation_scoring_method,
         n_cpu=njobs,)
 
-p2g = p2g[p2g["importance"]!=0]
-p2g = p2g.loc[:, ["target", "region", "importance_x_rho"]]
+p2g = p2g[p2g["importance"] != 0]
+p2g = p2g.loc[:, ["target", "region", score_to_keep]]
 p2g.columns = ["gene", "cre", "score"]
-p2g = p2g[p2g["score"]!=0]
+p2g = p2g[p2g["score"] != 0]
+p2g["cre"] = p2g["cre"].str.replace(":", "-")
 print(p2g)
 
-p2g.to_csv(args.output)
+p2g.to_csv(args.output, index=False)

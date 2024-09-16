@@ -32,7 +32,7 @@ rule prior_hummus:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         grn_number_edges = 50000,
         tf_layer_method = None,
-        n_cores = 2
+        n_cores = 32
     singularity:
         'workflow/envs/hummus.sif'
     shell:
