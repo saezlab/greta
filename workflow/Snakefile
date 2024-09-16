@@ -39,6 +39,7 @@ include: 'rules/datasets/reprofibro.smk'
 include: 'rules/datasets/pitupair.smk'
 include: 'rules/datasets/pitunpair.smk'
 include: 'rules/datasets/heartatlas.smk'
+include: 'rules/datasets/brain.smk'
 
 # Methods
 include: 'rules/methods/celloracle.smk'

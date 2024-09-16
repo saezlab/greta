@@ -94,7 +94,7 @@ rule annotate_brain:
         path_gex=expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES),
         path_peaks='datasets/brain/peaks.h5ad',
         path_annot='datasets/brain/annot.csv',
-        path_geneids='geneids/'
+        path_geneids='gdata/geneids/'
     output:
         'datasets/brain/annotated.h5mu'
     singularity:
