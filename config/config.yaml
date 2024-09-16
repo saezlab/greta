@@ -163,14 +163,10 @@ datasets:
     brain:
         organism: 'hg38'
         url:
-            frags_smpl1: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5818649&format=file&file=GSM5818649%5FC16007%5Fatac%5Ffragments%2Etsv%2Egz'
-            multi_smpl1: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5818649&format=file&file=GSM5818649%5FC16007%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-            frags_smpl2: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5818673&format=file&file=GSM5818673%5FYC4345%5Fatac%5Ffragments%2Etsv%2Egz'
-            multi_smpl2: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5818673&format=file&file=GSM5818673%5FYC4345%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             full_dataset: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE193688&format=file'
             annot: 'https://heibox.uni-heidelberg.de/f/05637a872a384155a951/?dl=1'
         samples: 
-            ['C4176', 'C4322', 'C4361']
-            #['C5410', 'C4176', 'YC5928', 'C16007', 'C4322', 'YC5276', 'C4361', 'YC5346', 'C4660', 'YC5813', 'YC5442', 
-            #'YC914', 'YC5626', 'C4814', 'YC6235', 'C4634', 'YC4345', 'C4691', 'YC5751']
+            ['C5410', 'C4176', 'YC5928', 'C16007', 'C4322', 'YC5276', 'C4361', 'YC5346', 'C4660', 'YC5813', 'YC5442', 
+            'YC914', 'YC5626', 'C4814', 'YC6235', 'C4634', 'YC4345', 'C4691', 'YC5751', 'P02284', 'P4205', 'P4560', 'P4653', 'P4772', 'P4884',
+            'P4919', 'P5318', 'P5331', 'P5626', 'P5662', 'P6259', 'P6320', 'P6323', 'P6326']
 

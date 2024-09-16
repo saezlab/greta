@@ -4,7 +4,7 @@ SAMPLES = config['datasets']['brain']['samples']
 rule download_brain:
     output:
         tar=local('datasets/brain/GSE193688.tar'), 
-        annot=local('datasets/brain/raw_annot.csv')
+        annot=temp(local('datasets/brain/raw_annot.csv'))
 
     params:
         full_dataset=config['datasets']['brain']['url']['full_dataset'],
@@ -25,8 +25,8 @@ rule extract_files:
     input:
         tar=local('datasets/brain/GSE193688.tar')
     output:
-        frag=local(expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES)),
-        multi=local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES))
+        frag=temp(local(expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES))),
+        multi=temp(local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES)))
     shell:
         """
         data_path=$(dirname {input.tar})
@@ -67,7 +67,7 @@ rule prc_annot:
 
 
 rule callpeaks_brain:
-    threads: 4
+    threads: 32
     input:
         frags=expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES),
         annot='datasets/brain/annot.csv'
@@ -75,9 +75,9 @@ rule callpeaks_brain:
         'workflow/envs/gretabench.sif'
     output:
         tmp=temp(directory(local('datasets/brain/tmp_peaks'))),
-        peaks=local('datasets/brain/peaks.h5ad')
+        peaks=temp(local('datasets/brain/peaks.h5ad'))
     resources:
-        mem_mb=8000,
+        mem_mb=110000,
         runtime=2160,
     shell:
         """
