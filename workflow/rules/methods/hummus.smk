@@ -35,6 +35,8 @@ rule prior_hummus:
         n_cores = 32
     singularity:
         'workflow/envs/hummus.sif'
+    resources:
+        mem_mb=128000,
     shell:
         """
         Rscript workflow/scripts/methods/hummus/prior_hummus_tf_infos.R \
