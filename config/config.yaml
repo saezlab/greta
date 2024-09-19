@@ -82,8 +82,8 @@ datasets:
     pitupair:
         organism: 'hg38'
         url:
-            frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
-            multi: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391776/suppl/GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
+            frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
+            multi: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
         cases:
             all:
                 celltypes: 'all'
@@ -92,10 +92,10 @@ datasets:
     pitunpair:
         organism: 'hg38'
         url:
-            atac_frags: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffragments%2Etsv%2Egz'
-            peaks: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
-            rna_mtx: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391775/suppl/GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-            atac_meta: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM5391nnn/GSM5391768/suppl/GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
+            atac_frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Ffragments%2Etsv%2Egz'
+            peaks: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
+            rna_mtx: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391775&format=file&file=GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
+            atac_meta: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
             celltypes: 'https://heibox.uni-heidelberg.de/f/d36511f7f94947859564/?dl=1'
         cases:
             all:
