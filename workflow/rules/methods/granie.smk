@@ -22,14 +22,18 @@ rule pre_granie:
     singularity:
         'workflow/envs/granie.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/granie.pre.h5mu'
+        tmp=temp(local('datasets/{dataset}/cases/{case}/runs/granie.pre_tmp.h5mu')),
+        out='datasets/{dataset}/cases/{case}/runs/granie.pre.h5mu'
     shell:
         """
         python workflow/scripts/methods/granie/pre.py \
         -i {input} \
-        -o {output}
+        -o {output.tmp}
         Rscript workflow/scripts/methods/granie/pre.R \
-        {output}
+        {output.tmp}
+        python workflow/scripts/methods/granie/pre_post.py \
+        -i {output.tmp} \
+        -o {output.out}
         """
 
 rule p2g_granie:
