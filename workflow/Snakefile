@@ -50,6 +50,7 @@ include: 'rules/methods/hummus.smk'
 include: 'rules/methods/scenicplus.smk'
 include: 'rules/methods/grn.smk'
 include: 'rules/methods/random.smk'
+include: 'rules/methods/scenic.smk'
 
 # Analyses
 include: 'rules/analysis/metrics/prior.smk'
