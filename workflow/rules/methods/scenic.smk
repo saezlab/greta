@@ -10,6 +10,7 @@ rule download_tfsscenic:
 
 
 rule grn_scenic:
+    threads: 32
     input:
         data='datasets/{dataset}/cases/{case}/mdata.h5mu',
         tf='gdata/tfs/scenic.txt',
@@ -28,7 +29,7 @@ rule grn_scenic:
         -o {output.t}
 
         # Step 2: Run pyscenic GRN
-        pyscenic grn {output.t} {input.tf} -o {output.adj}
+        pyscenic grn {output.t} {input.tf} -o {output.adj} --num_workers 32
 
     	# Step 3: Process GRN
     	python workflow/scripts/methods/scenic/process_grn.py \
