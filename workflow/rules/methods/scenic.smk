@@ -21,6 +21,8 @@ rule grn_scenic:
         adj=temp(local('datasets/{dataset}/cases/{case}/runs/adj_tmp.tsv')),
     	t=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_tmp.loom')),
     	grn='datasets/{dataset}/cases/{case}/runs/scenic.scenic.scenic.scenic.grn.csv'
+    resources:
+        mem_mb=64000
     shell:
         """
         # Step 1: Create Loom file
@@ -29,7 +31,7 @@ rule grn_scenic:
         -o {output.t}
 
         # Step 2: Run pyscenic GRN
-        pyscenic grn {output.t} {input.tf} -o {output.adj} --num_workers 32
+        pyscenic grn {output.t} {input.tf} -o {output.adj} --num_workers 30
 
     	# Step 3: Process GRN
     	python workflow/scripts/methods/scenic/process_grn.py \
