@@ -122,3 +122,22 @@ rule pred_pathway_reac:
         -p {params.reac_path} \
         -o {output}
         """
+
+
+rule pred_pair_pitu:
+    input:
+        p='analysis/topo/{dname}pair.{case}.sims_mult.csv',
+        n='analysis/topo/{dname}npair.{case}.sims_mult.csv',
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        make_combs(
+            path='analysis/metrics/pred/pair/{dname}/{dname}.all/',
+            mthds=mthds,
+            name='scores',
+        )
+    shell:
+        """
+        python workflow/scripts/analysis/metrics/pred/compute_pair.py -i {input.p}
+        """
+
