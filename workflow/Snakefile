@@ -1,34 +1,12 @@
 from snakemake.utils import min_version
-
 min_version('7.29.0')
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'analysis')))
+from utils import make_combs
 
 configfile: 'config/config.yaml'
 container: 'workflow/envs/gretabench.sif'
-
-def make_combs(path, mthds, name):
-    from itertools import product
-    s = '{0}.{1}.{2}.{3}.' + name + '.csv'
-    combinations = product(mthds, repeat=4)
-    strings = []
-    for combo in combinations:
-        formatted_string = path + s.format(*combo)
-        strings.append(formatted_string)
-
-    # Add src
-    s = '{m}.{m}.{m}.{m}.' + name + '.csv'
-    for m in mthds:
-        formatted_string = path + s.format(m='o_' + m)
-        strings.append(formatted_string)
-
-    # Add indv nets
-    s = path + 'random.random.random.random.' + name + '.csv'
-    strings.append(s)
-    s = path + 'collectri.collectri.collectri.collectri.' + name + '.csv'
-    strings.append(s)
-    s = path + 'dorothea.dorothea.dorothea.dorothea.' + name + '.csv'
-    strings.append(s)
-
-    return strings
 
 mthds = list(config['methods'].keys())
 
