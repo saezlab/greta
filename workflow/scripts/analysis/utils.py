@@ -45,6 +45,8 @@ def make_combs(path, mthds, name):
     # Add indv nets
     s = path + 'random.random.random.random.' + name + '.csv'
     strings.append(s)
+    s = path + 'scenic.scenic.scenic.scenic.' + name + '.csv'
+    strings.append(s)
     s = path + 'collectri.collectri.collectri.collectri.' + name + '.csv'
     strings.append(s)
     s = path + 'dorothea.dorothea.dorothea.dorothea.' + name + '.csv'
