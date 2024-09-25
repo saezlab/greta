@@ -132,7 +132,7 @@ rule pred_pair_pitu:
         'workflow/envs/gretabench.sif'
     output:
         make_combs(
-            path='analysis/metrics/pred/pair/{dname}/{dname}.all/',
+            path='analysis/metrics/pred/pair/{dname}/{dname}.{case}/',
             mthds=mthds,
             name='scores',
         )
