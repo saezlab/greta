@@ -20,6 +20,7 @@ import pathlib
 from typing import (List, Literal, TYPE_CHECKING)
 import argparse
 from pathlib import Path
+import pysam
 
 # Init args
 parser = argparse.ArgumentParser()
@@ -112,6 +113,14 @@ cell_data['barcode'] = cell_data.index
 for batch_id in batch_ids:
     # Add batch_id to fragments_dict
     fragments_dict[batch_id] = fragments_files[batch_id]
+    # create tabix file
+    print("Create index files ('{fragments_file}.tbi')")
+    try:
+        pysam.tabix_index(fragments_files[batch_id], preset="bed")
+    except OSError:
+        print("It seems there is already a file called '{}.tbi'. Skipping index file creation.".format(
+            fragments_files[batch_id]))
+
     # Remove batch_id from cell barcodes
     cell_data.loc[cell_data['batch'] == batch_id, 'barcode'] = \
         cell_data.loc[cell_data['batch'] == batch_id, 'barcode'].str.replace(
