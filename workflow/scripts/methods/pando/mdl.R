@@ -6,6 +6,7 @@ library(R.utils)
 
 nCores <- 32
 cat("N cores: ", nCores, '\n')
+Sys.setenv(OMP_NUM_THREADS = as.character(nCores))
 registerDoParallel(nCores)
 
 # Parse args
