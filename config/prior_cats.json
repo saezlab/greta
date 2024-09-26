@@ -22,5 +22,17 @@
             "eqtlcatalogue": ["fibroblast", "iPSC"],
             "knocktf": ["Dermal_fibroblasts", "Fibroblasts", "Lung_fibroblast"]
         }
+    },
+    "heartatlas": {
+        "all": {
+            "tfmdb": ["Endothelial cell", "Fibroblast cell", "Muscle cell"],
+            "hpa": ["cardiomyocytes", "endothelial cells", "fibroblasts", "smooth muscle cells"],
+            "chipatlas": ["Cardiac", "Cardiac fibroblasts", "Cardiac progenitor cells", "Cardiomyocytes", "Heart", "Heart Ventricles", "Coronary artery cells", "Coronary artery endothelial cells", "Coronary artery smooth muscle", "Smooth"],
+            "remap2022": ["cardiac", "cardiac-muscle", "cardiomyocyte", "heart", "age at diagnosis, cardiac arrhythmia"],
+            "unibind": ["artery smooth muscle", "cardiomyocytes", "heart endothelial cells", "heart mesenchymal stem cells", "heart tissue", "myocytes", "ventricular cardiomyocytes", "ventricular myocytes"],
+            "gwascatalogue": ["Ischemic stroke, cardiac embolism", "Vasodilators used in cardiac diseases use measurement", "cardiac arrhythmia", "cardiac hypertrophy", "cardiac troponin I change measurement", "cardiac troponin I measurement", "cardiac troponin T measurement", "early cardiac repolarization measurement", "premature cardiac contractions, supraventricular ectopy, ventricular ectopy", "sudden cardiac arrest", "troponin i, cardiac muscle measurement", "congenital heart disease", "congenital heart disease, parental genotype effect measurement", "congenital heart malformation", "congenital left-sided heart lesions", "congenital left-sided heart lesions, parental genotype effect measurement", "congenital right-sided heart lesions', 'congestive heart failure", "conotruncal heart malformations", "conotruncal heart malformations, parental genotype effect measurement", "heart failure", "heart failure, body fat percentage", "heart function measurement", "heart rate", "heart rate response to exercise", "heart rate response to recovery post exercise", "heart rate variability measurement", "heart rate variability measurement, response to antipsychotic drug", "heart relative wall thickness", "heart septal defect", "heart valve disease", "response to antihypertensive drug, heart relative wall thickness", "response to beta blocker, heart rate", "resting heart rate", "rheumatic heart disease", "left ventricle sphericity index", "left ventricular diastolic function measurement", "left ventricular ejection fraction measurement", "left ventricular function, response to anthracycline-based chemotherapy", "left ventricular mass", "left ventricular mass index", "left ventricular stroke volume measurement", "left ventricular structural measurement", "left ventricular systolic function measurement", "Left ventricular mass to end-diastolic volume ratio", "cardiovascular measurement, left ventricular function", "cardiovascular measurement, left ventricular hypertrophy"],
+            "eqtlcatalogue":["heart (atrial appendage)", "heart (left ventricle)"],
+            "knocktf": ["Aorta", "Blood", "Heart", "Muscle"]
+        }
     }
 }
