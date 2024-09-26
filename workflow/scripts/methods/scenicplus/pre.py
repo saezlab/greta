@@ -68,8 +68,8 @@ print(annot.head())
 ##################
 dataset_name = 'pbmc10k'
 
-fragments_files = {
-    'smpl': frags}
+fragments_files = {frag.split(".frags")[0].split(".")[-1]:frag for frag in frags}
+print(fragments_files)
 
 # SCENIC+ paths
 # cisTopic paths
