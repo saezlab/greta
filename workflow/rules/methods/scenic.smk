@@ -1,45 +1,47 @@
+localrules: download_tfsscenic, download_rankings
+
+
 rule download_tfsscenic:
     output:
-        'gdata/tfs/scenic.txt'
+        out='gdata/tfs/scenic.txt'
     params:
         url='https://resources.aertslab.org/cistarget/tf_lists/allTFs_hg38.txt'
     resources:
         mem_mb=2000
     shell:
-        "wget '{params.url}' -O {output}"
+        "wget '{params.url}' -O {output.out}"
 
 
 rule download_rankings:
     output:
         small="aertslab/cistarget/hg38_500bp_up_100bp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
-	big="aertslab/cistarget/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather"
-	
+    	big="aertslab/cistarget/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
     params:
         url_small="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/refseq_r80/mc_v10_clust/gene_based/hg38_500bp_up_100bp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
-	url_big="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/refseq_r80/mc_v10_clust/gene_based/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather"
+    	url_big="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/refseq_r80/mc_v10_clust/gene_based/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
     shell:
         """
-	wget {params.url_big} -O {output.big}
-	wget {params.url_small} -O {output.small}
-	"""
+    	wget {params.url_big} -O {output.big}
+    	wget {params.url_small} -O {output.small}
+    	"""
 
 
-rule grn_scenic:
+rule mdl_scenic:
     threads: 16
     input:
-        data='datasets/{dataset}/cases/{case}/mdata.h5mu',
-        tf='gdata/tfs/scenic.txt',
+        mdata=rules.extract_case.output.mdata,
+        tf=rules.download_tfsscenic.output.out,
         proms='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/cre/promoters/promoters.bed',
-	ranking_small='aertslab/cistarget/hg38_500bp_up_100bp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather',
-	ranking_big='aertslab/cistarget/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather',
-	motifs='aertslab/motifs-v10nr_clust/nr.hgnc-m0.001-o0.0.tbl'
+    	ranking_small=rules.download_rankings.output.small,
+    	ranking_big=rules.download_rankings.output.big,
+    	motifs='aertslab/motifs-v10nr_clust/nr.hgnc-m0.001-o0.0.tbl'
     singularity:
         'workflow/envs/scenicplus.sif'
     output:
         adj=temp(local('datasets/{dataset}/cases/{case}/runs/adj_tmp.tsv')),
         t=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_tmp.loom')),
-	reg=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_reg.csv')),
-        grn='datasets/{dataset}/cases/{case}/runs/scenic.scenic.scenic.scenic.grn.csv'
+    	reg=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_reg.csv')),
+        out='datasets/{dataset}/cases/{case}/runs/scenic.scenic.scenic.scenic.mdl.csv'
     resources:
         mem_mb=64000
     shell:
@@ -70,6 +72,6 @@ rule grn_scenic:
         -o {output.grn} \
         -p {input.proms} \
         -g {output.adj} \
-	-r {output.reg}
+    	-r {output.reg}
         echo "Done"
         """

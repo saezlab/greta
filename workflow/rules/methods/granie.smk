@@ -1,7 +1,11 @@
+localrules: download_tfbs
+
+
 rule download_tfbs:
     output:
         h=directory('gdata/tfbs/hg38'),
         m=directory('gdata/tfbs/mm10'),
+        d=directory('gdata/tfbs'),
     shell:
         """
         wget 'https://s3.embl.de/zaugg-web/GRaNIE/TFBS/hg38/PWMScan_HOCOMOCOv12_H12INVIVO.tar.gz' -O {output.h}.tar.gz
@@ -15,10 +19,11 @@ rule download_tfbs:
         rm -r {output.h}/PWMScan_* {output.m}/pwmscan_*
         """
 
+
 rule pre_granie:
     threads: 32
     input:
-        'datasets/{dataset}/cases/{case}/mdata.h5mu'
+        mdata=rules.extract_case.output.mdata,
     singularity:
         'workflow/envs/granie.sif'
     output:
@@ -27,7 +32,7 @@ rule pre_granie:
     shell:
         """
         python workflow/scripts/methods/granie/pre.py \
-        -i {input} \
+        -i {input.mdata} \
         -o {output.tmp}
         Rscript workflow/scripts/methods/granie/pre.R \
         {output.tmp}
@@ -36,16 +41,17 @@ rule pre_granie:
         -o {output.out}
         """
 
+
 rule p2g_granie:
     threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        g='gdata/geneids',
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        g=rules.download_geneids.output.dr,
     singularity:
         'workflow/envs/granie.sif'
     output:
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.granie_tmp'))),
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.granie.p2g.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.granie.p2g.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['granie']['ext'],
@@ -55,26 +61,27 @@ rule p2g_granie:
     shell:
         """
         Rscript workflow/scripts/methods/granie/p2g.R \
-        {input.d} \
+        {input.pre} \
         {params.organism} \
         {input.g} \
         {output.t} \
         {params.ext} \
-        {output.p}
+        {output.out}
         """
+
 
 rule tfb_granie:
     threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        g='gdata/geneids',
-        t='gdata/tfbs',
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
+        g=rules.download_geneids.output.dr,
+        t=rules.download_tfbs.output.d,
     singularity:
         'workflow/envs/granie.sif'
     output:
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie_tmp'))),
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     resources:
@@ -82,27 +89,28 @@ rule tfb_granie:
     shell:
         """
         Rscript workflow/scripts/methods/granie/tfb.R \
-        {input.d} \
+        {input.pre} \
         {params.organism} \
         {input.g} \
         {output.t} \
         {input.t} \
-        {input.p} \
-        {output.p}
+        {input.p2g} \
+        {output.out}
         """
+
 
 rule mdl_granie:
     threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        t='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
-        g='gdata/geneids',
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
+        tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
+        g=rules.download_geneids.output.dr,
     singularity:
         'workflow/envs/granie.sif'
     output:
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie_tmp'))),
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         thr_fdr=config['methods']['granie']['thr_fdr'],
@@ -112,28 +120,29 @@ rule mdl_granie:
     shell:
         """
         Rscript workflow/scripts/methods/granie/mdl.R \
-        {input.d} \
+        {input.pre} \
         {params.organism} \
         {input.g} \
         {output.t} \
-        {input.p} \
-        {input.t} \
+        {input.p2g} \
+        {input.tfb} \
         {params.thr_fdr} \
-        {output.p}
+        {output.out}
         """
 
-rule src_granie:
+
+rule mdl_o_granie:
     threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/mdata.h5mu',
-        g='gdata/geneids',
-        t='gdata/tfbs',
+        mdata=rules.extract_case.output.mdata,
+        g=rules.download_geneids.output.dr,
+        t=rules.download_tfbs.output.d,
     singularity:
         'workflow/envs/granie.sif'
     output:
         h=temp(local('datasets/{dataset}/cases/{case}/runs/pre.granie.src.h5mu')),
         t=temp(directory(local('datasets/{dataset}/cases/{case}/runs/granie_tmp.src'))),
-        p='datasets/{dataset}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.grn.csv'
+        out='datasets/{dataset}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.grn.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['granie']['ext'],
@@ -143,7 +152,7 @@ rule src_granie:
     shell:
         """
         python workflow/scripts/methods/granie/pre.py \
-        -i {input.d} \
+        -i {input.mdata} \
         -o {output.h}
 
         Rscript workflow/scripts/methods/granie/src.R \
@@ -154,5 +163,5 @@ rule src_granie:
         {params.ext} \
         {input.t} \
         {params.thr_fdr} \
-        {output.p}
+        {output.out}
         """

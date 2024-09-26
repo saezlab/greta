@@ -1,11 +1,11 @@
-rule compute_tfact_knocktf:
+rule mech_tfact:
     input:
-        grn='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv',
-        rsc='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/perturb/knocktf/',
+        grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
+        rsc='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/perturb/{resource}/',
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        'analysis/metrics/mech/tfact/knocktf/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='analysis/metrics/mech/tfact/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         cats='config/prior_cats.json',
     shell:
@@ -14,18 +14,18 @@ rule compute_tfact_knocktf:
         -i {input.grn} \
         -b {input.rsc} \
         -c {params.cats} \
-        -o {output}
+        -o {output.out}
         """
 
 
-rule compute_prtrb_knocktf:
+rule mech_prtrb:
     input:
-        grn='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv',
-        rsc='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/perturb/knocktf/',
+        grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
+        rsc='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/perturb/{resource}/',
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        'analysis/metrics/mech/prtrb/knocktf/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='analysis/metrics/mech/prtrb/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         cats='config/prior_cats.json',
     resources:
@@ -37,5 +37,5 @@ rule compute_prtrb_knocktf:
         -i {input.grn} \
         -b {input.rsc} \
         -c {params.cats} \
-        -o {output}
+        -o {output.out}
         """

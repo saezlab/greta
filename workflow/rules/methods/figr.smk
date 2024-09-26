@@ -1,28 +1,29 @@
 rule pre_figr:
     threads: 32
     input:
-        'datasets/{dataset}/cases/{case}/mdata.h5mu'
+        mdata=rules.extract_case.output.mdata,
     singularity:
         'workflow/envs/figr.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/figr.pre.h5mu'
+        out='datasets/{dataset}/cases/{case}/runs/figr.pre.h5mu'
     resources:
         mem_mb=128000,
     shell:
         """
-        cp {input} {output}
+        cp {input.mdata} {output.out}
         Rscript workflow/scripts/methods/figr/pre.R \
-        {output}
+        {output.out}
         """
+
 
 rule p2g_figr:
     threads: 32
     input:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu'
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
     singularity:
         'workflow/envs/figr.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.figr.p2g.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.figr.p2g.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['figr']['ext'],
@@ -34,23 +35,24 @@ rule p2g_figr:
     shell:
         """
         Rscript workflow/scripts/methods/figr/p2g.R \
-        {input} \
+        {input.pre} \
         {params.organism} \
         {params.ext} \
         {params.thr_p2g_pval} \
         {params.ncres} \
-        {output}
+        {output.out}
         """
+
 
 rule tfb_figr:
     threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
     singularity:
         'workflow/envs/figr.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         cellK=config['methods']['figr']['cellK'],
@@ -61,24 +63,25 @@ rule tfb_figr:
     shell:
         """
         Rscript workflow/scripts/methods/figr/tfb.R \
-        {input.d} \
+        {input.pre} \
         {params.organism} \
-        {input.p} \
+        {input.p2g} \
         {params.cellK} \
         {params.dorcK} \
-        {output}
+        {output.out}
         """
+
 
 rule mdl_figr:
     threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        t='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
+        tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
     singularity:
         'workflow/envs/figr.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
     params:
         cellK=config['methods']['figr']['cellK'],
         thr_score=config['methods']['figr']['thr_score'],
@@ -88,22 +91,23 @@ rule mdl_figr:
     shell:
         """
         Rscript workflow/scripts/methods/figr/mdl.R \
-        {input.d} \
-        {input.p} \
-        {input.t} \
+        {input.pre} \
+        {input.p2g} \
+        {input.tfb} \
         {params.cellK} \
         {params.thr_score} \
-        {output}
+        {output.out}
         """
 
-rule src_figr:
+
+rule mdl_o_figr:
     threads: 32
     input:
-        'datasets/{dataset}/cases/{case}/mdata.h5mu',
+        mdata=rules.extract_case.output.mdata,
     singularity:
         'workflow/envs/figr.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/o_figr.o_figr.o_figr.o_figr.grn.csv'
+        out='datasets/{dataset}/cases/{case}/runs/o_figr.o_figr.o_figr.o_figr.grn.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['figr']['ext'],
@@ -118,7 +122,7 @@ rule src_figr:
     shell:
         """
         Rscript workflow/scripts/methods/figr/src.R \
-        {input} \
+        {input.mdata} \
         {params.cellK} \
         {params.organism} \
         {params.ext} \
@@ -126,5 +130,5 @@ rule src_figr:
         {params.ncres} \
         {params.dorcK} \
         {params.thr_score} \
-        {output}
+        {output.out}
         """

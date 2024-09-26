@@ -1,3 +1,18 @@
+rule download_geneids:
+    singularity:
+        'workflow/envs/gretabench.sif'
+    output:
+        hg='gdata/geneids/hg38.csv',
+        mm='gdata/geneids/mm10.csv',
+        dr=directory('gdata/geneids')
+    shell:
+        """
+        Rscript workflow/scripts/datasets/download_geneids.R \
+        {output.hg} \
+        {output.mm}
+        """
+
+
 rule download_pbmc10k:
     output:
         atac_frags='datasets/pbmc10k/smpl.frags.tsv.gz',
@@ -25,8 +40,8 @@ rule prcannot_pbmc10k:
 rule callpeaks_pbmc10k:
     threads: 32
     input:
-        frags='datasets/pbmc10k/smpl.frags.tsv.gz',
-        annot='datasets/pbmc10k/annot.csv',
+        frags=rules.download_pbmc10k.output.atac_frags,
+        annot=rules.prcannot_pbmc10k.output.annot,
     output:
         tmp=temp(directory(local('datasets/pbmc10k/tmp_peaks'))),
         peaks=temp(local('datasets/pbmc10k/peaks.h5ad'))
@@ -44,9 +59,9 @@ rule callpeaks_pbmc10k:
 
 rule annotate_pbmc10k:
     input:
-        annot='datasets/pbmc10k/annot.csv',
-        g='gdata/geneids',
-        peaks='datasets/pbmc10k/peaks.h5ad',
+        annot=rules.prcannot_pbmc10k.output.annot,
+        g=rules.download_geneids.output.dr,
+        peaks=rules.callpeaks_pbmc10k.output.peaks,
     output:
         tmp=temp(directory(local('datasets/pbmc10k/tmp_annot'))),
         out='datasets/pbmc10k/annotated.h5mu'

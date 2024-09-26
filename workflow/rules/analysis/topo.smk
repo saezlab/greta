@@ -1,11 +1,7 @@
 rule topo_mult:
     threads: 32
     input:
-        make_combs(
-            path='datasets/{dataset}/cases/{case}/runs/',
-            mthds=mthds,
-            name='grn',
-        )
+        lambda w: make_combs_rules(w=w, mthds=mthds, rule_name='grn_run')
     output:
         stats='analysis/topo/{dataset}.{case}.stats_mult.csv',
         sims='analysis/topo/{dataset}.{case}.sims_mult.csv',

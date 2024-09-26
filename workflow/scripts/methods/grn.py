@@ -14,7 +14,16 @@ path_out = args['path_out']
 # Find paths
 path = os.path.dirname(mdl_path)
 names = os.path.basename(mdl_path)
-pre_name, p2g_name, tfb_name, mdl_name = names.replace('.mdl.csv', '').split('.')
+lst = names.replace('.mdl.csv', '').split('.')
+
+# Skip baselines
+baselines = ['collectri', 'dorothea', 'random', 'scenic']
+if all(x == lst[0] for x in lst):
+    if (lst[0] not in baselines) or lst[0].startswith('o_'):
+        grn.to_csv(path_out, index=False)
+
+# Read
+pre_name, p2g_name, tfb_name, mdl_name = lst
 p2g_path = os.path.join(path, '{pre}.{p2g}.p2g.csv'.format(pre=pre_name, p2g=p2g_name))
 tfb_path = os.path.join(path, '{pre}.{p2g}.{tfb}.tfb.csv'.format(pre=pre_name, p2g=p2g_name, tfb=tfb_name))
 

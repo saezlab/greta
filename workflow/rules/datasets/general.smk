@@ -1,7 +1,7 @@
 rule extract_case:
     threads: 32
     input:
-        'datasets/{dataset}/annotated.h5mu'
+        lambda w: map_rules('annotate_', w.dataset)
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -24,18 +24,4 @@ rule extract_case:
         -r '{params.n_hvr}' \
         -t '{params.root}' \
         -o '{output.mdata}'
-        """
-
-rule download_geneids:
-    singularity:
-        'workflow/envs/gretabench.sif'
-    output:
-        hg='gdata/geneids/hg38.csv',
-        mm='gdata/geneids/mm10.csv',
-        dr=directory('gdata/geneids')
-    shell:
-        """
-        Rscript workflow/scripts/datasets/download_geneids.R \
-        {output.hg} \
-        {output.mm}
         """

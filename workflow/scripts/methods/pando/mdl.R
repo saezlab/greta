@@ -1,13 +1,16 @@
+nCores <- 32
+cat("N cores: ", nCores, '\n')
+Sys.setenv(OMP_NUM_THREADS=nCores)
+Sys.setenv(MKL_NUM_THREADS=nCores)
+Sys.setenv(BLAS_NUM_THREADS=nCores)
+
 library(tidyverse)
 library(rhdf5)
 library(Pando)
 library(doParallel)
 library(R.utils)
-
-nCores <- 32
-cat("N cores: ", nCores, '\n')
-Sys.setenv(OMP_NUM_THREADS = as.character(nCores))
 registerDoParallel(nCores)
+
 
 # Parse args
 args <- commandArgs(trailingOnly = F)

@@ -1,10 +1,9 @@
+localrules: aggr_type_task_resource
+
+
 rule aggr_type_task_resource:
     input:
-        make_combs(
-            path='analysis/metrics/{type}/{task}/{resource}/{dataset}.{case}/',
-            mthds=mthds,
-            name='scores',
-        )
+        lambda w: make_combs_rules(w=w, mthds=mthds, rule_name='{typ}_{tsk}'.format(typ=w.type, tsk=w.task))
     output:
         'analysis/metrics/{type}/{task}/{resource}/{dataset}.{case}.scores.csv'
     shell:
@@ -26,6 +25,7 @@ rule summary:
             'analysis/metrics/pred/pathway/kegg/{dataset}.{case}.scores.csv',
             'analysis/metrics/pred/pathway/hall/{dataset}.{case}.scores.csv',
             'analysis/metrics/pred/pathway/reac/{dataset}.{case}.scores.csv',
+            'analysis/metrics/pred/pathway/progeny/{dataset}.{case}.scores.csv',
             'analysis/metrics/prior/tfm/hpa/{dataset}.{case}.scores.csv',
             'analysis/metrics/prior/tfm/tfmdb/{dataset}.{case}.scores.csv',
             'analysis/metrics/prior/tfbind/chipatlas/{dataset}.{case}.scores.csv',
@@ -42,7 +42,5 @@ rule summary:
         'analysis/metrics/summary/{dataset}.{case}.csv'
     shell:
         """
-        python path/to/script \
-        -i {input} \
-        -o {output}
+        echo 'Done'
         """

@@ -1,64 +1,5 @@
-rule pre_celloracle:
-    threads: 32
-    input:
-        'datasets/{dataset}/cases/{case}/mdata.h5mu'
-    singularity:
-        'workflow/envs/celloracle.sif'
-    output:
-        'datasets/{dataset}/cases/{case}/runs/celloracle.pre.h5mu'
-    params:
-        k=config['methods']['celloracle']['k']
-    shell:
-        """
-        python workflow/scripts/methods/celloracle/pre.py \
-        -i {input} \
-        -k {params.k} \
-        -o {output}
-        """
+localrules: download_genomes, download_genomesizes
 
-rule download_genomesizes:
-    output:
-        hg38='gdata/sizes/hg38.txt',
-        mm10='gdata/sizes/mm10.txt',
-        size=directory('gdata/sizes')
-    shell:
-        """
-        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes' -O {output.hg38}
-        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes' -O {output.mm10}
-        """
-
-rule p2g_celloracle:
-    threads: 32
-    input:
-        data='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        sizes='gdata/sizes/',
-    singularity:
-        'workflow/envs/celloracle.sif'
-    output:
-        pp=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.peaks.csv')),
-        pc=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.conns.csv')),
-        pg='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.p2g.csv',
-    params:
-        organism=lambda w: config['datasets'][w.dataset]['organism'],
-        thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
-        ext=config['methods']['celloracle']['ext']
-    shell:
-        """
-        Rscript workflow/scripts/methods/celloracle/p2g.R \
-        {input.data} \
-        {params.organism} \
-        {params.ext} \
-        {output.pp} \
-        {output.pc}
-
-        python workflow/scripts/methods/celloracle/p2g.py \
-        -d {input.data} \
-        -a {output.pp} \
-        -c {output.pc} \
-        -o {params.organism} \
-        -t {params.thr_coaccess} \
-        -p {output.pg}
-        """
 
 rule download_genomes:
     output:
@@ -71,16 +12,82 @@ rule download_genomes:
         -d {output.d}
         """
 
-rule tfb_celloracle:
+
+rule download_genomesizes:
+    output:
+        hg38='gdata/sizes/hg38.txt',
+        mm10='gdata/sizes/mm10.txt',
+        size=directory('gdata/sizes')
+    shell:
+        """
+        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes' -O {output.hg38}
+        wget 'http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes' -O {output.mm10}
+        """
+
+
+rule pre_celloracle:
     threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        g='gdata/genomes',
+        mdata=rules.extract_case.output.mdata
     singularity:
         'workflow/envs/celloracle.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.celloracle.tfb.csv'
+        out='datasets/{dataset}/cases/{case}/runs/celloracle.pre.h5mu'
+    params:
+        k=config['methods']['celloracle']['k']
+    shell:
+        """
+        python workflow/scripts/methods/celloracle/pre.py \
+        -i {input.mdata} \
+        -k {params.k} \
+        -o {output.out}
+        """
+
+
+rule p2g_celloracle:
+    threads: 32
+    input:
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        sizes=rules.download_genomesizes.output.size
+    singularity:
+        'workflow/envs/celloracle.sif'
+    output:
+        pp=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.peaks.csv')),
+        pc=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.conns.csv')),
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.celloracle.p2g.csv',
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
+        ext=config['methods']['celloracle']['ext']
+    shell:
+        """
+        Rscript workflow/scripts/methods/celloracle/p2g.R \
+        {input.pre} \
+        {params.organism} \
+        {params.ext} \
+        {output.pp} \
+        {output.pc}
+
+        python workflow/scripts/methods/celloracle/p2g.py \
+        -d {input.pre} \
+        -a {output.pp} \
+        -c {output.pc} \
+        -o {params.organism} \
+        -t {params.thr_coaccess} \
+        -p {output.out}
+        """
+
+
+rule tfb_celloracle:
+    threads: 32
+    input:
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
+        g=rules.download_genomes.output.d,
+    singularity:
+        'workflow/envs/celloracle.sif'
+    output:
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.celloracle.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         fpr=config['methods']['celloracle']['fpr'],
@@ -89,25 +96,26 @@ rule tfb_celloracle:
     shell:
         """
         python workflow/scripts/methods/celloracle/tfb.py \
-        -d {input.d} \
-        -p {input.p} \
+        -d {input.pre} \
+        -p {input.p2g} \
         -g {params.organism} \
         -f {params.fpr} \
         -b {params.blen} \
         -t {params.tfb_thr} \
-        -o {output}
+        -o {output.out}
         """
+
 
 rule mdl_celloracle:
     threads: 32
     input:
-        pre='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p2g='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        tfb='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
+        tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
     singularity:
         'workflow/envs/celloracle.sif'
     output:
-        'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.mdl.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.mdl.csv'
     params:
         a=config['methods']['celloracle']['a'],
         p=config['methods']['celloracle']['p'],
@@ -126,16 +134,17 @@ rule mdl_celloracle:
         -o {output}
         """
 
-rule src_celloracle:
+
+rule mdl_o_celloracle:
     threads: 32
     input:
-        'datasets/{dataset}/cases/{case}/mdata.h5mu',
+        mdata=rules.extract_case.output.mdata,
     singularity:
         'workflow/envs/celloracle.sif'
     output:
         pp=temp(local('datasets/{dataset}/cases/{case}/runs/celloracle.src.peaks.csv')),
         pc=temp(local('datasets/{dataset}/cases/{case}/runs/celloracle.src.conns.csv')),
-        gr='datasets/{dataset}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.grn.csv',
+        out='datasets/{dataset}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.mdl.csv',
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         k=config['methods']['celloracle']['k'],
@@ -153,14 +162,14 @@ rule src_celloracle:
     shell:
         """
         Rscript workflow/scripts/methods/celloracle/src.R \
-        {input} \
+        {input.mdata} \
         {params.organism} \
         {params.ext} \
         {output.pp} \
         {output.pc}
 
         python workflow/scripts/methods/celloracle/src.py \
-        -a {input} \
+        -a {input.mdata} \
         -b {output.pp} \
         -c {output.pc} \
         -d {params.organism} \
@@ -172,5 +181,5 @@ rule src_celloracle:
         -k {params.p} \
         -l {params.n} \
         -m {params.k} \
-        -n {output.gr}
+        -n {output.out}
         """

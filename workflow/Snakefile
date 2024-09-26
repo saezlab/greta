@@ -5,19 +5,59 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'analysis')))
 from utils import make_combs
 
+
+def map_rules(rule_prefix, w_name):
+    rule_name = f'{rule_prefix}_{w_name}'
+    if hasattr(rules, rule_name):
+        return getattr(rules, rule_name).output.out
+    else:
+        print(rule_prefix, w_name)
+
+
+def format_rule(out, w, pre, p2g=None, tfb=None, mdl=None, resource=None):
+    if (p2g is None) & (tfb is None) & (mdl is None):
+        p2g, tfb, mdl = pre, pre, pre
+    frm = out.format(
+        pre=pre,
+        p2g=p2g,
+        tfb=tfb,
+        mdl=mdl,
+        **w
+    )
+    return frm
+
+
+def make_combs_rules(w, mthds, rule_name):
+    from itertools import product
+    out = getattr(rules, rule_name).output.out
+    rule_outputs = []
+    for pre, p2g, tfb, mdl in product(mthds, repeat=4):
+        rule_outputs.append(
+            format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
+        )
+    for mth in mthds:
+        rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
+    rule_outputs.append(format_rule(out, w=w, pre='random'))
+    rule_outputs.append(format_rule(out, w=w, pre='scenic'))
+    rule_outputs.append(format_rule(out, w=w, pre='collectri'))
+    rule_outputs.append(format_rule(out, w=w, pre='dorothea'))
+    return rule_outputs
+
+
 configfile: 'config/config.yaml'
 container: 'workflow/envs/gretabench.sif'
 
 mthds = list(config['methods'].keys())
+datasets = list(config['datasets'].keys())
 
 # Datasets
-include: 'rules/datasets/general.smk'
 include: 'rules/datasets/pbmc10k.smk'
 include: 'rules/datasets/reprofibro.smk'
 include: 'rules/datasets/pitupair.smk'
 include: 'rules/datasets/pitunpair.smk'
 include: 'rules/datasets/heartatlas.smk'
 include: 'rules/datasets/brain.smk'
+include: 'rules/datasets/general.smk'
 
 # Methods
 include: 'rules/methods/celloracle.smk'
