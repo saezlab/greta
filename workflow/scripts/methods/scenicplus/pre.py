@@ -24,7 +24,7 @@ import pysam
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--frags', required=True)
+parser.add_argument('-f', '--frags', nargs='+', required=True)
 parser.add_argument('-i', '--mudata', required=True)
 parser.add_argument('-o', '--output', required=True)
 parser.add_argument('-t', '--tmp_scenicplus', required=True)
@@ -68,7 +68,7 @@ print(annot.head())
 ##################
 dataset_name = 'pbmc10k'
 
-fragments_files = {frag.split(".frags")[0].split(".")[-1]:frag for frag in frags}
+fragments_files = {frag.split(".frags")[0].split("/")[-1]:frag for frag in frags}
 print(fragments_files)
 
 # SCENIC+ paths
@@ -146,7 +146,7 @@ chromsizes['Chromosome'] = [chromsizes['Chromosome'][x].split('_')[1]
                             else chromsizes['Chromosome'][x]
                             for x in range(len(chromsizes['Chromosome']))]
 chromsizes = pr.PyRanges(chromsizes)
-
+print(cell_data)
 bw_paths, bed_paths = export_pseudobulk(
     input_data=cell_data,
     variable='celltype',               # variable by which to generate pseubulk profiles, in this case we want pseudobulks per celltype

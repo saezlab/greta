@@ -50,6 +50,10 @@ datasets:
         samples:
             ['smpl']
         cases:
+            test:
+                celltypes: 'Naive B;Intermediate B;Memory B'
+                n_hvg: 2048
+                n_hvr: 8192
             tcell:
                 celltypes: 'CD4 TCM;CD4 Naive;CD8 Naive;Treg;CD4 TEM;MAIT;CD8 TEM_1;CD8 TEM_2;gdT;CD8 TEM_2'
                 n_hvg: 2048
