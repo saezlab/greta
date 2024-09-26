@@ -61,7 +61,8 @@ def list_frags_files(wildcards):
 
 rule pre_scenicplus:
     input:
-        frags = list_frags_files,
+#        frags = list_frags_files,
+        frags = 'datasets/{dataset}/smpl.frags.tsv.gz',
         mudata = 'datasets/{dataset}/cases/{case}/mdata.h5mu',
         chrom_sizes_m = "aertslab/genomes/mm10/mm10.chrom.sizes",
         chrom_sizes_h = "aertslab/genomes/hg38/hg38.chrom.sizes",

@@ -71,6 +71,12 @@ dataset_name = 'pbmc10k'
 fragments_files = {frag.split(".frags")[0].split("/")[-1]:frag for frag in frags}
 print(fragments_files)
 
+frags = frags[0]
+fragments_files = {
+    'smpl': frags}
+
+print(fragments_files)
+
 # SCENIC+ paths
 # cisTopic paths
 cis_topic_tmp_dir = os.path.join(tmp_scenicplus, 'cisTopic')
