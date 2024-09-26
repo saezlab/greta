@@ -57,7 +57,7 @@ rule p2g_granie:
         ext=config['methods']['granie']['ext'],
     resources:
         mem_mb=128000,
-        runtime=1440,
+        runtime=2880,
     shell:
         """
         Rscript workflow/scripts/methods/granie/p2g.R \
