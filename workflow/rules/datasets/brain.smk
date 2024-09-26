@@ -25,7 +25,7 @@ rule extract_files:
     input:
         tar=local('datasets/brain/GSE193688.tar')
     output:
-        frag=temp(local(expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES))),
+        frag=temp(local(expand('datasets/brain/{sample}.frags.tsv.gz', sample=SAMPLES))),
         multi=temp(local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES)))
     shell:
         """
@@ -69,7 +69,7 @@ rule prc_annot:
 rule callpeaks_brain:
     threads: 32
     input:
-        frags=expand('datasets/brain/{sample}_atac_fragments.tsv.gz', sample=SAMPLES),
+        frags=expand('datasets/brain/{sample}.frags.tsv.gz', sample=SAMPLES),
         annot='datasets/brain/annot.csv'
     singularity:
         'workflow/envs/gretabench.sif'

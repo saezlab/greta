@@ -5,8 +5,8 @@ rule download_reprofibro:
         genes=temp(local('datasets/reprofibro/genes.tsv.gz')),
         d1m_barcodes=temp(local('datasets/reprofibro/D1M.barcodes.tsv.gz')),
         d2m_barcodes=temp(local('datasets/reprofibro/D2M.barcodes.tsv.gz')),
-        d1m_frags='datasets/reprofibro/D1M.frag.bed.gz',
-        d2m_frags='datasets/reprofibro/D2M.frag.bed.gz',
+        d1m_frags='datasets/reprofibro/D1M.frag.tsv.gz',
+        d2m_frags='datasets/reprofibro/D2M.frag.tsv.gz',
         d1m_gex=temp(local('datasets/reprofibro/D1M.matrix.mtx.gz')),
         d2m_gex=temp(local('datasets/reprofibro/D2M.matrix.mtx.gz')),
         annot='datasets/reprofibro/annot.csv',
@@ -24,8 +24,8 @@ rule download_reprofibro:
         tar xvf {output.tar} -C $data_path
         mv $data_path/GSM7763381_D1M.barcodes.tsv.gz {output.d1m_barcodes}
         mv $data_path/GSM7763382_D2M.barcodes.tsv.gz {output.d2m_barcodes}
-        mv $data_path/GSM7763381_D1M.frag.bed.gz {output.d1m_frags}
-        mv $data_path/GSM7763382_D2M.frag.bed.gz {output.d2m_frags}
+        mv $data_path/GSM7763381_D1M.frag.tsv.gz {output.d1m_frags}
+        mv $data_path/GSM7763382_D2M.frag.tsv.gz {output.d2m_frags}
         mv $data_path/GSM7763381_D1M.matrix.mtx.gz {output.d1m_gex}
         mv $data_path/GSM7763382_D2M.matrix.mtx.gz {output.d2m_gex}
         wget '{params.barcodes}' -O {output.barcodes}
@@ -36,7 +36,7 @@ rule download_reprofibro:
 rule callpeaks_reprofibro:
     threads: 32
     input:
-        frags=['datasets/reprofibro/D1M.frag.bed.gz', 'datasets/reprofibro/D2M.frag.bed.gz'],
+        frags=['datasets/reprofibro/D1M.frag.tsv.gz', 'datasets/reprofibro/D2M.frag.tsv.gz'],
         annot='datasets/reprofibro/annot.csv',
     output:
         tmp=temp(directory(local('datasets/reprofibro/tmp'))),

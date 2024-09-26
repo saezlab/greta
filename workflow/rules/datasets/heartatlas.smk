@@ -2,7 +2,7 @@
 rule download_fragments:
     output:
         tar=temp(local('datasets/heartatlas/fragments.tar')),
-        frag=expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs'])
+        frag=expand('datasets/heartatlas/{sample}.frags.tsv.gz', sample=config['datasets']['heartatlas']['batchIDs'])
     params:
         tar=config['datasets']['heartatlas']['url']['tar']
     shell:
@@ -55,7 +55,7 @@ rule prcannot_heartatlas:
 rule callpeaks_heartatlas:
     threads: 16
     input:
-        frags=expand('datasets/heartatlas/{batchID}_atac_fragments.tsv.gz', batchID=config['datasets']['heartatlas']['batchIDs']),
+        frags=expand('datasets/heartatlas/{sample}.frags.tsv.gz', sample=config['datasets']['heartatlas']['batchIDs']),
         annot='datasets/heartatlas/annot.csv',
     singularity:
         'workflow/envs/gretabench.sif'

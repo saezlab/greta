@@ -47,6 +47,8 @@ datasets:
             peak_annot: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_peak_annotation.tsv'
             atac_frags: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz'
             atac_index: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz.tbi'
+        samples:
+            ['smpl']
         cases:
             tcell:
                 celltypes: 'CD4 TCM;CD4 Naive;CD8 Naive;Treg;CD4 TEM;MAIT;CD8 TEM_1;CD8 TEM_2;gdT;CD8 TEM_2'
@@ -73,6 +75,8 @@ datasets:
             barcodes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE242419&format=file&file=GSE242419%5Fmultiome%2EATAC%2ERNA%2Ebarcode%2Emap%2Etsv%2Egz'
             genes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE242419&format=file&file=GSE242419%5Fmultiome%5Fgenes%2Etsv%2Egz'
             annot: 'https://zenodo.org/records/8313962/files/multiome.zip?download=1'
+        samples:
+            ['GSM7763381_D1M', 'GSM7763382_D2M']
         cases:
             all:
                 celltypes: 'all'
@@ -85,6 +89,8 @@ datasets:
             frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
             multi: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             annot: 'https://heibox.uni-heidelberg.de/f/de56839fd8b24d0aba4a/?dl=1'
+        samples:
+            ['smpl']
         cases:
             all:
                 celltypes: 'all'
@@ -98,6 +104,8 @@ datasets:
             rna_mtx: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391775&format=file&file=GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
             atac_meta: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
             celltypes: 'https://heibox.uni-heidelberg.de/f/d36511f7f94947859564/?dl=1'
+        samples:
+            ['smpl']
         cases:
             all:
                 celltypes: 'all'
@@ -109,14 +117,11 @@ datasets:
             tar: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/fragments.tar'
             anndata: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Global_raw.h5ad'
             annotation: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Adult_Peaks.h5ad'
-        batchIDs:
-            - HCAHeartST10773166_HCAHeartST10781063
-            - HCAHeartST10773165_HCAHeartST10781062
-            - HCAHeart9508627_HCAHeart9508819
-            - HCAHeart9508629_HCAHeart9508821
-            - HCAHeart9845431_HCAHeart9917173
-            - HCAHeartST11064575_HCAHeartST11023240
-            - HCAHeartST11064574_HCAHeartST11023239
+        samples:
+            ['HCAHeartST10773166_HCAHeartST10781063', 'HCAHeartST10773165_HCAHeartST10781062',
+            'HCAHeart9508627_HCAHeart9508819', 'HCAHeart9508629_HCAHeart9508821',
+            'HCAHeart9845431_HCAHeart9917173', 'HCAHeartST11064575_HCAHeartST11023240',
+            'HCAHeartST11064574_HCAHeartST11023239']
         cases:
             all:
                 celltypes: 'all'
