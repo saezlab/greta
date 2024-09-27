@@ -1,3 +1,6 @@
+localrules: grn_run
+
+
 rule grn_run:
     input:
         mdl=lambda wildcards: map_rules('mdl', wildcards.mdl),

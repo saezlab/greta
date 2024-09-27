@@ -1,7 +1,7 @@
 rule extract_case:
     threads: 32
     input:
-        lambda w: map_rules('annotate_', w.dataset)
+        lambda w: map_rules('annotate', w.dataset)
     singularity:
         'workflow/envs/gretabench.sif'
     output:
