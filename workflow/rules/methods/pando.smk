@@ -138,7 +138,7 @@ rule mdl_o_pando:
         out='datasets/{dataset}/cases/{case}/runs/o_pando.o_pando.o_pando.o_pando.grn.csv'
     resources:
         mem_mb=512000,
-        runtime=720,
+        runtime=2880,
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         exclude_exons=config['methods']['pando']['exclude_exons'],
