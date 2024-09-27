@@ -32,9 +32,9 @@ rule mdl_scenic:
         mdata=rules.extract_case.output.mdata,
         tf=rules.download_tfsscenic.output.out,
         proms='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/cre/promoters/promoters.bed',
-    	ranking_small=rules.download_rankings.output.small,
-    	ranking_big=rules.download_rankings.output.big,
-    	motifs='aertslab/motifs-v10nr_clust/nr.hgnc-m0.001-o0.0.tbl'
+        ranking_small=rules.download_rankings.output.small,
+        ranking_big=rules.download_rankings.output.big,
+        motifs=rules.download_motifs.output.h
     singularity:
         'workflow/envs/scenicplus.sif'
     output:
