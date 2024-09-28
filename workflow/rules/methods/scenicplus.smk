@@ -157,6 +157,9 @@ rule tfb_scenicplus:
         annotation_extended_path=temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.annotation_extended.h5ad"),
         tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt"),
         out="datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv"
+    resources:
+        mem_mb=128000,
+        runtime=360,
     singularity:
         'workflow/envs/scenicplus.sif'
     shell:
