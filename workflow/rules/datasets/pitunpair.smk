@@ -1,9 +1,12 @@
+localrules: download_pitunpair, index_frags
+
+
 rule download_pitunpair:
     output:
         gex=temp(local('datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
         peaks=temp(local('datasets/pitunpair/peaks.original.h5')),
         frags='datasets/pitunpair/smpl.frags.tsv.gz',
-        celltypes='datasets/pitunpair/celltypes.csv'
+        celltypes=temp(local('datasets/pitunpair/celltypes.csv')),
     params:
         gex=config['datasets']['pitunpair']['url']['rna_mtx'],
         peaks=config['datasets']['pitunpair']['url']['peaks'],
@@ -17,13 +20,14 @@ rule download_pitunpair:
         wget '{params.celltypes}' -O '{output.celltypes}'
         """
 
+
 rule index_frags:
     input:
-        frags='datasets/pitunpair/smpl.frags.tsv.gz'
+        frags=rules.download_pitunpair.output.frags
     output:
-        index='datasets/pitunpair/smpl.frags.tsv.gz.tbi'
+        index=temp(local('datasets/pitunpair/smpl.frags.tsv.gz.tbi'))
     params:
-        unzip='datasets/pitunpair/smpl.frags.tsv'
+        unzip=rules.download_pitunpair.output.frags.replace('.gz', '')
     singularity:
         'workflow/envs/figr.sif'
     shell:
@@ -33,16 +37,18 @@ rule index_frags:
         tabix -p bed {input.frags}
         """
 
+
 rule coembedd_pitunpair:
+    threads: 32
     input:
-        gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
-        celltypes='datasets/pitunpair/celltypes.csv',
-        peaks='datasets/pitunpair/peaks.original.h5',
-        frags='datasets/pitunpair/smpl.frags.tsv.gz',
-        index='datasets/pitunpair/smpl.frags.tsv.gz.tbi'
+        gex=rules.download_pitunpair.output.gex,
+        celltypes=rules.download_pitunpair.output.celltypes,
+        peaks=rules.download_pitunpair.output.peaks,
+        frags=rules.download_pitunpair.output.frags,
+        index=rules.index_frags.output.index
     output:
-        exprMat=temp(local('datasets/pitunpair/exprMat.rds')),
-        atacSE=temp(local('datasets/pitunpair/atac.se.rds')),
+        exprmat=temp(local('datasets/pitunpair/exprmat.rds')),
+        atacse=temp(local('datasets/pitunpair/atacse.rds')),
         cca=temp(local('datasets/pitunpair/cca.rds'))
     singularity: 
         'workflow/envs/figr.sif'
@@ -53,20 +59,21 @@ rule coembedd_pitunpair:
         {input.celltypes} \
         {input.peaks} \
         {input.frags} \
-        {output.exprMat} \
-        {output.atacSE} \
+        {output.exprmat} \
+        {output.atacse} \
         {output.cca}
         """
 
 
-rule pairCells_pitunpair:
+rule paircells_pitunpair:
+    threads: 32
     input:
-        exprMat='datasets/pitunpair/exprMat.rds',
-        atacSE='datasets/pitunpair/atac.se.rds',
-        cca='datasets/pitunpair/cca.rds',
-        celltypes='datasets/pitunpair/celltypes.csv',
+        exprmat=rules.coembedd_pitunpair.output.exprmat,
+        atacse=rules.coembedd_pitunpair.output.atacse,
+        cca=rules.coembedd_pitunpair.output.cca,
+        celltypes=rules.download_pitunpair.output.celltypes,
     output:
-        barMap='datasets/pitunpair/barMap.csv'
+        barmap='datasets/pitunpair/barmap.csv'
     singularity:
         'workflow/envs/figr.sif'
     shell:
@@ -79,16 +86,17 @@ rule pairCells_pitunpair:
         {output.barMap} \
         """
 
+
 rule callpeaks_pitunpair:
     threads: 32
     input:
-        frags='datasets/pitunpair/smpl.frags.tsv.gz',
-        annot='datasets/pitunpair/barMap.csv',
+        frags=rules.download_pitunpair.output.frags,
+        annot=rules.paircells_pitunpair.output.barmap,
     singularity:
         'workflow/envs/gretabench.sif'
     output:
         tmp=temp(directory(local('datasets/pitunpair/tmp_peaks'))),
-        peaks='datasets/pitunpair/peaks.h5ad'
+        peaks=temp(local('datasets/pitunpair/peaks.h5ad')),
     resources:
         mem_mb=32000,
     shell:
@@ -100,12 +108,13 @@ rule callpeaks_pitunpair:
         -o {output.peaks}
         """
 
+
 rule annotate_pitunpair:
     input:
-        g='gdata/geneids',
-        peaks='datasets/pitunpair/peaks.h5ad',
-        gex='datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5',
-        barmap='datasets/pitunpair/barMap.csv'
+        peaks=rules.callpeaks_pitunpair.output.peaks,
+        gex=rules.download_pitunpair.output.gex,
+        barmap=rules.paircells_pitunpair.output.barmap,
+        g=rules.download_geneids.output.dr,
     singularity:
         'workflow/envs/gretabench.sif'
     output:

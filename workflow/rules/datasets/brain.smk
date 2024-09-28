@@ -1,76 +1,61 @@
+localrules: download_brain, extract_files_brain, prc_annot
 
-SAMPLES = config['datasets']['brain']['samples']
 
 rule download_brain:
     output:
-        tar=local('datasets/brain/GSE193688.tar'), 
-        annot=temp(local('datasets/brain/raw_annot.csv'))
-
+        tar='datasets/brain/GSE193688.tar', 
+        annot=temp(local('datasets/brain/raw_annot.csv')),
     params:
         full_dataset=config['datasets']['brain']['url']['full_dataset'],
-        annot=config['datasets']['brain']['url']['annot']
-
-
+        annot=config['datasets']['brain']['url']['annot'],
     shell:
         """
         data_path=$(dirname {output.tar})
- 
         echo "Downloading tar file"
         wget '{params.full_dataset}' -O '{output.tar}'
         wget '{params.annot}' -O '{output.annot}'
-    
         """
 
-rule extract_files:
+
+rule extract_files_brain:
     input:
-        tar=local('datasets/brain/GSE193688.tar')
+        tar=rules.download_brain.output.tar,
     output:
-        frag=temp(local(expand('datasets/brain/{sample}.frags.tsv.gz', sample=SAMPLES))),
-        multi=temp(local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES)))
+        frags=expand('datasets/brain/{sample}.frags.tsv.gz', sample=config['datasets']['brain']['samples']),
+        gex=temp(local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=config['datasets']['brain']['samples']))),
     shell:
         """
         data_path=$(dirname {input.tar})
-
-        echo "Extracting files and removing archive"
         tar -xvf '{input.tar}' -C $data_path
         rm '{input.tar}'
-
-        echo "Removing peak files"
         rm $data_path/*peaks.bed.gz
-
-        echo "Rename files"
         (cd $data_path && for x in GSM*; do    mv $x `echo $x | cut -c 12-`; done)
-
         """
 
 
 rule prc_annot:
     input:
-        raw_annot=local('datasets/brain/raw_annot.csv'),
-        multi=local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES))
+        raw_annot=rules.download_brain.output.annot,
     output:
-        annot=local('datasets/brain/annot.csv')
-
-    params:
-        sample_dir=local('datasets/brain/')
-
+        annot=temp(local('datasets/brain/annot.csv')),
     singularity:
         'workflow/envs/gretabench.sif'
-        
+    params:
+        samples=config['datasets']['brain']['samples'],
     shell:
         """
         python workflow/scripts/datasets/brain/prc_annot.py \
         -a {input.raw_annot} \
-        -b {output.annot} \
-        -c {params.sample_dir} 
+        -b {params.samples} \
+        -c {output.annot}
         """
 
 
 rule callpeaks_brain:
     threads: 32
     input:
-        frags=expand('datasets/brain/{sample}.frags.tsv.gz', sample=SAMPLES),
-        annot='datasets/brain/annot.csv'
+        frags=rules.extract_files_brain.output.frags,
+        annot=rules.prc_annot.output.annot,
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -91,12 +76,12 @@ rule callpeaks_brain:
 
 rule annotate_brain:
     input:
-        path_gex=expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=SAMPLES),
-        path_peaks='datasets/brain/peaks.h5ad',
-        path_annot='datasets/brain/annot.csv',
-        path_geneids='gdata/geneids/'
+        path_gex=rules.extract_files_brain.output.gex,
+        path_peaks=rules.callpeaks_brain.output.peaks,
+        path_annot=rules.prc_annot.output.annot,
+        path_geneids=rules.download_geneids.output.dr,
     output:
-        'datasets/brain/annotated.h5mu'
+        out='datasets/brain/annotated.h5mu'
     singularity:
         'workflow/envs/gretabench.sif'
     params:
@@ -109,5 +94,5 @@ rule annotate_brain:
         -c {input.path_annot} \
         -d {input.path_geneids} \
         -e {params.organism} \
-        -f {output}
+        -f {output.out}
         """

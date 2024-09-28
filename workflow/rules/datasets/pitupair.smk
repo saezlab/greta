@@ -1,7 +1,10 @@
+localrules: download_pitupair
+
+
 rule download_pitupair:
     output:
         multi=temp(local('datasets/pitupair/multiome_original.h5')),
-        frags=temp(local('datasets/pitupair/smpl.frags.tsv.gz')),
+        frags='datasets/pitupair/smpl.frags.tsv.gz',
         annot=temp(local('datasets/pitupair/annot.csv'))
     params:
         multi=config['datasets']['pitupair']['url']['multi'],
@@ -15,11 +18,12 @@ rule download_pitupair:
         wget '{params.annot}' -O '{output.annot}'
         """
 
+
 rule callpeaks_pitupair:
-    threads: 32
+    threads: 16
     input:
-        frags='datasets/pitupair/smpl.frags.tsv.gz',
-        annot='datasets/pitupair/annot.csv',
+        frags=rules.download_pitupair.output.frags,
+        annot=rules.download_pitupair.output.annot,
     output:
         tmp=temp(directory(local('datasets/pitupair/tmp_peaks'))),
         peaks=temp(local('datasets/pitupair/peaks.h5ad'))
@@ -39,12 +43,12 @@ rule callpeaks_pitupair:
 
 rule annotate_pitupair:
     input:
-        annot='datasets/pitupair/annot.csv',
-        g='gdata/geneids',
-        peaks='datasets/pitupair/peaks.h5ad',
-        multi='datasets/pitupair/multiome_original.h5',
+        annot=rules.download_pitupair.output.annot,
+        peaks=rules.callpeaks_pitupair.output.peaks,
+        multi=rules.download_pitupair.output.multi,
+        g=rules.download_geneids.output.dr,
     output:
-        'datasets/pitupair/annotated.h5mu'
+        out='datasets/pitupair/annotated.h5mu'
     singularity:
         'workflow/envs/gretabench.sif'
     params:

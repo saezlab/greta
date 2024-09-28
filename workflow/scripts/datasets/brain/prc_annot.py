@@ -3,27 +3,19 @@ import numpy as np
 import os
 import argparse
 
+
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-a','--inpath_annot', required=True)
-parser.add_argument('-b', '--outpath_annot', required=True)
-parser.add_argument('-c', '--path_samples', required=True)
+parser.add_argument('-a', '--path_rannot', required=True)
+parser.add_argument('-b','--samples', required=True, nrags='+')
+parser.add_argument('-c', '--path_annot', required=True)
 args = vars(parser.parse_args())
 
-inpath_annot = args['inpath_annot']
-outpath_annot = args['outpath_annot']
-path_samples = args['path_samples']
-
-
-# Get samples 
-
-samples = [x for x in os.listdir(path_samples) if x.endswith(".h5")]
-samples = [x.split('_')[0] for x in samples]
-
+path_rannot = args['path_rannot']
+samples = args['samples']
+path_annot = args['path_annot']
 
 annot = pd.read_csv(inpath_annot)
-
 annot = annot[annot['batch'].isin(samples)]
 annot = annot.set_index('barcode', drop=True)
-
 annot.to_csv(outpath_annot, header=True)

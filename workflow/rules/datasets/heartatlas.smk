@@ -1,5 +1,7 @@
-# heartatlas
-rule download_fragments:
+localrules: download_fragments_heart, download_anndata_heart
+
+
+rule download_fragments_heart:
     output:
         tar=temp(local('datasets/heartatlas/fragments.tar')),
         frag=expand('datasets/heartatlas/{sample}.frags.tsv.gz', sample=config['datasets']['heartatlas']['samples'])
@@ -8,42 +10,34 @@ rule download_fragments:
     shell:
         """
         data_path=$(dirname "{output.tar}")
-        echo "Data path: $data_path"
-
-        echo "Downloading tar file from {params.tar} to {output.tar}"
         wget '{params.tar}' -O '{output.tar}'
-
-        echo "Extracting tar file to $data_path"
         tar -xvf '{output.tar}' -C "$data_path"
-
-        echo "Removing .tbi files"
         rm "$data_path"/*.tbi
         """
 
-rule download_anndata:
+
+rule download_anndata_heart:
     output:
-        anndata=temp(local('datasets/heartatlas/multiome_raw.h5ad')),
-        annotation=temp(local('datasets/heartatlas/atac.h5ad'))
+        adata=temp(local('datasets/heartatlas/multiome_raw.h5ad')),
+        annot=temp(local('datasets/heartatlas/atac.h5ad'))
     params:
-        anndata=config['datasets']['heartatlas']['url']['anndata'],
-        annotation=config['datasets']['heartatlas']['url']['annotation']
+        adata=config['datasets']['heartatlas']['url']['anndata'],
+        annot=config['datasets']['heartatlas']['url']['annotation']
     shell:
         """
-        echo "Downloading anndata file from {params.anndata} to {output.anndata}"
-        wget '{params.anndata}' -O '{output.anndata}'
-
-        echo "Downloading anndata file from {params.annotation} to {output.annotation}"
-        wget '{params.annotation}' -O '{output.annotation}'
+        wget '{params.adata}' -O '{output.adata}'
+        wget '{params.annot}' -O '{output.annot}'
         """
+
 
 rule prcannot_heartatlas:
     input:
-        h5ad='datasets/heartatlas/multiome_raw.h5ad',
-        atac='datasets/heartatlas/atac.h5ad'
+        h5ad=rules.download_anndata_heart.output.adata,
+        atac=rules.download_anndata_heart.output.annot,
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        annot=temp('datasets/heartatlas/annot.csv')
+        annot=temp(local('datasets/heartatlas/annot.csv'))
     shell:
         """
         python workflow/scripts/datasets/heartatlas/heart_annot.py \
@@ -52,11 +46,12 @@ rule prcannot_heartatlas:
         -o {output.annot}
         """
 
+
 rule callpeaks_heartatlas:
     threads: 16
     input:
-        frags=expand('datasets/heartatlas/{sample}.frags.tsv.gz', sample=config['datasets']['heartatlas']['samples']),
-        annot='datasets/heartatlas/annot.csv',
+        frags=rules.download_fragments_heart.output.frag,
+        annot=rules.prcannot_heartatlas.output.annot,
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -74,14 +69,15 @@ rule callpeaks_heartatlas:
         -o {output.peaks}
         """
 
+
 rule annotate_heartatlas:
     input:
-        path_h5ad='datasets/heartatlas/multiome_raw.h5ad',
-        path_peaks='datasets/heartatlas/peaks.h5ad',
-        path_annot='datasets/heartatlas/annot.csv',
-        path_geneids='gdata/geneids/',
+        path_h5ad=rules.download_anndata_heart.output.adata,
+        path_peaks=rules.callpeaks_heartatlas.output.peaks,
+        path_annot=rules.prcannot_heartatlas.output.annot,
+        path_geneids=rules.download_geneids.output.dr,
     output:
-        'datasets/heartatlas/annotated.h5mu'
+        out='datasets/heartatlas/annotated.h5mu'
     params:
         organism=config['datasets']['heartatlas']['organism']
     shell:

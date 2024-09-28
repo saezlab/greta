@@ -80,7 +80,7 @@ datasets:
             genes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE242419&format=file&file=GSE242419%5Fmultiome%5Fgenes%2Etsv%2Egz'
             annot: 'https://zenodo.org/records/8313962/files/multiome.zip?download=1'
         samples:
-            ['GSM7763381_D1M', 'GSM7763382_D2M']
+            ['D1M', 'D2M']
         cases:
             all:
                 celltypes: 'all'

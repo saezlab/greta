@@ -1,15 +1,15 @@
+localrules: download_reprofibro
+
+
 rule download_reprofibro:
     output:
         tar=temp(local('datasets/reprofibro/RAW.tar')),
         barcodes=temp(local('datasets/reprofibro/barcode_map.tsv.gz')),
         genes=temp(local('datasets/reprofibro/genes.tsv.gz')),
-        d1m_barcodes=temp(local('datasets/reprofibro/D1M.barcodes.tsv.gz')),
-        d2m_barcodes=temp(local('datasets/reprofibro/D2M.barcodes.tsv.gz')),
-        d1m_frags='datasets/reprofibro/D1M.frag.tsv.gz',
-        d2m_frags='datasets/reprofibro/D2M.frag.tsv.gz',
-        d1m_gex=temp(local('datasets/reprofibro/D1M.matrix.mtx.gz')),
-        d2m_gex=temp(local('datasets/reprofibro/D2M.matrix.mtx.gz')),
-        annot='datasets/reprofibro/annot.csv',
+        bars=temp(local(expand('datasets/reprofibro/{sample}.barcodes.tsv.gz', sample=config['datasets']['reprofibro']['samples']))),
+        frags=expand('datasets/reprofibro/{sample}.frags.tsv.gz', sample=config['datasets']['reprofibro']['samples']),
+        mats=temp(local(expand('datasets/reprofibro/{sample}.matrix.mtx.gz', sample=config['datasets']['reprofibro']['samples']))),
+        annot=temp(local('datasets/reprofibro/annot.csv')),
     params:
         tar=config['datasets']['reprofibro']['url']['tar'],
         barcodes=config['datasets']['reprofibro']['url']['barcodes'],
@@ -22,12 +22,21 @@ rule download_reprofibro:
         python workflow/scripts/datasets/reprofibro/prc_annot.py -a {output.annot}
         wget '{params.tar}' -O {output.tar}
         tar xvf {output.tar} -C $data_path
-        mv $data_path/GSM7763381_D1M.barcodes.tsv.gz {output.d1m_barcodes}
-        mv $data_path/GSM7763382_D2M.barcodes.tsv.gz {output.d2m_barcodes}
-        mv $data_path/GSM7763381_D1M.frag.tsv.gz {output.d1m_frags}
-        mv $data_path/GSM7763382_D2M.frag.tsv.gz {output.d2m_frags}
-        mv $data_path/GSM7763381_D1M.matrix.mtx.gz {output.d1m_gex}
-        mv $data_path/GSM7763382_D2M.matrix.mtx.gz {output.d2m_gex}
+        rename_files() {{
+            local data_path=$1
+            local sufix=$2
+            local new_sufix=$3
+            shopt -s nullglob
+            local files=($data_path/GSM*_*.$sufix)
+            shopt -u nullglob
+            for file in ${{files[@]}}; do
+                local new_name=$(basename $file | sed 's/GSM776338[0-9]*_//' | sed 's/\.$sufix$/.$new_sufix/')
+                mv $file $data_path/$new_name
+            done
+        }}
+        rename_files $data_path barcodes.tsv.gz barcodes.tsv.gz
+        rename_files $data_path frag.tsv.gz frags.tsv.gz
+        rename_files $data_path matrix.mtx.gz matrix.mtx.gz
         wget '{params.barcodes}' -O {output.barcodes}
         wget '{params.genes}' -O {output.genes}
         """
@@ -36,8 +45,8 @@ rule download_reprofibro:
 rule callpeaks_reprofibro:
     threads: 32
     input:
-        frags=['datasets/reprofibro/D1M.frag.tsv.gz', 'datasets/reprofibro/D2M.frag.tsv.gz'],
-        annot='datasets/reprofibro/annot.csv',
+        frags=rules.download_reprofibro.output.frags,
+        annot=rules.download_reprofibro.output.annot,
     output:
         tmp=temp(directory(local('datasets/reprofibro/tmp'))),
         peaks=temp(local('datasets/reprofibro/peaks.h5ad'))
@@ -55,17 +64,15 @@ rule callpeaks_reprofibro:
 
 rule annotate_reprofibro:
     input:
-        path_matrix_d1m='datasets/reprofibro/D1M.matrix.mtx.gz',
-        path_barcodes_d1m='datasets/reprofibro/D1M.barcodes.tsv.gz',
-        path_matrix_d2m='datasets/reprofibro/D2M.matrix.mtx.gz',
-        path_barcodes_d2m='datasets/reprofibro/D2M.barcodes.tsv.gz',
-        path_gsym='datasets/reprofibro/genes.tsv.gz',
-        path_peaks='datasets/reprofibro/peaks.h5ad',
-        path_annot='datasets/reprofibro/annot.csv',
-        path_barmap='datasets/reprofibro/barcode_map.tsv.gz',
-        path_geneids='gdata/geneids/',
+        mats=rules.download_reprofibro.output.mats,
+        bars=rules.download_reprofibro.output.bars,
+        path_gsym=rules.download_reprofibro.output.genes,
+        path_peaks=rules.callpeaks_reprofibro.output.peaks,
+        path_annot=rules.download_reprofibro.output.annot,
+        path_barmap=rules.download_reprofibro.output.barcodes,
+        path_geneids=rules.download_geneids.output.dr,
     output:
-        'datasets/reprofibro/annotated.h5mu'
+        out='datasets/reprofibro/annotated.h5mu'
     params:
         organism=config['datasets']['reprofibro']['organism']
     shell:

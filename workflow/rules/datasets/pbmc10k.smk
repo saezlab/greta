@@ -1,3 +1,6 @@
+localrules: download_geneids, download_pbmc10k
+
+
 rule download_geneids:
     singularity:
         'workflow/envs/gretabench.sif'

@@ -15,12 +15,13 @@ path_out = args['path_out']
 path = os.path.dirname(mdl_path)
 names = os.path.basename(mdl_path)
 lst = names.replace('.mdl.csv', '').split('.')
+mdl = pd.read_csv(mdl_path)
 
 # Skip baselines
 baselines = ['collectri', 'dorothea', 'random', 'scenic']
 if all(x == lst[0] for x in lst):
-    if (lst[0] not in baselines) or lst[0].startswith('o_'):
-        grn.to_csv(path_out, index=False)
+    if (lst[0] in baselines) or lst[0].startswith('o_'):
+        mdl.to_csv(path_out, index=False)
 
 # Read
 pre_name, p2g_name, tfb_name, mdl_name = lst
@@ -30,7 +31,6 @@ tfb_path = os.path.join(path, '{pre}.{p2g}.{tfb}.tfb.csv'.format(pre=pre_name, p
 # Open files
 tfb = pd.read_csv(tfb_path)
 p2g = pd.read_csv(p2g_path)
-mdl = pd.read_csv(mdl_path)
 
 # Merge dfs (can contain duplicates at cre level)
 grn = pd.merge(tfb[['tf', 'cre']], p2g[['cre', 'gene']], on='cre').rename(columns={'tf': 'source', 'gene': 'target'})

@@ -9,10 +9,8 @@ import argparse
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-a','--path_matrix_d1m', required=True)
-parser.add_argument('-b','--path_barcodes_d1m', required=True)
-parser.add_argument('-c','--path_matrix_d2m', required=True)
-parser.add_argument('-d','--path_barcodes_d2m', required=True)
+parser.add_argument('-a','--path_mats', required=True, nargs='+')
+parser.add_argument('-b','--path_bars', required=True, nargs='+')
 parser.add_argument('-e','--path_gsym', required=True)
 parser.add_argument('-f','--path_peaks', required=True)
 parser.add_argument('-g','--path_annot', required=True)
@@ -22,10 +20,8 @@ parser.add_argument('-k','--organism', required=True)
 parser.add_argument('-l','--path_output', required=True)
 args = vars(parser.parse_args())
 
-path_matrix_d1m = args['path_matrix_d1m']
-path_barcodes_d1m = args['path_barcodes_d1m']
-path_matrix_d2m = args['path_matrix_d2m']
-path_barcodes_d2m = args['path_barcodes_d2m']
+path_mats = args['path_mats']
+path_bars = args['path_bars']
 path_gsym = args['path_gsym']
 path_peaks = args['path_peaks']
 path_annot = args['path_annot']
@@ -80,11 +76,10 @@ def read_sample(path_matrix, path_barcodes, path_gsym, bar_map, obs, geneids):
 
 
 # Read samples
-rna_d1m = read_sample(path_matrix_d1m, path_barcodes_d1m, path_gsym, bar_map, obs, geneids)
-rna_d2m = read_sample(path_matrix_d2m, path_barcodes_d2m, path_gsym, bar_map, obs, geneids)
-
-# Merge
-rna = [rna_d1m, rna_d2m]
+rna = []
+for i in range(len(path_mats)):
+    path_mat, path_bar = path_mats[i], path_bars[i]
+    rna.append(read_sample(path_mat, path_bar, path_gsym, bar_map, obs, geneids))
 rna = ad.concat(rna, join='outer')
 
 # Clean
