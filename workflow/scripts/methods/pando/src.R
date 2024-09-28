@@ -19,8 +19,6 @@ granges_hg <- args[15]
 granges_mm <- args[16]
 path_grn <- args[17]
 
-# Set cores
-registerDoParallel(32)
 
 # Read data
 print('Open object')
@@ -67,22 +65,6 @@ muo_data <- initiate_grn(
     exclude_exons = exclude_exons
 )
 
-# Update object with only peaks that have genes linked
-#peaks_near_gene <- find_peaks_near_genes(
-#    peaks = NetworkRegions(muo_data)@ranges,
-#    genes = annot[annot$gene_name %in% intersect(rownames(muo_data[['RNA']]), annot$gene_name), ],
-#    method = 'GREAT',
-#    upstream = round(ext / 2),
-#    downstream = round(ext / 2),
-#)
-#peaks2gene <- aggregate_matrix(t(peaks_near_gene), groups=colnames(peaks_near_gene), fun='sum')
-#msk <- as.logical(sparseMatrixStats::colMaxs(peaks2gene))
-#p2g_peaks <- colnames(peaks2gene)[msk]
-#muo_data@grn@regions@ranges <- data.frame(seqnames=p2g_peaks) %>%
-#    tidyr::separate(col = 'seqnames', into = c("seqnames", "start", "end"), sep = "-", remove=FALSE) %>%
-#    GenomicRanges::makeGRangesFromDataFrame(.)
-#muo_data@grn@regions@peaks <- subjectHits(findOverlaps(muo_data@grn@regions@ranges, Signac::StringToGRanges(rownames(Seurat::GetAssay(muo_data, assay='peaks')))))
-
 # Find motifs
 print('Scan motifs')
 data('motifs')
@@ -99,6 +81,19 @@ muo_data <- find_motifs(
 
 # Infer GRN
 print('Infer GRN')
+nCores <- 32
+cat("N cores: ", nCores, '\n')
+cl <- makeCluster(nCores)
+clusterExport(cl, varlist = c("nCores", "muo_data", "thr_corr"))
+clusterEvalQ(cl, {
+  library(tidyverse)
+  library(Pando)
+  Sys.setenv(OMP_NUM_THREADS=nCores)
+  Sys.setenv(MKL_NUM_THREADS=nCores)
+  Sys.setenv(BLAS_NUM_THREADS=nCores)
+})
+registerDoParallel(cl)
+
 muo_data <- infer_grn(
     muo_data,
     peak_to_gene_method = 'GREAT',

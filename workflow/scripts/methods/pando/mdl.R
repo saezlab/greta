@@ -1,15 +1,9 @@
-nCores <- 32
-cat("N cores: ", nCores, '\n')
-Sys.setenv(OMP_NUM_THREADS=nCores)
-Sys.setenv(MKL_NUM_THREADS=nCores)
-Sys.setenv(BLAS_NUM_THREADS=nCores)
-
+library(dplyr)
 library(tidyverse)
 library(rhdf5)
 library(Pando)
 library(doParallel)
 library(R.utils)
-registerDoParallel(nCores)
 
 
 # Parse args
@@ -56,6 +50,20 @@ tfb$cre = stringr::str_replace_all(tfb$cre, '-', '_')
 # Run per feature
 features <- unique(p2g$gene)
 cat("Number of target genes to fit: ", length(features), '\n')
+
+nCores <- 32
+cat("N cores: ", nCores, '\n')
+
+cl <- makeCluster(nCores)
+clusterExport(cl, varlist = c("nCores", "rna_X", "atac_X", "p2g", "tfb", "features", "thr_cor"))
+clusterEvalQ(cl, {
+  library(tidyverse)
+  library(Pando)
+  Sys.setenv(OMP_NUM_THREADS=nCores)
+  Sys.setenv(MKL_NUM_THREADS=nCores)
+  Sys.setenv(BLAS_NUM_THREADS=nCores)
+})
+registerDoParallel(cl)
 
 run_mdl <- function(){
 model_fits <- Pando::map_par(features, function(g){
