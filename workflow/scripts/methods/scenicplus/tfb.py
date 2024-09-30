@@ -400,13 +400,15 @@ def run_motif_enrichment_dem(
         )
     for dem_result in dem_results:
         if len(dem_result.motif_enrichment) > 0:
+            print("Saving cistrome.")
             dem_result.write_hdf5(
                 path = output_fname_dem_result,
                 mode = "a"
             )
-        warnings.warn("Warning.....................No cistrome selected, you should probably lower dem_adj_pval_thr if you wanna keep cistromes")
+        else:
+            warnings.warn("Warning.....................No cistrome selected, you should probably lower dem_adj_pval_thr if you wanna keep cistromes")
 from pycistarget.motif_enrichment_dem import (
-    # DEM,
+    DEM,
     ranksums_numba_multiple,
     mean_axis1, get_log2_fc,
     p_adjust_bh, get_optimal_threshold_roc
@@ -535,7 +537,7 @@ def prepare_motif_enrichment_results(
             f"Writing extended cistromes to: {out_file_extended_annotation.__str__()}")
         adata_extended_cistromes.write_h5ad(out_file_extended_annotation.__str__())
 
-class DEM(MotifEnrichmentResult):
+class old_DEM(MotifEnrichmentResult):
     def __init__(
         self,
         foreground_regions: pr.PyRanges,
