@@ -18,9 +18,9 @@ rule download_reprofibro:
     shell:
         """
         data_path=$(dirname {output.tar})
-        wget '{params.annot}' -O {output.annot}
+        wget --no-verbose '{params.annot}' -O {output.annot}
         python workflow/scripts/datasets/reprofibro/prc_annot.py -a {output.annot}
-        wget '{params.tar}' -O {output.tar}
+        wget --no-verbose '{params.tar}' -O {output.tar}
         tar xvf {output.tar} -C $data_path
         rename_files() {{
             local data_path=$1
@@ -37,8 +37,8 @@ rule download_reprofibro:
         rename_files $data_path barcodes.tsv.gz barcodes.tsv.gz
         rename_files $data_path frag.tsv.gz frags.tsv.gz
         rename_files $data_path matrix.mtx.gz matrix.mtx.gz
-        wget '{params.barcodes}' -O {output.barcodes}
-        wget '{params.genes}' -O {output.genes}
+        wget --no-verbose '{params.barcodes}' -O {output.barcodes}
+        wget --no-verbose '{params.genes}' -O {output.genes}
         """
 
 

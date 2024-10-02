@@ -24,7 +24,7 @@ rule download_pbmc10k:
         atac_frags=config['datasets']['pbmc10k']['url']['atac_frags'],
     shell:
         """
-        wget '{params.atac_frags}' -O '{output.atac_frags}'
+        wget --no-verbose '{params.atac_frags}' -O '{output.atac_frags}'
         """
 
 

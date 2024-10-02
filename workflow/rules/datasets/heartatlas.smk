@@ -10,7 +10,7 @@ rule download_fragments_heart:
     shell:
         """
         data_path=$(dirname "{output.tar}")
-        wget '{params.tar}' -O '{output.tar}'
+        wget --no-verbose '{params.tar}' -O '{output.tar}'
         tar -xvf '{output.tar}' -C "$data_path"
         rm "$data_path"/*.tbi
         """
@@ -25,8 +25,8 @@ rule download_anndata_heart:
         annot=config['datasets']['heartatlas']['url']['annotation']
     shell:
         """
-        wget '{params.adata}' -O '{output.adata}'
-        wget '{params.annot}' -O '{output.annot}'
+        wget --no-verbose '{params.adata}' -O '{output.adata}'
+        wget --no-verbose '{params.annot}' -O '{output.annot}'
         """
 
 

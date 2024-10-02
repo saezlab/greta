@@ -13,9 +13,9 @@ rule download_pitupair:
     
     shell:
         """
-        wget '{params.frags}' -O '{output.frags}'
-        wget '{params.multi}' -O '{output.multi}'
-        wget '{params.annot}' -O '{output.annot}'
+        wget --no-verbose '{params.frags}' -O '{output.frags}'
+        wget --no-verbose '{params.multi}' -O '{output.multi}'
+        wget --no-verbose '{params.annot}' -O '{output.annot}'
         """
 
 

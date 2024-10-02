@@ -14,10 +14,10 @@ rule download_pitunpair:
         celltypes=config['datasets']['pitunpair']['url']['celltypes']
     shell:
         """
-        wget '{params.gex}' -O '{output.gex}'
-        wget '{params.peaks}' -O '{output.peaks}'
-        wget '{params.frags}' -O '{output.frags}'
-        wget '{params.celltypes}' -O '{output.celltypes}'
+        wget --no-verbose '{params.gex}' -O '{output.gex}'
+        wget --no-verbose '{params.peaks}' -O '{output.peaks}'
+        wget --no-verbose '{params.frags}' -O '{output.frags}'
+        wget --no-verbose '{params.celltypes}' -O '{output.celltypes}'
         """
 
 

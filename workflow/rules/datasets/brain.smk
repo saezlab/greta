@@ -12,8 +12,8 @@ rule download_brain:
         """
         data_path=$(dirname {output.tar})
         echo "Downloading tar file"
-        wget '{params.full_dataset}' -O '{output.tar}'
-        wget '{params.annot}' -O '{output.annot}'
+        wget --no-verbose '{params.full_dataset}' -O '{output.tar}'
+        wget --no-verbose '{params.annot}' -O '{output.annot}'
         """
 
 
