@@ -19,7 +19,7 @@ printshellcmds: "True"
 default-resources:
    - runtime=180
    - mem_mb=64000
-   - partition=single
+   - partition=cpu-single
    - threads=128
 # # set-threads: map rule names to threads
 # set-threads:
