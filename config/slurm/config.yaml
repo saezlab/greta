@@ -20,7 +20,7 @@ default-resources:
    - runtime=180
    - mem_mb=64000
    - partition=cpu-single
-   - threads=128
+   - threads=32
 # # set-threads: map rule names to threads
 # set-threads:
 #   - single_core_rule=1
