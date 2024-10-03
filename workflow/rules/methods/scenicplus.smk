@@ -158,7 +158,7 @@ rule tfb_scenicplus:
         tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt"),
         out="datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv"
     resources:
-        mem_mb=128000,
+        mem_mb=256000,
         runtime=360,
     singularity:
         'workflow/envs/scenicplus.sif'
