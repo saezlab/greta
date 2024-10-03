@@ -1,38 +1,36 @@
-
 rule pre_hummus:
     input:
-        d='datasets/{dataset}/cases/{case}/mdata.h5mu',
-        #h='gdata/grandes/EnsDb.Hsapiens.v86.RDS',
+        mdata='datasets/{dataset}/cases/{case}/mdata.h5mu',
     singularity:
         'workflow/envs/gretabench.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.hummus.pre.txt'
     output:
-        d='datasets/{dataset}/cases/{case}/runs/hummus.pre.h5mu'
+        out='datasets/{dataset}/cases/{case}/runs/hummus.pre.h5mu'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     shell:
         """
         python workflow/scripts/methods/hummus/pre.py \
-        -i {input.d} \
-        -o {output.d}
+        -i {input.mdata} \
+        -o {output.out}
         """
 
+
 rule prior_hummus:
+    threads: 32
     input:
-        d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        h = 'gdata/granges/hg38_ensdb_v86.csv',
-        m = 'gdata/granges/mm10_ensdb_v79.csv',
+        pre=lambda wildcards: map_rules('pre', wildcards.pre),
+        h=rules.download_granges.output.h,
+        m=rules.download_granges.output.m,
     output:
-        tf_list = temp('datasets/{dataset}/cases/{case}/runs/{pre}.tfs.list.hummus.tsv'),
-        rna_network = temp('datasets/{dataset}/cases/{case}/runs/{pre}.grnboost2.csv'),
-        atac_network = temp('datasets/{dataset}/cases/{case}/runs/{pre}.atacnet.csv'),
-        hummus_object = temp('datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS'),
+        tf_list=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.tfs.list.hummus.tsv')),
+        rna_network=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.grnboost2.csv')),
+        atac_network=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.atacnet.csv')),
+        hummus_object=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS')),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        grn_number_edges = 50000,
-        tf_layer_method = None,
-        n_cores = 32
+        grn_number_edges=50000,
+        tf_layer_method=None,
+        n_cores=32
     singularity:
         'workflow/envs/hummus.sif'
     resources:
@@ -40,12 +38,12 @@ rule prior_hummus:
     shell:
         """
         Rscript workflow/scripts/methods/hummus/prior_hummus_tf_infos.R \
-        {input.d} \
+        {input.pre} \
         {params.organism} \
         {output.tf_list}
 
         python workflow/scripts/methods/hummus/prior_hummus.py \
-        -d {input.d} \
+        -d {input.pre} \
         -r {output.rna_network} \
         -a {output.atac_network} \
         -c {params.n_cores} \
@@ -53,7 +51,7 @@ rule prior_hummus:
         -o {params.organism}
 
         Rscript workflow/scripts/methods/hummus/prior_hummus.R \
-        {input.d} \
+        {input.pre} \
         {params.organism} \
         {input.h} \
         {input.m} \
@@ -66,52 +64,44 @@ rule prior_hummus:
 
 
 rule p2g_hummus:
+    threads: 32
     input:
-        hummus_object = "datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS"
+        hummus_object=rules.prior_hummus.output.hummus_object
     singularity:
         'workflow/envs/hummus.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.hummus.p2g.txt'
     output:
-        p2g = 'datasets/{dataset}/cases/{case}/runs/{pre}.hummus.p2g.csv',
-#        loom_rna = temp('datasets/{dataset}/cases/{case}/runs/{pre}.hummus.rna.loom'),
-#        atac_network = temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.hummus.atacnet.csv')),
-        # multilayer_f indictaed through multiplex subfolder that won't change
-        # bipartites not given since they can be change with other p2g and tfb outputs
-        multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.multilayer")),
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.hummus.p2g.csv',
+        multilayer_f=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.multilayer')),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=900000,
-        n_cores = 32
+        n_cores=32
     shell:
         """
-        # add Integrate networks into multilayer object, and connect them
         Rscript workflow/scripts/methods/hummus/p2g.R \
         {input.hummus_object} \
         {params.organism} \
         {params.ext} \
         {params.n_cores} \
-        {output.p2g} \
+        {output.out} \
         {output.multilayer_f} \
         """
 
 
 rule tfb_hummus:
+    threads: 32
     input:
-        #d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p2g = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        hummus_object = 'datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS'
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
+        hummus_object=rules.prior_hummus.output.hummus_object,
     singularity:
         'workflow/envs/hummus.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.hummus.tfb.txt'
     output:
-        tfb = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.hummus.tfb.csv',
-        multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.multilayer")),
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.hummus.tfb.csv',
+        multilayer_f=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.multilayer')),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        n_cores = 32,
-        p2g = lambda w: w.p2g
+        n_cores=32,
+        p2g=lambda w: w.p2g
     shell:
         """
         Rscript workflow/scripts/methods/hummus/tfb.R \
@@ -119,31 +109,28 @@ rule tfb_hummus:
         {input.p2g} \
         {params.organism} \
         {params.n_cores} \
-        {output.tfb} \
+        {output.out} \
         {output.multilayer_f} \
         {params.p2g}
         """
 
 
 rule mdl_hummus:
+    threads: 32
     input:
-        #d='datasets/{dataset}/cases/{case}/runs/{pre}.pre.h5mu',
-        p2g = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.p2g.csv',
-        tfb = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.tfb.csv',
-        hummus_object = 'datasets/{dataset}/cases/{case}/runs/{pre}.hummus_object.RDS'
+        p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
+        tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
+        hummus_object=rules.prior_hummus.output.hummus_object,
     singularity:
         'workflow/envs/hummus.sif'
-    benchmark:
-        'benchmarks/{dataset}.{case}.{pre}.{p2g}.{tfb}.hummus.mdl.txt'
     output:
-        mdl = 'datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.hummus.mdl.csv',
-        multilayer_f = temp(directory("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.multilayer")),
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.hummus.mdl.csv',
+        multilayer_f=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.multilayer')),
     params:
-        n_cores = 32,
+        n_cores=32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        p2g = lambda w: w.p2g,
-        tfb = lambda w: w.tfb
-
+        p2g=lambda w: w.p2g,
+        tfb=lambda w: w.tfb,
     shell:
         """
         Rscript workflow/scripts/methods/hummus/mdl.R \
