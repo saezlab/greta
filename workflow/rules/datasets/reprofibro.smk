@@ -1,6 +1,3 @@
-localrules: download_reprofibro
-
-
 rule download_reprofibro:
     output:
         tar=temp(local('datasets/reprofibro/RAW.tar')),
@@ -22,28 +19,27 @@ rule download_reprofibro:
         python workflow/scripts/datasets/reprofibro/prc_annot.py -a {output.annot}
         wget --no-verbose '{params.tar}' -O {output.tar}
         tar xvf {output.tar} -C $data_path
-        rename_files() {{
-            local data_path=$1
-            local sufix=$2
-            local new_sufix=$3
-            shopt -s nullglob
-            local files=($data_path/GSM*_*.$sufix)
-            shopt -u nullglob
-            for file in ${{files[@]}}; do
-                local new_name=$(basename $file | sed 's/GSM776338[0-9]*_//' | sed 's/\.$sufix$/.$new_sufix/')
-                mv $file $data_path/$new_name
-            done
-        }}
-        rename_files $data_path barcodes.tsv.gz barcodes.tsv.gz
-        rename_files $data_path frag.tsv.gz frags.tsv.gz
-        rename_files $data_path matrix.mtx.gz matrix.mtx.gz
+        cd $data_path
+        for file in GSM*_*.frag.bed.gz; do
+            new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.frag\.bed\.gz/\\1.frags.tsv.gz/')
+            mv $file $new_file
+        done
+        for file in GSM*_*.barcodes.tsv.gz; do
+            new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.barcodes\.tsv\.gz/\\1.barcodes.tsv.gz/')
+            mv $file $new_file
+        done
+        for file in GSM*_*.matrix.mtx.gz; do
+            new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.matrix\.mtx\.gz/\\1.matrix.mtx.gz/')
+            mv $file $new_file
+        done
+        cd ../../
         wget --no-verbose '{params.barcodes}' -O {output.barcodes}
         wget --no-verbose '{params.genes}' -O {output.genes}
         """
 
 
 rule callpeaks_reprofibro:
-    threads: 32
+    threads: 16
     input:
         frags=rules.download_reprofibro.output.frags,
         annot=rules.download_reprofibro.output.annot,
@@ -78,10 +74,8 @@ rule annotate_reprofibro:
     shell:
         """
         python workflow/scripts/datasets/reprofibro/reprofibro.py \
-        -a {input.path_matrix_d1m} \
-        -b {input.path_barcodes_d1m} \
-        -c {input.path_matrix_d2m} \
-        -d {input.path_barcodes_d2m} \
+        -a {input.mats} \
+        -b {input.bars} \
         -e {input.path_gsym} \
         -f {input.path_peaks} \
         -g {input.path_annot} \

@@ -1,6 +1,3 @@
-localrules: download_fragments_heart, download_anndata_heart
-
-
 rule download_fragments_heart:
     output:
         tar=temp(local('datasets/heartatlas/fragments.tar')),
@@ -13,6 +10,10 @@ rule download_fragments_heart:
         wget --no-verbose '{params.tar}' -O '{output.tar}'
         tar -xvf '{output.tar}' -C "$data_path"
         rm "$data_path"/*.tbi
+        for file in $data_path/*_atac_fragments.tsv.gz; do
+            new_file=$(echo "$file" | sed 's/_atac_fragments.tsv.gz/.frags.tsv.gz/')
+            mv "$file" "$new_file"
+        done
         """
 
 

@@ -1,6 +1,3 @@
-localrules: download_brain, extract_files_brain, prc_annot
-
-
 rule download_brain:
     output:
         tar='datasets/brain/GSE193688.tar', 
@@ -30,6 +27,10 @@ rule extract_files_brain:
         rm '{input.tar}'
         rm $data_path/*peaks.bed.gz
         (cd $data_path && for x in GSM*; do    mv $x `echo $x | cut -c 12-`; done)
+        for file in $data_path/*_atac_fragments.tsv.gz; do
+            new_file=$(echo "$file" | sed 's/_atac_fragments.tsv.gz/.frags.tsv.gz/')
+            mv "$file" "$new_file"
+        done
         """
 
 
@@ -52,7 +53,7 @@ rule prc_annot:
 
 
 rule callpeaks_brain:
-    threads: 32
+    threads: 16
     input:
         frags=rules.extract_files_brain.output.frags,
         annot=rules.prc_annot.output.annot,

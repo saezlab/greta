@@ -1,4 +1,4 @@
-localrules: download_pitunpair, index_frags
+localrules: download_pitunpair
 
 
 rule download_pitunpair:
@@ -79,16 +79,16 @@ rule paircells_pitunpair:
     shell:
         """
         Rscript workflow/scripts/datasets/pitunpair/pairCells.R \
-        {input.exprMat} \
-        {input.atacSE} \
+        {input.exprmat} \
+        {input.atacse} \
         {input.cca} \
         {input.celltypes} \
-        {output.barMap} \
+        {output.barmap} \
         """
 
 
 rule callpeaks_pitunpair:
-    threads: 32
+    threads: 16
     input:
         frags=rules.download_pitunpair.output.frags,
         annot=rules.paircells_pitunpair.output.barmap,

@@ -1,4 +1,4 @@
-localrules: download_geneids, download_pbmc10k
+localrules: download_geneids
 
 
 rule download_geneids:
@@ -41,7 +41,7 @@ rule prcannot_pbmc10k:
 
 
 rule callpeaks_pbmc10k:
-    threads: 32
+    threads: 16
     input:
         frags=rules.download_pbmc10k.output.atac_frags,
         annot=rules.prcannot_pbmc10k.output.annot,
