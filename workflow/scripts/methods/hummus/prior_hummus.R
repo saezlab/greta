@@ -20,11 +20,13 @@ if (tf_layer_method == "None"){
 
 # Set genome
 if (organism == 'hg38'){
+    specie="human"
     genome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
     annot <- read.csv(granges_hg)
     genome_annot = get_genome_annotations(
         ensdb_annotations = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86)
 } else if (organism == 'mm10'){
+    specie="mouse"
     annot <- read.csv(granges_mm)
     genome <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
     genome_annot = get_genome_annotations(
@@ -54,7 +56,9 @@ seurat_object[['peaks']] <- Signac::CreateChromatinAssay(
 rm(atac_X)
 hummus <- Initiate_Hummus_Object(seurat_object)
 rm(seurat_object)
-hummus
+hummus@motifs_db <- get_tf2motifs(species = specie)
+
+
 hummus[['RNA']]
 hummus[['peaks']]
 
