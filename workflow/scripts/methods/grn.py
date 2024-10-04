@@ -22,6 +22,7 @@ baselines = ['collectri', 'dorothea', 'random', 'scenic']
 if all(x == lst[0] for x in lst):
     if (lst[0] in baselines) or lst[0].startswith('o_'):
         mdl.to_csv(path_out, index=False)
+        os._exit(0)
 
 # Read
 pre_name, p2g_name, tfb_name, mdl_name = lst
