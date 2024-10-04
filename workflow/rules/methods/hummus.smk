@@ -1,22 +1,21 @@
+localrules: pre_hummus
+
+
 rule pre_hummus:
     input:
         mdata='datasets/{dataset}/cases/{case}/mdata.h5mu',
-    singularity:
-        'workflow/envs/gretabench.sif'
     output:
         out='datasets/{dataset}/cases/{case}/runs/hummus.pre.h5mu'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     shell:
         """
-        python workflow/scripts/methods/hummus/pre.py \
-        -i {input.mdata} \
-        -o {output.out}
+        cp {input.mdata} {output.out}
         """
 
 
 rule prior_hummus:
-    threads: 32
+    threads: 16
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         h=rules.download_granges.output.h,
@@ -30,13 +29,17 @@ rule prior_hummus:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         grn_number_edges=50000,
         tf_layer_method=None,
-        n_cores=32
+        n_cores=16
     singularity:
         'workflow/envs/hummus.sif'
     resources:
         mem_mb=128000,
     shell:
         """
+        export OMP_NUM_THREADS={params.n_cores}
+        export MKL_NUM_THREADS={params.n_cores}
+        export NUMEXPR_NUM_THREADS={params.n_cores}
+
         Rscript workflow/scripts/methods/hummus/prior_hummus_tf_infos.R \
         {input.pre} \
         {params.organism} \
@@ -49,7 +52,8 @@ rule prior_hummus:
         -c {params.n_cores} \
         -n {output.tf_list} \
         -o {params.organism}
-
+        echo "Nets and circe done"
+        echo "Starting last step"
         Rscript workflow/scripts/methods/hummus/prior_hummus.R \
         {input.pre} \
         {params.organism} \
