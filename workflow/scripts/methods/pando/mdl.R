@@ -3,7 +3,6 @@ library(tidyverse)
 library(rhdf5)
 library(Pando)
 library(doParallel)
-library(R.utils)
 
 
 # Parse args
@@ -157,18 +156,8 @@ mutate(
 return(grn)
 }
 
-get_grn_timeout <- function(timeout){
-    tryCatch({
-        grn <- withTimeout(run_mdl(), timeout = timeout)
-        return(grn)
-    }, TimeoutException = function(ex) {
-        message("Timeout reached.")
-        grn <- data.frame(source=character(), target=character(), score=numeric(), pval=numeric())
-        return(grn)
-    })
-}
+grn <- run_mdl()
 
-grn <- get_grn_timeout(timeout=129600)  # Set limit of 1 day an a half
 
 # Write
 write.csv(x = grn, file = path_out, row.names=FALSE)
