@@ -59,22 +59,30 @@ rule p2g_celloracle:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
         ext=config['methods']['celloracle']['ext']
+    resources:
+        runtime=config['max_mins_per_step'],
     shell:
         """
-        Rscript workflow/scripts/methods/celloracle/p2g.R \
+        set +e
+        timeout $(({resources.runtime}-20))m bash -c \
+        'Rscript workflow/scripts/methods/celloracle/p2g.R \
         {input.pre} \
         {params.organism} \
         {params.ext} \
         {output.pp} \
-        {output.pc}
-
+        {output.pc} && \
         python workflow/scripts/methods/celloracle/p2g.py \
         -d {input.pre} \
         -a {output.pp} \
         -c {output.pc} \
         -o {params.organism} \
         -t {params.thr_coaccess} \
-        -p {output.out}
+        -p {output.out}'
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
+            touch {output.pp}
+            touch {output.pc}
+        fi
         """
 
 
@@ -93,8 +101,12 @@ rule tfb_celloracle:
         fpr=config['methods']['celloracle']['fpr'],
         blen=config['methods']['celloracle']['blen'],
         tfb_thr=config['methods']['celloracle']['tfb_thr']
+    resources:
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         python workflow/scripts/methods/celloracle/tfb.py \
         -d {input.pre} \
         -p {input.p2g} \
@@ -103,6 +115,9 @@ rule tfb_celloracle:
         -b {params.blen} \
         -t {params.tfb_thr} \
         -o {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
+        fi
         """
 
 
@@ -121,9 +136,11 @@ rule mdl_celloracle:
         p=config['methods']['celloracle']['p'],
         n=config['methods']['celloracle']['n'],
     resources:
-        runtime=720,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         python workflow/scripts/methods/celloracle/mdl.py \
         -m {input.pre} \
         -g {input.p2g} \
@@ -131,7 +148,10 @@ rule mdl_celloracle:
         -a {params.a} \
         -p {params.p} \
         -n {params.n} \
-        -o {output}
+        -o {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+        fi
         """
 
 
@@ -158,16 +178,17 @@ rule mdl_o_celloracle:
         n=config['methods']['celloracle']['n'],
     resources:
         mem_mb=256000,
-        runtime=720,
+        runtime=config['max_mins_per_step'],
     shell:
         """
-        Rscript workflow/scripts/methods/celloracle/src.R \
+        set +e
+        timeout $(({resources.runtime}-20))m bash -c \
+        'Rscript workflow/scripts/methods/celloracle/src.R \
         {input.mdata} \
         {params.organism} \
         {params.ext} \
         {output.pp} \
-        {output.pc}
-
+        {output.pc} && \
         python workflow/scripts/methods/celloracle/src.py \
         -a {input.mdata} \
         -b {output.pp} \
@@ -181,5 +202,10 @@ rule mdl_o_celloracle:
         -k {params.p} \
         -l {params.n} \
         -m {params.k} \
-        -n {output.out}
+        -n {output.out}'
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+            touch {output.pp}
+            touch {output.pc}
+        fi
         """

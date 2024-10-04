@@ -57,9 +57,11 @@ rule p2g_granie:
         ext=config['methods']['granie']['ext'],
     resources:
         mem_mb=128000,
-        runtime=2880,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/granie/p2g.R \
         {input.pre} \
         {params.organism} \
@@ -67,6 +69,10 @@ rule p2g_granie:
         {output.t} \
         {params.ext} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
+            mkdir {output.t}
+        fi
         """
 
 
@@ -86,8 +92,11 @@ rule tfb_granie:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     resources:
         mem_mb=128000,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/granie/tfb.R \
         {input.pre} \
         {params.organism} \
@@ -96,6 +105,10 @@ rule tfb_granie:
         {input.t} \
         {input.p2g} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
+            mkdir {output.t}
+        fi
         """
 
 
@@ -116,9 +129,11 @@ rule mdl_granie:
         thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
         mem_mb=128000,
-        runtime=720,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/granie/mdl.R \
         {input.pre} \
         {params.organism} \
@@ -128,6 +143,10 @@ rule mdl_granie:
         {input.tfb} \
         {params.thr_fdr} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+            mkdir {output.t}
+        fi
         """
 
 
@@ -149,12 +168,14 @@ rule mdl_o_granie:
         thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
         mem_mb=128000,
+        runtime=config['max_mins_per_step'],
     shell:
         """
-        python workflow/scripts/methods/granie/pre.py \
+        set +e
+        timeout $(({resources.runtime}-20))m bash -c \
+        'python workflow/scripts/methods/granie/pre.py \
         -i {input.mdata} \
-        -o {output.h}
-
+        -o {output.h} && \
         Rscript workflow/scripts/methods/granie/src.R \
         {output.h} \
         {params.organism} \
@@ -163,5 +184,9 @@ rule mdl_o_granie:
         {params.ext} \
         {input.t} \
         {params.thr_fdr} \
-        {output.out}
+        {output.out}'
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+            mkdir {output.t}
+        fi
         """

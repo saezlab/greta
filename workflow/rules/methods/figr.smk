@@ -31,9 +31,11 @@ rule p2g_figr:
         ncres=config['methods']['figr']['ncres'],
     resources:
         mem_mb=256000,
-        runtime=1440,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/figr/p2g.R \
         {input.pre} \
         {params.organism} \
@@ -41,6 +43,9 @@ rule p2g_figr:
         {params.thr_p2g_pval} \
         {params.ncres} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
+        fi
         """
 
 
@@ -59,9 +64,11 @@ rule tfb_figr:
         dorcK=config['methods']['figr']['dorcK'],
     resources:
         mem_mb=256000,
-        runtime=1440,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/figr/tfb.R \
         {input.pre} \
         {params.organism} \
@@ -69,6 +76,9 @@ rule tfb_figr:
         {params.cellK} \
         {params.dorcK} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
+        fi
         """
 
 
@@ -87,9 +97,11 @@ rule mdl_figr:
         thr_score=config['methods']['figr']['thr_score'],
     resources:
         mem_mb=512000,
-        runtime=2160,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/figr/mdl.R \
         {input.pre} \
         {input.p2g} \
@@ -97,6 +109,9 @@ rule mdl_figr:
         {params.cellK} \
         {params.thr_score} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+        fi
         """
 
 
@@ -118,9 +133,11 @@ rule mdl_o_figr:
         thr_score=config['methods']['figr']['thr_score'],
     resources:
         mem_mb=256000,
-        runtime=2160,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/figr/src.R \
         {input.mdata} \
         {params.cellK} \
@@ -131,4 +148,7 @@ rule mdl_o_figr:
         {params.dorcK} \
         {params.thr_score} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+        fi
         """

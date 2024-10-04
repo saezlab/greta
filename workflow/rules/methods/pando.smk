@@ -60,8 +60,12 @@ rule p2g_pando:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['pando']['ext'],
+    resources:
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/pando/p2g.R \
         {input.pre} \
         {params.organism} \
@@ -69,6 +73,9 @@ rule p2g_pando:
         {input.m} \
         {params.ext} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
+        fi
         """
 
 
@@ -83,13 +90,20 @@ rule tfb_pando:
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.pando.tfb.csv'
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism']
+    resources:
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/pando/tfb.R \
         {input.pre} \
         {params.organism} \
         {input.p2g} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
+        fi
         """
 
 
@@ -103,17 +117,19 @@ rule mdl_pando:
         'workflow/envs/pando.sif'
     output:
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
-    resources:
-        mem_mb=512000,
-        runtime=2880,
     params:
         thr_corr=config['methods']['pando']['thr_corr'],
         p_thresh=config['methods']['pando']['p_thresh'],
         rsq_thresh=config['methods']['pando']['rsq_thresh'],
         nvar_thresh=config['methods']['pando']['nvar_thresh'],
         min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
+    resources:
+        mem_mb=512000,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/pando/mdl.R \
         {input.pre} \
         {input.p2g} \
@@ -124,6 +140,9 @@ rule mdl_pando:
         {params.nvar_thresh} \
         {params.min_genes_per_module} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+        fi
         """
 
 rule mdl_o_pando:
@@ -136,9 +155,6 @@ rule mdl_o_pando:
         'workflow/envs/pando.sif'
     output:
         out='datasets/{dataset}/cases/{case}/runs/o_pando.o_pando.o_pando.o_pando.grn.csv'
-    resources:
-        mem_mb=512000,
-        runtime=2880,
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         exclude_exons=config['methods']['pando']['exclude_exons'],
@@ -148,8 +164,13 @@ rule mdl_o_pando:
         rsq_thresh=config['methods']['pando']['rsq_thresh'],
         nvar_thresh=config['methods']['pando']['nvar_thresh'],
         min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
+    resources:
+        mem_mb=512000,
+        runtime=config['max_mins_per_step'],
     shell:
         """
+        set +e
+        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/pando/src.R \
         {input.mdata} \
         {params.exclude_exons} \
@@ -163,4 +184,7 @@ rule mdl_o_pando:
         {input.h} \
         {input.m} \
         {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+        fi
         """

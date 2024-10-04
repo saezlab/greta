@@ -1,3 +1,5 @@
+max_mins_per_step: 1100
+
 methods:
     celloracle:
         k: 20
