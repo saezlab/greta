@@ -1,6 +1,6 @@
 import os
 import argparse
-os.environ[ 'NUMBA_CACHE_DIR' ] = '/tmp/'
+os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
 
 import pandas as pd
 import muon as mu
@@ -51,25 +51,19 @@ mudata = mu.read_h5mu(path_mudata)
 if __name__ == '__main__':
     print('Computing networks...')
     tf_names = pd.read_csv(tf_names, header=None)[0].tolist()
-
+    print('Running grnboost2...')
     rna_network = run_grnboost2(
         expression_data=mudata["rna"].to_df(),
         tf_names=tf_names,
         n_cores=n_cores)
     rna_network.to_csv(path_grnboost2, index=False)
-
+    print('grnboost2 done!')
+    print('Running circe')
     # Create the atacnet network
     atac = ci.add_region_infos(mudata["atac"], sep=(':', '-'))
-    mudata = mu.MuData(
-        {"rna": mudata["rna"],
-         "atac": atac})
-    ci.compute_atac_network(
-        mudata["atac"],
-        organism=organism)
-
-    atac_network = ci.extract_atac_links(mudata["atac"])
+    ci.compute_atac_network(atac, organism=organism)
+    print('curce done!')
+    atac_network = ci.extract_atac_links(atac)
     atac_network = atac_network[atac_network["score"]>0]
     atac_network.to_csv(path_atacnet, index=False)
-
-
 
