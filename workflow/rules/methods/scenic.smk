@@ -48,7 +48,7 @@ rule mdl_scenic:
         """
         # Step 1: Create Loom file
         python workflow/scripts/methods/scenic/loom.py \
-        -i {input.data} \
+        -i {input.mdata} \
         -o {output.t}
         echo "Created loom"
 
@@ -69,7 +69,7 @@ rule mdl_scenic:
 
         # Step 4: Process GRN
         python workflow/scripts/methods/scenic/process_grn.py \
-        -o {output.grn} \
+        -o {output.out} \
         -p {input.proms} \
         -g {output.adj} \
     	-r {output.reg}
