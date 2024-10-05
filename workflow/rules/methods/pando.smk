@@ -128,6 +128,9 @@ rule mdl_pando:
         runtime=config['max_mins_per_step'],
     shell:
         """
+        export OMP_NUM_THREADS={threads}
+        export MKL_NUM_THREADS={threads}
+        export NUMEXPR_NUM_THREADS={threads}
         set +e
         timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/pando/mdl.R \
@@ -140,7 +143,7 @@ rule mdl_pando:
         {params.nvar_thresh} \
         {params.min_genes_per_module} \
         {output.out}
-        if [ $? -eq 124 ]; then
+        if [ $? -eq 124 ] || [ $? -eq 137 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """
@@ -169,6 +172,9 @@ rule mdl_o_pando:
         runtime=config['max_mins_per_step'],
     shell:
         """
+        export OMP_NUM_THREADS={threads}
+        export MKL_NUM_THREADS={threads}
+        export NUMEXPR_NUM_THREADS={threads}
         set +e
         timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/pando/src.R \
@@ -184,7 +190,7 @@ rule mdl_o_pando:
         {input.h} \
         {input.m} \
         {output.out}
-        if [ $? -eq 124 ]; then
+        if [ $? -eq 124 ] || [ $? -eq 137 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """
