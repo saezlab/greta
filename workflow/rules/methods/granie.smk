@@ -56,7 +56,7 @@ rule p2g_granie:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['granie']['ext'],
     resources:
-        mem_mb=128000,
+        mem_mb=256000,
         runtime=config['max_mins_per_step'],
     shell:
         """
