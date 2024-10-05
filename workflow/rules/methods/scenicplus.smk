@@ -143,8 +143,8 @@ rule tfb_scenicplus:
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         cistarget_rankings_human=rules.download_cistarget.output.human_rankings,
         cistarget_scores_human=rules.download_cistarget.output.human_scores,
-        path_to_motif_annotations_human=rules.download_gene_annotations.output.h,
-        path_to_motif_annotations_mouse=rules.download_gene_annotations.output.m,
+        path_to_motif_annotations_human=rules.download_motifs.output.h,
+        path_to_motif_annotations_mouse=rules.download_motifs.output.m,
     params:
         n_cores=32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
