@@ -155,7 +155,7 @@ From: ubuntu:20.04
     # Install python dependencies for hummus (arboreto and atacnet to replace GENIE3 and Cicero)
     conda activate env
     
-    pip install hummuspy circe-py muon
+    pip install hummuspy circe-py==0.3.1 muon
     pip install git+https://github.com/aertslab/arboreto.git
 
     # Install hummus R package from github

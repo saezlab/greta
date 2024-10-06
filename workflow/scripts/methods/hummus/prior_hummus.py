@@ -61,7 +61,7 @@ if __name__ == '__main__':
     print('Running circe')
     # Create the atacnet network
     atac = ci.add_region_infos(mudata["atac"], sep=(':', '-'))
-    ci.compute_atac_network(atac, organism=organism)
+    ci.compute_atac_network(atac, organism=organism, njobs=n_cores)
     print('curce done!')
     atac_network = ci.extract_atac_links(atac)
     atac_network = atac_network[atac_network["score"]>0]
