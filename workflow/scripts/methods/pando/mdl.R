@@ -51,6 +51,7 @@ features <- unique(p2g$gene)
 cat("Number of target genes to fit: ", length(features), '\n')
 
 nCores <- 32
+options(mc.cores = 32)
 cat("N cores: ", nCores, '\n')
 
 cl <- makeCluster(nCores)
@@ -65,6 +66,9 @@ clusterEvalQ(cl, {
 registerDoParallel(cl)
 
 run_mdl <- function(){
+cat("OMP_NUM_THREADS: ", Sys.getenv("OMP_NUM_THREADS"), "\n")
+cat("MKL_NUM_THREADS: ", Sys.getenv("MKL_NUM_THREADS"), "\n")
+cat("BLAS_NUM_THREADS: ", Sys.getenv("BLAS_NUM_THREADS"), "\n")
 model_fits <- Pando::map_par(features, function(g){
     # Subset scaffold
     print(g)

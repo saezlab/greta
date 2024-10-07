@@ -73,7 +73,7 @@ motif2tf_use <- motif2tf %>%
     dplyr::filter(tf %in% rownames(muo_data[['RNA']]))
 motifs_use <- motifs[unique(motif2tf_use$motif)]
 muo_data <- find_motifs(
-    muo_data, 
+    muo_data,
     pfm = motifs_use, 
     motif_tfs = motif2tf_use,
     genome = genome
@@ -82,6 +82,7 @@ muo_data <- find_motifs(
 # Infer GRN
 print('Infer GRN')
 nCores <- 32
+options(mc.cores = 32)
 cat("N cores: ", nCores, '\n')
 cl <- makeCluster(nCores)
 clusterExport(cl, varlist = c("nCores", "muo_data", "thr_corr"))
@@ -93,7 +94,9 @@ clusterEvalQ(cl, {
   Sys.setenv(BLAS_NUM_THREADS=nCores)
 })
 registerDoParallel(cl)
-
+cat("OMP_NUM_THREADS: ", Sys.getenv("OMP_NUM_THREADS"), "\n")
+cat("MKL_NUM_THREADS: ", Sys.getenv("MKL_NUM_THREADS"), "\n")
+cat("BLAS_NUM_THREADS: ", Sys.getenv("BLAS_NUM_THREADS"), "\n")
 muo_data <- infer_grn(
     muo_data,
     peak_to_gene_method = 'GREAT',
