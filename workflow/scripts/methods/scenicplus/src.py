@@ -1,7 +1,9 @@
 import os
 os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
+import scanpy as sc
 from typing import (List, Dict, Literal, TYPE_CHECKING)
 import pathlib
+from pathlib import Path
 import argparse
 import logging
 import pickle
@@ -12,7 +14,6 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 from scipy.stats import gaussian_kde
-import scanpy as sc
 import muon as mu
 
 # for chromsizes
@@ -950,20 +951,20 @@ def read_fragments_to_polars_df(
 # Init args
 parser = argparse.ArgumentParser()
     # Data and folders
-parser.add_argument('-f', '--frags', type=str, help='Path to fragments file')
-parser.add_argument('-i', '--mdata', type=str, help='Path to metadata file')
+parser.add_argument('-f', '--frags',  nargs='+', help='Path to fragments file')
+parser.add_argument('-i', '--mudata', type=str, help='Path to metadata file')
 parser.add_argument('-o', '--out', type=str, help='Path to output directory')
 parser.add_argument('-t', '--temp_dir', type=str, help='Path to temp directory')
 parser.add_argument('--ray_tmp_dir', type=str, help='Path to ray tmp directory')
 parser.add_argument('--tmp_scenicplus', type=str, help='Path to tmp scenicplus directory')
     # General parameters
 parser.add_argument('-g', '--organism', type=str, help='Organism')
-parser.add_argument('-c', '--n_cores', type=int, help='Number of cores')
+parser.add_argument('-c', '--njobs', type=int, help='Number of cores')
     # Additional files
 parser.add_argument('-m', '--chrom_sizes_m', type=str, help='Path to mouse chrom sizes')
 parser.add_argument('-j', '--chrom_sizes_h', type=str, help='Path to human chrom sizes')
-parser.add_argument('-a', '--annot_m', type=str, help='Path to mouse annotations')
-parser.add_argument('-b', '--annot_h', type=str, help='Path to human annotations')
+parser.add_argument('-a', '--annot_mouse', type=str, help='Path to mouse annotations')
+parser.add_argument('-b', '--annot_human', type=str, help='Path to human annotations')
 parser.add_argument('-r', '--cistarget_rankings_human', type=str, help='Path to human cistarget rankings')
 parser.add_argument('-s', '--cistarget_scores_human', type=str, help='Path to human cistarget scores')
 parser.add_argument('--path_to_motif_annotations_human', type=str, help='Path to human motif annotations')
@@ -977,27 +978,26 @@ parser.add_argument('--use_gene_boundaries', type=bool, help='Use gene boundarie
 parser.add_argument('--region_to_gene_importance_method', type=str, help='Region to gene importance method')
 parser.add_argument('--region_to_gene_correlation_method', type=str, help='Region to gene correlation method')
 parser.add_argument('--method_mdl', type=str, help='Method mdl')
-parser.add_argument('--order_regions_to_genes_by', type=str, help='Order regions to genes by')
-parser.add_argument('--order_TFs_to_genes_by', type=str, help='Order TFs to genes by')
-parser.add_argument('--gsea_n_perm', type=int, help='GSEA n perm')
-parser.add_argument('--quantile_thresholds_region_to_gene', type=str, help='Quantile thresholds region to gene')
-parser.add_argument('--top_n_regionTogenes_per_gene', type=str, help='Top n regionTogenes per gene')
-parser.add_argument('--top_n_regionTogenes_per_region', type=str, help='Top n regionTogenes per region')
-parser.add_argument('--min_regions_per_gene', type=int, help='Min regions per gene')
-parser.add_argument('--rho_threshold', type=float, help='Rho threshold')
-parser.add_argument('--min_target_genes', type=int, help='Min target genes')
-
+parser.add_argument('--order_regions_to_genes_by', type=str, required=False, default="importance")
+parser.add_argument('--order_TFs_to_genes_by', type=str, required=False, default="importance")
+parser.add_argument('--gsea_n_perm', type=int, required=False, default=1000)
+parser.add_argument('--quantile_thresholds_region_to_gene', type=float, required=False, nargs="*", default=[0.85, 0.90, 0.95])
+parser.add_argument('--top_n_regionTogenes_per_gene', type=int, required=False, nargs="*", default=[5, 10, 15])
+parser.add_argument('--top_n_regionTogenes_per_region', type=int, required=False, nargs="*", default=[])
+parser.add_argument('--min_regions_per_gene', required=True, type=int)
+parser.add_argument('--rho_threshold', type=float, required=False, default=0.05,)
+parser.add_argument('--min_target_genes', type=int, required=False, default=10,)
 args = vars(parser.parse_args())
 
 # Set up variables
 frags = args['frags']
 mudata_file = args['mudata']
-output_fname = args['output']
+output_fname = args['out']
 tmp_scenicplus = args['tmp_scenicplus']
 ray_tmp_dir = os.path.join(args['ray_tmp_dir'])
 njobs = args['njobs']
-output = args['output']
 organism = args['organism']
+
 if organism == 'hg38':
     organism = "hsapiens"
     chromsizes_fname = args['chrom_sizes_h']
@@ -1049,6 +1049,7 @@ fragments_dict = {}
 batch_ids = cell_data['batch'].unique()
 cell_data['barcode'] = cell_data.index
 fragments_files = {frag.split(".frags")[0].split("/")[-1]:frag for frag in frags}
+print("fragments_files:{}".format(fragments_files))
 
 for batch_id in batch_ids:
     # Add batch_id to fragments_dict
