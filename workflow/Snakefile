@@ -11,6 +11,7 @@ def map_rules(rule_prefix, w_name):
     if hasattr(rules, rule_name):
         return getattr(rules, rule_name).output.out
     else:
+        print(f'rule_prefix={rule_prefix} w_name={w_name}')
         print(rule_prefix, w_name)
 
 
@@ -42,6 +43,12 @@ def make_combs_rules(w, mthds, rule_name):
     rule_outputs.append(format_rule(out, w=w, pre='collectri'))
     rule_outputs.append(format_rule(out, w=w, pre='dorothea'))
     return rule_outputs
+
+
+def list_frags_files(wildcards):
+    return expand('datasets/{dataset}/{sample}.frags.tsv.gz',
+                    dataset=wildcards.dataset,
+                    sample=config['datasets'][wildcards.dataset]['samples'])
 
 
 configfile: 'config/config.yaml'

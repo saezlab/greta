@@ -675,4 +675,4 @@ tfb["score"] = (tfb["score"]-min)/(max - min)*(0.04-0.001)+0.001
 tfb["score"] = -np.log10(tfb["score"])
 tfb["cre"] = tfb["cre"].str.replace(":", "-")
 # Save
-tfb.to_csv(output_tfb)
+tfb.to_csv(output_tfb, index=False)

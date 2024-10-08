@@ -49,12 +49,6 @@ rule download_cistarget:
         """
 
 
-def list_frags_files(wildcards):
-    return expand('datasets/{dataset}/{sample}.frags.tsv.gz',
-                    dataset=wildcards.dataset,
-                    sample=config['datasets'][wildcards.dataset]['samples'])
-
-
 rule pre_scenicplus:
     threads: 32
     input:
@@ -69,10 +63,8 @@ rule pre_scenicplus:
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
-        # stores many intermediate cistopic files
         tmp_scenicplus=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))), 
-        # must be an absolute path, and *SHORT* (ray path check will fail if it's too long)
-        ray_tmp_dir="/tmp",
+        ray_tmp_dir="/tmp_pre_scp",
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores=32
     shell:
@@ -104,15 +96,13 @@ rule p2g_scenicplus:
         temp_dir=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp/{pre}'))),
         n_cores=32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        # Minimum and maximum (up until another gene) number of bps upstream to include in the search space.
-        # cf : scenicplus.data_wrangling.gene_search_space.get_search_space
-        search_space_upstream="1000 150000",
-        search_space_downstream="1000 150000",
-        search_space_extend_tss="10 10",
-        remove_promoters=False,  # Fixed to False in the snakemake pipeline
-        use_gene_boundaries=False,  # Fixed to False in the snakemake pipeline
-        region_to_gene_importance_method="GBM",
-        region_to_gene_correlation_method="SR",
+        ext=config['methods']['scenicplus']['ext'],
+        min_dist=config['methods']['scenicplus']['min_dist'],
+        search_space_extend_tss=config['methods']['scenicplus']['search_space_extend_tss'],
+        remove_promoters=config['methods']['scenicplus']['remove_promoters'],
+        use_gene_boundaries=config['methods']['scenicplus']['use_gene_boundaries'],
+        region_to_gene_importance_method=config['methods']['scenicplus']['region_to_gene_importance_method'],
+        region_to_gene_correlation_method=config['methods']['scenicplus']['region_to_gene_correlation_method'],
     output:
         out='datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus.p2g.csv',
     shell:
@@ -124,8 +114,8 @@ rule p2g_scenicplus:
         -m {input.chrom_sizes_m} \
         -j {input.chrom_sizes_h} \
         -o {output.out} \
-        -u "{params.search_space_upstream}" \
-        -d "{params.search_space_downstream}" \
+        -u "{params.ext}" \
+        -d "{params.min_dist}" \
         -e "{params.search_space_extend_tss}" \
         -r {params.remove_promoters} \
         -g {params.organism} \
@@ -197,18 +187,18 @@ rule mdl_scenicplus:
         out="datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv"
     params:
         tmp_dir="/tmp",
-        method_mdl="GBM",
         n_cores=32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        order_regions_to_genes_by="importance",
-        order_TFs_to_genes_by="importance",
-        gsea_n_perm=1000,
-        quantile_thresholds_region_to_gene="0.85 0.90 0.95",
-        top_n_regionTogenes_per_gene="5 10 15",
-        top_n_regionTogenes_per_region="",
-        min_regions_per_gene=0,
-        rho_threshold=0.05,
-        min_target_genes=10,
+        method_mdl=config['methods']['scenicplus']['method_mdl'],
+        order_regions_to_genes_by=config['methods']['scenicplus']['order_regions_to_genes_by'],
+        order_TFs_to_genes_by=config['methods']['scenicplus']['order_TFs_to_genes_by'],
+        gsea_n_perm=config['methods']['scenicplus']['gsea_n_perm'],
+        quantile_thresholds_region_to_gene=config['methods']['scenicplus']['quantile_thresholds_region_to_gene'],
+        top_n_regionTogenes_per_gene=config['methods']['scenicplus']['top_n_regionTogenes_per_gene'],
+        top_n_regionTogenes_per_region=config['methods']['scenicplus']['top_n_regionTogenes_per_region'],
+        min_regions_per_gene=config['methods']['scenicplus']['min_regions_per_gene'],
+        rho_threshold=config['methods']['scenicplus']['rho_threshold'],
+        min_target_genes=config['methods']['scenicplus']['min_target_genes'],
     singularity:
         'workflow/envs/scenicplus.sif'
     shell:
@@ -236,7 +226,8 @@ rule mdl_scenicplus:
         """
 
 
-rule src_scenicplus:
+rule mdl_o_scenicplus:
+    threads: 32
     input:
         # data
         frags=list_frags_files,
@@ -282,8 +273,8 @@ rule src_scenicplus:
         'workflow/envs/scenicplus.sif'
     output:
         out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv',
-        cistarget_results_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.cistarget.hdf5"),
-        dem_results_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.dem.hdf5"),
+        cistarget_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.cistarget.hdf5"),
+        dem_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.dem.hdf5"),
     shell:
         """
         python workflow/scripts/methods/scenicplus/src.py \

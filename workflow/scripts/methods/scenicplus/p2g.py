@@ -286,8 +286,8 @@ parser.add_argument('-o', '--output', required=True)
 
 parser.add_argument('-t', '--temp_dir', required=True)
 parser.add_argument('-c', '--njobs', required=True, type=int)
-parser.add_argument('-u', '--upstream', required=True)
-parser.add_argument('-d', '--downstream', required=True)
+parser.add_argument('-u', '--ext', required=True)
+parser.add_argument('-d', '--min_dist', required=True)
 parser.add_argument('-e', '--extend_tss', required=True)
 parser.add_argument('-r', '--remove_promoters', required=True)
 parser.add_argument('-z', '--use_gene_boundaries', required=True)
@@ -320,8 +320,11 @@ else:
     raise ValueError("Organism not hg38 nor mm10")
 
 use_gene_boundaries = args.use_gene_boundaries
-upstream = tuple([int(num) for num in args.upstream.split(' ')])
-downstream = tuple([int(num) for num in args.downstream.split(' ')])
+
+dist = int(float(args.ext) // 2)
+upstream = (args.min_dist, dist)
+downstream = (args.min_dist, dist)
+assert args.min_dist > dist, f'min_dist={args.min_dist} has to be bigger than dist={dist}'
 extend_tss = tuple([int(num) for num in args.extend_tss.split(' ')])
 remove_promoters = args.remove_promoters
 importance_scoring_method = args.importance_scoring_method

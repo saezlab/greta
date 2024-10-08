@@ -29,6 +29,24 @@ methods:
         rsq_thresh: 0.05
         nvar_thresh: 2
         min_genes_per_module: 3
+    scenicplus:
+        search_space_extend_tss: '10 10'
+        ext: 500000
+        min_dist: 1000
+        remove_promoters: False
+        use_gene_boundaries: False
+        region_to_gene_importance_method: 'GBM'
+        region_to_gene_correlation_method: 'SR'
+        method_mdl: 'GBM'
+        order_regions_to_genes_by: 'importance'
+        order_TFs_to_genes_by: 'importance'
+        gsea_n_perm: 1000
+        quantile_thresholds_region_to_gene: '0.85 0.90 0.95'
+        top_n_regionTogenes_per_gene: '5 10 15'
+        top_n_regionTogenes_per_region: ''
+        min_regions_per_gene: 0
+        rho_threshold: 0.05
+        min_target_genes: 10
 
 colors:
     nets:
