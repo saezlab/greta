@@ -420,7 +420,6 @@ p2g = p2g.rename(columns={
     "gene": "target",
     "score": "importance_x_rho",
     })
-p2g["importance_x_rho"][:100] = p2g["importance_x_rho"][:100]*(-1)
 p2g["rho"] = np.sign(p2g["importance_x_rho"])
 p2g["importance_x_abs_rho"] = np.abs(p2g["importance_x_rho"])
 p2g["importance"] = p2g["importance_x_rho"]
