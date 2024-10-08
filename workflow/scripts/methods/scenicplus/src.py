@@ -1,246 +1,48 @@
-import logging
-import joblib
-import scipy as sp
 import os
 os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
+from typing import (List, Dict, Literal, TYPE_CHECKING)
+import pathlib
+import argparse
+import logging
 import pickle
+import requests
+
+import joblib
 import numpy as np
+import pandas as pd
+import scipy as sp
+from scipy.stats import gaussian_kde
 import scanpy as sc
 import muon as mu
 
 # for chromsizes
-import pyranges as pr
-import requests
-import pandas as pd
-import pycisTopic
 import polars as pl
-from pycisTopic.pseudobulk_peak_calling import export_pseudobulk
-from typing import Dict
-import pathlib
-from typing import (List, Literal, TYPE_CHECKING)
-import argparse
-from pathlib import Path
-import pysam
-
-# Init args
-parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--frags', nargs='+', required=True)
-parser.add_argument('-i', '--mudata', required=True)
-parser.add_argument('-o', '--output', required=True)
-parser.add_argument('-t', '--tmp_scenicplus', required=True)
-parser.add_argument('-z', '--ray_tmp_dir', required=True)
-parser.add_argument('-g', '--organism', required=True)
-parser.add_argument('-n', '--njobs', required=True, type=int)
-parser.add_argument('-m', '--chrom_sizes_m', required=True)
-parser.add_argument('-j', '--chrom_sizes_h', required=True)
-parser.add_argument('-a', '--annot_human', required=True)
-parser.add_argument('-b', '--annot_mouse', required=True)
-args = vars(parser.parse_args())
-
-frags = args['frags']
-mudata_file = args['mudata']
-output_fname = args['output']
-tmp_scenicplus = args['tmp_scenicplus']
-# ray_tmp_dir = os.path.join(tmp_scenicplus, 'ray_tmp')
-ray_tmp_dir = os.path.join(args['ray_tmp_dir'])
-njobs = args['njobs']
-output = args['output']
-
-
-organism = args['organism']
-if organism == 'hg38':
-    organism = "hsapiens"
-    chromsizes_fname = args['chrom_sizes_h']
-    annot_fname = args['annot_human']
-elif organism == 'mm10':
-    organism = "mmusculus"
-    chromsizes_fname = args['chrom_sizes_m']
-    annot_fname = args['annot_mouse']
-
-annot = pd.read_csv(annot_fname, sep="\t")
-annot.Start = annot.Start.astype(np.int32)
-annot.Gene = annot.Gene.astype(str)
-annot = pl.DataFrame(annot)
-print(annot.head())
-
-##################
-# Set parameters #
-##################
-dataset_name = 'pbmc10k'
-
-fragments_files = {frag.split(".frags")[0].split("/")[-1]:frag for frag in frags}
-print(fragments_files)
-
-# SCENIC+ paths
-# cisTopic paths
-cis_topic_tmp_dir = os.path.join(tmp_scenicplus, 'cisTopic')
-quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
-bed_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bed_files")
-bigwig_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files")
-bed_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bed_paths.pkl')
-bw_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bw_paths.pkl')
-# MACS paths
-macs_folder = os.path.join(ray_tmp_dir, "MACS")
-narrow_peaks_pickle = os.path.join(macs_folder, 'narrow_peaks_dict.pkl')
-# Consensus peaks paths
-consensus_peaks_bed = os.path.join(cis_topic_tmp_dir, 'consensus_region.bed')
-quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
-# cisTopic object path
-cistopic_obj_path = os.path.join(cis_topic_tmp_dir, 'cistopic_obj.pkl')
-
-os.makedirs(tmp_scenicplus, exist_ok=True)
-#os.makedirs(ray_tmp_dir, exist_ok=True)
-
-print(ray_tmp_dir)
-os.makedirs(cis_topic_tmp_dir, exist_ok=True)
-os.makedirs(quality_control_dir, exist_ok=True)
-os.makedirs(macs_folder, exist_ok=True)
-os.makedirs(bed_folder, exist_ok=True)
-os.makedirs(bigwig_folder, exist_ok=True)
-
-# Celltype annotations from MuData object
-# Replace spaces with underscores
-mudata = mu.read_h5mu(mudata_file)
-cell_data = mudata.obs
-cell_data['celltype'] = cell_data['celltype'].astype(str) 
-cell_data['celltype'] = cell_data['celltype'].str.replace(' ', '_')
-
-# Add cell barcode column
-# Create fragments dictionary
-fragments_dict = {}
-batch_ids = cell_data['batch'].unique()
-cell_data['barcode'] = cell_data.index
-for batch_id in batch_ids:
-    # Add batch_id to fragments_dict
-    fragments_dict[batch_id] = fragments_files[batch_id]
-    # create tabix file
-    print("Create index files ('{fragments_file}.tbi')")
-    try:
-        pysam.tabix_index(fragments_files[batch_id], preset="bed")
-    except OSError:
-        print("It seems there is already a file called '{}.tbi'. Skipping index file creation.".format(
-            fragments_files[batch_id]))
-
-    # Remove batch_id from cell barcodes
-    cell_data.loc[cell_data['batch'] == batch_id, 'barcode'] = \
-        cell_data.loc[cell_data['batch'] == batch_id, 'barcode'].str.replace(
-            batch_id + '_', '')
-
-
-cell_data['barcode'] = cell_data['barcode'].str.split('-1').str[0] + '-1'
-cell_data.index = cell_data['barcode']
-cell_data.head(3)
-
-# Get chromosome sizes (for hg38 here)
-#chromsizes = pd.read_csv(chromsizes_url, sep='\t', header=None)
-chromsizes = pd.read_csv(chromsizes_fname, sep='\t', header=None)
-
-chromsizes.columns = ['Chromosome', 'End']
-chromsizes['Start'] = [0]*chromsizes.shape[0]
-chromsizes = chromsizes.loc[:, ['Chromosome', 'Start', 'End']]
-# Exceptionally in this case, to agree with CellRangerARC annotations
-chromsizes['Chromosome'] = [chromsizes['Chromosome'][x].replace('v', '.')
-                            for x in range(len(chromsizes['Chromosome']))]
-chromsizes['Chromosome'] = [chromsizes['Chromosome'][x].split('_')[1]
-                            if len(chromsizes['Chromosome'][x].split('_')) > 1
-                            else chromsizes['Chromosome'][x]
-                            for x in range(len(chromsizes['Chromosome']))]
-chromsizes = pr.PyRanges(chromsizes)
-print(cell_data)
-bw_paths, bed_paths = export_pseudobulk(
-    input_data=cell_data,
-    variable='celltype',               # variable by which to generate pseubulk profiles, in this case we want pseudobulks per celltype
-    sample_id_col='batch',
-    chromsizes=chromsizes,
-    bed_path=bed_folder,               # specify where pseudobulk_bed_files should be stored
-    bigwig_path=bigwig_folder,         # specify where pseudobulk_bw_files should be stored
-    path_to_fragments=fragments_dict,  # location of fragment fiels
-    n_cpu=1,                           # specify the number of cores to use, we use ray for multi processing
-    normalize_bigwig=True,
-    temp_dir=ray_tmp_dir,              # specify the location of the temp directory
-    split_pattern='-')
-
-
-# Save all pickle files
-pickle.dump(bed_paths,
-            open(bed_pickle, 'wb'))
-pickle.dump(bw_paths,
-            open(bw_pickle, 'wb'))
-
-bed_paths = pickle.load(
-    open(os.path.join(bed_pickle), 'rb'))
-bw_paths = pickle.load(
-    open(os.path.join(bw_pickle), 'rb'))
-
-################
-# Peak calling #
-################
-from pycisTopic.pseudobulk_peak_calling import peak_calling
-# Run peak calling
-macs_path = 'macs2'
-narrow_peaks_dict = peak_calling(macs_path,
-                                 bed_paths,
-                                 macs_folder,
-                                 genome_size='hs',
-                                 n_cpu=njobs,
-                                 input_format='BEDPE',
-                                 shift=73,
-                                 ext_size=146,
-                                 keep_dup='all',
-                                 q_value=0.05,
-                                 _temp_dir=ray_tmp_dir
-                                 )
-
-pickle.dump(narrow_peaks_dict,
-            open(narrow_peaks_pickle, 'wb'))
-
-narrow_peaks_dict = pickle.load(
-    open(os.path.join(macs_folder, 'narrow_peaks_dict.pkl'), 'rb'))
-
-######################
-# Get consensus peaks #
-######################
-from pycisTopic.iterative_peak_calling import get_consensus_peaks
-peak_half_width = 250
-# Get consensus peaks
-consensus_peaks = get_consensus_peaks(
-    narrow_peaks_dict,
-    peak_half_width,
-    chromsizes=chromsizes,
-    path_to_blacklist=None  # os.path.join(folder_path_to_blacklist, 'peak-blacklist.v2.bed')
-)
-
-consensus_peaks.to_bed(
-    path=consensus_peaks_bed,
-    keep=True,
-    compression='infer',
-    chain=False)
-
-# transform to pl.DataFrame
-consensus_peaks = consensus_peaks.as_df()
-consensus_peaks = pl.DataFrame(consensus_peaks)
-
-##################
-# Get annotation #
-##################
-annot = pd.read_csv(annot_fname, sep='\t')
-annot.Start = annot.Start.astype(np.int32)
-annot.Gene = annot.Gene.astype(str)
-annot = pl.DataFrame(annot)
-print(annot)
-print(chromsizes)
-# Enable Polars global string cache so all categoricals are created with the same
-# string cache.
 pl.enable_string_cache()
 
+import pyranges as pr
+import pysam
+import pycisTopic.pseudobulk_peak_calling
 from pycisTopic.fragments import (
     get_fragments_in_peaks,
     get_fragments_per_cb,
     get_insert_size_distribution,
 )
-from pycisTopic.topic_binarization import threshold_otsu
+from pycisTopic.topic_binarization import threshold_otsu, binarize_topics
 from pycisTopic.tss_profile import get_tss_profile
-from scipy.stats import gaussian_kde
+from pycisTopic.iterative_peak_calling import get_consensus_peaks
+from pycisTopic.qc import get_barcodes_passing_qc_for_sample
+from pycisTopic.cistopic_class import create_cistopic_object_from_fragments
+import pycisTopic.lda_models
+from pycisTopic.diff_features import (
+    impute_accessibility,
+    normalize_scores,
+    find_highly_variable_features,
+    find_diff_features)
+from pycisTopic.utils import region_names_to_coordinates
+import scenicplus.data_wrangling.adata_cistopic_wrangling
+
+#from pycisTopic.pseudobulk_peak_calling import export_pseudobulk
+#from pycisTopic.pseudobulk_peak_calling import peak_calling
 
 def compute_qc_stats(
     fragments_df_pl: pl.DataFrame,
@@ -1044,26 +846,6 @@ def read_barcodes_file_to_polars_series(
     return cbs.to_series()
 
 
-# Run QC
-for key in fragments_dict.keys():
-    qc(
-        fragments_tsv_filename=fragments_dict[key],
-        regions_bed_filename=consensus_peaks_bed,
-        tss_annotation_bed_df_pl=annot,
-        output_prefix=os.path.join(quality_control_dir, key),
-        tss_flank_window=2000,
-        tss_smoothing_rolling_window=10,
-        tss_minimum_signal_window=100,
-        tss_window=50,
-        tss_min_norm=0.2,
-        use_genomic_ranges=True,
-        min_fragments_per_cb=10,
-        collapse_duplicates=True,
-        no_threads=njobs,
-        engine='pyarrow'
-    )
-
-
 def read_fragments_to_polars_df(
     fragments_bed_filename: str,
     engine: str | Literal["polars"] | Literal["pyarrow"] = "pyarrow",
@@ -1165,7 +947,219 @@ def read_fragments_to_polars_df(
     return fragments_df_pl
 
 
-from pycisTopic.qc import get_barcodes_passing_qc_for_sample
+# Init args
+parser = argparse.ArgumentParser()
+    # Data and folders
+parser.add_argument('-f', '--frags', type=str, help='Path to fragments file')
+parser.add_argument('-i', '--mdata', type=str, help='Path to metadata file')
+parser.add_argument('-o', '--out', type=str, help='Path to output directory')
+parser.add_argument('-t', '--temp_dir', type=str, help='Path to temp directory')
+parser.add_argument('--ray_tmp_dir', type=str, help='Path to ray tmp directory')
+parser.add_argument('--tmp_scenicplus', type=str, help='Path to tmp scenicplus directory')
+    # General parameters
+parser.add_argument('-g', '--organism', type=str, help='Organism')
+parser.add_argument('-c', '--n_cores', type=int, help='Number of cores')
+    # Additional files
+parser.add_argument('-m', '--chrom_sizes_m', type=str, help='Path to mouse chrom sizes')
+parser.add_argument('-j', '--chrom_sizes_h', type=str, help='Path to human chrom sizes')
+parser.add_argument('-a', '--annot_m', type=str, help='Path to mouse annotations')
+parser.add_argument('-b', '--annot_h', type=str, help='Path to human annotations')
+parser.add_argument('-r', '--cistarget_rankings_human', type=str, help='Path to human cistarget rankings')
+parser.add_argument('-s', '--cistarget_scores_human', type=str, help='Path to human cistarget scores')
+parser.add_argument('--path_to_motif_annotations_human', type=str, help='Path to human motif annotations')
+parser.add_argument('--path_to_motif_annotations_mouse', type=str, help='Path to mouse motif annotations')
+    # ScenicPlus parameters
+parser.add_argument('--search_space_upstream', type=str, help='Search space upstream')
+parser.add_argument('--search_space_downstream', type=str, help='Search space downstream')
+parser.add_argument('--search_space_extend_tss', type=str, help='Search space extend tss')
+parser.add_argument('--remove_promoters', type=bool, help='Remove promoters')
+parser.add_argument('--use_gene_boundaries', type=bool, help='Use gene boundaries')
+parser.add_argument('--region_to_gene_importance_method', type=str, help='Region to gene importance method')
+parser.add_argument('--region_to_gene_correlation_method', type=str, help='Region to gene correlation method')
+parser.add_argument('--method_mdl', type=str, help='Method mdl')
+parser.add_argument('--order_regions_to_genes_by', type=str, help='Order regions to genes by')
+parser.add_argument('--order_TFs_to_genes_by', type=str, help='Order TFs to genes by')
+parser.add_argument('--gsea_n_perm', type=int, help='GSEA n perm')
+parser.add_argument('--quantile_thresholds_region_to_gene', type=str, help='Quantile thresholds region to gene')
+parser.add_argument('--top_n_regionTogenes_per_gene', type=str, help='Top n regionTogenes per gene')
+parser.add_argument('--top_n_regionTogenes_per_region', type=str, help='Top n regionTogenes per region')
+parser.add_argument('--min_regions_per_gene', type=int, help='Min regions per gene')
+parser.add_argument('--rho_threshold', type=float, help='Rho threshold')
+parser.add_argument('--min_target_genes', type=int, help='Min target genes')
+
+args = vars(parser.parse_args())
+
+# Set up variables
+frags = args['frags']
+mudata_file = args['mudata']
+output_fname = args['output']
+tmp_scenicplus = args['tmp_scenicplus']
+ray_tmp_dir = os.path.join(args['ray_tmp_dir'])
+njobs = args['njobs']
+output = args['output']
+organism = args['organism']
+if organism == 'hg38':
+    organism = "hsapiens"
+    chromsizes_fname = args['chrom_sizes_h']
+    annot_fname = args['annot_human']
+elif organism == 'mm10':
+    organism = "mmusculus"
+    chromsizes_fname = args['chrom_sizes_m']
+    annot_fname = args['annot_mouse']
+
+
+annot = pd.read_csv(annot_fname, sep="\t")
+annot.Start = annot.Start.astype(np.int32)
+annot.Gene = annot.Gene.astype(str)
+annot = pl.DataFrame(annot)
+print(annot.head())
+
+
+# cisTopic paths
+cis_topic_tmp_dir = os.path.join(tmp_scenicplus, 'cisTopic')
+quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
+bed_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bed_files")
+bigwig_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files")
+bed_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bed_paths.pkl')
+bw_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bw_paths.pkl')
+# MACS paths
+macs_folder = os.path.join(ray_tmp_dir, "MACS")
+narrow_peaks_pickle = os.path.join(macs_folder, 'narrow_peaks_dict.pkl')
+# Consensus peaks paths
+consensus_peaks_bed = os.path.join(cis_topic_tmp_dir, 'consensus_region.bed')
+quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
+# cisTopic object path
+cistopic_obj_path = os.path.join(cis_topic_tmp_dir, 'cistopic_obj.pkl')
+
+os.makedirs(tmp_scenicplus, exist_ok=True)
+os.makedirs(cis_topic_tmp_dir, exist_ok=True)
+os.makedirs(quality_control_dir, exist_ok=True)
+os.makedirs(macs_folder, exist_ok=True)
+os.makedirs(bed_folder, exist_ok=True)
+os.makedirs(bigwig_folder, exist_ok=True)
+
+# Celltype annotations from MuData object
+mudata = mu.read_h5mu(mudata_file)
+cell_data = mudata.obs
+cell_data['celltype'] = cell_data['celltype'].astype(str) 
+cell_data['celltype'] = cell_data['celltype'].str.replace(' ', '_')
+
+# Create fragments dictionary
+fragments_dict = {}
+batch_ids = cell_data['batch'].unique()
+cell_data['barcode'] = cell_data.index
+fragments_files = {frag.split(".frags")[0].split("/")[-1]:frag for frag in frags}
+
+for batch_id in batch_ids:
+    # Add batch_id to fragments_dict
+    fragments_dict[batch_id] = fragments_files[batch_id]
+    # create tabix file
+    print("Create index files ('{fragments_file}.tbi')")
+    try:
+        pysam.tabix_index(fragments_files[batch_id], preset="bed")
+    except OSError:
+        print("It seems there is already a file called '{}.tbi'. Skipping index file creation.".format(
+            fragments_files[batch_id]))
+    # Remove batch_id from cell barcodes
+    cell_data.loc[cell_data['batch'] == batch_id, 'barcode'] = \
+        cell_data.loc[cell_data['batch'] == batch_id, 'barcode'].str.replace(
+            batch_id + '_', '')
+
+cell_data['barcode'] = cell_data['barcode'].str.split('-1').str[0] + '-1'
+cell_data.index = cell_data['barcode']
+
+
+# Get chromosome sizes (for hg38 here)
+chromsizes = pd.read_csv(chromsizes_fname, sep='\t', header=None)
+chromsizes.columns = ['Chromosome', 'End']
+chromsizes['Start'] = [0]*chromsizes.shape[0]
+chromsizes = chromsizes.loc[:, ['Chromosome', 'Start', 'End']]
+chromsizes['Chromosome'] = [chromsizes['Chromosome'][x].replace('v', '.')
+                            for x in range(len(chromsizes['Chromosome']))]
+chromsizes['Chromosome'] = [chromsizes['Chromosome'][x].split('_')[1]
+                            if len(chromsizes['Chromosome'][x].split('_')) > 1
+                            else chromsizes['Chromosome'][x]
+                            for x in range(len(chromsizes['Chromosome']))]
+chromsizes = pr.PyRanges(chromsizes)
+
+bw_paths, bed_paths = pycisTopic.pseudobulk_peak_calling.export_pseudobulk(
+    input_data=cell_data,
+    variable='celltype',               # variable by which to generate pseubulk profiles, in this case we want pseudobulks per celltype
+    sample_id_col='batch',
+    chromsizes=chromsizes,
+    bed_path=bed_folder,               # specify where pseudobulk_bed_files should be stored
+    bigwig_path=bigwig_folder,         # specify where pseudobulk_bw_files should be stored
+    path_to_fragments=fragments_dict,  # location of fragment fiels
+    n_cpu=1,                           # specify the number of cores to use, we use ray for multi processing
+    normalize_bigwig=True,
+    temp_dir=ray_tmp_dir,              # specify the location of the temp directory
+    split_pattern='-')
+
+# Run peak calling
+macs_path = 'macs2'
+narrow_peaks_dict = pycisTopic.pseudobulk_peak_calling.peak_calling(
+    macs_path,
+    bed_paths,
+    macs_folder,
+    genome_size='hs',
+    n_cpu=njobs,
+    input_format='BEDPE',
+    shift=73,
+    ext_size=146,
+    keep_dup='all',
+    q_value=0.05,
+    _temp_dir=ray_tmp_dir
+    )
+
+
+peak_half_width = 250
+# Get consensus peaks
+consensus_peaks = get_consensus_peaks(
+    narrow_peaks_dict,
+    peak_half_width,
+    chromsizes=chromsizes,
+    path_to_blacklist=None  # os.path.join(folder_path_to_blacklist, 'peak-blacklist.v2.bed')
+)
+
+consensus_peaks.to_bed(
+    path=consensus_peaks_bed,
+    keep=True,
+    compression='infer',
+    chain=False)
+
+# transform to pl.DataFrame
+consensus_peaks = consensus_peaks.as_df()
+consensus_peaks = pl.DataFrame(consensus_peaks)
+
+##################
+# Get annotation #
+##################
+annot = pd.read_csv(annot_fname, sep='\t')
+annot.Start = annot.Start.astype(np.int32)
+annot.Gene = annot.Gene.astype(str)
+annot = pl.DataFrame(annot)
+print(annot)
+print(chromsizes)
+
+# Run QC
+for key in fragments_dict.keys():
+    qc(
+        fragments_tsv_filename=fragments_dict[key],
+        regions_bed_filename=consensus_peaks_bed,
+        tss_annotation_bed_df_pl=annot,
+        output_prefix=os.path.join(quality_control_dir, key),
+        tss_flank_window=2000,
+        tss_smoothing_rolling_window=10,
+        tss_minimum_signal_window=100,
+        tss_window=50,
+        tss_min_norm=0.2,
+        use_genomic_ranges=True,
+        min_fragments_per_cb=10,
+        collapse_duplicates=True,
+        no_threads=njobs,
+        engine='pyarrow'
+    )
+
 # Get barcodes passing QC
 sample_id_to_barcodes_passing_filters = {}
 sample_id_to_thresholds = {}
@@ -1181,7 +1175,6 @@ for sample_id in fragments_dict:
             frip_threshold=0,
             use_automatic_thresholds=True,
     )
-    #write barcodes passing QC to file
     pd.Series(sample_id_to_barcodes_passing_filters[sample_id]).to_csv(
         os.path.join(quality_control_dir, f'{sample_id}.barcodes_passing_qc.txt'),
         header=None, index=None, sep='\t'
@@ -1193,9 +1186,8 @@ fragments_df_pl = pycisTopic.fragments.read_bed_to_polars_df(
         min_column_count=4,
     ).lazy()
 
-from pycisTopic.cistopic_class import create_cistopic_object_from_fragments
-import polars as pl
 
+# Create cistopic object
 cistopic_obj_list = []
 for sample_id in fragments_dict:
     # compute matrix from fragments, peaks, and barcodes passing QC.
@@ -1203,7 +1195,6 @@ for sample_id in fragments_dict:
         fragments_bed_filename=fragments_dict[sample_id],
         regions_bed_filename=consensus_peaks_bed,
         barcodes_tsv_filename=os.path.join(quality_control_dir, f'{sample_id}.barcodes_passing_qc.txt'),
-        # blacklist_bed_filename="hg38-blacklist.v2.bed",  # Or None
     )
     cistopic_obj = pycisTopic.cistopic_class.create_cistopic_object(
         fragment_matrix=counts_fragments_matrix,
@@ -1217,17 +1208,6 @@ for sample_id in fragments_dict:
 cistopic_obj = pycisTopic.cistopic_class.merge(cistopic_obj_list)
 cistopic_obj.add_cell_data(cell_data, split_pattern='-')
 
-pickle.dump(
-    cistopic_obj,
-    open(os.path.join(cis_topic_tmp_dir, "cistopic_obj.pkl"), "wb")
-)
-
-cistopic_obj = pickle.load(
-    open(os.path.join(cis_topic_tmp_dir, "cistopic_obj.pkl"), "rb")
-)
-
-import pycisTopic.lda_models
-# Run models
 models = pycisTopic.lda_models.run_cgs_models(
     cistopic_obj,
     n_topics=[2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
@@ -1242,37 +1222,14 @@ models = pycisTopic.lda_models.run_cgs_models(
     _temp_dir=ray_tmp_dir
 )
 
-pickle.dump(
-    models,
-    open(os.path.join(cis_topic_tmp_dir, "models.pkl"), "wb")
-)
-
 model = pycisTopic.lda_models.evaluate_models(
     models,
     select_model=None,
     return_model=True
 )
 cistopic_obj.add_LDA_model(model)
-pickle.dump(
-    cistopic_obj,
-    open(os.path.join(
-        cis_topic_tmp_dir, "cistopic_obj.pkl"), "wb")
-)
 
-pickle.load(
-    open(os.path.join(
-        cis_topic_tmp_dir, "cistopic_obj.pkl"), "rb")
-)
-
-# Now, we keep only variable regions
-from pycisTopic.diff_features import (
-    impute_accessibility,
-    normalize_scores,
-    find_highly_variable_features,
-    find_diff_features
-)
-from pycisTopic.topic_binarization import binarize_topics
-
+# Impute accessibility
 imputed_acc_obj = impute_accessibility(
     cistopic_obj,
     selected_cells=None,
@@ -1280,6 +1237,8 @@ imputed_acc_obj = impute_accessibility(
     scale_factor=10**6
 )
 normalized_imputed_acc_obj = normalize_scores(imputed_acc_obj, scale_factor=10**4)
+
+# Get top markers
 variable_regions = find_highly_variable_features(
     normalized_imputed_acc_obj,
     min_disp=0.05,
@@ -1302,20 +1261,17 @@ markers_dict = find_diff_features(
     _temp_dir=ray_tmp_dir,
     split_pattern='-'
 )
-
 region_bin_topics_otsu = binarize_topics(
     cistopic_obj, method='otsu',
     plot=True, num_columns=5
 )
-
 region_bin_topics_top_3k = binarize_topics(
     cistopic_obj, method='ntop', ntop=3_000,
     plot=True, num_columns=5
 )
 
-from pycisTopic.utils import region_names_to_coordinates
-region_sets = {}
 
+region_sets = {}
 for topic in markers_dict:
     region_sets[topic + "markers_dict"] = \
         pr.PyRanges(
@@ -1325,7 +1281,6 @@ for topic in markers_dict:
                 ["Chromosome", "Start", "End"]
             )
         )
-
 for topic in region_bin_topics_otsu:
     region_sets[topic + "_otsu"] = \
         pr.PyRanges(
@@ -1335,7 +1290,6 @@ for topic in region_bin_topics_otsu:
                 ["Chromosome", "Start", "End"]
             )
         )
-
 for topic in region_bin_topics_top_3k:
     region_sets[topic + "_top3k"] = \
         pr.PyRanges(
@@ -1358,7 +1312,6 @@ diff_regions = (df_diff_regions["Chromosome"] +
 # Transform as mudata object
 # Match RNA barcode
 mudata["rna"].obs_names = cell_data.index + "___smpl"
-import scenicplus.data_wrangling.adata_cistopic_wrangling
 new_mudata = scenicplus.data_wrangling.adata_cistopic_wrangling.process_multiome_data(
     GEX_anndata=mudata["rna"],
     cisTopic_obj=cistopic_obj,
@@ -1378,9 +1331,4 @@ pre_atac.var_names = \
 pre_rna = new_mudata["scRNA"].copy()
 pre_atac.layers["counts"] = sp.sparse.csr_matrix(pre_atac.X.copy())
 pre_rna.layers["counts"] = sp.sparse.csr_matrix(pre_rna.X.copy())
-
-
 pre_mudata = mu.MuData({"rna": pre_rna, "atac": pre_atac})
-
-
-pre_mudata.write_h5mu(output_fname)
