@@ -54,14 +54,13 @@ nCores <- 32
 options(mc.cores = 32)
 cat("N cores: ", nCores, '\n')
 
-cl <- makeCluster(nCores)
+cl <- makeCluster(nCores, outfile="")
 clusterExport(cl, varlist = c("nCores", "rna_X", "atac_X", "p2g", "tfb", "features", "thr_cor"))
 clusterEvalQ(cl, {
   library(tidyverse)
-  library(Pando)
-  Sys.setenv(OMP_NUM_THREADS=nCores)
-  Sys.setenv(MKL_NUM_THREADS=nCores)
-  Sys.setenv(BLAS_NUM_THREADS=nCores)
+  Sys.setenv(OMP_NUM_THREADS=1)
+  Sys.setenv(MKL_NUM_THREADS=1)
+  Sys.setenv(BLAS_NUM_THREADS=1)
 })
 registerDoParallel(cl)
 
@@ -69,9 +68,9 @@ run_mdl <- function(){
 cat("OMP_NUM_THREADS: ", Sys.getenv("OMP_NUM_THREADS"), "\n")
 cat("MKL_NUM_THREADS: ", Sys.getenv("MKL_NUM_THREADS"), "\n")
 cat("BLAS_NUM_THREADS: ", Sys.getenv("BLAS_NUM_THREADS"), "\n")
+
 model_fits <- Pando::map_par(features, function(g){
     # Subset scaffold
-    print(g)
     g_scaff_grn <- inner_join(p2g[p2g$gene == g, ], tfb, by = 'cre') %>%
         filter(tf != gene) # Remove self regulation
 

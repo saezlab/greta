@@ -172,9 +172,6 @@ rule mdl_o_pando:
         runtime=config['max_mins_per_step'],
     shell:
         """
-        export OMP_NUM_THREADS={threads}
-        export MKL_NUM_THREADS={threads}
-        export NUMEXPR_NUM_THREADS={threads}
         set +e
         timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/methods/pando/src.R \
