@@ -30,6 +30,7 @@ def run_grnboost2(expression_data, tf_names, n_cores=1):
         expression_data=expression_data,
         tf_names=tf_names,
         client_or_address=custom_client)
+    custom_client.shutdown()
     custom_client.close()
 
     return rna_network
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     # Create the atacnet network
     atac = ci.add_region_infos(mudata["atac"], sep=(':', '-'))
     ci.compute_atac_network(atac, organism=organism, njobs=n_cores)
-    print('curce done!')
+    print('Circe done!')
     atac_network = ci.extract_atac_links(atac)
     atac_network = atac_network[atac_network["score"]>0]
     atac_network.to_csv(path_atacnet, index=False)
