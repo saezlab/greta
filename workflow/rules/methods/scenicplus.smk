@@ -253,7 +253,7 @@ rule src_scenicplus:
         cistarget_scores_human=rules.download_cistarget.output.human_scores,
     params:
         # general params
-        n_cores=32
+        n_cores=32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ray_tmp_dir="/tmp",
         temp_dir=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp/src/'))),
@@ -281,7 +281,7 @@ rule src_scenicplus:
     singularity:
         'workflow/envs/scenicplus.sif'
     output:
-        out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.grn.csv'
+        out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv'
     shell:
         """
         python workflow/scripts/methods/scenicplus/src.py \
