@@ -142,7 +142,7 @@ rule mdl_hummus:
         {input.p2g} \
         {input.tfb} \
         {params.n_cores} \
-        {output.mdl} \
+        {output.out} \
         {output.multilayer_f} \
         {params.p2g} \
         {params.tfb} \

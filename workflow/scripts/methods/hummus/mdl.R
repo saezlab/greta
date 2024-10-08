@@ -79,7 +79,7 @@ grn <- define_grn(
 
 #get only gene, peaks and score columns
 grn <- grn[, c("gene", "tf", "score")]
-colnames(grn) <- c("gene", "tf",  "score")
+colnames(grn) <- c("source", "target",  "score")
 
 # Write
 write.csv(
