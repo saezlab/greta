@@ -85,6 +85,10 @@ else:
 
 # Keep peaks contained in enhancers only
 p2g = pd.read_csv(p2g)
+if peaks.shape[0] == 0:
+    tfb = pd.DataFrame(columns=['cre', 'tf', 'score'])
+    tfb.to_csv(path_out, index=False)
+    exit()
 regions = p2g['cre'].unique()
 
 # Load the (raw) data and filter regions

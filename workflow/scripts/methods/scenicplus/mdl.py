@@ -97,9 +97,6 @@ def infer_TF_to_gene(
 #    log.info(f"Saving TF to gene adjacencies to: {adj_out_fname.__str__()}")
 
     return adj
-#    adj.to_csv(
- #       adj_out_fname,
-  #      sep="\t", header = True, index = False)
 
 
 def infer_grn(
@@ -177,9 +174,8 @@ def infer_grn(
      #   eRegulon_metadata=eRegulon_metadata)
 
     #log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
-    return eRegulon_metadata #.to_csv(
-        #eRegulon_out_fname,
-        #sep="\t", header=True, index=False)
+    return eRegulon_metadata
+
 
 from scenicplus.utils import p_adjust_bh
 from scenicplus.grn_builder.modules import (
@@ -399,6 +395,10 @@ def calculate_triplet_score(
 multiome_mudata = mu.read(multiome_mudata_path)
 tfb = pd.read_csv(tfb_path)
 p2g = pd.read_csv(p2g_path)
+if (p2g.shape[0] == 0) or (tfb.shape[0] == 0):
+    grn = pd.DataFrame(columns=['source', 'target', 'score', 'pval'])
+    grn.to_csv(path_out, index=False)
+    exit()
 
 tf_names = list(tfb["tf"].unique())
 
@@ -469,5 +469,5 @@ mdl = infer_grn(
     n_cpu=1)
 
 mdl = mdl.groupby(["TF", "Gene"])["rho_TF2G"].sum().reset_index()
-mdl = mdl.rename({"TF":"tf", "Gene":"gene", "rho_TF2G":"score"}, axis=1)
+mdl = mdl.rename({"TF":"source", "Gene":"target", "rho_TF2G":"score"}, axis=1)
 mdl.to_csv(mdl_path, sep=",", index=False)
