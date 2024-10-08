@@ -19,10 +19,13 @@ if (tf_layer_method == "None"){
 }
 
 # Set genome
+print("Set parameters")
 if (organism == 'hg38'){
     specie="human"
     genome <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+    print("annotations")
     annot <- read.csv(granges_hg)
+    print("genome_annot")
     genome_annot = get_genome_annotations(
         ensdb_annotations = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86)
 } else if (organism == 'mm10'){
@@ -33,6 +36,8 @@ if (organism == 'hg38'){
         ensdb_annotations = EnsDb.Mmusculus.v79::EnsDb.Mmusculus.v79)
 }
 
+
+print("Open Data")
 # Read peaks and genes
 indata <- H5Fopen(path_data, flags='H5F_ACC_RDONLY')
 # RNA
@@ -59,10 +64,6 @@ rm(seurat_object)
 hummus@motifs_db <- get_tf2motifs(species = specie)
 
 
-hummus[['RNA']]
-hummus[['peaks']]
-
-
 # Filter annot by seen genes and add it to peaks matrix
 annot <- annot[annot$gene_name %in% intersect(colnames(hummus[['RNA']]), annot$gene_name)]
 
@@ -72,6 +73,7 @@ genome_annot <- get_genome_annotations(
 Signac::Annotation(hummus@assays$peaks) <- genome_annot
 rm(annot)
 
+print("Open GRNBoost2 layer")
 rna_network <- read.csv(rna_network_path, sep = ",")
 rna_network <- rna_network[1:grn_number_edges, ]
 # Add external networks
@@ -83,6 +85,7 @@ hummus <- add_network(
     weighted = TRUE)
 
 
+print("Open Circe layer")
 atac_network <- read.csv(atac_network_path, sep = ",")
 #atac_network[,'peak1'] <- stringr::str_replace_all(atac_network[,'peak1'], '-', '_')
 #atac_network[,'peak2'] <- stringr::str_replace_all(atac_network[,'peak2'], '-', '_')
@@ -95,8 +98,8 @@ hummus <- add_network(
     network_name = "AtacNet",
     weighted = TRUE)
 
-# Connect TF to peaks !!!!!TODO: to move in tf2p
+# Connect TF to peaks !!!!! TODO: to move in tf2p
 hummus <- compute_tf_network(hummus, method = tf_layer_method)
 
-
+print("Save HuMMuS multilayer.")
 saveRDS(hummus, hummus_object_f)
