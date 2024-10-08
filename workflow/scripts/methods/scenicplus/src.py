@@ -1,6 +1,7 @@
 import os
 os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
 import scanpy as sc
+import anndata as ad
 from typing import (List, Dict, Literal, TYPE_CHECKING)
 import pathlib
 from pathlib import Path
@@ -40,10 +41,15 @@ from pycisTopic.diff_features import (
     find_highly_variable_features,
     find_diff_features)
 from pycisTopic.utils import region_names_to_coordinates
-import scenicplus.data_wrangling.adata_cistopic_wrangling
 
-#from pycisTopic.pseudobulk_peak_calling import export_pseudobulk
-#from pycisTopic.pseudobulk_peak_calling import peak_calling
+import scenicplus.data_wrangling.adata_cistopic_wrangling
+import scenicplus.data_wrangling.gene_search_space
+from pycistarget.motif_enrichment_dem import (
+    DEM,
+    ranksums_numba_multiple,
+    mean_axis1, get_log2_fc,
+    p_adjust_bh, get_optimal_threshold_roc
+    )
 
 def compute_qc_stats(
     fragments_df_pl: pl.DataFrame,
@@ -948,6 +954,301 @@ def read_fragments_to_polars_df(
     return fragments_df_pl
 
 
+# changed to accept cistarget_db directly opened
+def _run_cistarget_single_region_set(
+        ctx_db,
+        region_set,
+        name,
+        species,
+        auc_threshold,
+        nes_threshold,
+        rank_threshold,
+        path_to_motif_annotations,
+        annotation_version,
+        annotations_to_use,
+        motif_similarity_fdr,
+        orthologous_identity_threshold) -> pycistarget.motif_enrichment_cistarget.cisTarget:
+    """Helper function to run cisTarget on a single region set."""
+    cistarget_result = pycistarget.motif_enrichment_cistarget.cisTarget(
+        region_set=region_set,
+        name=name,
+        species=species,
+        auc_threshold=auc_threshold,
+        nes_threshold=nes_threshold,
+        rank_threshold=rank_threshold,
+        path_to_motif_annotations=path_to_motif_annotations,
+        annotation_version=annotation_version,
+        annotation_to_use=annotations_to_use,
+        motif_similarity_fdr=motif_similarity_fdr,
+        orthologous_identity_threshold=orthologous_identity_threshold,
+    )
+    cistarget_result.run_ctx(ctx_db)
+    return cistarget_result
+
+
+def run_motif_enrichment_cistarget(
+        region_set_dict: Dict[str, pr.PyRanges],
+        ctx_db: pycistarget.motif_enrichment_cistarget.cisTargetDatabase,
+        output_fname_cistarget_result: pathlib.Path,
+        n_cpu: int,
+        fraction_overlap_w_cistarget_database: float,
+        auc_threshold: float,
+        nes_threshold: float,
+        rank_threshold: float,
+        path_to_motif_annotations: str,
+        annotation_version: str,
+        motif_similarity_fdr: float,
+        orthologous_identity_threshold: float,
+        temp_dir: pathlib.Path,
+        species: Literal[
+            "homo_sapiens", "mus_musculus", "drosophila_melanogaster"],
+        annotations_to_use: List[str]
+):
+    print("starting")
+    """
+    Run motif enrichment using cistarget algorithm.
+    """
+    cistarget_results = joblib.Parallel(
+        n_jobs=n_cpu,
+        temp_folder=temp_dir
+    )(
+        joblib.delayed(
+            _run_cistarget_single_region_set
+        )(
+            name=key,
+            region_set=region_set_dict[key],
+            ctx_db=ctx_db,
+            species=species,
+            auc_threshold=auc_threshold,
+            nes_threshold=nes_threshold,
+            rank_threshold=rank_threshold,
+            path_to_motif_annotations=path_to_motif_annotations,
+            annotation_version=annotation_version,
+            annotations_to_use=annotations_to_use,
+            motif_similarity_fdr=motif_similarity_fdr,
+            orthologous_identity_threshold=orthologous_identity_threshold
+        )
+        for key in region_set_dict
+    )
+    for cistarget_result in cistarget_results:
+        if len(cistarget_result.motif_enrichment) > 0:
+            cistarget_result.write_hdf5(
+                path=output_fname_cistarget_result,
+                mode="a"
+            )
+
+
+def run_motif_enrichment_dem(
+        region_set_dict: Dict[str, pr.PyRanges],
+        dem_db_fname: pathlib.Path,
+        output_fname_dem_html: pathlib.Path,
+        output_fname_dem_result: pathlib.Path,
+        n_cpu: int,
+        temp_dir: pathlib.Path,
+        species: Literal[
+                "homo_sapiens", "mus_musculus", "drosophila_melanogaster"],
+        fraction_overlap_w_dem_database: float = 0.4,
+        max_bg_regions: Optional[int] = None,
+        path_to_genome_annotation: Optional[str] = None,
+        balance_number_of_promoters: bool = True,
+        promoter_space: int = 1_000,
+        adjpval_thr: float = 0.05,
+        log2fc_thr: float = 1.0,
+        mean_fg_thr: float = 0.0,
+        motif_hit_thr: Optional[float] = None,
+        path_to_motif_annotations: Optional[str] = None,
+        annotation_version: str = "v10nr_clust",
+        annotations_to_use: tuple = ("Direct_annot", "Orthology_annot"),
+        motif_similarity_fdr: float = 0.001,
+        orthologous_identity_threshold: float = 0.0,
+        seed: int = 555,
+        write_html: bool = True):
+    """
+    Run motif enrichment using DEM algorithm.
+
+    region_set_folder --> replaced to region_set_dictionary
+    """
+    from pycistarget.motif_enrichment_dem import (
+        DEM,
+    )
+
+    # Read genome annotation, if needed
+    if path_to_genome_annotation is not None:
+        genome_annotation = pd.read_table(path_to_genome_annotation)
+    else:
+        genome_annotation = None
+
+    dem_results: List[DEM] = joblib.Parallel(
+        n_jobs=n_cpu,
+        temp_folder=temp_dir
+    )(
+        joblib.delayed(
+            _run_dem_single_region_set
+        )(
+            foreground_region_sets=foreground_region_sets,
+            background_region_sets=background_region_sets,
+            name=name,
+            dem_db_fname=dem_db_fname,
+            max_bg_regions=max_bg_regions,
+            genome_annotation=genome_annotation,
+            balance_number_of_promoters=balance_number_of_promoters,
+            promoter_space=promoter_space,
+            seed=seed,
+            fraction_overlap_w_dem_database=fraction_overlap_w_dem_database,
+            species=species,
+            adjpval_thr=adjpval_thr,
+            log2fc_thr=log2fc_thr,
+            mean_fg_thr=mean_fg_thr,
+            motif_hit_thr=motif_hit_thr,
+            path_to_motif_annotations=path_to_motif_annotations,
+            annotation_version=annotation_version,
+            annotations_to_use=annotations_to_use,
+            motif_similarity_fdr=motif_similarity_fdr,
+            orthologous_identity_threshold=orthologous_identity_threshold
+        )
+        for name, foreground_region_sets, background_region_sets in _get_foreground_background(region_set_dict)
+    )
+    if write_html:
+        all_motif_enrichment_df = pd.concat(
+            ctx_result.motif_enrichment for ctx_result in dem_results
+        )
+        all_motif_enrichment_df.to_html(
+            buf = output_fname_dem_html,
+            escape = False,
+            col_space = 80
+        )
+    for dem_result in dem_results:
+        if len(dem_result.motif_enrichment) > 0:
+            print("Saving cistrome.")
+            dem_result.write_hdf5(
+                path = output_fname_dem_result,
+                mode = "a"
+            )
+        else:
+            warnings.warn("Warning.....................No cistrome selected, you should probably lower dem_adj_pval_thr if you wanna keep cistromes")
+
+
+def _run_dem_single_region_set(
+        foreground_region_sets,
+        background_region_sets,
+        dem_db_fname,
+        max_bg_regions,
+        genome_annotation,
+        balance_number_of_promoters,
+        promoter_space,
+        seed,
+        fraction_overlap_w_dem_database,
+        name,
+        species,
+        adjpval_thr,
+        log2fc_thr,
+        mean_fg_thr,
+        motif_hit_thr,
+        path_to_motif_annotations,
+        annotation_version,
+        annotations_to_use,
+        motif_similarity_fdr,
+        orthologous_identity_threshold):  # -> DEM:
+    """Helper function to run DEM on a single region set."""
+    from pycistarget.motif_enrichment_dem import (
+        DEMDatabase,
+        get_foreground_and_background_regions,
+    )
+    # Get foreground and background regions for DEM analysis
+    foreground_regions, background_regions = get_foreground_and_background_regions(
+        foreground_region_sets = foreground_region_sets,
+        background_region_sets = background_region_sets,
+        max_bg_regions = max_bg_regions,
+        genome_annotation = genome_annotation,
+        balance_number_of_promoters = balance_number_of_promoters,
+        promoter_space = promoter_space,
+        seed = seed)
+
+    # Load DEM database
+    dem_db = DEMDatabase(
+        dem_db_fname,
+        fraction_overlap=fraction_overlap_w_dem_database)
+    # Setup DEM analysis
+    dem_result = DEM(
+        foreground_regions = foreground_regions,
+        background_regions = background_regions,
+        name = name,
+        species = species,
+        adjpval_thr = adjpval_thr,
+        log2fc_thr = log2fc_thr,
+        mean_fg_thr = mean_fg_thr,
+        motif_hit_thr = motif_hit_thr,
+        path_to_motif_annotations = path_to_motif_annotations,
+        annotation_version = annotation_version,
+        annotation_to_use = annotations_to_use,
+        motif_similarity_fdr = motif_similarity_fdr,
+        orthologous_identity_threshold = orthologous_identity_threshold)
+    # Run DEM analysis
+    dem_result.run(dem_db)
+    return dem_result
+
+
+def prepare_motif_enrichment_results(
+        paths_to_motif_enrichment_results: List[str],
+        mdata: MuData,
+        out_file_direct_annotation: pathlib.Path,
+        out_file_extended_annotation: pathlib.Path,
+        out_file_tf_names: pathlib.Path,
+        direct_annotation: List[str],
+        extended_annotation: List[str]) -> None:
+    """
+    Prepare motif enrichment results for SCENIC+ analysis.
+
+    Parameters
+    ----------
+    paths_to_motif_enrichment_results : List[str]
+        List of paths to motif enrichment results.
+    multiome_mudata_fname : pathlib.Path
+        Path to multiome MuData file.
+    out_file_direct_annotation : pathlib.Path
+        Path to store TF cistromes with direct annotation.
+    out_file_extended_annotation : pathlib.Path
+        Path to store TF cistromes with extended annotation.
+    out_file_tf_names : pathlib.Path
+        Path to store TF names.
+    direct_annotation : List[str]
+        List of annotations to use for direct annotation.
+    extended_annotation : List[str]
+        List of annotations to use for extended annotation.
+
+    """
+    from scenicplus.data_wrangling.cistarget_wrangling import get_and_merge_cistromes
+    log.info("Reading multiome MuData.")
+    log.info("Getting cistromes.")
+    region_names = mdata["atac"].var_names.str.replace('-', ':', n=1)  # replace first '-' by ':'
+
+    adata_direct_cistromes, adata_extended_cistromes = get_and_merge_cistromes(
+        paths_to_motif_enrichment_results=paths_to_motif_enrichment_results,
+        scplus_regions=set(region_names),
+        direct_annotation=direct_annotation,
+        extended_annotation=extended_annotation)
+    # Get transcription factor names from cistromes
+    # Later, to calculate TF-to-gene relationships these TFs will be used.
+    TFs = list(
+        {
+            *adata_direct_cistromes.var_names,
+            *adata_extended_cistromes.var_names
+        } & set(mdata["rna"].var_names))
+    log.info(f"Found {len(TFs)} TFs.")
+    log.info(f"Saving TF names to: {out_file_tf_names.__str__()}")
+    with open(out_file_tf_names, "w") as f:
+        for TF in TFs:
+            _ = f.write(TF)
+            _ = f.write("\n")
+    if len(direct_annotation) > 0:
+        log.info(
+            f"Writing direct cistromes to: {out_file_direct_annotation.__str__()}")
+        adata_direct_cistromes.write_h5ad(out_file_direct_annotation.__str__())
+    if len(extended_annotation) > 0:
+        log.info(
+            f"Writing extended cistromes to: {out_file_extended_annotation.__str__()}")
+        adata_extended_cistromes.write_h5ad(out_file_extended_annotation.__str__())
+
 # Init args
 parser = argparse.ArgumentParser()
     # Data and folders
@@ -957,6 +1258,12 @@ parser.add_argument('-o', '--out', type=str, help='Path to output directory')
 parser.add_argument('-t', '--temp_dir', type=str, help='Path to temp directory')
 parser.add_argument('--ray_tmp_dir', type=str, help='Path to ray tmp directory')
 parser.add_argument('--tmp_scenicplus', type=str, help='Path to tmp scenicplus directory')
+    # tfb intermediate files
+parser.add_argument('--annotation_direct_path', type=str, help='Path to direct annotation')
+parser.add_argument('--annotation_extended_path', type=str, help='Path to extended annotation')
+parser.add_argument('--tf_names_path', type=str, help='Path to TF names')
+parser.add_argument('--cistarget_results_path', required=True)
+parser.add_argument('--dem_results_path', required=True)
     # General parameters
 parser.add_argument('-g', '--organism', type=str, help='Organism')
 parser.add_argument('-c', '--njobs', type=int, help='Number of cores')
@@ -997,6 +1304,8 @@ tmp_scenicplus = args['tmp_scenicplus']
 ray_tmp_dir = os.path.join(args['ray_tmp_dir'])
 njobs = args['njobs']
 organism = args['organism']
+dem_results_path = args['dem_results_path']
+cistarget_results_path = args['cistarget_results_path']
 
 if organism == 'hg38':
     organism = "hsapiens"
@@ -1039,8 +1348,8 @@ os.makedirs(bed_folder, exist_ok=True)
 os.makedirs(bigwig_folder, exist_ok=True)
 
 # Celltype annotations from MuData object
-mudata = mu.read_h5mu(mudata_file)
-cell_data = mudata.obs
+mdata = mu.read_h5mu(mudata_file)
+cell_data = mdata.obs
 cell_data['celltype'] = cell_data['celltype'].astype(str) 
 cell_data['celltype'] = cell_data['celltype'].str.replace(' ', '_')
 
@@ -1191,7 +1500,8 @@ fragments_df_pl = pycisTopic.fragments.read_bed_to_polars_df(
 # Create cistopic object
 cistopic_obj_list = []
 for sample_id in fragments_dict:
-    # compute matrix from fragments, peaks, and barcodes passing QC.
+    # compute matrix from fragments, peaks, and barcodes p
+organism = args['organism']assing QC.
     counts_fragments_matrix, cbs, region_ids = create_fragment_matrix_from_fragments(
         fragments_bed_filename=fragments_dict[sample_id],
         regions_bed_filename=consensus_peaks_bed,
@@ -1312,16 +1622,16 @@ diff_regions = (df_diff_regions["Chromosome"] +
 
 # Transform as mudata object
 # Match RNA barcode
-mudata["rna"].obs_names = cell_data.index + "___smpl"
-new_mudata = scenicplus.data_wrangling.adata_cistopic_wrangling.process_multiome_data(
-    GEX_anndata=mudata["rna"],
+mdata["rna"].obs_names = cell_data.index + "___smpl"
+new_mdata = scenicplus.data_wrangling.adata_cistopic_wrangling.process_multiome_data(
+    GEX_anndata=mdata["rna"],
     cisTopic_obj=cistopic_obj,
     use_raw_for_GEX_anndata=False,  # ????
     imputed_acc_kwargs=None,
     bc_transform_func=lambda x: x,
     )
 
-pre_atac = new_mudata["scATAC"][:, new_mudata["scATAC"].var.index.isin(
+pre_atac = new_mdata["scATAC"][:, new_mdata["scATAC"].var.index.isin(
     diff_regions)]
 # rename regions
 pre_atac.var_names = \
@@ -1329,7 +1639,148 @@ pre_atac.var_names = \
      "-" + pre_atac.var["Start"].astype(str) +
      "-" + pre_atac.var["End"].astype(str)).values
 
-pre_rna = new_mudata["scRNA"].copy()
+pre_rna = new_mdata["scRNA"].copy()
 pre_atac.layers["counts"] = sp.sparse.csr_matrix(pre_atac.X.copy())
 pre_rna.layers["counts"] = sp.sparse.csr_matrix(pre_rna.X.copy())
-pre_mudata = mu.MuData({"rna": pre_rna, "atac": pre_atac})
+mdata = mu.MuData({"rna": pre_rna, "atac": pre_atac})
+del new_mdata
+
+
+use_gene_boundaries = args["use_gene_boundaries"]
+upstream = tuple([int(num) for num in args["upstream"].split(' ')])
+downstream = tuple([int(num) for num in args["downstream"].split(' ')])
+extend_tss = tuple([int(num) for num in args["extend_tss"].split(' ')])
+remove_promoters = args["remove_promoters"]
+importance_scoring_method = args["importance_scoring_method"]
+correlation_scoring_method = args["correlation_scoring_method"]
+mask_expr_dropout = True
+
+# Download chromosome sizes and gene body coordinates
+result = scenicplus.data_wrangling.gene_search_space.download_gene_annotation_and_chromsizes(
+        species=organism,
+        biomart_host="http://www.ensembl.org",
+        use_ucsc_chromosome_style=True)
+
+if type(result) is tuple:
+    annot, chromsizes = result
+else:
+    annot = result
+    print(
+        "Chrosomome sizes was not found, please provide this information manually.")
+
+# Calculate search space
+mdata["atac"].var_names = mdata["atac"].var_names.str.split('-', 1).str[0]\
+    + ':' + mdata["atac"].var_names.str.split('-', 1).str[1]
+mdata["rna"][:, mdata["rna"].X.sum(0) != 0]
+mdata["atac"][:, mdata["atac"].X.sum(0) != 0]
+
+print(mdata["atac"].var_names)
+search_space = scenicplus.data_wrangling.gene_search_space.get_search_space(
+        scplus_region=mdata["atac"].var.index,
+        scplus_genes=mdata["rna"].var.index,
+        gene_annotation=annot,
+        chromsizes=chromsizes,
+        use_gene_boundaries=use_gene_boundaries,
+        upstream=upstream,
+        downstream=downstream,
+        extend_tss=extend_tss,
+        remove_promoters=remove_promoters)
+
+# Calculate regions to genes relationships
+p2g = calculate_regions_to_genes_relationships(
+        df_exp_mtx=mdata["rna"].to_df(),
+        df_acc_mtx=mdata["atac"].to_df(),
+        search_space=search_space,
+        temp_dir=args["temp_dir"],
+        mask_expr_dropout=False,
+        importance_scoring_method=importance_scoring_method,
+        correlation_scoring_method=correlation_scoring_method,
+        n_cpu=njobs,)
+
+
+dem_max_bg_regions = 500
+dem_balance_number_of_promoters = True
+dem_promoter_space = 1_000
+dem_adj_pval_thr = 0.05
+dem_log2fc_thr = 1.0
+dem_mean_fg_thr = 0.0
+dem_motif_hit_thr = 3.0
+
+# Run DEM
+print("Running DEM")
+run_motif_enrichment_dem(
+    dem_region_sets,
+    dem_db_fname=dem_scores_fname,
+    output_fname_dem_result=dem_results_path,
+    output_fname_dem_html="",
+    n_cpu=32,
+    path_to_genome_annotation="aertslab/genomes/hg38/hg38_ensdb_v86.csv",
+    temp_dir=temp_dir,
+    species=species,
+    fraction_overlap_w_dem_database=0.4,
+    path_to_motif_annotations=path_to_motif_annotations,
+    annotation_version=annotation_version,
+    motif_similarity_fdr=0.05,
+    orthologous_identity_threshold=0.0,
+    annotations_to_use=["Direct_annot", "Orthology_annot"],
+    write_html=False,
+    max_bg_regions=dem_max_bg_regions,
+    balance_number_of_promoters=dem_balance_number_of_promoters,
+    promoter_space=dem_promoter_space,
+    adjpval_thr=dem_adj_pval_thr,
+    log2fc_thr=dem_log2fc_thr,
+    mean_fg_thr=dem_mean_fg_thr,
+    motif_hit_thr=dem_motif_hit_thr,
+    seed=555,
+)
+
+# Open cisTarget database
+print("Running cistarget")
+cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
+    cistarget_rankings_fname,
+    region_sets=region_sets,
+    name="cistarget",
+    fraction_overlap=0.4)
+# Run cistarget
+run_motif_enrichment_cistarget(
+    region_sets,
+    cistarget_db,
+    output_fname_cistarget_result=cistarget_results_path,
+    n_cpu=32,
+    fraction_overlap_w_cistarget_database=0.4,
+    auc_threshold=0.005,
+    nes_threshold=3,
+    rank_threshold=0.05,
+    path_to_motif_annotations=path_to_motif_annotations,
+    annotation_version=annotation_version,
+    motif_similarity_fdr=0.05,
+    orthologous_identity_threshold=0.8,
+    temp_dir=temp_dir,
+    species=species,
+    annotations_to_use=["Direct_annot", "Orthology_annot"]
+)
+del cistarget_db
+
+# Reformat cistromes results, merging DEM and Cistarget pairs
+# Giving Direct and Extended cistromes
+if os.path.exists(dem_results_path):
+    paths_to_motif_enrichment_results = [dem_results_path, cistarget_results_path]
+else:
+    # Save empty hdf file to no thave missiong output for snakemake workflow
+    dem_hdf = h5py.File(dem_results_path, 'w')
+    dem_hdf.close()
+
+    paths_to_motif_enrichment_results = [cistarget_results_path]
+    warnings.warn("Warning...........No significant result from DEM, you might want to adjust thresolds.\nHere, only cistarget method results will be kept.")
+
+output_cistromes_annotations_direct = args["annotation_direct_path"]
+output_cistromes_annotations_extended = args["annotation_extended_path"]
+output_tf_names = args["tf_names_path"]
+prepare_motif_enrichment_results(
+    paths_to_motif_enrichment_results=paths_to_motif_enrichment_results,
+    multiome_mudata_fname=mdata,
+    out_file_direct_annotation=output_cistromes_annotations_direct,
+    out_file_extended_annotation=output_cistromes_annotations_extended,
+    out_file_tf_names=output_tf_names,
+    direct_annotation=["Direct_annot"],
+    extended_annotation=["Orthology_annot"])

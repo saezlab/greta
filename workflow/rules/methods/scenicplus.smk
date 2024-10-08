@@ -281,7 +281,9 @@ rule src_scenicplus:
     singularity:
         'workflow/envs/scenicplus.sif'
     output:
-        out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv'
+        out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv',
+        cistarget_results_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.cistarget.hdf5"),
+        dem_results_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.dem.hdf5"),
     shell:
         """
         python workflow/scripts/methods/scenicplus/src.py \
@@ -317,7 +319,9 @@ rule src_scenicplus:
         --top_n_regionTogenes_per_region "{params.top_n_regionTogenes_per_region}" \
         --min_regions_per_gene {params.min_regions_per_gene} \
         --rho_threshold {params.rho_threshold} \
-        --min_target_genes {params.min_target_genes}
+        --min_target_genes {params.min_target_genes} \
+        --cistarget_results {output.cistarget_results} \
+        --dem_results {output.dem_results} \
         """
         
 
