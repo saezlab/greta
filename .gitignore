@@ -147,3 +147,4 @@ benchmarks/
 gdata/
 workflow/scripts/methods/scenic+/s1.py
 logs/
+*.ipynb
