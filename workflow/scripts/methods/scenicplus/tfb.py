@@ -85,7 +85,7 @@ else:
 
 # Keep peaks contained in enhancers only
 p2g = pd.read_csv(p2g)
-if peaks.shape[0] == 0:
+if p2g.shape[0] == 0:
     tfb = pd.DataFrame(columns=['cre', 'tf', 'score'])
     tfb.to_csv(path_out, index=False)
     exit()
@@ -96,7 +96,7 @@ mudata_file = mu.read_h5mu(mudata_path)
 # mask columns in regions
 mask = mudata_file["atac"].var_names.isin(regions)
 cistopic_obj = pycisTopic.cistopic_class.create_cistopic_object(
-    mudata_file["atac"].layers["counts"][:, mask].T.toarray(),
+    mudata_file["atac"].layers["counts"][:, mask].T.toarray().astype(int),
     cell_names=mudata_file["atac"][:, mask].obs_names.values.tolist(),
     region_names=mudata_file["atac"][:, mask].var_names.values.tolist()
     )

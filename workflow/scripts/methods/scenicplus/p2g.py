@@ -321,10 +321,11 @@ else:
 
 use_gene_boundaries = args.use_gene_boundaries
 
-dist = int(float(args.ext) // 2)
+dist = str(int(float(args.ext) // 2))
 upstream = (args.min_dist, dist)
 downstream = (args.min_dist, dist)
-assert args.min_dist > dist, f'min_dist={args.min_dist} has to be bigger than dist={dist}'
+min_dist = int(args.min_dist)
+assert min_dist < int(dist), f'min_dist={min_dist} has to be smaller than dist={dist}'
 extend_tss = tuple([int(num) for num in args.extend_tss.split(' ')])
 remove_promoters = args.remove_promoters
 importance_scoring_method = args.importance_scoring_method
@@ -387,6 +388,7 @@ p2g = p2g.loc[:, ["target", "region", score_to_keep]]
 p2g.columns = ["gene", "cre", "score"]
 p2g = p2g[p2g["score"] != 0]
 p2g["cre"] = p2g["cre"].str.replace(":", "-")
+p2g = p2g[['cre', 'gene', 'score']]
 print(p2g)
 
 p2g.to_csv(args.output, index=False)

@@ -73,29 +73,23 @@ else:
     raise ValueError("Invalid organism")
 
 def infer_TF_to_gene(
-        multiome_mudata_fname: pathlib.Path,
+        mdata,
         tf_names: pathlib.Path,
+        g_names,
         temp_dir: pathlib.Path,
         method: Literal["GBM", "RF"],
         n_cpu: int,
         seed: int):
-    """
-    Replace tf_names_fname by tf_list 
-    Replace scRNA by rna
-    """
     from scenicplus.TF_to_gene import calculate_TFs_to_genes_relationships
-    log.info("Reading multiome MuData.")
-    mdata = mudata.read(multiome_mudata_fname.__str__())
+    cols = np.union1d(tf_names, g_names)
     log.info(f"Using {len(tf_names)} TFs.")
     adj = calculate_TFs_to_genes_relationships(
-        df_exp_mtx=mdata["rna"].to_df(),
+        df_exp_mtx=mdata["rna"][:, cols].to_df(),
         tf_names = tf_names,
         temp_dir = temp_dir,
         method = method,
         n_cpu = n_cpu,
         seed = seed)
-#    log.info(f"Saving TF to gene adjacencies to: {adj_out_fname.__str__()}")
-
     return adj
 
 
@@ -162,18 +156,12 @@ def infer_grn(
         disable_tqdm=False)
 
     log.info("Formatting eGRN as table.")
-    eRegulon_metadata = _format_egrns(
-        eRegulons=eRegulons,
-        tf_to_gene=tf_to_gene)
-
-    print(eRegulon_metadata)
-    log.info("Calculating triplet ranking.")
-    print(TF_to_region_score)
-   # eRegulon_metadata = calculate_triplet_score(
-    #    TF_to_region_score=TF_to_region_score,
-     #   eRegulon_metadata=eRegulon_metadata)
-
-    #log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
+    if len(e_modules_to_return) > 1:
+        eRegulon_metadata = _format_egrns(
+            eRegulons=eRegulons,
+            tf_to_gene=tf_to_gene)
+    else:
+        eRegulon_metadata = pd.DataFrame(columns=["TF", "Gene", "rho_TF2G"])
     return eRegulon_metadata
 
 
@@ -401,20 +389,28 @@ if (p2g.shape[0] == 0) or (tfb.shape[0] == 0):
     exit()
 
 tf_names = list(tfb["tf"].unique())
+g_names = list(p2g['gene'].unique())
 
 # TF to gene relationships
 tf_to_gene_prior = infer_TF_to_gene(
-    multiome_mudata_fname=multiome_mudata_path,
+    mdata=multiome_mudata,
     tf_names=tf_names,
+    g_names=g_names,
     temp_dir=temp_dir,
-    # adj_out_fname="",#tf_to_gene_prior_path,
     method=method,
     n_cpu=n_cpu,
     seed=seed)
 
-tf_to_gene_prior.to_csv("a.csv")
-
 # Format p2g
+if np.unique(np.sign(p2g['score'].values)).size > 1:
+    rho_dichotomize_r2g = True
+else:
+    rho_dichotomize_r2g = False
+    def norm_score(x):
+        min_x = x.min()
+        return (x - min_x) / (x.max() - min_x)
+    p2g['score'] = norm_score(p2g['score'].values)
+    
 p2g = p2g.rename(columns={
     "cre": "region",
     "gene": "target",
@@ -461,7 +457,7 @@ mdl = infer_grn(
     binarize_using_basc=True,
     min_regions_per_gene=args.min_regions_per_gene,
     rho_dichotomize_tf2g=True,
-    rho_dichotomize_r2g=True,
+    rho_dichotomize_r2g=rho_dichotomize_r2g,
     rho_dichotomize_eregulon=True,
     keep_only_activating=False,
     rho_threshold=args.rho_threshold,
