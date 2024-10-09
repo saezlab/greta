@@ -43,7 +43,8 @@ rule mdl_scenic:
     	reg=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_reg.csv')),
         out='datasets/{dataset}/cases/{case}/runs/scenic.scenic.scenic.scenic.mdl.csv'
     resources:
-        mem_mb=64000
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         # Step 1: Create Loom file

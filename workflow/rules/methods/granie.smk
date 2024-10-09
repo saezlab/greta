@@ -29,6 +29,9 @@ rule pre_granie:
     output:
         tmp=temp(local('datasets/{dataset}/cases/{case}/runs/granie.pre_tmp.h5mu')),
         out='datasets/{dataset}/cases/{case}/runs/granie.pre.h5mu'
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         python workflow/scripts/methods/granie/pre.py \
@@ -56,7 +59,7 @@ rule p2g_granie:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['granie']['ext'],
     resources:
-        mem_mb=256000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -91,7 +94,7 @@ rule tfb_granie:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
     resources:
-        mem_mb=128000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -128,7 +131,7 @@ rule mdl_granie:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
-        mem_mb=128000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -167,7 +170,7 @@ rule mdl_o_granie:
         ext=config['methods']['granie']['ext'],
         thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
-        mem_mb=128000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """

@@ -7,7 +7,8 @@ rule pre_figr:
     output:
         out='datasets/{dataset}/cases/{case}/runs/figr.pre.h5mu'
     resources:
-        mem_mb=128000,
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         cp {input.mdata} {output.out}
@@ -30,7 +31,7 @@ rule p2g_figr:
         thr_p2g_pval=config['methods']['figr']['thr_p2g_pval'],
         ncres=config['methods']['figr']['ncres'],
     resources:
-        mem_mb=256000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -63,7 +64,7 @@ rule tfb_figr:
         cellK=config['methods']['figr']['cellK'],
         dorcK=config['methods']['figr']['dorcK'],
     resources:
-        mem_mb=256000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -96,7 +97,7 @@ rule mdl_figr:
         cellK=config['methods']['figr']['cellK'],
         thr_score=config['methods']['figr']['thr_score'],
     resources:
-        mem_mb=512000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -132,7 +133,7 @@ rule mdl_o_figr:
         dorcK=config['methods']['figr']['dorcK'],
         thr_score=config['methods']['figr']['thr_score'],
     resources:
-        mem_mb=256000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """

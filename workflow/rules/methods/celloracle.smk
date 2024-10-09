@@ -35,6 +35,9 @@ rule pre_celloracle:
         out='datasets/{dataset}/cases/{case}/runs/celloracle.pre.h5mu'
     params:
         k=config['methods']['celloracle']['k']
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         python workflow/scripts/methods/celloracle/pre.py \
@@ -60,6 +63,7 @@ rule p2g_celloracle:
         thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
         ext=config['methods']['celloracle']['ext']
     resources:
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -102,6 +106,7 @@ rule tfb_celloracle:
         blen=config['methods']['celloracle']['blen'],
         tfb_thr=config['methods']['celloracle']['tfb_thr']
     resources:
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -136,6 +141,7 @@ rule mdl_celloracle:
         p=config['methods']['celloracle']['p'],
         n=config['methods']['celloracle']['n'],
     resources:
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -177,7 +183,7 @@ rule mdl_o_celloracle:
         p=config['methods']['celloracle']['p'],
         n=config['methods']['celloracle']['n'],
     resources:
-        mem_mb=256000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """

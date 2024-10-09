@@ -29,6 +29,9 @@ rule pre_pando:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         exclude_exons=config['methods']['pando']['exclude_exons'],
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         Rscript workflow/scripts/methods/pando/pre.R \
@@ -61,6 +64,7 @@ rule p2g_pando:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=config['methods']['pando']['ext'],
     resources:
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -91,6 +95,7 @@ rule tfb_pando:
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism']
     resources:
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -124,7 +129,7 @@ rule mdl_pando:
         nvar_thresh=config['methods']['pando']['nvar_thresh'],
         min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
     resources:
-        mem_mb=512000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -140,7 +145,7 @@ rule mdl_pando:
         {params.nvar_thresh} \
         {params.min_genes_per_module} \
         {output.out}
-        if [ $? -eq 124 ] || [ $? -eq 137 ]; then
+        if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """
@@ -165,7 +170,7 @@ rule mdl_o_pando:
         nvar_thresh=config['methods']['pando']['nvar_thresh'],
         min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
     resources:
-        mem_mb=512000,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -184,7 +189,7 @@ rule mdl_o_pando:
         {input.h} \
         {input.m} \
         {output.out}
-        if [ $? -eq 124 ] || [ $? -eq 137 ]; then
+        if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """

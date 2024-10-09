@@ -37,7 +37,8 @@ def make_combs_rules(w, mthds, rule_name):
             format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
         )
     for mth in mthds:
-        rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
+        if mth != 'scenicplus':  # TODO: remove one src scenic
+            rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
     rule_outputs.append(format_rule(out, w=w, pre='random'))
     rule_outputs.append(format_rule(out, w=w, pre='scenic'))
     rule_outputs.append(format_rule(out, w=w, pre='collectri'))
@@ -50,6 +51,8 @@ def list_frags_files(wildcards):
                     dataset=wildcards.dataset,
                     sample=config['datasets'][wildcards.dataset]['samples'])
 
+def restart_mem(wildcards, attempt):
+    return (2 ** (4 + attempt)) * 1000
 
 configfile: 'config/config.yaml'
 container: 'workflow/envs/gretabench.sif'

@@ -33,7 +33,8 @@ rule prior_hummus:
     singularity:
         'workflow/envs/hummus.sif'
     resources:
-        mem_mb=128000,
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         export OMP_NUM_THREADS={params.n_cores}
@@ -80,6 +81,9 @@ rule p2g_hummus:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         ext=900000,
         n_cores=32
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         Rscript workflow/scripts/methods/hummus/p2g.R \
@@ -106,6 +110,9 @@ rule tfb_hummus:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores=32,
         p2g=lambda w: w.p2g
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         Rscript workflow/scripts/methods/hummus/tfb.R \
@@ -135,6 +142,9 @@ rule mdl_hummus:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         p2g=lambda w: w.p2g,
         tfb=lambda w: w.tfb,
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         Rscript workflow/scripts/methods/hummus/mdl.R \

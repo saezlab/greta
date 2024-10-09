@@ -28,7 +28,8 @@ rule mdl_collectri:
     output:
         out='datasets/{dataset}/cases/{case}/runs/collectri.collectri.collectri.collectri.mdl.csv'
     resources:
-        mem_mb=32000
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         python workflow/scripts/methods/prc_prior_grn.py \
@@ -49,7 +50,8 @@ rule mdl_dorothea:
     output:
         out='datasets/{dataset}/cases/{case}/runs/dorothea.dorothea.dorothea.dorothea.mdl.csv'
     resources:
-        mem_mb=32000
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         python workflow/scripts/methods/prc_prior_grn.py \
