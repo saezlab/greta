@@ -8,6 +8,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--inp_path', required=True)
 parser.add_argument('-t','--tf_path', required=True)
+parser.add_argument('-c','--cg_path', required=True)
 parser.add_argument('-g','--g_perc', required=True)
 parser.add_argument('-n','--scale', required=True)
 parser.add_argument('-r','--tf_g_ratio', required=True)
@@ -17,6 +18,7 @@ args = vars(parser.parse_args())
 
 inp_path = args['inp_path']
 tf_path = args['tf_path']
+cg_path = args['cg_path']
 g_perc = float(args['g_perc'])
 scale = float(args['scale'])
 tf_g_ratio = float(args['tf_g_ratio'])
@@ -50,10 +52,12 @@ def run_pre(mdata, seed):
     return mdata
 
 
-def run_p2g(mdata, g_perc, scale, seed):
+def run_p2g(mdata, cg, g_perc, scale, seed):
     # Read features
-    genes = mdata.mod['rna'].var_names
-    cres = mdata.mod['atac'].var_names
+    genes = mdata.mod['rna'].var_names.values.astype('U')
+    cres = mdata.mod['atac'].var_names.values.astype('U')
+    genes = genes[np.isin(genes, list(cg.keys()))]
+    print(genes.size)
     
     # Randomly sample genes
     rng = np.random.default_rng(seed=seed)
@@ -67,7 +71,10 @@ def run_p2g(mdata, g_perc, scale, seed):
     for i in range(genes.size):
         n_cre = int(n_cres[i])
         g = genes[i]
-        r_cres = rng.choice(cres, n_cre, replace=False)
+        chrom = cg[g]
+        chrom_msk = np.char.startswith(cres, chrom)
+        chrom_cres = cres[chrom_msk]
+        r_cres = rng.choice(chrom_cres, np.min([n_cre, chrom_cres.size]), replace=False)
         for cre in r_cres:
             df.append([cre, g, 1])
     df = pd.DataFrame(df, columns=['cre', 'gene', 'score'])
@@ -121,7 +128,8 @@ def run_mdl(p2g, tfb, tf_g_ratio, seed):
 # Run random
 mdata = mu.read(inp_path)
 mdata = run_pre(mdata, seed)
-p2g = run_p2g(mdata, g_perc, scale, seed)
+cg = pd.read_csv(cg_path).set_index('gene')['chrom'].to_dict()
+p2g = run_p2g(mdata, cg, g_perc, scale, seed)
 tfs = pd.read_csv(tf_path, header=None).loc[:, 0].values.astype('U')
 tfb = run_tfb(mdata, p2g, tfs, scale, seed)
 grn = run_mdl(p2g, tfb, tf_g_ratio, seed)
