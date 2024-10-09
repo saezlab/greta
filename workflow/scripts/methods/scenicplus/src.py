@@ -2,7 +2,7 @@ import os
 os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
 import scanpy as sc
 import anndata as ad
-from typing import (List, Dict, Literal, TYPE_CHECKING)
+from typing import (List, Optional, Tuple, Set, Dict, Union, Literal, TYPE_CHECKING)
 import pathlib
 from pathlib import Path
 import argparse
@@ -35,6 +35,7 @@ from pycisTopic.iterative_peak_calling import get_consensus_peaks
 from pycisTopic.qc import get_barcodes_passing_qc_for_sample
 from pycisTopic.cistopic_class import create_cistopic_object_from_fragments
 import pycisTopic.lda_models
+import pycisTopic.cistopic_class
 from pycisTopic.diff_features import (
     impute_accessibility,
     normalize_scores,
@@ -44,12 +45,23 @@ from pycisTopic.utils import region_names_to_coordinates
 
 import scenicplus.data_wrangling.adata_cistopic_wrangling
 import scenicplus.data_wrangling.gene_search_space
+
+import pycistarget.motif_enrichment_cistarget
 from pycistarget.motif_enrichment_dem import (
     DEM,
     ranksums_numba_multiple,
     mean_axis1, get_log2_fc,
-    p_adjust_bh, get_optimal_threshold_roc
+    p_adjust_bh, get_optimal_threshold_roc,
+    DEMDatabase
     )
+from scenicplus.triplet_score import get_max_rank_of_motif_for_each_TF
+import mudata
+from scenicplus.cli.commands import (
+#    prepare_motif_enrichment_results,
+    _get_foreground_background
+)
+from pycistarget.motif_enrichment_result import MotifEnrichmentResult
+log = logging.getLogger("SCENIC+")
 
 def compute_qc_stats(
     fragments_df_pl: pl.DataFrame,
@@ -1190,7 +1202,7 @@ def _run_dem_single_region_set(
 
 def prepare_motif_enrichment_results(
         paths_to_motif_enrichment_results: List[str],
-        mdata: MuData,
+        mdata: mudata.MuData,
         out_file_direct_annotation: pathlib.Path,
         out_file_extended_annotation: pathlib.Path,
         out_file_tf_names: pathlib.Path,
@@ -1500,8 +1512,7 @@ fragments_df_pl = pycisTopic.fragments.read_bed_to_polars_df(
 # Create cistopic object
 cistopic_obj_list = []
 for sample_id in fragments_dict:
-    # compute matrix from fragments, peaks, and barcodes p
-organism = args['organism']assing QC.
+    # compute matrix from fragments, peaks, and barcodes passing QC.
     counts_fragments_matrix, cbs, region_ids = create_fragment_matrix_from_fragments(
         fragments_bed_filename=fragments_dict[sample_id],
         regions_bed_filename=consensus_peaks_bed,
@@ -1518,6 +1529,8 @@ organism = args['organism']assing QC.
 
 cistopic_obj = pycisTopic.cistopic_class.merge(cistopic_obj_list)
 cistopic_obj.add_cell_data(cell_data, split_pattern='-')
+
+print("Generate models.")
 
 models = pycisTopic.lda_models.run_cgs_models(
     cistopic_obj,
@@ -1647,12 +1660,12 @@ del new_mdata
 
 
 use_gene_boundaries = args["use_gene_boundaries"]
-upstream = tuple([int(num) for num in args["upstream"].split(' ')])
-downstream = tuple([int(num) for num in args["downstream"].split(' ')])
-extend_tss = tuple([int(num) for num in args["extend_tss"].split(' ')])
+upstream = tuple([int(num) for num in args["search_space_upstream"].split(' ')])
+downstream = tuple([int(num) for num in args["search_space_downstream"].split(' ')])
+extend_tss = tuple([int(num) for num in args["search_space_extend_tss"].split(' ')])
 remove_promoters = args["remove_promoters"]
-importance_scoring_method = args["importance_scoring_method"]
-correlation_scoring_method = args["correlation_scoring_method"]
+importance_scoring_method = args["region_to_gene_importance_method"]
+correlation_scoring_method = args["region_to_gene_correlation_method"]
 mask_expr_dropout = True
 
 # Download chromosome sizes and gene body coordinates

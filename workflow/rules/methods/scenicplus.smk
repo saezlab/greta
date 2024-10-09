@@ -275,6 +275,9 @@ rule mdl_o_scenicplus:
         out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv',
         cistarget_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.cistarget.hdf5"),
         dem_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.dem.hdf5"),
+        annotation_direct_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_direct.h5ad"),
+        annotation_extended_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_extended.h5ad"),
+        tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.tf_names.txt"),
     shell:
         """
         python workflow/scripts/methods/scenicplus/src.py \
@@ -305,14 +308,17 @@ rule mdl_o_scenicplus:
         --order_regions_to_genes_by {params.order_regions_to_genes_by} \
         --order_TFs_to_genes_by {params.order_TFs_to_genes_by} \
         --gsea_n_perm {params.gsea_n_perm} \
-        --quantile_thresholds_region_to_gene "{params.quantile_thresholds_region_to_gene}" \
-        --top_n_regionTogenes_per_gene "{params.top_n_regionTogenes_per_gene}" \
-        --top_n_regionTogenes_per_region "{params.top_n_regionTogenes_per_region}" \
+        --quantile_thresholds_region_to_gene {params.quantile_thresholds_region_to_gene} \
+        --top_n_regionTogenes_per_gene {params.top_n_regionTogenes_per_gene} \
+        --top_n_regionTogenes_per_region {params.top_n_regionTogenes_per_region} \
         --min_regions_per_gene {params.min_regions_per_gene} \
         --rho_threshold {params.rho_threshold} \
         --min_target_genes {params.min_target_genes} \
         --cistarget_results {output.cistarget_results} \
         --dem_results {output.dem_results} \
+        --annotation_direct_path {output.annotation_direct_path}\
+        --annotation_extended_path {output.annotation_extended_path}\
+        --tf_names_path {output.tf_names_path}\
         """
         
 
