@@ -79,7 +79,7 @@ rule p2g_hummus:
         multilayer_f=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.multilayer')),
     params:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        ext=900000,
+        ext=500,
         n_cores=32
     resources:
         mem_mb=restart_mem,
@@ -157,4 +157,62 @@ rule mdl_hummus:
         {params.p2g} \
         {params.tfb} \
         {params.organism}
+        """
+
+
+rule mdl_o_hummus:
+    threads: 32
+    input:
+        mdata='datasets/{dataset}/cases/{case}/mdata.h5mu',
+        h=rules.download_granges.output.h,
+        m=rules.download_granges.output.m,
+    params:
+        organism=lambda w: config['datasets'][w.dataset]['organism'],
+        grn_number_edges=50000,
+        tf_layer_method=None,
+        ext=500,
+        n_cores=16,
+    singularity:
+        'workflow/envs/hummus.sif'
+    output:
+        tf_list=temp(local('datasets/{dataset}/cases/{case}/runs/o_hummus.tfs.list.hummus.tsv')),
+        rna_network=temp(local('datasets/{dataset}/cases/{case}/runs/o_hummus.grnboost2.csv')),
+        atac_network=temp(local('datasets/{dataset}/cases/{case}/runs/o_hummus.atacnet.csv')),
+        hummus_object=temp(local('datasets/{dataset}/cases/{case}/runs/o_hummus.hummus_object.RDS')),
+        multilayer_f=temp(directory('datasets/{dataset}/cases/{case}/runs/o_hummus.multilayer')),
+        out='datasets/{dataset}/cases/{case}/runs/o_hummus.o_hummus.o_hummus.o_hummus.mdl.csv',
+    shell:
+        """
+        export OMP_NUM_THREADS={params.n_cores}
+        export MKL_NUM_THREADS={params.n_cores}
+        export NUMEXPR_NUM_THREADS={params.n_cores}
+
+        Rscript workflow/scripts/methods/hummus/prior_hummus_tf_infos.R \
+        {input.mdata} \
+        {params.organism} \
+        {output.tf_list}
+
+        python workflow/scripts/methods/hummus/src.py \
+        -d {input.mdata} \
+        -r {output.rna_network} \
+        -a {output.atac_network} \
+        -c {params.n_cores} \
+        -n {output.tf_list} \
+        -o {params.organism}
+        echo "Nets and circe done"
+
+        Rscript workflow/scripts/methods/hummus/src.R \
+        {input.mdata} \
+        {params.organism} \
+        {input.h} \
+        {input.m} \
+        {output.rna_network} \
+        {output.atac_network} \
+        {output.hummus_object} \
+        {params.grn_number_edges} \
+        {params.tf_layer_method} \
+        {params.ext} \
+        {params.n_cores} \
+        {output.multilayer_f} \
+        {output.out}
         """
