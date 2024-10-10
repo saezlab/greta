@@ -156,7 +156,7 @@ def infer_grn(
         disable_tqdm=False)
 
     log.info("Formatting eGRN as table.")
-    if len(e_modules_to_return) > 1:
+    if len(eRegulons) > 1:
         eRegulon_metadata = _format_egrns(
             eRegulons=eRegulons,
             tf_to_gene=tf_to_gene)

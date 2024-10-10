@@ -64,7 +64,7 @@ rule pre_scenicplus:
         'workflow/envs/scenicplus.sif'
     params:
         tmp_scenicplus=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))), 
-        ray_tmp_dir="/tmp_pre_scp",
+        ray_tmp_dir="/tmp",
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores=32
     shell:

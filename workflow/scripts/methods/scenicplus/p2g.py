@@ -321,11 +321,11 @@ else:
 
 use_gene_boundaries = args.use_gene_boundaries
 
-dist = str(int(float(args.ext) // 2))
-upstream = (args.min_dist, dist)
-downstream = (args.min_dist, dist)
+dist = int(float(args.ext) // 2)
 min_dist = int(args.min_dist)
-assert min_dist < int(dist), f'min_dist={min_dist} has to be smaller than dist={dist}'
+upstream = (min_dist, dist)
+downstream = (min_dist, dist)
+assert min_dist < dist, f'min_dist={min_dist} has to be smaller than dist={dist}'
 extend_tss = tuple([int(num) for num in args.extend_tss.split(' ')])
 remove_promoters = args.remove_promoters
 importance_scoring_method = args.importance_scoring_method
