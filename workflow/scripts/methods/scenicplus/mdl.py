@@ -156,6 +156,8 @@ def infer_grn(
         disable_tqdm=False)
 
     log.info("Formatting eGRN as table.")
+    log.info(f"Number of eRegulons: {len(eRegulons)}")
+    print(eRegulons)
     if len(eRegulons) > 1:
         eRegulon_metadata = _format_egrns(
             eRegulons=eRegulons,
@@ -301,7 +303,7 @@ def build_grn(
     # filter out nans
     new_e_modules = [m for m in new_e_modules if not np.isnan(
         m.gsea_enrichment_score) and not np.isnan(m.gsea_pval)]
-
+    log.info(f'Number of modules: {len(new_e_modules)}')
     log.info(
         f'Subsetting on adjusted pvalue: {adj_pval_thr}, minimal NES: {NES_thr} and minimal leading edge genes {min_target_genes}')
     # subset on adj_p_val
@@ -320,10 +322,12 @@ def build_grn(
             module_in_LE = module.subset_leading_edge(inplace=False)
             if module_in_LE.n_target_genes >= min_target_genes:
                 e_modules_to_return.append(module_in_LE)
+    log.info(f'Number of modules after NES filtering: {len(e_modules_to_return)}')
     if merge_eRegulons:
-        log.info('Merging eRegulons')
+        log.info(f'Merging {len(e_modules_to_return)} eRegulons')
         e_modules_to_return = merge_emodules(
             e_modules=e_modules_to_return, inplace=False, rho_dichotomize=rho_dichotomize_eregulon)
+        log.info(f'After merging: {len(e_modules_to_return)}')
     e_modules_to_return = [
         x for x in e_modules_to_return if not isinstance(x, list)]
     return e_modules_to_return
@@ -404,8 +408,10 @@ tf_to_gene_prior = infer_TF_to_gene(
 # Format p2g
 if np.unique(np.sign(p2g['score'].values)).size > 1:
     rho_dichotomize_r2g = True
+    rho_dichotomize_eregulon = True
 else:
     rho_dichotomize_r2g = False
+    rho_dichotomize_eregulon = False
     def norm_score(x):
         min_x = x.min()
         return (x - min_x) / (x.max() - min_x)
@@ -458,7 +464,7 @@ mdl = infer_grn(
     min_regions_per_gene=args.min_regions_per_gene,
     rho_dichotomize_tf2g=True,
     rho_dichotomize_r2g=rho_dichotomize_r2g,
-    rho_dichotomize_eregulon=True,
+    rho_dichotomize_eregulon=rho_dichotomize_eregulon,
     keep_only_activating=False,
     rho_threshold=args.rho_threshold,
     min_target_genes=args.min_target_genes,
