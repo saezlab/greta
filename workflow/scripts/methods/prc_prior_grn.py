@@ -43,5 +43,10 @@ proms = proms.df[['cre', 'Name']].rename(columns={'Name': 'target'})
 grn = pd.merge(grn, proms, how='inner')[['source', 'cre', 'target', 'weight']]
 grn = grn.sort_values(['source', 'target', 'cre']).rename(columns={'weight': 'score'})
 
+# Filter regulons with less than 5 targets
+n_targets = grn.groupby(['source']).size().reset_index(name='counts')
+n_targets = n_targets[n_targets['counts'] > 5]
+grn = grn[grn['source'].isin(n_targets['source'])]
+
 # Write
 grn.to_csv(out_path, index=False)
