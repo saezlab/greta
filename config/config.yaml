@@ -14,7 +14,7 @@ methods:
     figr:
         ext: 500000
         thr_p2g_pval: 0.1
-        ncres: 10
+        ncres: 2
         cellK: 10
         dorcK: 10
         thr_score: 2
