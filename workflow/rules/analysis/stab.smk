@@ -1,7 +1,8 @@
-def get_stab_paths(config, mthds, datasets):
+def get_stab_paths(config, mthds, baselines, datasets):
     ns = [1024, 2048, 4096, 8192, 16384]
     seeds = [0, 1, 2]
     mthds = ['o_' + m for m in mthds]
+    mthds.extend(baselines)
     d_lst = []
     c_lst = []
     m_lst = []
@@ -39,9 +40,7 @@ def get_stab_paths(config, mthds, datasets):
         return d_lst, c_lst, m_lst
 
 
-datasets = ['pbmc10k']
-
-d_lst, c_lst, m_lst = get_stab_paths(config, mthds, datasets)
+d_lst, c_lst, m_lst = get_stab_paths(config, mthds, baselines, stab_datasets)
 
 rule run_stab:
     input:
@@ -54,7 +53,9 @@ rule run_stab:
     container: None
     shell:
         """
-        sacct -S 2024-08-15 -E $(date -d '23:59:59 today' +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
+        last_date=$(stat -c %y {input[0]} | cut -d ' ' -f 1)
+        last_date=$(date -d '$last_date - 2 days' +%Y-%m-%d)
+        sacct -S $last_date -E $(date -d '23:59:59 today' +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
         awk '/^ +src_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.tmp}
         python workflow/scripts/analysis/stab/run_stab.py \
         -i {output.tmp} \

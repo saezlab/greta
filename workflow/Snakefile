@@ -28,21 +28,22 @@ def format_rule(out, w, pre, p2g=None, tfb=None, mdl=None, resource=None):
     return frm
 
 
-def make_combs_rules(w, mthds, rule_name):
+def make_combs_rules(w, mthds, baselines, rule_name):
     from itertools import product
     out = getattr(rules, rule_name).output.out
     rule_outputs = []
-    for pre, p2g, tfb, mdl in product(mthds, repeat=4):
-        rule_outputs.append(
-            format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
-        )
+    if w.dataset not in stab_datasets:
+        for pre, p2g, tfb, mdl in product(mthds, repeat=4):
+            rule_outputs.append(
+                format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
+            )
     for mth in mthds:
         if mth != 'scenicplus':  # TODO: remove one src scenic
             rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
-    rule_outputs.append(format_rule(out, w=w, pre='random'))
-    rule_outputs.append(format_rule(out, w=w, pre='scenic'))
-    rule_outputs.append(format_rule(out, w=w, pre='collectri'))
-    rule_outputs.append(format_rule(out, w=w, pre='dorothea'))
+    for bsl in baselines:
+        rule_outputs.append(format_rule(out, w=w, pre=bsl))
+    for r_o in rule_outputs:
+        pass
     return rule_outputs
 
 
@@ -58,7 +59,10 @@ configfile: 'config/config.yaml'
 container: 'workflow/envs/gretabench.sif'
 
 mthds = list(config['methods'].keys())
+baselines = config['baselines']
+
 datasets = list(config['datasets'].keys())
+stab_datasets = config['stab_datasets']
 
 # Datasets
 include: 'rules/datasets/pbmc10k.smk'

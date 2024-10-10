@@ -48,6 +48,8 @@ methods:
         rho_threshold: 0.05
         min_target_genes: 10
 
+baselines: ['collectri', 'dorothea', 'random', 'scenic']
+
 colors:
     nets:
         celloracle: '#1f77b4'
@@ -166,3 +168,4 @@ datasets:
                 n_hvg: 16384
                 n_hvr: 65536
 
+stab_datasets: ['pitupair']
