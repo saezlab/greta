@@ -73,7 +73,7 @@ rule paircells_pitunpair:
         cca=rules.coembedd_pitunpair.output.cca,
         celltypes=rules.download_pitunpair.output.celltypes,
     output:
-        barmap='datasets/pitunpair/barmap.csv'
+        barmap=temp(local('datasets/pitunpair/barmap.csv'))
     singularity:
         'workflow/envs/figr.sif'
     shell:
