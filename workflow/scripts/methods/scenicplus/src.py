@@ -1,4 +1,6 @@
+import sys
 import os
+import warnings
 os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
 import scanpy as sc
 import anndata as ad
@@ -13,9 +15,18 @@ import requests
 import joblib
 import numpy as np
 import pandas as pd
+import h5py
 import scipy as sp
 from scipy.stats import gaussian_kde
 import muon as mu
+
+from matplotlib import cm
+import subprocess
+from matplotlib.colors import Normalize
+from scipy.stats import pearsonr, spearmanr
+from sklearn.ensemble import (ExtraTreesRegressor, GradientBoostingRegressor,
+                              RandomForestRegressor)
+from tqdm import tqdm
 
 # for chromsizes
 import polars as pl
@@ -60,8 +71,68 @@ from scenicplus.cli.commands import (
 #    prepare_motif_enrichment_results,
     _get_foreground_background
 )
+
 from pycistarget.motif_enrichment_result import MotifEnrichmentResult
+
+from scenicplus.utils import p_adjust_bh
+from scenicplus.grn_builder.modules import (
+    create_emodules, eRegulon, merge_emodules, RHO_THRESHOLD, TARGET_GENE_NAME)
+from scenicplus.grn_builder.gsea import run_gsea
+from scenicplus.grn_builder.gsea_approach import _run_gsea_for_e_module
+from scenicplus.triplet_score import (
+        get_max_rank_of_motif_for_each_TF,
+        _rank_scores_and_assign_random_ranking_in_range_for_ties,
+        _calculate_cross_species_rank_ratio_with_order_statistics)
+import anndata
+from tqdm import tqdm
+
+
 log = logging.getLogger("SCENIC+")
+
+score_to_keep = "rho"  #"importance_x_rho"
+
+RANDOM_SEED = 666
+
+SKLEARN_REGRESSOR_FACTORY = {
+    'RF': RandomForestRegressor,
+    'ET': ExtraTreesRegressor,
+    'GBM': GradientBoostingRegressor
+}
+
+SCIPY_CORRELATION_FACTORY = {
+    'PR': pearsonr,
+    'SR': spearmanr
+}
+
+# Parameters from arboreto
+# scikit-learn random forest regressor
+RF_KWARGS = {
+    'n_jobs': 1,
+    'n_estimators': 1000,
+    'max_features': 'sqrt'
+}
+
+# scikit-learn extra-trees regressor
+ET_KWARGS = {
+    'n_jobs': 1,
+    'n_estimators': 1000,
+    'max_features': 'sqrt'
+}
+
+# scikit-learn gradient boosting regressor
+GBM_KWARGS = {
+    'learning_rate': 0.01,
+    'n_estimators': 500,
+    'max_features': 0.1
+}
+
+# scikit-learn stochastic gradient boosting regressor
+SGBM_KWARGS = {
+    'learning_rate': 0.01,
+    'n_estimators': 5000,  # can be arbitrarily large
+    'max_features': 0.1,
+    'subsample': 0.9
+}
 
 def compute_qc_stats(
     fragments_df_pl: pl.DataFrame,
@@ -966,6 +1037,215 @@ def read_fragments_to_polars_df(
     return fragments_df_pl
 
 
+def _score_regions_to_single_gene(
+    acc: np.ndarray,
+    exp: np.ndarray,
+    gene_name: str,
+    region_names: Set[str],
+    regressor_type: Literal["RF", "ET", "GBM", "PR", "SR"],
+    regressor_kwargs: dict,
+    mask_expr_dropout: bool
+    ) -> Optional[Tuple[str, pd.Series]]:
+    """
+    Calculates region to gene importances or region to gene correlations for a single gene
+
+    Parameters
+    ----------
+    acc: np.ndarray
+        Numpy array containing matrix of accessibility of regions in search space.
+    exp: 
+        Numpy array containing expression vector.
+    gene_name: str
+        Name of the gene.
+    region_names: List[str]
+        Names of the regions.
+    regressor_type: Literal["RF", "ET", "GBM", "PR", "SR"]
+        Regressor type to use, must be any of "RF", "ET", "GBM", "PR", "SR".
+    regressor_kwargs: dict
+        Keyword arguments to pass to the regressor function.
+    mask_expr_dropout: bool
+        Wether or not to mask expression dropouts.
+    
+    Returns
+    -------
+    feature_importance for regression methods and correlation_coef for correlation methods
+    """
+    if mask_expr_dropout:
+        cell_non_zero = exp != 0
+        exp = exp[cell_non_zero]
+        acc = acc[cell_non_zero, :]
+    # Check-up for genes with 1 region only, related to issue 2
+    if acc.ndim == 1:
+        acc = acc.reshape(-1, 1)
+    if regressor_type in SKLEARN_REGRESSOR_FACTORY.keys():
+        from arboreto import core as arboreto_core
+
+        # fit model
+        fitted_model = arboreto_core.fit_model(regressor_type=regressor_type,
+                                               regressor_kwargs=regressor_kwargs,
+                                               tf_matrix=acc,
+                                               target_gene_expression=exp)
+        # get importance scores for each feature
+        feature_importance = arboreto_core.to_feature_importances(regressor_type=regressor_type,
+                                                                  regressor_kwargs=regressor_kwargs,
+                                                                  trained_regressor=fitted_model)
+        return gene_name, pd.Series(feature_importance, index=region_names)
+
+    elif regressor_type in SCIPY_CORRELATION_FACTORY.keys():
+        # define correlation method
+        correlator = SCIPY_CORRELATION_FACTORY[regressor_type]
+
+        # do correlation and get correlation coef
+        correlation_result = np.array([correlator(x, exp) for x in acc.T])
+        correlation_coef = correlation_result[:, 0]
+
+        return gene_name, pd.Series(correlation_coef, index=region_names)
+    else:
+        raise ValueError("Unsuported regression model")
+
+def _get_acc_idx_per_gene(
+        scplus_region_names: pd.Index,
+        search_space: pd.DataFrame) -> Tuple[np.ndarray, List[List[str]]]:
+    region_names = search_space["Name"].to_numpy()
+    gene_names = search_space["Gene"].to_numpy()
+    s = np.argsort(gene_names)
+    region_names = region_names[s]
+    gene_names = gene_names[s]
+    region_names_to_idx = pd.DataFrame(
+        index = scplus_region_names,
+        data = {'idx': np.arange(len(scplus_region_names))})
+    unique_gene_names, gene_idx = np.unique(gene_names, return_index = True)
+    region_idx_per_gene = []
+    for i in range(len(gene_idx)):
+        if i < len(gene_idx) - 1:
+            region_idx_per_gene.append(
+                region_names_to_idx.loc[region_names[gene_idx[i]:gene_idx[i+1]], 'idx'].to_list())
+        else:
+            region_idx_per_gene.append(
+                region_names_to_idx.loc[region_names[gene_idx[i]:], 'idx'].to_list())
+    return unique_gene_names, region_idx_per_gene
+
+def _score_regions_to_genes(
+        df_exp_mtx: pd.DataFrame,
+        df_acc_mtx: pd.DataFrame,
+        search_space: pd.DataFrame,
+        mask_expr_dropout: bool,
+        regressor_type: Literal["RF", "ET", "GBM", "PR", "SR"],
+        regressor_kwargs: dict,
+        n_cpu: int,
+        temp_dir: Union[None, pathlib.Path]) -> dict:
+    """
+    # TODO: Add doctstrings
+    """
+    if len(set(df_exp_mtx.columns)) != len(df_exp_mtx.columns):
+        raise ValueError("Expression matrix contains duplicate gene names")
+    if len(set(df_acc_mtx.columns)) != len(df_acc_mtx.columns):
+        raise ValueError("Chromatin accessibility matrix contains duplicate gene names")
+    if temp_dir is not None:
+        if type(temp_dir) == str:
+            temp_dir = pathlib.Path(temp_dir)
+        if not temp_dir.exists():
+            Warning(f"{temp_dir} does not exist, creating it.")
+            os.makedirs(temp_dir)
+    scplus_region_names = df_acc_mtx.columns
+    scplus_gene_names = df_exp_mtx.columns
+    search_space = search_space[search_space['Name'].isin(scplus_region_names)]
+    search_space = search_space[search_space['Gene'].isin(scplus_gene_names)]
+    # Get region indeces per gene
+    gene_names, acc_idx = _get_acc_idx_per_gene(
+        scplus_region_names = scplus_region_names, search_space = search_space)
+    EXP = df_exp_mtx[gene_names].to_numpy()
+    ACC = df_acc_mtx.to_numpy()
+    regions_to_genes = dict(
+        joblib.Parallel(
+            n_jobs = n_cpu,
+            temp_folder=temp_dir)(
+                joblib.delayed(_score_regions_to_single_gene)(
+                    acc = ACC[:, acc_idx[idx]],
+                    exp = EXP[:, idx],
+                    gene_name = gene_names[idx],
+                    region_names = scplus_region_names[acc_idx[idx]],
+                    regressor_type = regressor_type,
+                    regressor_kwargs = regressor_kwargs, 
+                    mask_expr_dropout = mask_expr_dropout
+                )
+                for idx in tqdm(
+                    range(len(gene_names)),
+                    total = len(gene_names),
+                    desc=f'Running using {n_cpu} cores')
+                ))
+    return regions_to_genes
+
+def calculate_regions_to_genes_relationships(
+        df_exp_mtx: pd.DataFrame,
+        df_acc_mtx: pd.DataFrame,
+        search_space: pd.DataFrame,
+        temp_dir: pathlib.Path,
+        mask_expr_dropout: bool = False,
+        importance_scoring_method: Literal["RF", "ET", "GBM"] = 'GBM',
+        importance_scoring_kwargs: dict = GBM_KWARGS,
+        correlation_scoring_method: Literal["PR", "SR"] = 'SR',
+        n_cpu: int = 1,
+        add_distance: bool = True):
+    """
+    # TODO: add docstrings
+    """
+    # Create logger
+    level = logging.INFO
+    format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+    handlers = [logging.StreamHandler(stream=sys.stdout)]
+    logging.basicConfig(level=level, format=format, handlers=handlers)
+    log = logging.getLogger('R2G')
+    # calulcate region to gene importance
+    log.info(
+        f'Calculating region to gene importances, using {importance_scoring_method} method')
+    region_to_gene_importances = _score_regions_to_genes(
+        df_exp_mtx=df_exp_mtx,
+        df_acc_mtx=df_acc_mtx,
+        search_space=search_space,
+        mask_expr_dropout = mask_expr_dropout,
+        regressor_type = importance_scoring_method,
+        regressor_kwargs = importance_scoring_kwargs,
+        n_cpu = n_cpu,
+        temp_dir = temp_dir)
+
+    # calculate region to gene correlation
+    log.info(
+        f'Calculating region to gene correlation, using {correlation_scoring_method} method')
+    region_to_gene_correlation = _score_regions_to_genes(
+        df_exp_mtx=df_exp_mtx,
+        df_acc_mtx=df_acc_mtx,
+        search_space=search_space,
+        mask_expr_dropout = mask_expr_dropout,
+        regressor_type = correlation_scoring_method,
+        regressor_kwargs = importance_scoring_kwargs,
+        n_cpu = n_cpu,
+        temp_dir = temp_dir)
+
+    # transform dictionaries to pandas dataframe
+    result_df = pd.concat([pd.DataFrame(data={'target': gene,
+                                                'region': region_to_gene_importances[gene].index.to_list(),
+                                                'importance': region_to_gene_importances[gene].to_list(),
+                                                'rho': region_to_gene_correlation[gene].loc[
+                                                    region_to_gene_importances[gene].index.to_list()].to_list()})
+                            for gene in region_to_gene_importances.keys()
+                            ]
+                            )
+    result_df = result_df.reset_index()
+    result_df = result_df.drop('index', axis=1)
+    result_df['importance_x_rho'] = result_df['rho'] * \
+        result_df['importance']
+    result_df['importance_x_abs_rho'] = abs(
+        result_df['rho']) * result_df['importance']
+    if add_distance:
+        search_space_rn = search_space.rename(
+            {'Name': 'region', 'Gene': 'target'}, axis=1).copy()
+        result_df = result_df.merge(search_space_rn, on=['region', 'target'])
+        #result_df['Distance'] = result_df['Distance'].map(lambda x: x[0])
+    log.info('Done!')
+    return result_df
+
+
 # changed to accept cistarget_db directly opened
 def _run_cistarget_single_region_set(
         ctx_db,
@@ -1261,6 +1541,315 @@ def prepare_motif_enrichment_results(
             f"Writing extended cistromes to: {out_file_extended_annotation.__str__()}")
         adata_extended_cistromes.write_h5ad(out_file_extended_annotation.__str__())
 
+
+
+def infer_TF_to_gene(
+        multiome_mudata_fname: pathlib.Path,
+        tf_names: pathlib.Path,
+        temp_dir: pathlib.Path,
+        method: Literal["GBM", "RF"],
+        n_cpu: int,
+        seed: int):
+    """
+    Replace tf_names_fname by tf_list 
+    Replace scRNA by rna
+    """
+    from scenicplus.TF_to_gene import calculate_TFs_to_genes_relationships
+    log.info("Reading multiome MuData.")
+    mdata = mudata.read(multiome_mudata_fname.__str__())
+    log.info(f"Using {len(tf_names)} TFs.")
+    adj = calculate_TFs_to_genes_relationships(
+        df_exp_mtx=mdata["rna"].to_df(),
+        tf_names = tf_names,
+        temp_dir = temp_dir,
+        method = method,
+        n_cpu = n_cpu,
+        seed = seed)
+
+    return adj
+
+
+def infer_grn(
+        TF_to_gene_adj: pathlib.Path,
+        region_to_gene_adj: pathlib.Path,
+        cistromes: pathlib.Path,
+        ranking_db_fname: str,
+        is_extended: bool,
+        temp_dir: pathlib.Path,
+        order_regions_to_genes_by: str,
+        order_TFs_to_genes_by: str,
+        gsea_n_perm: int,
+        quantiles: List[float],
+        top_n_regionTogenes_per_gene: List[float],
+        top_n_regionTogenes_per_region: List[float],
+        binarize_using_basc: bool,
+        min_regions_per_gene: int,
+        rho_dichotomize_tf2g: bool,
+        rho_dichotomize_r2g: bool,
+        rho_dichotomize_eregulon: bool,
+        keep_only_activating: bool,
+        rho_threshold: float,
+        min_target_genes: int,
+        n_cpu: int):
+    """
+    Pass TF_to_gene_adj, region_to_gene_adj, cistromes directly
+    """
+    #from scenicplus.triplet_score import calculate_triplet_score
+    log.info("Loading TF to gene adjacencies.")
+    tf_to_gene = TF_to_gene_adj
+
+    log.info("Loading region to gene adjacencies.")
+    region_to_gene = region_to_gene_adj
+
+    log.info("Loading cistromes.")
+    cistromes = cistromes
+
+    eRegulons = build_grn(
+        tf_to_gene=tf_to_gene,
+        region_to_gene=region_to_gene,
+        cistromes=cistromes,
+        is_extended=is_extended,
+        temp_dir=temp_dir.__str__(),
+        order_regions_to_genes_by=order_regions_to_genes_by,
+        order_TFs_to_genes_by=order_TFs_to_genes_by,
+        gsea_n_perm=gsea_n_perm,
+        quantiles=quantiles,
+        top_n_regionTogenes_per_gene=top_n_regionTogenes_per_gene,
+        top_n_regionTogenes_per_region=top_n_regionTogenes_per_region,
+        binarize_using_basc=binarize_using_basc,
+        min_regions_per_gene=min_regions_per_gene,
+        rho_dichotomize_tf2g=rho_dichotomize_tf2g,
+        rho_dichotomize_r2g=rho_dichotomize_r2g,
+        rho_dichotomize_eregulon=rho_dichotomize_eregulon,
+        keep_only_activating=keep_only_activating,
+        rho_threshold=rho_threshold,
+        NES_thr=0,
+        adj_pval_thr=1,
+        min_target_genes=min_target_genes,
+        n_cpu=n_cpu,
+        merge_eRegulons=True,
+        disable_tqdm=False)
+
+    log.info("Formatting eGRN as table.")
+    eRegulon_metadata = _format_egrns(
+        eRegulons=eRegulons,
+        tf_to_gene=tf_to_gene)
+
+    print(eRegulon_metadata)
+    log.info("Calculating triplet ranking.")
+    #print(TF_to_region_score)
+   # eRegulon_metadata = calculate_triplet_score(
+    #    TF_to_region_score=TF_to_region_score,
+     #   eRegulon_metadata=eRegulon_metadata)
+
+    #log.info(f"Saving network to {eRegulon_out_fname.__str__()}")
+    return eRegulon_metadata
+
+
+def build_grn(
+        tf_to_gene: pd.DataFrame,
+        region_to_gene: pd.DataFrame,
+        cistromes: anndata.AnnData,
+        is_extended: bool,
+        temp_dir: str,
+        order_regions_to_genes_by='importance',
+        order_TFs_to_genes_by='importance',
+        gsea_n_perm=1000,
+        quantiles=(0.85, 0.90),
+        top_n_regionTogenes_per_gene=(5, 10, 15),
+        top_n_regionTogenes_per_region=(),
+        binarize_using_basc=True,
+        min_regions_per_gene=0,
+        rho_dichotomize_tf2g=True,
+        rho_dichotomize_r2g=True,
+        rho_dichotomize_eregulon=True,
+        keep_only_activating=False,
+        rho_threshold=RHO_THRESHOLD,
+        NES_thr=0,
+        adj_pval_thr=1,
+        min_target_genes=5,
+        n_cpu=1,
+        merge_eRegulons=True,
+        disable_tqdm=False,
+        **kwargs) -> List[eRegulon]:
+    log.info('Thresholding region to gene relationships')
+    # some tfs are missing from tf_to_gene because they are not 
+    # preset in the gene expression matrix, so subset!
+    cistromes = cistromes[
+        :, cistromes.var_names[cistromes.var_names.isin(tf_to_gene['TF'])]]
+    relevant_tfs, e_modules = create_emodules(
+        region_to_gene=region_to_gene,
+        cistromes=cistromes,
+        is_extended=is_extended,
+        order_regions_to_genes_by=order_regions_to_genes_by,
+        quantiles=quantiles,
+        top_n_regionTogenes_per_gene=top_n_regionTogenes_per_gene,
+        top_n_regionTogenes_per_region=top_n_regionTogenes_per_region,
+        binarize_using_basc=binarize_using_basc,
+        min_regions_per_gene=min_regions_per_gene,
+        rho_dichotomize=rho_dichotomize_r2g,
+        keep_only_activating=keep_only_activating,
+        rho_threshold=rho_threshold,
+        disable_tqdm=disable_tqdm,
+        n_cpu=n_cpu,
+        temp_dir=temp_dir)
+    log.info('Subsetting TF2G adjacencies for TF with motif.')
+    TF2G_adj_relevant = tf_to_gene.loc[tf_to_gene['TF'].isin(relevant_tfs)]
+    TF2G_adj_relevant.index = TF2G_adj_relevant["TF"]
+    log.info('Running GSEA...')
+    if rho_dichotomize_tf2g:
+        log.info("Generating rankings...")
+        TF2G_adj_relevant_pos = TF2G_adj_relevant.loc[TF2G_adj_relevant["rho"] > rho_threshold]
+        TF2G_adj_relevant_neg = TF2G_adj_relevant.loc[TF2G_adj_relevant["rho"] < -rho_threshold]
+        pos_TFs, c = np.unique(TF2G_adj_relevant_pos["TF"], return_counts=True)
+        pos_TFs = pos_TFs[c >= min_target_genes]
+        neg_TFs, c = np.unique(TF2G_adj_relevant_neg["TF"], return_counts=True)
+        neg_TFs = neg_TFs[c >= min_target_genes]
+        print(len(pos_TFs), len(neg_TFs))
+        # The expression below will fail if there is only a single target gene (after thresholding on rho)
+        # TF2G_adj_relevant_pos/neg.loc[TF] will return a pd.Series instead of dataframe
+        # This should never be the case though (if min_target_genes > 1)
+        # But better fix this at some point!
+        TF_to_ranking_pos = {
+            TF: TF2G_adj_relevant_pos.loc[TF].set_index('target')[order_TFs_to_genes_by].sort_values(ascending = False)
+            for TF in tqdm(pos_TFs, total = len(pos_TFs))}
+        TF_to_ranking_neg = {
+            TF: TF2G_adj_relevant_neg.loc[TF].set_index('target')[order_TFs_to_genes_by].sort_values(ascending = False)
+            for TF in tqdm(neg_TFs, total = len(neg_TFs))}
+        pos_tf_gene_modules = joblib.Parallel(
+            n_jobs=n_cpu,
+            temp_folder=temp_dir)(
+            joblib.delayed(_run_gsea_for_e_module)(
+                e_module=e_module,
+                rnk=TF_to_ranking_pos[e_module.transcription_factor],
+                gsea_n_perm=gsea_n_perm,
+                context=frozenset(['positive tf2g']))
+            for e_module in tqdm(
+                e_modules, 
+                total = len(e_modules),
+                desc="Running for Positive TF to gene")
+            if e_module.transcription_factor in pos_TFs)
+        neg_tf_gene_modules = joblib.Parallel(
+            n_jobs=n_cpu,
+            temp_folder=temp_dir)(
+            joblib.delayed(_run_gsea_for_e_module)(
+                e_module=e_module,
+                rnk=TF_to_ranking_neg[e_module.transcription_factor],
+                gsea_n_perm=gsea_n_perm,
+                context=frozenset(['negative tf2g']))
+            for e_module in tqdm(
+                e_modules, 
+                total = len(e_modules),
+                desc="Running for Negative TF to gene")
+            if e_module.transcription_factor in neg_TFs)
+        new_e_modules = [*pos_tf_gene_modules, *neg_tf_gene_modules]
+    else:
+        log.info("Generating rankings...")
+        TFs, c = np.unique(TF2G_adj_relevant["TF"], return_counts=True)
+        TFs = TFs[c >= min_target_genes]
+        # The expression below will fail if there is only a single target gene (after thresholding on rho)
+        # TF2G_adj_relevant.loc[TF] will return a pd.Series instead of dataframe
+        # This should never be the case though (if min_target_genes > 1)
+        # But better fix this at some point!
+        TF_to_ranking = {
+            TF: TF2G_adj_relevant.loc[TF].set_index('target')[order_TFs_to_genes_by].sort_values(ascending = False)
+            for TF in tqdm(TFs, total = len(TFs))}
+        new_e_modules = joblib.Parallel(
+            n_jobs=n_cpu,
+            temp_folder=temp_dir)(
+            joblib.delayed(_run_gsea_for_e_module)(
+                e_module=e_module,
+                rnk=TF_to_ranking[e_module.transcription_factor],
+                gsea_n_perm=gsea_n_perm,
+                context=frozenset(['negative tf2g']))
+            for e_module in tqdm(
+                e_modules, 
+                total = len(e_modules),
+                desc="Running for Negative TF to gene")
+            if e_module.transcription_factor in TFs)
+    # filter out nans
+    new_e_modules = [m for m in new_e_modules if not np.isnan(
+        m.gsea_enrichment_score) and not np.isnan(m.gsea_pval)]
+
+    log.info(
+        f'Subsetting on adjusted pvalue: {adj_pval_thr}, minimal NES: {NES_thr} and minimal leading edge genes {min_target_genes}')
+    # subset on adj_p_val
+    adj_pval = p_adjust_bh([m.gsea_pval for m in new_e_modules])
+    if any([np.isnan(p) for p in adj_pval]):
+        Warning(
+            'Something went wrong with calculating adjusted p values, early returning!')
+        return new_e_modules
+
+    for module, adj_pval in zip(new_e_modules, adj_pval):
+        module.gsea_adj_pval = adj_pval
+
+    e_modules_to_return: List[eRegulon] = []
+    for module in new_e_modules:
+        if module.gsea_adj_pval < adj_pval_thr and module.gsea_enrichment_score > NES_thr:
+            module_in_LE = module.subset_leading_edge(inplace=False)
+            if module_in_LE.n_target_genes >= min_target_genes:
+                e_modules_to_return.append(module_in_LE)
+    if merge_eRegulons:
+        log.info('Merging eRegulons')
+        e_modules_to_return = merge_emodules(
+            e_modules=e_modules_to_return, inplace=False, rho_dichotomize=rho_dichotomize_eregulon)
+    e_modules_to_return = [
+        x for x in e_modules_to_return if not isinstance(x, list)]
+    return e_modules_to_return
+
+
+def calculate_triplet_score(
+        TF_to_region_score: pd.DataFrame,
+        eRegulon_metadata: pd.DataFrame,
+        ) -> pd.DataFrame:
+    """
+        Calculate the triplet score for each eRegulon.
+        Adapted from SCENIC+ to take tfb scores instead of rank comigng from cistarget_db.
+        TF_to_region_score: pd.DataFrame, should contain the following columns: 
+                - tf
+                - region
+                - score
+    """
+
+    eRegulon_metadata = eRegulon_metadata.copy()
+
+    TF_region_iter = eRegulon_metadata[["TF", "Region"]].to_numpy()
+    eRegulon_mask = [(TF_to_region_score["tf"] == TF) &  (TF_to_region_score["region"] == region) for TF, region in TF_region_iter]
+    eRegulon_metadata = eRegulon_metadata.iloc[eRegulon_mask, :]
+    print(eRegulon_metadata)
+
+    TF_region_iter = eRegulon_metadata[["TF", "Region"]].to_numpy()
+    TF_to_region_score = np.array([
+        TF_to_region_score[
+            (TF_to_region_score["tf"] == TF) &
+            (TF_to_region_score["region"] == region)]["score"].values[0]
+        for TF, region in TF_region_iter])
+
+    TF_to_gene_score = eRegulon_metadata["importance_TF2G"].to_numpy()
+    region_to_gene_score = eRegulon_metadata["importance_R2G"].to_numpy()
+    # rank the scores
+    TF_to_region_rank = _rank_scores_and_assign_random_ranking_in_range_for_ties(
+        TF_to_region_score) # positive since higher score is better here
+    TF_to_gene_rank = _rank_scores_and_assign_random_ranking_in_range_for_ties(
+        TF_to_gene_score)
+    region_to_gene_rank = _rank_scores_and_assign_random_ranking_in_range_for_ties(
+        region_to_gene_score)
+    # create rank ratios
+    TF_to_gene_rank_ratio = (TF_to_gene_rank.astype(np.float64) + 1) / TF_to_gene_rank.shape[0]
+    region_to_gene_rank_ratio = (region_to_gene_rank.astype(np.float64) + 1) / region_to_gene_rank.shape[0]
+    TF_to_region_rank_ratio = (TF_to_region_rank.astype(np.float64) + 1) / TF_to_region_rank.shape[0]
+    # create aggregated rank
+    rank_ratios = np.array([
+        TF_to_gene_rank_ratio, region_to_gene_rank_ratio, TF_to_region_rank_ratio])
+    aggregated_rank = np.zeros((rank_ratios.shape[1],), dtype = np.float64)
+    for i in range(rank_ratios.shape[1]):
+        aggregated_rank[i] = _calculate_cross_species_rank_ratio_with_order_statistics(rank_ratios[:, i])
+    eRegulon_metadata["triplet_rank"] = aggregated_rank.argsort().argsort()
+    return eRegulon_metadata
+
+
+
+
 # Init args
 parser = argparse.ArgumentParser()
     # Data and folders
@@ -1321,13 +1910,21 @@ cistarget_results_path = args['cistarget_results_path']
 
 if organism == 'hg38':
     organism = "hsapiens"
+    species = "homo_sapiens",
     chromsizes_fname = args['chrom_sizes_h']
     annot_fname = args['annot_human']
+    cistarget_ranking_db_fname = pathlib.Path(args["cistarget_rankings_human"])
+    cistarget_score_db_fname = pathlib.Path(args["cistarget_scores_human"])
+    path_to_motif_annotations = args["path_to_motif_annotations_human"]
 elif organism == 'mm10':
     organism = "mmusculus"
     chromsizes_fname = args['chrom_sizes_m']
     annot_fname = args['annot_mouse']
-
+    cistarget_ranking_db_fname = pathlib.Path(args["cistarget_rankings_mouse"])
+    cistarget_score_db_fname = pathlib.Path(args["cistarget_scores_mouse"])
+    path_to_motif_annotations = args["path_to_motif_annotations_mouse"]
+    species = "mus_musculus"
+annotation_version = "v10nr_clust"
 
 annot = pd.read_csv(annot_fname, sep="\t")
 annot.Start = annot.Start.astype(np.int32)
@@ -1534,9 +2131,9 @@ print("Generate models.")
 
 models = pycisTopic.lda_models.run_cgs_models(
     cistopic_obj,
-    n_topics=[2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+    n_topics=[40,50], #[2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
     n_cpu=njobs,
-    n_iter=150,
+    n_iter=15, #150,
     random_state=555,
     alpha=50,
     alpha_by_topic=True,
@@ -1624,6 +2221,38 @@ for topic in region_bin_topics_top_3k:
             )
         )
 
+
+dem_region_sets = {
+    "top3k": {
+        name:
+        pr.PyRanges(
+            region_names_to_coordinates(
+                region_bin_topics_top_3k[name].index
+            ).sort_values(
+                ["Chromosome", "Start", "End"]
+            )
+        ) for name in region_bin_topics_top_3k},
+    "otsu": {
+        name:
+        pr.PyRanges(
+            region_names_to_coordinates(
+                region_bin_topics_otsu[name].index
+            ).sort_values(
+                ["Chromosome", "Start", "End"]
+            )
+        ) for name in region_bin_topics_otsu},
+    "markers_dict": {
+        name:
+        pr.PyRanges(
+            region_names_to_coordinates(
+                markers_dict[name].index
+            ).sort_values(
+                ["Chromosome", "Start", "End"]
+            )
+        ) for name in markers_dict}
+    }
+
+
 # Filter multiome data only for the selected regions
 df_diff_regions = pd.concat([region_sets[k].dfs[chr]
                              for k in region_sets
@@ -1670,7 +2299,7 @@ mask_expr_dropout = True
 
 # Download chromosome sizes and gene body coordinates
 result = scenicplus.data_wrangling.gene_search_space.download_gene_annotation_and_chromsizes(
-        species=organism,
+        species="hsapiens", #organism,
         biomart_host="http://www.ensembl.org",
         use_ucsc_chromosome_style=True)
 
@@ -1723,12 +2352,12 @@ dem_motif_hit_thr = 3.0
 print("Running DEM")
 run_motif_enrichment_dem(
     dem_region_sets,
-    dem_db_fname=dem_scores_fname,
+    dem_db_fname=cistarget_score_db_fname,
     output_fname_dem_result=dem_results_path,
     output_fname_dem_html="",
     n_cpu=32,
     path_to_genome_annotation="aertslab/genomes/hg38/hg38_ensdb_v86.csv",
-    temp_dir=temp_dir,
+    temp_dir=tmp_scenicplus,
     species=species,
     fraction_overlap_w_dem_database=0.4,
     path_to_motif_annotations=path_to_motif_annotations,
@@ -1750,7 +2379,7 @@ run_motif_enrichment_dem(
 # Open cisTarget database
 print("Running cistarget")
 cistarget_db = pycistarget.motif_enrichment_cistarget.cisTargetDatabase(
-    cistarget_rankings_fname,
+    cistarget_ranking_db_fname,
     region_sets=region_sets,
     name="cistarget",
     fraction_overlap=0.4)
@@ -1768,7 +2397,7 @@ run_motif_enrichment_cistarget(
     annotation_version=annotation_version,
     motif_similarity_fdr=0.05,
     orthologous_identity_threshold=0.8,
-    temp_dir=temp_dir,
+    temp_dir=tmp_scenicplus,
     species=species,
     annotations_to_use=["Direct_annot", "Orthology_annot"]
 )
@@ -1797,3 +2426,69 @@ prepare_motif_enrichment_results(
     out_file_tf_names=output_tf_names,
     direct_annotation=["Direct_annot"],
     extended_annotation=["Orthology_annot"])
+
+
+
+
+# Open cistromes direct and extended
+direct_h5ad = ad.read_h5ad(output_cistromes_annotations_direct)
+direct_h5ad.var["motifs"] = direct_h5ad.var["motifs"].astype(str)+","
+extended_h5ad = ad.read_h5ad(output_cistromes_annotations_extended)
+extended_h5ad.var["motifs"] = extended_h5ad.var["motifs"].astype(str)+","
+
+# Concat cistromes
+## Group motif per TF in var["motifs"]
+all_var = pd.concat([direct_h5ad.var, extended_h5ad.var]).reset_index().groupby("index").apply(lambda x: x.sum())
+all_var["motifs"] = all_var["motifs"].str.strip(",")
+## Sum anndata.X slots
+all_h5ad = ad.concat([direct_h5ad, extended_h5ad], join="outer")
+all_tfb = all_h5ad.to_df().reset_index().groupby("index").sum()
+all_h5ad = ad.AnnData(all_tfb)
+
+with open(output_tf_names) as f:
+    tf_names = f.read().split("\n")
+
+# TF to gene relationships
+tf_to_gene_prior = infer_TF_to_gene(
+    multiome_mudata_fname=mudata_file,
+    tf_names=tf_names,
+    temp_dir=ray_tmp_dir,
+    # adj_out_fname="",#tf_to_gene_prior_path,
+    method=args["method_mdl"],
+    n_cpu=njobs,
+    seed=1)
+
+# Get cistromes
+cistromes = all_h5ad
+
+print(p2g.head())
+print(tf_to_gene_prior.head())
+
+# Infer eGRN
+mdl = infer_grn(
+    TF_to_gene_adj=tf_to_gene_prior,
+    region_to_gene_adj=p2g,
+    cistromes=cistromes,
+    ranking_db_fname=ranking_db_fname,
+    is_extended=True,
+    temp_dir=ray_tmp_dir,
+    order_regions_to_genes_by=args.order_regions_to_genes_by,
+    order_TFs_to_genes_by=args.order_TFs_to_genes_by,
+    gsea_n_perm=args.gsea_n_perm,
+    quantiles=args.quantile_thresholds_region_to_gene,
+    top_n_regionTogenes_per_gene=args.top_n_regionTogenes_per_gene,
+    top_n_regionTogenes_per_region=args.top_n_regionTogenes_per_region,
+    binarize_using_basc=True,
+    min_regions_per_gene=args.min_regions_per_gene,
+    rho_dichotomize_tf2g=True,
+    rho_dichotomize_r2g=True,
+    rho_dichotomize_eregulon=True,
+    keep_only_activating=False,
+    rho_threshold=args.rho_threshold,
+    min_target_genes=args.min_target_genes,
+    n_cpu=1)
+
+mdl = mdl.groupby(["TF", "Gene"])["rho_TF2G"].sum().reset_index()
+mdl = mdl.rename({"TF": "source", "Gene": "target", "rho_TF2G": "score"}, axis=1)
+mdl.to_csv(output_fname, sep=",", index=False)
+
