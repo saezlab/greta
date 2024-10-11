@@ -85,11 +85,12 @@ From: ubuntu:20.04
     r-tidyverse \
     bioconductor-org.hs.eg.db \
     bioconductor-txdb.hsapiens.ucsc.hg38.knowngene \
-    bioconductor-bsgenome.hsapiens.ucsc.hg38
+    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
+    r-batchtools
 
     # Install granie
     conda activate env
-    Rscript -e "devtools::install_gitlab('grp-zaugg/GRaNIE@2f640172215798a0d8d8c67338b2543459822371', host = 'git.embl.de', subdir = 'src/GRaNIE', upgrade = 'never')"
+    Rscript -e "devtools::install_gitlab('grp-zaugg/GRaNIE@6f1f4ddd96f2932e15ca60fb8554e74de842f7e4', host = 'git.embl.de', subdir = 'src/GRaNIE', upgrade = 'never')"
 
     # Remove cache for lighter containers
     pip cache purge
