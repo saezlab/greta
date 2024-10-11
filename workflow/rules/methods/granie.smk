@@ -21,7 +21,7 @@ rule download_tfbs:
 
 
 rule pre_granie:
-    threads: 32
+    threads: 1
     input:
         mdata=rules.extract_case.output.mdata,
     singularity:
@@ -46,7 +46,7 @@ rule pre_granie:
 
 
 rule p2g_granie:
-    threads: 32
+    threads: 1
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         g=rules.download_geneids.output.dr,
@@ -71,7 +71,8 @@ rule p2g_granie:
         {input.g} \
         {output.t} \
         {params.ext} \
-        {output.out}
+        {output.out} \
+        {threads}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
             mkdir {output.t}
@@ -80,7 +81,7 @@ rule p2g_granie:
 
 
 rule tfb_granie:
-    threads: 32
+    threads: 1
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
@@ -107,7 +108,8 @@ rule tfb_granie:
         {output.t} \
         {input.t} \
         {input.p2g} \
-        {output.out}
+        {output.out} \
+        {threads}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
             mkdir {output.t}
@@ -154,7 +156,7 @@ rule mdl_granie:
 
 
 rule mdl_o_granie:
-    threads: 32
+    threads: 1
     input:
         mdata=rules.extract_case.output.mdata,
         g=rules.download_geneids.output.dr,
@@ -187,7 +189,8 @@ rule mdl_o_granie:
         {params.ext} \
         {input.t} \
         {params.thr_fdr} \
-        {output.out}'
+        {output.out} \
+        {threads}'
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
             mkdir {output.t}
