@@ -10,7 +10,7 @@ tmp_dir <- args[9]
 path_motifs <- args[10]
 path_p2g <- args[11]
 path_out <- args[12]
-nCores <- 32
+nCores <- as.numeric(args[13])
 
 format_peaks <- function(peaks){
     split_strings <- strsplit(peaks, "-")

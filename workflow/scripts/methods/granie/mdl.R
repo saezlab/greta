@@ -10,8 +10,7 @@ path_p2g <- args[10]
 path_tfb <- args[11]
 thr_fdr <- as.numeric(args[12])
 path_out <- args[13]
-
-nCores <- 32
+nCores <- as.numeric(args[14])
 cat("N cores: ", nCores, '\n')
 
 format_peaks <- function(peaks){

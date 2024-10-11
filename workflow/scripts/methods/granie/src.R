@@ -11,7 +11,7 @@ ext <- as.numeric(args[10])
 path_motifs <- args[11]
 thr_fdr <- as.numeric(args[12])
 path_out <- args[13]
-nCores <- 32
+nCores <- as.numeric(args[14])
 
 format_peaks <- function(peaks){
     split_strings <- strsplit(peaks, "-")

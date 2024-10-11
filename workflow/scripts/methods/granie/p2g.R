@@ -9,7 +9,7 @@ path_geneids <- args[8]
 tmp_dir <- args[9]
 ext <- as.numeric(args[10])
 path_out <- args[11]
-nCores <- 32
+nCores <- as.numeric(args[12])
 
 format_peaks <- function(peaks){
     split_strings <- strsplit(peaks, "-")
