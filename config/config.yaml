@@ -47,6 +47,9 @@ methods:
         min_regions_per_gene: 0
         rho_threshold: 0.05
         min_target_genes: 10
+    dictys:
+        ext: 500000
+        device: 0
 
 colors:
     nets:
