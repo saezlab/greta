@@ -64,6 +64,9 @@ if ((nrow(p2g) == 0) | (nrow(tfb) == 0)){
     quit(save="no")
 }
 
+# Make negative scores to 0
+tfb$score[tfb$score < 0] <- 0
+
 # Compute sum of peaks per gene (DORCs)
 dorcMat <- FigR::getDORCScores(
     ATAC.se = ATAC.se,
