@@ -15,15 +15,15 @@ rule download_tfsscenic:
 rule download_rankings:
     output:
         small="aertslab/cistarget/hg38_500bp_up_100bp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
-    	big="aertslab/cistarget/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
+        big="aertslab/cistarget/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
     params:
         url_small="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/refseq_r80/mc_v10_clust/gene_based/hg38_500bp_up_100bp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
-    	url_big="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/refseq_r80/mc_v10_clust/gene_based/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
+        url_big="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/refseq_r80/mc_v10_clust/gene_based/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather",
     shell:
         """
-    	wget {params.url_big} -O {output.big}
-    	wget {params.url_small} -O {output.small}
-    	"""
+        wget {params.url_big} -O {output.big}
+        wget {params.url_small} -O {output.small}
+        """
 
 
 rule mdl_scenic:
@@ -40,7 +40,7 @@ rule mdl_scenic:
     output:
         adj=temp(local('datasets/{dataset}/cases/{case}/runs/adj_tmp.tsv')),
         t=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_tmp.loom')),
-    	reg=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_reg.csv')),
+        reg=temp(local('datasets/{dataset}/cases/{case}/runs/scenic_reg.csv')),
         out='datasets/{dataset}/cases/{case}/runs/scenic.scenic.scenic.scenic.mdl.csv'
     resources:
         mem_mb=restart_mem,
@@ -54,18 +54,18 @@ rule mdl_scenic:
         echo "Created loom"
 
         # Step 2: Run pyscenic GRN
-        pyscenic grn {output.t} {input.tf} -o {output.adj} --num_workers 16
+        arboreto_with_multiprocessing.py {output.t} {input.tf} -o {output.adj} --num_workers {threads} --seed 42
         echo "Generated adj"
 
-    	# Step 3: Run CTX
-    	pyscenic ctx {output.adj} \
-    	{input.ranking_small} \
-    	{input.ranking_big} \
-    	--annotations_fname {input.motifs} \
-    	--expression_mtx_fname {output.t} \
-    	--output {output.reg} \
-    	--mask_dropouts \
-    	--num_workers 16
+        # Step 3: Run CTX
+        pyscenic ctx {output.adj} \
+        {input.ranking_small} \
+        {input.ranking_big} \
+        --annotations_fname {input.motifs} \
+        --expression_mtx_fname {output.t} \
+        --output {output.reg} \
+        --mask_dropouts \
+        --num_workers {threads}
         echo "Filtered TFs by motifs"
 
         # Step 4: Process GRN
@@ -73,6 +73,6 @@ rule mdl_scenic:
         -o {output.out} \
         -p {input.proms} \
         -g {output.adj} \
-    	-r {output.reg}
+        -r {output.reg}
         echo "Done"
         """
