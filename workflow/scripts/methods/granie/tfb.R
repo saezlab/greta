@@ -118,6 +118,7 @@ clean_peaks <- function(peaks) {
   return(fpeaks)
 }
 tfb$cre <- sapply(tfb$cre, clean_peaks)
+tfb$score <- -log10(10^-(2 + (tfb$score - 1)))
 
 # Write
 write.csv(x = tfb, file = path_out, row.names=FALSE)
