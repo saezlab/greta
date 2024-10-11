@@ -1,7 +1,7 @@
 def get_stab_paths(config, mthds, baselines, datasets):
     ns = [1024, 2048, 4096, 8192, 16384]
     seeds = [0, 1, 2]
-    mthds = ['o_' + m for m in mthds]
+    mthds = ['o_' + m for m in mthds if m != 'scenicplus']  # TODO: remove scenicplus filter when ready
     mthds.extend(baselines)
     d_lst = []
     c_lst = []
