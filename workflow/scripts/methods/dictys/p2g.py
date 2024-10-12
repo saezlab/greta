@@ -17,7 +17,7 @@ path_data = args['path_data']
 annot = args['gene_annotation']
 working_dir = args['working_dir']
 path_out = args['path_out']
-distance = args['ext']
+distance = int(args['ext'])
 
 
 # Write the RNA matrix and ATAC matrix to working directory
@@ -27,11 +27,13 @@ dist_filename = os.path.join(working_dir, "tssdist.tsv.gz")
 
 data = md.read(path_data)
 rna_X = pd.DataFrame(np.array(data['rna'].layers['counts'].todense()).T, columns=data['rna'].obs.index, index=data['rna'].var.index)
-rna_X.to_csv(rna_filename, sep="\t", compression="gzip") 
+if not os.path.exists(rna_filename):
+    rna_X.to_csv(rna_filename, sep="\t", compression="gzip") 
 
 atac_peak_names = [n.replace('-', ':') for n in data['atac'].var.index]
 atac_X = pd.DataFrame(np.zeros((data['atac'].var.index.shape[0], 1)), index=atac_peak_names, columns=['placeholder'])
-atac_X.to_csv(atac_filename, sep="\t", compression="gzip") 
+if not os.path.exists(atac_filename):
+    atac_X.to_csv(atac_filename, sep="\t", compression="gzip") 
 
 
 # Identify all peaks that are within Xbp of annotated TSS 

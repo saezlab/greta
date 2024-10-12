@@ -15,7 +15,7 @@ rule download_motifs:
     params:
         url_h="https://hocomoco11.autosome.org/final_bundle/hocomoco11/full/HUMAN/mono/HOCOMOCOv11_full_HUMAN_mono_homer_format_0.0001.motif"
     output:
-        h="aertslab/motifs.motif",
+        h="gdata/motifs.motif",
     shell:
         """
         wget -O {output.h} {params.url_h}
@@ -26,13 +26,12 @@ rule download_gene_annotations:
     params:
         url_h="http://ftp.ensembl.org/pub/release-107/gtf/homo_sapiens/Homo_sapiens.GRCh38.107.gtf.gz"
     output:
-        h="aertslab/genomes/gene.gtf",
+        h="gdata/gene.gtf",
     shell:
         """
-        wget -O gene.gtf.gz {params.url_h} && \
-        gunzip gene.gtf.gz
+        wget -O {output.h}.gz {params.url_h} && \
+        gunzip {output.h}.gz
         """
-
 
 rule pre_dictys:
     threads: 32
@@ -119,11 +118,13 @@ rule mdl_dictys:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
+        annotation=rules.download_gene_annotations.output.h,
         wd='datasets/{dataset}/cases/{case}/runs/',
     output:
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dicyts.mdl.csv'
     params:
         d=config['methods']['dictys']['device'],
+        ext=config['methods']['dictys']['ext']
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -138,7 +139,9 @@ rule mdl_dictys:
         -w {input.wd} \
         -p {output.out} \
         -t {threads} \
-        -v {params.d}
+        -v {params.d} \
+        -e {params.ext} \
+        -g {input.annotation}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi

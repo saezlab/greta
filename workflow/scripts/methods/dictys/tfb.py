@@ -42,7 +42,8 @@ all_atac_peak.to_csv(valid_peak_fname, sep='\t', header=False, index=False)
 data = md.read(mudata)
 rna_X = pd.DataFrame(np.array(data['rna'].layers['counts'].todense()).T, columns=data['rna'].obs.index, index=data['rna'].var.index)
 rna_filename = os.path.join(working_dir, "expression.tsv.gz")
-rna_X.to_csv(rna_filename, sep="\t", compression="gzip") 
+if not os.path.exists(rna_filename):
+    rna_X.to_csv(rna_filename, sep="\t", compression="gzip") 
 
 
 # For each cluster of cells, compute TF to peak linking
