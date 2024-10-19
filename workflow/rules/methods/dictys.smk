@@ -33,6 +33,7 @@ rule download_gene_annotations:
         gunzip {output.h}.gz
         """
 
+
 rule pre_dictys:
     input:
         mdata=rules.extract_case.output.mdata
@@ -82,11 +83,11 @@ rule tfb_dictys:
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
-        wd='datasets/{dataset}/cases/{case}/runs/',
         frags=list_frags_files,
         motif=rules.download_motifs.output.h,
         genome=rules.download_genomes.output.d,
     output:
+        d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dictys_tmp'))
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dicyts.tfb.csv'
     resources:
         mem_mb=restart_mem,
@@ -98,7 +99,6 @@ rule tfb_dictys:
         python workflow/scripts/methods/dictys/tfb.py \
         -d {input.pre} \
         -k {input.p2g} \
-        -w {input.wd} \
         -f {input.frags} \
         -p {output.out} \
         -t {threads} \
@@ -117,7 +117,6 @@ rule mdl_dictys:
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
         annotation=rules.download_gene_annotations.output.h,
-        wd='datasets/{dataset}/cases/{case}/runs/',
     output:
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dicyts.mdl.csv'
     params:

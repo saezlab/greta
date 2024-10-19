@@ -20,9 +20,10 @@ distance = int(args['ext'])
 
 # Write the RNA matrix and ATAC matrix to working directory
 working_dir = os.path.dirname(path_data)
-rna_filename = os.path.join(working_dir, "dictys_expression.tsv.gz")
-atac_filename = os.path.join(working_dir, "dictys_atac_peak.tsv.gz")
-dist_filename = os.path.join(working_dir, "dictys_tssdist.tsv.gz")
+pre = os.path.basename(path_data).split('.')[0]
+rna_filename = os.path.join(working_dir, f"{pre}.dictys_expression.tsv.gz")
+atac_filename = os.path.join(working_dir, f"{pre}.dictys_atac_peak.tsv.gz")
+dist_filename = os.path.join(working_dir, f"{pre}.dictys_tssdist.tsv.gz")
 
 data = md.read(path_data)
 rna_X = pd.DataFrame(np.array(data['rna'].layers['counts'].todense()).T, columns=data['rna'].obs.index, index=data['rna'].var.index)
@@ -39,6 +40,7 @@ os.system(f'python3 -m dictys chromatin tssdist --cut {distance//2} {rna_filenam
 
 # Convert distance to score for p2g
 df = pd.read_csv(dist_filename, sep='\t')
-df['score'] = -np.abs(df.dist)
+df['score'] = -np.abs(df['dist'])
+df['cre'] = df['cre'].str.replace(':', '-')
 df.columns = ['cre', 'gene', 'dist', 'score']
 df[['cre', 'gene', 'score']].to_csv(path_out, index=False)
