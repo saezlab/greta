@@ -118,6 +118,7 @@ rule mdl_dictys:
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
         annotation=rules.download_gene_annotations.output.h,
     output:
+        d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp'))
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dicyts.mdl.csv'
     params:
         d=config['methods']['dictys']['device'],
@@ -133,7 +134,6 @@ rule mdl_dictys:
         -d {input.pre} \
         -g {input.p2g} \
         -b {input.tfb} \
-        -w {input.wd} \
         -p {output.out} \
         -t {threads} \
         -v {params.d} \
@@ -143,4 +143,3 @@ rule mdl_dictys:
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """
-
