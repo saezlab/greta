@@ -75,6 +75,7 @@ include: 'rules/datasets/general.smk'
 
 # Methods
 include: 'rules/methods/celloracle.smk'
+inlcude: 'rules/methods/dictys.smk'
 include: 'rules/methods/pando.smk'
 include: 'rules/methods/granie.smk'
 include: 'rules/methods/figr.smk'
