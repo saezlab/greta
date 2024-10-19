@@ -50,8 +50,8 @@ tfb$cre = stringr::str_replace_all(tfb$cre, '-', '_')
 features <- unique(p2g$gene)
 cat("Number of target genes to fit: ", length(features), '\n')
 
-nCores <- 32
-options(mc.cores = 32)
+nCores <- 4
+options(mc.cores = 4)
 cat("N cores: ", nCores, '\n')
 
 cl <- makeCluster(nCores, outfile="")
