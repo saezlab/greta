@@ -1,9 +1,9 @@
-localrules: download_motifs, download_gene_annotations, download_genomes
+localrules: download_motifs, download_gene_annotations, download_genomes, pre_dictys
 
 
 rule download_genomes:
     output:
-        d=directory('gdata/genomes'),
+        d=directory('gdata/dictys'),
     shell:
         """
         python workflow/scripts/methods/dictys/download_genomes.py \
@@ -15,7 +15,7 @@ rule download_motifs:
     params:
         url_h="https://hocomoco11.autosome.org/final_bundle/hocomoco11/full/HUMAN/mono/HOCOMOCOv11_full_HUMAN_mono_homer_format_0.0001.motif"
     output:
-        h="gdata/motifs.motif",
+        h="gdata/dictys/motifs.motif",
     shell:
         """
         wget -O {output.h} {params.url_h}
@@ -26,7 +26,7 @@ rule download_gene_annotations:
     params:
         url_h="http://ftp.ensembl.org/pub/release-107/gtf/homo_sapiens/Homo_sapiens.GRCh38.107.gtf.gz"
     output:
-        h="gdata/gene.gtf",
+        h="gdata/dictys/gene.gtf",
     shell:
         """
         wget -O {output.h}.gz {params.url_h} && \
@@ -34,7 +34,6 @@ rule download_gene_annotations:
         """
 
 rule pre_dictys:
-    threads: 32
     input:
         mdata=rules.extract_case.output.mdata
     output:
@@ -44,9 +43,7 @@ rule pre_dictys:
         runtime=config['max_mins_per_step'],
     shell:
         """
-        python workflow/scripts/methods/dictys/pre.py \
-        -i {input.mdata} \
-        -o {output.out}
+        cp {input.mdata} {output.out}
         """
 
 
@@ -54,9 +51,11 @@ rule p2g_dictys:
     threads: 32
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
-        wd='datasets/{dataset}/cases/{case}/runs/',
         annotation=rules.download_gene_annotations.output.h,
     output:
+        expr=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.dictys_expression.tsv.gz')),
+        accs=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.dictys_atac_peak.tsv.gz')),
+        tsss=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.dictys_tssdist.tsv.gz')),
         out='datasets/{dataset}/cases/{case}/runs/{pre}.dictys.p2g.csv',
     params:
         ext=config['methods']['dictys']['ext']
@@ -69,7 +68,6 @@ rule p2g_dictys:
         timeout $(({resources.runtime}-20))m bash -c \
         'python workflow/scripts/methods/dictys/p2g.py \
         -d {input.pre} \
-        -w {input.wd} \
         -p {output.out} \
         -e {params.ext} \
         -g {input.annotation}'
