@@ -1,7 +1,7 @@
-localrules: download_motifs, download_gene_annotations, download_genomes, pre_dictys
+localrules: download_motifs_dictys, download_gene_annotations_dictys, download_genomes_dictys, pre_dictys
 
 
-rule download_genomes:
+rule download_genomes_dictys:
     output:
         d=directory('gdata/dictys'),
     shell:
@@ -11,7 +11,7 @@ rule download_genomes:
         """
 
 
-rule download_motifs:
+rule download_motifs_dictys:
     params:
         url_h="https://hocomoco11.autosome.org/final_bundle/hocomoco11/full/HUMAN/mono/HOCOMOCOv11_full_HUMAN_mono_homer_format_0.0001.motif"
     output:
@@ -22,15 +22,19 @@ rule download_motifs:
         """
 
 
-rule download_gene_annotations:
+rule download_gene_annotations_dictys:
+    conda:
+        '../../envs/dictys.yaml'
     params:
-        url_h="http://ftp.ensembl.org/pub/release-107/gtf/homo_sapiens/Homo_sapiens.GRCh38.107.gtf.gz"
+        url_gtf="http://ftp.ensembl.org/pub/release-107/gtf/homo_sapiens/Homo_sapiens.GRCh38.107.gtf.gz"
     output:
-        h="gdata/dictys/gene.gtf",
+        gtf=temp(local('gdata/dictys/gene.gtf')),
+        bed='gdata/dictys/gene.bed'
     shell:
         """
-        wget -O {output.h}.gz {params.url_h} && \
-        gunzip {output.h}.gz
+        wget -O {output.gtf}.gz {params.url_gtf} && \
+        gunzip {output.gtf}.gz
+        dictys_helper gene_gtf.sh {output.gtf} {output.bed}
         """
 
 
@@ -49,14 +53,14 @@ rule pre_dictys:
 
 
 rule p2g_dictys:
-    threads: 32
+    threads: 1
+    conda:
+        '../../envs/dictys.yaml'
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
-        annotation=rules.download_gene_annotations.output.h,
+        annotation=rules.download_gene_annotations_dictys.output.bed,
     output:
-        expr=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.dictys_expression.tsv.gz')),
-        accs=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.dictys_atac_peak.tsv.gz')),
-        tsss=temp(local('datasets/{dataset}/cases/{case}/runs/{pre}.dictys_tssdist.tsv.gz')),
+        d=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}_dictys_tmp/'))),
         out='datasets/{dataset}/cases/{case}/runs/{pre}.dictys.p2g.csv',
     params:
         ext=config['methods']['dictys']['ext']
@@ -65,10 +69,12 @@ rule p2g_dictys:
         runtime=config['max_mins_per_step'],
     shell:
         """
+        mkdir {output.d}
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
         'python workflow/scripts/methods/dictys/p2g.py \
         -d {input.pre} \
+        -t {output.d} \
         -p {output.out} \
         -e {params.ext} \
         -g {input.annotation}'
@@ -84,10 +90,10 @@ rule tfb_dictys:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         frags=list_frags_files,
-        motif=rules.download_motifs.output.h,
-        genome=rules.download_genomes.output.d,
+        motif=rules.download_motifs_dictys.output.h,
+        genome=rules.download_genomes_dictys.output.d,
     output:
-        d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dictys_tmp'))
+        d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dictys_tmp')),
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dicyts.tfb.csv'
     resources:
         mem_mb=restart_mem,
@@ -116,9 +122,9 @@ rule mdl_dictys:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
-        annotation=rules.download_gene_annotations.output.h,
+        annotation=rules.download_gene_annotations_dictys.output.bed,
     output:
-        d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp'))
+        d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp')),
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dicyts.mdl.csv'
     params:
         d=config['methods']['dictys']['device'],

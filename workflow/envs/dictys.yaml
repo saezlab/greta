@@ -1,14 +1,15 @@
 name: dictys
 channels:
-  - lingfeiwang
-  - bioconda
   - conda-forge
   - pytorch
+  - lingfeiwang
+  - bioconda
 dependencies:
-  - python=3.9
+  - python=3.10
   - mamba
   - dictys
   - pytorch
   - torchvision
   - torchaudio
   - cpuonly
+  - mudata
