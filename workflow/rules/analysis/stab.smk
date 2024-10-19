@@ -56,7 +56,7 @@ rule run_stab:
         last_date=$(stat -c %y {input[0]} | cut -d ' ' -f 1)
         last_date=$(date -d '$last_date - 2 days' +%Y-%m-%d)
         sacct -S $last_date -E $(date -d '23:59:59 today' +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
-        awk '/^ +src_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.tmp}
+        awk '/^ +mdl_o_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.tmp}
         python workflow/scripts/analysis/stab/run_stab.py \
         -i {output.tmp} \
         -o {output.res}

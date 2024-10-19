@@ -52,7 +52,7 @@ dataset = os.path.basename(out_path).replace('.csv', '')
 res = []
 for _, row in tqdm(list(df.iterrows())):
     s, time, mem = row[0], row[1], row[2]
-    mth = re.search(r'src_(.*?)_dataset=', s).group(1)
+    mth = re.search(r'mdl_o_(.*?)_dataset=', s).group(1)
     ds = re.search(r'_dataset=(.*?).case=', s).group(1)
     case = re.search(r'case=([\w_]+)', s).group(1)
     if case.startswith('16384'):
