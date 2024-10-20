@@ -21,7 +21,7 @@ seq = 'N' * seqlen
 qual = 'F' * seqlen
 valid_chr = [f"chr{i}" for i in range(1,23)] + ['chrX', 'chrY']
 valid_chr = dict([(i,0) for i in valid_chr])
-    
+
 sam_header_string = """@HD	SO:coordinate
 @SQ	SN:chr1	LN:248956422
 @SQ	SN:chr10	LN:133797422
@@ -48,33 +48,29 @@ sam_header_string = """@HD	SO:coordinate
 @SQ	SN:chrX	LN:156040895
 @SQ	SN:chrY	LN:57227415
 """
-    
+
 def format_sam(s):
     [chrom, srt, end, bc, rpt] = s.strip().split('\t')
     if chrom.lower() not in valid_chr:
-        return    
+        return
     qname = f"{chrom}:{srt}:{end}:{bc}"
     fwpos = int(srt) - lshift + 1          # fragment is 0-index, sam is 1-index (bam is 0-index)
     bwpos = int(end) - rshift + 1 - seqlen # reverse strand, left-most position
     tlen  = bwpos + seqlen - fwpos
     for c in range(int(rpt)):
-        print(f"{qname}:{c}\t{fwflag}\t{chrom}\t{fwpos}\t{mapq}\t" + 
+        print(f"{qname}:{c}\t{fwflag}\t{chrom}\t{fwpos}\t{mapq}\t" +
               f"{cigar}\t{rnext}\t{bwpos}\t{tlen}\t{seq}\t{qual}\tCB:Z:{bc}\n", end="")
-        print(f"{qname}:{c}\t{bwflag}\t{chrom}\t{bwpos}\t{mapq}\t" + 
+        print(f"{qname}:{c}\t{bwflag}\t{chrom}\t{bwpos}\t{mapq}\t" +
               f"{cigar}\t{rnext}\t{fwpos}\t{tlen*-1}\t{seq}\t{qual}\tCB:Z:{bc}\n", end="")
-    
+
 def filter_fragment_file(atac_fname):
-    ref = pd.read_csv(atac_fname, header=None).to_numpy().flatten()
-    ref = dict([(r,0) for r in ref])
-    
+    ref = set(pd.read_csv(atac_fname, header=None).to_numpy().flatten())
     print(sam_header_string, end="")
-        
     while True:
         ls = sys.stdin.readlines(50000)
         if len(ls) == 0:
             break
         t1 = [l.split('\t') for l in ls]
-        
         wt = [x for x, y in zip(ls, t1) if x[0] != '#' and y[3] in ref]
         for w in wt:
             format_sam(w)

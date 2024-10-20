@@ -27,13 +27,13 @@ print(path_frags)
 if __name__ == '__main__':
     n_jobs = 16
     print('N of cores:', n_jobs)
-    
+
     # Change default cache dir
     if not os.path.exists(path_tmp):
         os.mkdir(path_tmp)
     _datasets = datasets()
     _datasets.path = Path(path_tmp)
-    
+
     # Find sample_ids
     sample_ids = [os.path.basename(p).split('.')[0].replace('_atac_fragments', '') for p in path_frags]
     tmp_files = [os.path.join(path_tmp, p + '.frags.h5ad') for p in sample_ids]
@@ -72,12 +72,12 @@ if __name__ == '__main__':
     atac = ad.AnnData(obs=pd.concat(lst_obs))
     atac.uns = {'reference_sequences': uns}
     atac.obsm[type_frags] = scipy.sparse.vstack(lst_frags)
-    
+
     # Call and merge peaks
     snap.tl.macs3(atac, groupby='celltype', replicate='batch', n_jobs=n_jobs, tempdir=path_tmp)
     peaks = snap.tl.merge_peaks(atac.uns['macs3'], snap.genome.hg38)
     atac = snap.pp.make_peak_matrix(atac, use_rep=peaks['Peaks'])
-    
+
     # Clean
     del atac.obs
     del atac.var
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         p = '{0}-{1}-{2}'.format(seq, start, end)
         new_var_names.append(p)
     atac.var_names = new_var_names
-    
+
     # Write
     atac.write(path_output)
 
