@@ -9,7 +9,7 @@ max-jobs-per-second: "5"
 max-status-checks-per-second: "5"
 local-cores: 1
 latency-wait: "15"
-use-conda: "False"
+use-conda: "True"
 use-singularity: "True"
 use-envmodules: "True"
 jobs: "64"
