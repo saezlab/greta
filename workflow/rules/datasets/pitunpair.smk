@@ -1,7 +1,5 @@
-localrules: download_pitunpair
-
-
 rule download_pitunpair:
+    threads: 1
     output:
         gex=temp(local('datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
         peaks=temp(local('datasets/pitunpair/peaks.original.h5')),
@@ -17,11 +15,13 @@ rule download_pitunpair:
         wget --no-verbose '{params.gex}' -O '{output.gex}'
         wget --no-verbose '{params.peaks}' -O '{output.peaks}'
         wget --no-verbose '{params.frags}' -O '{output.frags}'
+        bash workflow/scripts/datasets/format_frags.sh {output.frags}
         wget --no-verbose '{params.celltypes}' -O '{output.celltypes}'
         """
 
 
 rule index_frags:
+    threads: 1
     input:
         frags=rules.download_pitunpair.output.frags
     output:
@@ -83,12 +83,12 @@ rule paircells_pitunpair:
         {input.atacse} \
         {input.cca} \
         {input.celltypes} \
-        {output.barmap} \
+        {output.barmap}
         """
 
 
 rule callpeaks_pitunpair:
-    threads: 16
+    threads: 32
     input:
         frags=rules.download_pitunpair.output.frags,
         annot=rules.paircells_pitunpair.output.barmap,
@@ -105,11 +105,13 @@ rule callpeaks_pitunpair:
         -f {input.frags} \
         -a {input.annot} \
         -t {output.tmp} \
+        -n {threads} \
         -o {output.peaks}
         """
 
 
 rule annotate_pitunpair:
+    threads: 1
     input:
         peaks=rules.callpeaks_pitunpair.output.peaks,
         gex=rules.download_pitunpair.output.gex,

@@ -1,7 +1,5 @@
-localrules: download_pitupair
-
-
 rule download_pitupair:
+    threads: 1
     output:
         multi=temp(local('datasets/pitupair/multiome_original.h5')),
         frags='datasets/pitupair/smpl.frags.tsv.gz',
@@ -14,13 +12,14 @@ rule download_pitupair:
     shell:
         """
         wget --no-verbose '{params.frags}' -O '{output.frags}'
+        bash workflow/scripts/datasets/format_frags.sh {output.frags}
         wget --no-verbose '{params.multi}' -O '{output.multi}'
         wget --no-verbose '{params.annot}' -O '{output.annot}'
         """
 
 
 rule callpeaks_pitupair:
-    threads: 16
+    threads: 32
     input:
         frags=rules.download_pitupair.output.frags,
         annot=rules.download_pitupair.output.annot,
@@ -37,11 +36,13 @@ rule callpeaks_pitupair:
         -f {input.frags} \
         -a {input.annot} \
         -t {output.tmp} \
+        -n {threads}
         -o {output.peaks}
         """
 
 
 rule annotate_pitupair:
+    threads: 1
     input:
         annot=rules.download_pitupair.output.annot,
         peaks=rules.callpeaks_pitupair.output.peaks,

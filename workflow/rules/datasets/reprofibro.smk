@@ -1,4 +1,5 @@
 rule download_reprofibro:
+    threads: 1
     output:
         tar=temp(local('datasets/reprofibro/RAW.tar')),
         barcodes=temp(local('datasets/reprofibro/barcode_map.tsv.gz')),
@@ -23,6 +24,7 @@ rule download_reprofibro:
         for file in GSM*_*.frag.bed.gz; do
             new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.frag\.bed\.gz/\\1.frags.tsv.gz/')
             mv $file $new_file
+            bash workflow/scripts/datasets/format_frags.sh $new_file
         done
         for file in GSM*_*.barcodes.tsv.gz; do
             new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.barcodes\.tsv\.gz/\\1.barcodes.tsv.gz/')
@@ -39,9 +41,9 @@ rule download_reprofibro:
 
 
 rule callpeaks_reprofibro:
+    threads: 32
     singularity:
         'workflow/envs/gretabench.sif'
-    threads: 16
     input:
         frags=rules.download_reprofibro.output.frags,
         annot=rules.download_reprofibro.output.annot,
@@ -56,11 +58,13 @@ rule callpeaks_reprofibro:
         -f {input.frags} \
         -a {input.annot} \
         -t {output.tmp} \
+        -n {threads} \
         -o {output.peaks}
         """
 
 
 rule annotate_reprofibro:
+    threads: 1
     singularity:
         'workflow/envs/gretabench.sif'
     input:

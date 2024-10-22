@@ -2,6 +2,7 @@ localrules: download_geneids
 
 
 rule download_geneids:
+    threads: 1
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -17,6 +18,7 @@ rule download_geneids:
 
 
 rule download_pbmc10k:
+    threads: 1
     output:
         atac_frags='datasets/pbmc10k/smpl.frags.tsv.gz',
     params:
@@ -30,6 +32,7 @@ rule download_pbmc10k:
 
 
 rule prcannot_pbmc10k:
+    threads: 1
     singularity:
         'workflow/envs/gretabench.sif'
     output:
@@ -67,6 +70,7 @@ rule callpeaks_pbmc10k:
 
 
 rule annotate_pbmc10k:
+    threads: 1
     singularity:
         'workflow/envs/gretabench.sif'
     input:

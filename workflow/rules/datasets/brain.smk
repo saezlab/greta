@@ -1,4 +1,5 @@
 rule download_brain:
+    threads: 1
     output:
         tar='datasets/brain/GSE193688.tar', 
         annot=temp(local('datasets/brain/raw_annot.csv')),
@@ -15,6 +16,7 @@ rule download_brain:
 
 
 rule extract_files_brain:
+    threads: 1
     input:
         tar=rules.download_brain.output.tar,
     output:
@@ -30,11 +32,13 @@ rule extract_files_brain:
         for file in $data_path/*_atac_fragments.tsv.gz; do
             new_file=$(echo "$file" | sed 's/_atac_fragments.tsv.gz/.frags.tsv.gz/')
             mv "$file" "$new_file"
+            bash workflow/scripts/datasets/format_frags.sh $new_file
         done
         """
 
 
 rule prc_annot:
+    threads: 1
     input:
         raw_annot=rules.download_brain.output.annot,
     output:
@@ -53,7 +57,7 @@ rule prc_annot:
 
 
 rule callpeaks_brain:
-    threads: 16
+    threads: 32
     input:
         frags=rules.extract_files_brain.output.frags,
         annot=rules.prc_annot.output.annot,
@@ -71,11 +75,13 @@ rule callpeaks_brain:
         -f {input.frags} \
         -a {input.annot} \
         -t {output.tmp} \
+        -n {threads} \
         -o {output.peaks}
         """
 
 
 rule annotate_brain:
+    threads: 1
     input:
         path_gex=rules.extract_files_brain.output.gex,
         path_peaks=rules.callpeaks_brain.output.peaks,

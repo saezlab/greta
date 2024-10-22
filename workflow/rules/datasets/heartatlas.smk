@@ -1,4 +1,5 @@
 rule download_fragments_heart:
+    threads: 1
     output:
         tar=temp(local('datasets/heartatlas/fragments.tar')),
         frag=expand('datasets/heartatlas/{sample}.frags.tsv.gz', sample=config['datasets']['heartatlas']['samples'])
@@ -13,11 +14,13 @@ rule download_fragments_heart:
         for file in $data_path/*_atac_fragments.tsv.gz; do
             new_file=$(echo "$file" | sed 's/_atac_fragments.tsv.gz/.frags.tsv.gz/')
             mv "$file" "$new_file"
+            bash workflow/scripts/datasets/format_frags.sh $new_file
         done
         """
 
 
 rule download_anndata_heart:
+    threads: 1
     output:
         adata=temp(local('datasets/heartatlas/multiome_raw.h5ad')),
         annot=temp(local('datasets/heartatlas/atac.h5ad'))
@@ -32,11 +35,12 @@ rule download_anndata_heart:
 
 
 rule prcannot_heartatlas:
+    threads: 1
+    singularity:
+        'workflow/envs/gretabench.sif'
     input:
         h5ad=rules.download_anndata_heart.output.adata,
         atac=rules.download_anndata_heart.output.annot,
-    singularity:
-        'workflow/envs/gretabench.sif'
     output:
         annot=temp(local('datasets/heartatlas/annot.csv'))
     shell:
@@ -49,29 +53,33 @@ rule prcannot_heartatlas:
 
 
 rule callpeaks_heartatlas:
-    threads: 16
-    input:
-        frags=rules.download_fragments_heart.output.frag,
-        annot=rules.prcannot_heartatlas.output.annot,
-    singularity:
-        'workflow/envs/gretabench.sif'
-    output:
-        tmp=temp(directory(local('datasets/heartatlas/tmp_peaks'))),
-        peaks=temp(local('datasets/heartatlas/peaks.h5ad'))
+    threads: 32
     resources:
         mem_mb=512000,
         runtime=2160,
+    singularity:
+        'workflow/envs/gretabench.sif'
+    input:
+        frags=rules.download_fragments_heart.output.frag,
+        annot=rules.prcannot_heartatlas.output.annot,
+    output:
+        tmp=temp(directory(local('datasets/heartatlas/tmp_peaks'))),
+        peaks=temp(local('datasets/heartatlas/peaks.h5ad'))
     shell:
         """
         python workflow/scripts/datasets/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
         -t {output.tmp} \
+        -n {threads} \
         -o {output.peaks}
         """
 
 
 rule annotate_heartatlas:
+    threads: 1
+    singularity:
+        'workflow/envs/gretabench.sif'
     input:
         path_h5ad=rules.download_anndata_heart.output.adata,
         path_peaks=rules.callpeaks_heartatlas.output.peaks,
