@@ -56,7 +56,6 @@ def restart_mem(wildcards, attempt):
     return (2 ** (4 + attempt)) * 1000
 
 configfile: 'config/config.yaml'
-container: 'workflow/envs/gretabench.sif'
 
 mthds = list(config['methods'].keys())
 baselines = config['baselines']
