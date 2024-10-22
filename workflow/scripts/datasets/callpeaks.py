@@ -14,18 +14,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-f','--path_frags', nargs='+', required=True)
 parser.add_argument('-a','--path_annot', required=True)
 parser.add_argument('-t','--path_tmp', required=True)
+parser.add_argument('-n','--n_jobs', required=True)
 parser.add_argument('-o','--path_output', required=True)
 args = vars(parser.parse_args())
 
 path_frags = args['path_frags']
 path_annot = args['path_annot']
 path_tmp = args['path_tmp']
+n_jobs = int(args['n_jobs'])
 path_output = args['path_output']
 
 print(path_frags)
 
 if __name__ == '__main__':
-    n_jobs = 16
     print('N of cores:', n_jobs)
 
     # Change default cache dir
@@ -58,7 +59,7 @@ if __name__ == '__main__':
     lst_frags = []
     for sample_id, tmp_file in zip(sample_ids, tmp_files):
         tmp = ad.read_h5ad(tmp_file, backed='r')
-        tmp.obs.index = [sample_id + '_' + barcode.split('-1')[0].replace('_atac_fragments', '') for barcode in tmp.obs.index]
+        tmp.obs.index = [barcode.split('-1')[0].replace('_atac_fragments', '') for barcode in tmp.obs.index]
         # Filter by annotation
         obs = pd.merge(tmp.obs, annot, left_index=True, right_index=True)
         # Add uns
