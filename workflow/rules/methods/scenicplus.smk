@@ -67,6 +67,9 @@ rule pre_scenicplus:
         ray_tmp_dir="/tmp",
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores=32
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         python workflow/scripts/methods/scenicplus/pre.py \
@@ -105,6 +108,9 @@ rule p2g_scenicplus:
         region_to_gene_correlation_method=config['methods']['scenicplus']['region_to_gene_correlation_method'],
     output:
         out='datasets/{dataset}/cases/{case}/runs/{pre}.scenicplus.p2g.csv',
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         python workflow/scripts/methods/scenicplus/p2g.py \
@@ -148,8 +154,8 @@ rule tfb_scenicplus:
         tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tf_names.txt"),
         out="datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv"
     resources:
-        mem_mb=512000,
-        runtime=360,
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     singularity:
         'workflow/envs/scenicplus.sif'
     shell:
@@ -201,6 +207,9 @@ rule mdl_scenicplus:
         min_target_genes=config['methods']['scenicplus']['min_target_genes'],
     singularity:
         'workflow/envs/scenicplus.sif'
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         python workflow/scripts/methods/scenicplus/mdl.py \
@@ -278,6 +287,9 @@ rule mdl_o_scenicplus:
         annotation_direct_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_direct.h5ad"),
         annotation_extended_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_extended.h5ad"),
         tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.tf_names.txt"),
+    resources:
+        mem_mb=512000,
+        runtime=360,
     shell:
         """
         python workflow/scripts/methods/scenicplus/src.py \
