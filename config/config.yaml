@@ -50,6 +50,7 @@ methods:
     dictys:
         ext: 500000
         device: 0
+        n_p2g_links: 20
 
 baselines: ['collectri', 'dorothea', 'random', 'scenic']
 

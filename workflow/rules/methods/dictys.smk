@@ -130,6 +130,9 @@ rule tfb_dictys:
 
 rule mdl_dictys:
     threads: 32
+    conda:
+        '../../envs/dictys.yaml'
+    container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
@@ -139,8 +142,8 @@ rule mdl_dictys:
         d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp')),
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dicyts.mdl.csv'
     params:
-        d=config['methods']['dictys']['device'],
-        ext=config['methods']['dictys']['ext']
+        ext=config['methods']['dictys']['ext']//2,
+        n_p2g_links=config['methods']['dictys']['n_p2g_links'],
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -148,15 +151,15 @@ rule mdl_dictys:
         """
         set +e
         timeout $(({resources.runtime}-20))m \
-        python workflow/scripts/methods/dictys/mdl.py \
-        -d {input.pre} \
-        -g {input.p2g} \
-        -b {input.tfb} \
-        -p {output.out} \
-        -t {threads} \
-        -v {params.d} \
-        -e {params.ext} \
-        -g {input.annotation}
+        bash workflow/scripts/methods/dictys/mdl.sh \
+        --output_d {output.d} \
+        --pre_path {input.pre} \
+        --tfb_path {input.tfb} \
+        --annot {input.annotation} \
+        --distance {params.ext} \
+        --n_p2g_links {params.n_p2g_links} \
+        --threads {threads} \
+        --out_path {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
