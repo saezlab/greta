@@ -39,6 +39,8 @@ rule download_reprofibro:
 
 
 rule callpeaks_reprofibro:
+    singularity:
+        'workflow/envs/gretabench.sif'
     threads: 16
     input:
         frags=rules.download_reprofibro.output.frags,
@@ -59,6 +61,8 @@ rule callpeaks_reprofibro:
 
 
 rule annotate_reprofibro:
+    singularity:
+        'workflow/envs/gretabench.sif'
     input:
         mats=rules.download_reprofibro.output.mats,
         bars=rules.download_reprofibro.output.bars,

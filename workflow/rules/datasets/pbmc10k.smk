@@ -25,10 +25,13 @@ rule download_pbmc10k:
     shell:
         """
         wget --no-verbose '{params.atac_frags}' -O '{output.atac_frags}'
+        bash workflow/scripts/datasets/format_frags.sh {output.atac_frags}
         """
 
 
 rule prcannot_pbmc10k:
+    singularity:
+        'workflow/envs/gretabench.sif'
     output:
         tmp=temp(directory(local('datasets/pbmc10k/tmp'))),
         annot=temp(local('datasets/pbmc10k/annot.csv')),
@@ -41,7 +44,9 @@ rule prcannot_pbmc10k:
 
 
 rule callpeaks_pbmc10k:
-    threads: 16
+    threads: 32
+    singularity:
+        'workflow/envs/gretabench.sif'
     input:
         frags=rules.download_pbmc10k.output.atac_frags,
         annot=rules.prcannot_pbmc10k.output.annot,
@@ -56,11 +61,14 @@ rule callpeaks_pbmc10k:
         -f {input.frags} \
         -a {input.annot} \
         -t {output.tmp} \
+        -n {threads} \
         -o {output.peaks}
         """
 
 
 rule annotate_pbmc10k:
+    singularity:
+        'workflow/envs/gretabench.sif'
     input:
         annot=rules.prcannot_pbmc10k.output.annot,
         g=rules.download_geneids.output.dr,
