@@ -1,13 +1,13 @@
-localrules: download_motifs_dictys, download_gene_annotations_dictys, download_genomes_dictys, pre_dictys
+localrules: download_motifs_dictys, download_gene_annotations_dictys
 
 
 rule download_genomes_dictys:
+    conda: '../../envs/dictys.yaml'
     output:
-        d=directory('gdata/dictys'),
+        d=directory('gdata/dictys_genomes/'),
     shell:
         """
-        python workflow/scripts/methods/dictys/download_genomes.py \
-        -d {output.d}
+        dictys_helper genome_homer.sh hg38 {output.d}
         """
 
 
@@ -39,16 +39,23 @@ rule download_gene_annotations_dictys:
 
 
 rule pre_dictys:
+    threads: 1
+    conda:
+        '../../envs/dictys.yaml'
     input:
         mdata=rules.extract_case.output.mdata
     output:
-        out='datasets/{dataset}/cases/{case}/runs/dictys.pre.h5mu'
+        tmp='datasets/{dataset}/cases/{case}/runs/dictys_pre_expr.tsv.gz',
+        out='datasets/{dataset}/cases/{case}/runs/dictys.pre.h5mu',
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
-        cp {input.mdata} {output.out}
+        python workflow/scripts/methods/dictys/pre.py \
+        -m {input} \
+        -t {output.tmp} \
+        -o {output.out}
         """
 
 
@@ -56,6 +63,7 @@ rule p2g_dictys:
     threads: 1
     conda:
         '../../envs/dictys.yaml'
+    container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         annotation=rules.download_gene_annotations_dictys.output.bed,
@@ -69,7 +77,7 @@ rule p2g_dictys:
         runtime=config['max_mins_per_step'],
     shell:
         """
-        mkdir {output.d}
+        mkdir -p {output.d}
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
         'python workflow/scripts/methods/dictys/p2g.py \
@@ -86,6 +94,9 @@ rule p2g_dictys:
 
 rule tfb_dictys:
     threads: 32
+    conda:
+        '../../envs/dictys.yaml'
+    container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
@@ -94,7 +105,7 @@ rule tfb_dictys:
         genome=rules.download_genomes_dictys.output.d,
     output:
         d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dictys_tmp')),
-        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dicyts.tfb.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.dictys.tfb.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -102,14 +113,15 @@ rule tfb_dictys:
         """
         set +e
         timeout $(({resources.runtime}-20))m \
-        python workflow/scripts/methods/dictys/tfb.py \
-        -d {input.pre} \
-        -k {input.p2g} \
-        -f {input.frags} \
-        -p {output.out} \
-        -t {threads} \
-        -m {input.motif} \
-        -g {input.genome}
+        bash workflow/scripts/methods/dictys/tfb.sh \
+        --input_pre {input.pre} \
+        --input_p2g {input.p2g} \
+        --input_frags {input.frags} \
+        --input_motif {input.motif} \
+        --input_genome {input.genome} \
+        --output_d {output.d} \
+        --output_out {output.out} \
+        --threads {threads}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
         fi

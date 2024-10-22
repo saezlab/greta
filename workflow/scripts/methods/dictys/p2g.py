@@ -24,12 +24,8 @@ distance = int(args['ext'])
 rna_filename = os.path.join(tmp_path, "expression.tsv.gz")
 atac_filename = os.path.join(tmp_path, "atac_peak.tsv.gz")
 dist_filename = os.path.join(tmp_path, "tssdist.tsv.gz")
-print(rna_filename)
-print(atac_filename)
-print(dist_filename)
-print(annot)
 data = md.read(path_data)
-rna_X = pd.DataFrame(np.array(data['rna'].layers['counts'].todense()).T, columns=data['rna'].obs.index, index=data['rna'].var.index)
+rna_X = pd.DataFrame(np.array(data['rna'].X).T, columns=data['rna'].obs.index, index=data['rna'].var.index)
 rna_X.to_csv(rna_filename, sep="\t", compression="gzip")
 
 atac_peak_names = [n.replace('-', ':') for n in data['atac'].var.index]
