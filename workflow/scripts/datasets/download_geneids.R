@@ -18,7 +18,8 @@ get_gene_table <- function(dataset){
     gene_data <- getBM(
         attributes = attributes,
         mart = ensembl,
-        useCache=FALSE
+        useCache=FALSE,
+        verbose=FALSE
     )
     colnames(gene_data) <- c('id', 'symbol')
     return(gene_data)
