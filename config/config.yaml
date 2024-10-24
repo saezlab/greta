@@ -173,3 +173,4 @@ datasets:
                 n_hvr: 65536
 
 stab_datasets: ['pitupair']
+nocombs_datasets: ['pitupair', 'pitunpair']

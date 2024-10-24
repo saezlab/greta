@@ -32,7 +32,7 @@ def make_combs_rules(w, mthds, baselines, rule_name):
     from itertools import product
     out = getattr(rules, rule_name).output.out
     rule_outputs = []
-    if w.dataset not in stab_datasets:
+    if w.dataset not in nocombs_datasets:
         for pre, p2g, tfb, mdl in product(mthds, repeat=4):
             rule_outputs.append(
                 format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
@@ -42,8 +42,6 @@ def make_combs_rules(w, mthds, baselines, rule_name):
             rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
     for bsl in baselines:
         rule_outputs.append(format_rule(out, w=w, pre=bsl))
-    for r_o in rule_outputs:
-        pass
     return rule_outputs
 
 
@@ -62,6 +60,7 @@ baselines = config['baselines']
 
 datasets = list(config['datasets'].keys())
 stab_datasets = config['stab_datasets']
+nocombs_datasets = config['nocombs_datasets']
 
 # Datasets
 include: 'rules/datasets/pbmc10k.smk'
