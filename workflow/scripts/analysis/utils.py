@@ -1,5 +1,35 @@
 import pandas as pd
 import numpy as np
+import os
+
+
+def get_grn_name(grn_path):
+    name = os.path.basename(path).replace('.grn.csv', '').replace('.csv', '')
+    pre, p2g, tfb, mdl = name.split('.')
+    if (pre == p2g) & (p2g == tfb) & (tfb == mdl):
+        name = pre
+    return name
+
+
+def get_grn_stats(grn):
+    import igraph as ig
+    n_s = grn['source'].unique().size
+    n_e = grn.shape[0]
+    n_t = grn['target'].unique().size
+    n_r = grn.groupby(['source']).count()['target'].mean()
+    
+    tfs = set(grn['source']) & set(grn['target'])
+    msk = grn['source'].isin(tfs) & grn['target'].isin(tfs)
+    tf_grn = grn.loc[msk, :]
+    tf_g = ig.Graph.TupleList(list(zip(tf_grn['source'], tf_grn['target'])), directed=True)
+    tf_bet = np.mean(tf_g.betweenness())
+    tf_odg = np.mean(tf_g.outdegree())
+    if not tf_g.is_acyclic():
+        tf_eig = np.mean(tf_g.eigenvector_centrality())
+    else:
+        tf_eig = 0.
+    
+    return n_s, n_e, n_t, n_r, tf_odg, tf_bet, tf_eig
 
 
 def ocoeff(df_a, df_b, on=['source', 'target']):

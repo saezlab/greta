@@ -6,7 +6,13 @@ from tqdm import tqdm
 from functools import partial
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import ocoeff, parallel_ocoeff, parallel_ocoeff_chunk
+from utils import (
+    ocoeff,
+    parallel_ocoeff,
+    parallel_ocoeff_chunk,
+    get_grn_name,
+    get_grn_stats
+)
 import argparse
 
 
@@ -17,43 +23,27 @@ parser.add_argument('-t','--stat_path', required=True)
 parser.add_argument('-s','--sim_path', required=True)
 args = vars(parser.parse_args())
 
+
 paths = args['paths']
 stat_path = args['stat_path']
 sim_path = args['sim_path']
 
 
-def get_grn_stats(df):
-    n_s = df['source'].unique().size
-    n_e = df.shape[0]
-    n_t = df['target'].unique().size
-    n_r = df.groupby(['source']).count()['target'].mean()
-    return n_s, n_e, n_t, n_r
-
-
 print('Reading and computing grns stats...')
 names = []
 dfs = []
-n_srcs = []
-n_edgs = []
-n_trgs = []
-n_regs = []
+stats = []
 for path in tqdm(paths):
-    names.append(os.path.basename(path).replace('.grn.csv', '').replace('.csv', ''))
+    name = get_grn_name(path)
+    names.append(name)
     df = pd.read_csv(path).drop_duplicates(['source', 'target'], keep='first')
     dfs.append(df)
-    n_s, n_e, n_t, n_r = get_grn_stats(df)
-    n_srcs.append(n_s)
-    n_edgs.append(n_e)
-    n_trgs.append(n_t)
-    n_regs.append(n_r)
+    stat = get_grn_stats(df)
+    stats.append(['name'] + stat)
 
 # Store as df
-stats = pd.DataFrame()
-stats['name'] = names
-stats['n_tfs'] = n_srcs
-stats['n_edges'] = n_edgs
-stats['n_targets'] = n_trgs
-stats['mean_reg_size'] = n_regs
+cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'mean_reg_size', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']
+stats = pd.DataFrame(stats, columns=cols)
 
 print('Computing pairwise overlap coefficients...')
 chunk_size = 100  # Adjust based on profiling
