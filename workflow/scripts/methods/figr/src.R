@@ -17,9 +17,9 @@ thr_p2g_pval <- as.numeric(args[10])
 ncres <- as.numeric(args[11])
 dorcK <- as.numeric(args[12])
 thr_score <- as.numeric(args[13])
-path_out <- args[14]
+nCores <- as.numeric(args[14])
+path_out <- args[15]
 
-nCores <- 32
 
 # Read data
 print('Open object')

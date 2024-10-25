@@ -109,6 +109,7 @@ rule mdl_figr:
         {input.tfb} \
         {params.cellK} \
         {params.thr_score} \
+        {threads} \
         {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
@@ -117,7 +118,7 @@ rule mdl_figr:
 
 
 rule mdl_o_figr:
-    threads: 32
+    threads: 1
     input:
         mdata=rules.extract_case.output.mdata,
     singularity:
@@ -148,6 +149,7 @@ rule mdl_o_figr:
         {params.ncres} \
         {params.dorcK} \
         {params.thr_score} \
+        {threads} \
         {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
