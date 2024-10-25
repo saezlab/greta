@@ -17,6 +17,11 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+if [ "$(wc -l < $input_p2g)" -eq 1 ]; then
+    awk 'BEGIN {{ print "cre,tf,score" }}' > $output_out
+    exit 0
+fi
+
 mkdir -p "$output_d" && \
 python workflow/scripts/methods/dictys/extract_data.py \
 --pre_path "$input_pre" \

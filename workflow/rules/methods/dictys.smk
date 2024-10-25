@@ -142,7 +142,7 @@ rule mdl_dictys:
         d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp')),
         out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dicyts.mdl.csv'
     params:
-        ext=config['methods']['dictys']['ext']//2,
+        ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
     resources:
         mem_mb=restart_mem,
@@ -154,6 +154,7 @@ rule mdl_dictys:
         bash workflow/scripts/methods/dictys/mdl.sh \
         --output_d {output.d} \
         --pre_path {input.pre} \
+        --p2g_path {input.p2g} \
         --tfb_path {input.tfb} \
         --annot {input.annotation} \
         --distance {params.ext} \

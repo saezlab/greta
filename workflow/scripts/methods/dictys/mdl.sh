@@ -6,6 +6,7 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --output_d) output_d="$2"; shift ;;
         --pre_path) pre_path="$2"; shift ;;
+        --p2g_path) p2g_path="$2"; shift ;;
         --tfb_path) tfb_path="$2"; shift ;;
         --annot) annot="$2"; shift ;;
         --distance) distance="$2"; shift ;;
@@ -16,6 +17,11 @@ while [[ "$#" -gt 0 ]]; do
     esac
     shift
 done
+
+if [ "$(wc -l < $input_p2g)" -eq 1 ] || [ "$(wc -l < $tfb_path)" -eq 1 ]; then
+    awk 'BEGIN {{ print "source,target,score,pval" }}' > $output_out
+    exit 0
+fi
 
 mkdir -p "$output_d" && \
 python -c "import pandas as pd, numpy as np, mudata as mu, sys, os; \
