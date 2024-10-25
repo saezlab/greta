@@ -47,8 +47,6 @@ rule coembedd_pitunpair:
         frags=rules.download_pitunpair.output.frags,
         index=rules.index_frags.output.index
     output:
-        exprmat=temp(local('datasets/pitunpair/exprmat.rds')),
-        atacse=temp(local('datasets/pitunpair/atacse.rds')),
         cca=temp(local('datasets/pitunpair/cca.rds'))
     singularity: 
         'workflow/envs/figr.sif'
@@ -59,17 +57,14 @@ rule coembedd_pitunpair:
         {input.celltypes} \
         {input.peaks} \
         {input.frags} \
-        {output.exprmat} \
-        {output.atacse} \
-        {output.cca}
+        {output.cca} \
+        {threads}
         """
 
 
 rule paircells_pitunpair:
-    threads: 32
+    threads: 1
     input:
-        exprmat=rules.coembedd_pitunpair.output.exprmat,
-        atacse=rules.coembedd_pitunpair.output.atacse,
         cca=rules.coembedd_pitunpair.output.cca,
         celltypes=rules.download_pitunpair.output.celltypes,
     output:
@@ -78,9 +73,7 @@ rule paircells_pitunpair:
         'workflow/envs/figr.sif'
     shell:
         """
-        Rscript workflow/scripts/datasets/pitunpair/pairCells.R \
-        {input.exprmat} \
-        {input.atacse} \
+        Rscript workflow/scripts/datasets/pitunpair/paircells.R \
         {input.cca} \
         {input.celltypes} \
         {output.barmap}

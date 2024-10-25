@@ -1,11 +1,11 @@
 rule download_pitupair:
     threads: 1
     output:
-        multi=temp(local('datasets/pitupair/multiome_original.h5')),
+        gex=temp(local('datasets/pitupair/multiome_original.h5')),
         frags='datasets/pitupair/smpl.frags.tsv.gz',
         annot=temp(local('datasets/pitupair/annot.csv'))
     params:
-        multi=config['datasets']['pitupair']['url']['multi'],
+        gex=config['datasets']['pitupair']['url']['gex'],
         frags=config['datasets']['pitupair']['url']['frags'],
         annot=config['datasets']['pitupair']['url']['annot']
     
@@ -13,7 +13,7 @@ rule download_pitupair:
         """
         wget --no-verbose '{params.frags}' -O '{output.frags}'
         bash workflow/scripts/datasets/format_frags.sh {output.frags}
-        wget --no-verbose '{params.multi}' -O '{output.multi}'
+        wget --no-verbose '{params.gex}' -O '{output.gex}'
         wget --no-verbose '{params.annot}' -O '{output.annot}'
         """
 
@@ -36,17 +36,17 @@ rule callpeaks_pitupair:
         -f {input.frags} \
         -a {input.annot} \
         -t {output.tmp} \
-        -n {threads}
+        -n {threads} \
         -o {output.peaks}
         """
 
 
 rule annotate_pitupair:
-    threads: 1
+    threads: 32
     input:
         annot=rules.download_pitupair.output.annot,
         peaks=rules.callpeaks_pitupair.output.peaks,
-        multi=rules.download_pitupair.output.multi,
+        gex=rules.download_pitupair.output.gex,
         g=rules.download_geneids.output.dr,
     output:
         out='datasets/pitupair/annotated.h5mu'
@@ -64,5 +64,5 @@ rule annotate_pitupair:
         -d {params.organism} \
         -e {input.peaks} \
         -f {output} \
-        -g {input.multi}
+        -g {input.gex}
         """

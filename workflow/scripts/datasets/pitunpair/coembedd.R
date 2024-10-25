@@ -4,6 +4,7 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 library(Seurat)
+library(SingleCellExperiment)
 
 
 # Parse args
@@ -12,105 +13,54 @@ path_gex <- args[6]
 path_celltypes <- args[7]
 path_peaks <- args[8]
 path_frags <- args[9]
-path_gex_out <- args[10]
-path_atac.se_out <- args[11]
-path_cca_out <- args[12]
-
-nCores <- 32
-
-print(args)
+path_cca_out <- args[10]
+nCores <- args[11]
 
 
-# Load RNA and ATAC seq matrix
+# RNA
 rna <- Read10X_h5(path_gex)
+data.rna <- CreateSeuratObject(counts = rna, project = "RNA", assay = "RNA")
+celltypes <- read.csv(path_celltypes)
+cells_to_remove <- Cells(data.rna)[!Cells(data.rna) %in% celltypes$X]
+data.rna <- subset(data.rna, cells = setdiff(Cells(data.rna), cells_to_remove))
+data.rna <- NormalizeData(data.rna)
+data.rna <- FindVariableFeatures(data.rna)
+data.rna <- ScaleData(data.rna)
+
+# ATAC
 atac <- Read10X_h5(path_peaks)
-
-
-# Add annotation to peaks 
 grange.counts <- StringToGRanges(rownames(atac), sep = c(":", "-"))
 grange.use <- seqnames(grange.counts) %in% standardChromosomes(grange.counts)
 atac <- atac[as.vector(grange.use), ]
 annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
 seqlevelsStyle(annotations) <- 'UCSC'
 genome(annotations) <- "hg38"
-
-
-# Create Seurat object for RNA-seq data
-data.rna <- CreateSeuratObject(counts = rna, project = "RNA", assay = "RNA")
-
-# Create Seurat Object for ATAC-seq data
-## Create ChromatinAssay object
-
-frag.file <- path_frags
+colnames(atac) <- gsub("-[0-9]+$", "", colnames(atac))
+colnames(atac) <- paste0("smpl_", colnames(atac))
 chrom_assay <- CreateChromatinAssay(
    counts = atac,
    sep = c(":", "-"),
    genome = 'hg38',
-   fragments = frag.file,
+   fragments = path_frags,
    min.cells = 10,
    annotation = annotations
- )
-
-## Create Seurat object from chromatin assay
+)
 data.atac <- CreateSeuratObject(counts = chrom_assay, assay = "ATAC", project = "ATAC")
-
-
-
-# Perform standard preprocessing of each modality independently
-## RNA preprocessing
-data.rna <- NormalizeData(data.rna)
-data.rna <- FindVariableFeatures(data.rna)
-data.rna <- ScaleData(data.rna)
-data.rna <- RunPCA(data.rna)
-data.rna <- FindNeighbors(data.rna, dims = 1:30)
-data.rna <- FindClusters(data.rna, resolution = 0.25)
-data.rna <- RunUMAP(data.rna, dims = 1:30)
-
-
-# Annotate RNA clusters and remove unwanted clusters
-## Manual annotation based on markers provided in paper, to be replaced with ground truth annotation as provided by authors (if available)
-celltypes <- read.csv(path_celltypes)
-
-cells_to_remove <- Cells(data.rna)[!Cells(data.rna) %in% celltypes$X]
-data.rna <- subset(data.rna, cells = setdiff(Cells(data.rna), cells_to_remove))
-
-data.rna$celltype <- celltypes$celltype
-
-## Extract gene expression data and save as sparse matrix
-exprMat <- GetAssayData(object = data.rna, assay = "RNA", slot = "data")
-saveRDS(exprMat, file = path_gex_out)
-
-#------------------------------------------
-library(SingleCellExperiment)
-
-# ATAC preprocessing
 data.atac <- RunTFIDF(data.atac)
 data.atac <- FindTopFeatures(data.atac, min.cutoff = "q0")
-data.atac <- RunSVD(data.atac)
-data.atac <- RunUMAP(data.atac, reduction = "lsi", dims = 2:30, reduction.name = "umap.atac", reduction.key = "atacUMAP_")
-
-## Extract gene expression data and save as sparse matrix
+data.atac <- ScaleData(data.atac)
 atac.sce <- as.SingleCellExperiment(data.atac)
 rowRanges(atac.sce) <- granges(data.atac)
-saveRDS(atac.sce, file = path_atac.se_out)
 
-
-#------------------------------------------
-
-# Estimating gene activities for CCA
+# Infer gene scores
 gene.activities <- GeneActivity(data.atac, features = VariableFeatures(data.rna))
-
-## add gene activities as a new assay
 data.atac[["ACTIVITY"]] <- CreateAssayObject(counts = gene.activities)
-
-## normalize gene activities and compute variable features
 DefaultAssay(data.atac) <- "ACTIVITY"
 data.atac <- NormalizeData(data.atac)
 data.atac <- ScaleData(data.atac, features = rownames(data.atac))
 data.atac <- FindVariableFeatures(data.atac)
 
-
-# Run CCA, with default parameters --> features = union of variable features from both modalities
+# Run CCA
 data.cca <- RunCCA(
   data.rna,
   data.atac,
