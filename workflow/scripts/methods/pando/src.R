@@ -17,7 +17,8 @@ min_genes_per_module = as.numeric(args[13])
 organism <- args[14]
 granges_hg <- args[15]
 granges_mm <- args[16]
-path_grn <- args[17]
+nCores <- as.numeric(args[17])
+path_grn <- args[18]
 
 
 # Read data
@@ -81,22 +82,23 @@ muo_data <- find_motifs(
 
 # Infer GRN
 print('Infer GRN')
-nCores <- 32
-options(mc.cores = 32)
-cat("N cores: ", nCores, '\n')
-cl <- makeCluster(nCores)
-clusterExport(cl, varlist = c("nCores", "muo_data", "thr_corr"))
-clusterEvalQ(cl, {
-  library(tidyverse)
-  library(Pando)
-  Sys.setenv(OMP_NUM_THREADS=1)
-  Sys.setenv(MKL_NUM_THREADS=1)
-  Sys.setenv(BLAS_NUM_THREADS=1)
-})
-registerDoParallel(cl)
-cat("OMP_NUM_THREADS: ", Sys.getenv("OMP_NUM_THREADS"), "\n")
-cat("MKL_NUM_THREADS: ", Sys.getenv("MKL_NUM_THREADS"), "\n")
-cat("BLAS_NUM_THREADS: ", Sys.getenv("BLAS_NUM_THREADS"), "\n")
+if (nCores > 1){
+    options(mc.cores = nCores)
+    cat("N cores: ", nCores, '\n')
+    cl <- makeCluster(nCores)
+    clusterExport(cl, varlist = c("nCores", "muo_data", "thr_corr"))
+    clusterEvalQ(cl, {
+      library(tidyverse)
+      library(Pando)
+      Sys.setenv(OMP_NUM_THREADS=1)
+      Sys.setenv(MKL_NUM_THREADS=1)
+      Sys.setenv(BLAS_NUM_THREADS=1)
+    })
+    registerDoParallel(cl)
+    parallel = TRUE
+} else {
+    parallel = FALSE
+}
 muo_data <- infer_grn(
     muo_data,
     peak_to_gene_method = 'GREAT',
@@ -105,7 +107,7 @@ muo_data <- infer_grn(
     peak_cor = thr_corr,
     upstream = round(ext / 2),
     downstream = round(ext / 2),
-    parallel = T
+    parallel = parallel
 )
 
 # Module discovery

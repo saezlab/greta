@@ -15,7 +15,8 @@ p_thresh = as.numeric(args[10])
 thr_rsq = as.numeric(args[11])
 nvar_thresh = as.numeric(args[12])
 min_genes_per_module = as.numeric(args[13])
-path_out = args[14]
+nCores = as.numeric(args[14])
+path_out = args[15]
 
 # Read dfs
 p2g <- read.csv(path_p2g)[, c('cre', 'gene')]
@@ -50,24 +51,24 @@ tfb$cre = stringr::str_replace_all(tfb$cre, '-', '_')
 features <- unique(p2g$gene)
 cat("Number of target genes to fit: ", length(features), '\n')
 
-nCores <- 4
-options(mc.cores = 4)
-cat("N cores: ", nCores, '\n')
-
-cl <- makeCluster(nCores, outfile="")
-clusterExport(cl, varlist = c("nCores", "rna_X", "atac_X", "p2g", "tfb", "features", "thr_cor"))
-clusterEvalQ(cl, {
-  library(tidyverse)
-  Sys.setenv(OMP_NUM_THREADS=1)
-  Sys.setenv(MKL_NUM_THREADS=1)
-  Sys.setenv(BLAS_NUM_THREADS=1)
-})
-registerDoParallel(cl)
+if (nCores > 1){
+    options(mc.cores = nCores)
+    cat("N cores: ", nCores, '\n')
+    cl <- makeCluster(nCores, outfile="")
+    clusterExport(cl, varlist = c("nCores", "rna_X", "atac_X", "p2g", "tfb", "features", "thr_cor"))
+    clusterEvalQ(cl, {
+      library(tidyverse)
+      Sys.setenv(OMP_NUM_THREADS=1)
+      Sys.setenv(MKL_NUM_THREADS=1)
+      Sys.setenv(BLAS_NUM_THREADS=1)
+    })
+    registerDoParallel(cl)
+    parallel = TRUE
+} else {
+    parallel = FALSE
+}
 
 run_mdl <- function(){
-cat("OMP_NUM_THREADS: ", Sys.getenv("OMP_NUM_THREADS"), "\n")
-cat("MKL_NUM_THREADS: ", Sys.getenv("MKL_NUM_THREADS"), "\n")
-cat("BLAS_NUM_THREADS: ", Sys.getenv("BLAS_NUM_THREADS"), "\n")
 
 model_fits <- Pando::map_par(features, function(g){
     # Subset scaffold

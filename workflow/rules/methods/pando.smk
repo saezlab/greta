@@ -113,7 +113,7 @@ rule tfb_pando:
 
 
 rule mdl_pando:
-    threads: 32
+    threads: 1
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
@@ -144,6 +144,7 @@ rule mdl_pando:
         {params.rsq_thresh} \
         {params.nvar_thresh} \
         {params.min_genes_per_module} \
+        {threads} \
         {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
@@ -151,7 +152,7 @@ rule mdl_pando:
         """
 
 rule mdl_o_pando:
-    threads: 32
+    threads: 1
     input:
         mdata=rules.extract_case.output.mdata,
         h=rules.download_granges.output.h,
@@ -188,6 +189,7 @@ rule mdl_o_pando:
         {params.organism} \
         {input.h} \
         {input.m} \
+        {threads} \
         {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
