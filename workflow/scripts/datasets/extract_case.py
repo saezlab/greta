@@ -98,20 +98,21 @@ mdata.mod['atac'] = atac
 mdata.obsm['X_spectral'] = snap.tl.multi_spectral([rna, atac], features=None)[1]
 
 # Integrate
-sce.pp.harmony_integrate(
-    mdata,
-    key='batch',
-    basis='X_spectral',
-    adjusted_basis='X_spectral',
-    max_iter_harmony=30
-)
+n_samples = mdata.obs['batch'].unique().size
+if n_samples > 1:
+    sce.pp.harmony_integrate(
+        mdata,
+        key='batch',
+        basis='X_spectral',
+        adjusted_basis='X_spectral',
+        max_iter_harmony=30
+    )
 
 # Umap
 sc.pp.neighbors(mdata, use_rep="X_spectral")
 sc.tl.umap(mdata)
 
 # Clean
-#del mdata.uns
 del mdata.obsp
 
 # Desparsify
