@@ -1,12 +1,12 @@
 rule index_frags_fakepair:
     threads: 1
     input:
-        frags=rules.download_pitupair.output.frags
+        frags=lambda w: map_rules('download_', rule_name='{dname}pair', w.dname, out='frags'),
     output:
-        frags=temp(local('datasets/fakepair/smpl.frags.tsv.gz')),
-        index=temp(local('datasets/fakepair/smpl.frags.tsv.gz.tbi')),
+        frags=temp(local('datasets/fake{dname}pair/smpl.frags.tsv.gz')),
+        index=temp(local('datasets/fake{dname}pair/smpl.frags.tsv.gz.tbi')),
     params:
-        unzip='datasets/fakepair/smpl.frags.tsv'
+        unzip='datasets/fake{dname}pair/smpl.frags.tsv'
     singularity:
         'workflow/envs/figr.sif'
     shell:
@@ -21,12 +21,12 @@ rule index_frags_fakepair:
 rule coem_fakepair:
     threads: 32
     input:
-        gex=rules.download_pitupair.output.gex,
-        peaks=rules.callpeaks_pitupair.output.peaks,
+        gex=lambda w: map_rules('download_', rule_name='{dname}pair', w.dname, out='gex'),
+        peaks=lambda w: map_rules('callpeaks_', rule_name='{dname}pair', w.dname, out='peaks'),
         frags=rules.index_frags_fakepair.output.frags,
         index=rules.index_frags_fakepair.output.index,
     output:
-        cca=temp(local('datasets/fakepair/cca.rds'))
+        cca=temp(local('datasets/fake{dname}pair/cca.rds'))
     singularity:
         'workflow/envs/figr.sif'
     resources:
@@ -45,9 +45,9 @@ rule pair_fakepair:
     threads: 1
     input:
         cca=rules.coem_fakepair.output.cca,
-        annot=rules.download_pitupair.output.annot,
+        annot=lambda w: map_rules('download_', rule_name='{dname}pair', w.dname, out='annot'),
     output:
-        barmap=temp(local('datasets/fakepair/barmap.csv'))
+        barmap=temp(local('datasets/fake{dname}pair/barmap.csv'))
     singularity:
         'workflow/envs/figr.sif'
     shell:
@@ -56,30 +56,4 @@ rule pair_fakepair:
         {input.cca} \
         {input.annot} \
         {output.barmap}
-        """
-
-rule annotate_fakepair:
-    threads: 1
-    input:
-        annot=rules.pair_fakepair.output.barmap,
-        peaks=rules.callpeaks_pitupair.output.peaks,
-        gex=rules.download_pitupair.output.gex,
-        g=rules.download_geneids.output.dr,
-    output:
-        out='datasets/fakepair/annotated.h5mu'
-    singularity:
-        'workflow/envs/gretabench.sif'
-    params:
-        organism=config['datasets']['pitupair']['organism'],
-    resources:
-        mem_mb=32000,
-    shell:
-        """
-        python workflow/scripts/datasets/fakepair/fakepair.py \
-        -b {input.annot} \
-        -c {input.g} \
-        -d {params.organism} \
-        -e {input.peaks} \
-        -f {output} \
-        -g {input.gex}
         """

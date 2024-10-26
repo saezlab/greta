@@ -80,15 +80,6 @@ datasets:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
-    fakepair:
-        organism: 'hg38'
-        samples:
-            ['smpl']
-        cases:
-            all:
-                celltypes: 'all'
-                n_hvg: 16384
-                n_hvr: 65536
     heartatlas:
         organism: 'hg38'
         url:
