@@ -66,13 +66,50 @@ colors:
 
 # Datasets
 datasets:
+    brain:
+        organism: 'hg38'
+        url:
+            full_dataset: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE193688&format=file'
+            annot: 'https://heibox.uni-heidelberg.de/f/05637a872a384155a951/?dl=1'
+        samples:
+            ['C5410', 'C4176', 'YC5928', 'C16007', 'C4322', 'YC5276', 'C4361', 'YC5346', 'C4660', 'YC5813', 'YC5442',
+            'YC914', 'YC5626', 'C4814', 'YC6235', 'C4634', 'YC4345', 'C4691', 'YC5751', 'P02284', 'P4205', 'P4560', 'P4653', 'P4772', 'P4884',
+            'P4919', 'P5318', 'P5331', 'P5626', 'P5662', 'P6259', 'P6320', 'P6323', 'P6326']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
+    fakepair:
+        organism: 'hg38'
+        samples:
+            ['smpl']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
+    heartatlas:
+        organism: 'hg38'
+        url:
+            tar: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/fragments.tar'
+            anndata: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Global_raw.h5ad'
+            annot: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Adult_Peaks.h5ad'
+        samples:
+            ['HCAHeartST10773166_HCAHeartST10781063', 'HCAHeartST10773165_HCAHeartST10781062',
+            'HCAHeart9508627_HCAHeart9508819', 'HCAHeart9508629_HCAHeart9508821',
+            'HCAHeart9845431_HCAHeart9917173', 'HCAHeartST11064575_HCAHeartST11023240',
+            'HCAHeartST11064574_HCAHeartST11023239']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     pbmc10k:
         organism: 'hg38'
         url:
             matrix: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_filtered_feature_bc_matrix.h5'
-            peak_annot: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_peak_annotation.tsv'
             atac_frags: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz'
-            atac_index: 'https://cf.10xgenomics.com/samples/cell-arc/1.0.0/pbmc_granulocyte_sorted_10k/pbmc_granulocyte_sorted_10k_atac_fragments.tsv.gz.tbi'
         samples:
             ['smpl']
         cases:
@@ -98,6 +135,33 @@ datasets:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+    pitunpair:
+        organism: 'hg38'
+        url:
+            atac_frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Ffragments%2Etsv%2Egz'
+            peaks: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
+            rna_mtx: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391775&format=file&file=GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
+            annot: 'https://heibox.uni-heidelberg.de/f/d36511f7f94947859564/?dl=1'
+        samples:
+            ['smpl']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
+    pitupair:
+        organism: 'hg38'
+        url:
+            frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
+            gex: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
+            annot: 'https://heibox.uni-heidelberg.de/f/de56839fd8b24d0aba4a/?dl=1'
+        samples:
+            ['smpl']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     reprofibro:
         organism: 'hg38'
         url:
@@ -113,64 +177,8 @@ datasets:
                 n_hvg: 16384
                 n_hvr: 65536
                 root: 'Fibroblast-like'
-    pitupair:
-        organism: 'hg38'
-        url:
-            frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Fatac%5Ffragments%2Etsv%2Egz'
-            gex: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391776&format=file&file=GSM5391776%5FHF1M%2DCryo%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-            annot: 'https://heibox.uni-heidelberg.de/f/de56839fd8b24d0aba4a/?dl=1'
-        samples:
-            ['smpl']
-        cases:
-            all:
-                celltypes: 'all'
-                n_hvg: 16384
-                n_hvr: 65536
-    pitunpair:
-        organism: 'hg38'
-        url:
-            atac_frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Ffragments%2Etsv%2Egz'
-            peaks: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Ffiltered%5Fpeak%5Fbc%5Fmatrix%2Eh5'
-            rna_mtx: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391775&format=file&file=GSM5391775%5FHF1P%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
-            atac_meta: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM5391768&format=file&file=GSM5391768%5FHFA1P%5Fsinglecell%2Ecsv%2Egz'
-            celltypes: 'https://heibox.uni-heidelberg.de/f/d36511f7f94947859564/?dl=1'
-        samples:
-            ['smpl']
-        cases:
-            all:
-                celltypes: 'all'
-                n_hvg: 16384
-                n_hvr: 65536
-    heartatlas:
-        organism: 'hg38'
-        url:
-            tar: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/fragments.tar'
-            anndata: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Global_raw.h5ad'
-            annotation: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Adult_Peaks.h5ad'
-        samples:
-            ['HCAHeartST10773166_HCAHeartST10781063', 'HCAHeartST10773165_HCAHeartST10781062',
-            'HCAHeart9508627_HCAHeart9508819', 'HCAHeart9508629_HCAHeart9508821',
-            'HCAHeart9845431_HCAHeart9917173', 'HCAHeartST11064575_HCAHeartST11023240',
-            'HCAHeartST11064574_HCAHeartST11023239']
-        cases:
-            all:
-                celltypes: 'all'
-                n_hvg: 16384
-                n_hvr: 65536
-    brain:
-        organism: 'hg38'
-        url:
-            full_dataset: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE193688&format=file'
-            annot: 'https://heibox.uni-heidelberg.de/f/05637a872a384155a951/?dl=1'
-        samples: 
-            ['C5410', 'C4176', 'YC5928', 'C16007', 'C4322', 'YC5276', 'C4361', 'YC5346', 'C4660', 'YC5813', 'YC5442', 
-            'YC914', 'YC5626', 'C4814', 'YC6235', 'C4634', 'YC4345', 'C4691', 'YC5751', 'P02284', 'P4205', 'P4560', 'P4653', 'P4772', 'P4884',
-            'P4919', 'P5318', 'P5331', 'P5626', 'P5662', 'P6259', 'P6320', 'P6323', 'P6326']
-        cases:
-            all:
-                celltypes: 'all'
-                n_hvg: 16384
-                n_hvr: 65536
+
+
 
 stab_datasets: ['pitupair']
 nocombs_datasets: ['pitupair', 'pitunpair']

@@ -33,8 +33,6 @@ geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
 
 # Read annots
 obs = pd.read_csv(path_annot, index_col=0)
-sample_id = 'smpl'
-obs.index = [sample_id + '_' + o.split('-1')[0] for o in obs.index]
 
 # Read data
 rna = sc.read_10x_h5(path_multi, genome="GRCh38", gex_only=True)
@@ -68,9 +66,9 @@ del rna.obs
 # Read atac data
 atac = ad.read_h5ad(path_peaks)
 
-# Filter annotation and RNA data based on ATAC barcodes
-obs = obs[obs.index.isin(atac.obs_names)]
-rna = rna[rna.obs_names.isin(atac.obs_names)]
+# Filter
+rna = rna[atac.obs_names, :].copy()
+obs = obs.loc[atac.obs_names, :]
 
 # Create mdata
 mdata = md.MuData(

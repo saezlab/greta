@@ -52,7 +52,6 @@ if __name__ == '__main__':
 
     # Filter by annotation
     annot = pd.read_csv(path_annot, index_col=0)
-    annot.index = [sample_id + '_' + barcode.split('-1')[0] for barcode, sample_id in zip(annot.index, annot['batch'])]
     uns = None
     type_frags = None
     lst_obs = []

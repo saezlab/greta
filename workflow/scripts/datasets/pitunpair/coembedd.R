@@ -4,7 +4,6 @@ library(ggplot2)
 library(cowplot)
 library(dplyr)
 library(Seurat)
-library(SingleCellExperiment)
 
 
 # Parse args
@@ -14,7 +13,6 @@ path_celltypes <- args[7]
 path_peaks <- args[8]
 path_frags <- args[9]
 path_cca_out <- args[10]
-nCores <- args[11]
 
 
 # RNA
@@ -49,8 +47,6 @@ data.atac <- CreateSeuratObject(counts = chrom_assay, assay = "ATAC", project = 
 data.atac <- RunTFIDF(data.atac)
 data.atac <- FindTopFeatures(data.atac, min.cutoff = "q0")
 data.atac <- ScaleData(data.atac)
-atac.sce <- as.SingleCellExperiment(data.atac)
-rowRanges(atac.sce) <- granges(data.atac)
 
 # Infer gene scores
 gene.activities <- GeneActivity(data.atac, features = VariableFeatures(data.rna))

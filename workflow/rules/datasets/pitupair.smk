@@ -15,6 +15,8 @@ rule download_pitupair:
         bash workflow/scripts/datasets/format_frags.sh {output.frags}
         wget --no-verbose '{params.gex}' -O '{output.gex}'
         wget --no-verbose '{params.annot}' -O '{output.annot}'
+        awk 'BEGIN {{FS=OFS=","}} NR==1 {{print $0; next}} {{gsub(/-[0-9]+$/, "", $1); print $3"_"$1,$2,$3}}' {output.annot} > {output.annot}.tmp
+        mv {output.annot}.tmp {output.annot}
         """
 
 
@@ -42,7 +44,7 @@ rule callpeaks_pitupair:
 
 
 rule annotate_pitupair:
-    threads: 32
+    threads: 1
     input:
         annot=rules.download_pitupair.output.annot,
         peaks=rules.callpeaks_pitupair.output.peaks,

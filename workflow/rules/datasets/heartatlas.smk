@@ -26,7 +26,7 @@ rule download_anndata_heart:
         annot=temp(local('datasets/heartatlas/atac.h5ad'))
     params:
         adata=config['datasets']['heartatlas']['url']['anndata'],
-        annot=config['datasets']['heartatlas']['url']['annotation']
+        annot=config['datasets']['heartatlas']['url']['annot']
     shell:
         """
         wget --no-verbose '{params.adata}' -O '{output.adata}'

@@ -4,19 +4,19 @@ rule download_pitunpair:
         gex=temp(local('datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
         peaks=temp(local('datasets/pitunpair/peaks.original.h5')),
         frags='datasets/pitunpair/smpl.frags.tsv.gz',
-        celltypes=temp(local('datasets/pitunpair/celltypes.csv')),
+        annot=temp(local('datasets/pitunpair/annot.csv')),
     params:
         gex=config['datasets']['pitunpair']['url']['rna_mtx'],
         peaks=config['datasets']['pitunpair']['url']['peaks'],
         frags=config['datasets']['pitunpair']['url']['atac_frags'],
-        celltypes=config['datasets']['pitunpair']['url']['celltypes']
+        annot=config['datasets']['pitunpair']['url']['annot']
     shell:
         """
         wget --no-verbose '{params.gex}' -O '{output.gex}'
         wget --no-verbose '{params.peaks}' -O '{output.peaks}'
         wget --no-verbose '{params.frags}' -O '{output.frags}'
         bash workflow/scripts/datasets/format_frags.sh {output.frags}
-        wget --no-verbose '{params.celltypes}' -O '{output.celltypes}'
+        wget --no-verbose '{params.annot}' -O '{output.annot}'
         """
 
 
@@ -42,7 +42,7 @@ rule coembedd_pitunpair:
     threads: 32
     input:
         gex=rules.download_pitunpair.output.gex,
-        celltypes=rules.download_pitunpair.output.celltypes,
+        annot=rules.download_pitunpair.output.annot,
         peaks=rules.download_pitunpair.output.peaks,
         frags=rules.download_pitunpair.output.frags,
         index=rules.index_frags.output.index
@@ -54,11 +54,10 @@ rule coembedd_pitunpair:
         """
         Rscript workflow/scripts/datasets/pitunpair/coembedd.R \
         {input.gex} \
-        {input.celltypes} \
+        {input.annot} \
         {input.peaks} \
         {input.frags} \
-        {output.cca} \
-        {threads}
+        {output.cca}
         """
 
 
@@ -66,7 +65,7 @@ rule paircells_pitunpair:
     threads: 1
     input:
         cca=rules.coembedd_pitunpair.output.cca,
-        celltypes=rules.download_pitunpair.output.celltypes,
+        annot=rules.download_pitunpair.output.annot,
     output:
         barmap=temp(local('datasets/pitunpair/barmap.csv'))
     singularity:
@@ -75,7 +74,7 @@ rule paircells_pitunpair:
         """
         Rscript workflow/scripts/datasets/pitunpair/paircells.R \
         {input.cca} \
-        {input.celltypes} \
+        {input.annot} \
         {output.barmap}
         """
 

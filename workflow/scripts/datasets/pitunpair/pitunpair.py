@@ -32,22 +32,15 @@ geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
 # Read barmap
 barmap = pd.read_csv(path_barmap, index_col=0)
 
-
 # Read data
 rna = sc.read_10x_h5(path_expr, genome="GRCh38")
 del rna.obs
 rna.var.index.name = None
 
 # Filter RNA data based on barmap
-rna = rna[rna.obs_names.isin(barmap['RNA'])]
-barmap = barmap.sort_values(by='RNA')
-rna = rna[rna.obs_names.sort_values(), :]
+rna = rna[barmap['RNA'].values, :]
+print(barmap)
 rna.obs_names = barmap.index
-
-# Rename barcodes RNA
-sample_id = 'smpl'
-rna.obs_names = [sample_id + '_' + o.split('-1')[0] for o in rna.obs_names]
-barmap.index = [sample_id + '_' + o.split('-1')[0] for o in barmap.index]
 
 # Filter faulty gene symbols
 ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
@@ -72,11 +65,7 @@ del rna.var
 atac = ad.read_h5ad(path_peaks)
 
 # Filter ATAC data based on barmap and RNA
-atac = atac[atac.obs_names.isin(rna.obs_names)]
-
-# Make sure barcodes match in RNA add ATAC before merging to mudata
-rna = rna[rna.obs_names.sort_values(), :]
-atac = atac[atac.obs_names.sort_values()]
+atac = atac[rna.obs_names, :]
 
 # Create mdata
 mdata = md.MuData(
