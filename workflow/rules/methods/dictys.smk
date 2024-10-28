@@ -71,7 +71,7 @@ rule p2g_dictys:
         d=temp(directory(local('datasets/{dataset}/cases/{case}/runs/{pre}_dictys_tmp/'))),
         out='datasets/{dataset}/cases/{case}/runs/{pre}.dictys.p2g.csv',
     params:
-        ext=config['methods']['dictys']['ext']
+        ext=config['methods']['dictys']['ext'] // 2,
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -168,12 +168,62 @@ rule mdl_dictys:
 
 
 rule mdl_o_dictys:
-    threads: 1
+    threads: 32
+    conda: '../../envs/dictys.yaml'
+    container: None
     input:
-        mdl=rules.mdl_dictys.output.out,
+        mdata=rules.extract_case.output.mdata,
+        annotation=rules.download_gene_annotations_dictys.output.bed,
+        frags=list_frags_files,
+        motif=rules.download_motifs_dictys.output.h,
+        genome=rules.download_genomes_dictys.output.d,
     output:
-        out='datasets/{dataset}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.grn.csv'
+        tmp='datasets/{dataset}/cases/{case}/runs/o_dictys_pre_expr.tsv.gz',
+        d=temp(directory(local('datasets/{dataset}/cases/{case}/runs/o_dictys_dictys_tmp/'))),
+        pre=temp(local('datasets/{dataset}/cases/{case}/runs/o_dictys.pre.h5mu')),
+        p2g=temp(local('datasets/{dataset}/cases/{case}/runs/o_dictys.o_dictys.p2g.csv')),
+        tfb=temp(local('datasets/{dataset}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.tfb.csv')),
+        out='datasets/{dataset}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.grn.csv',
+    params:
+        ext=config['methods']['dictys']['ext'] // 2,
+        n_p2g_links=config['methods']['dictys']['n_p2g_links'],
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
-        cp {input.mdl} {output.out}
+        set +e
+        timeout $(({resources.runtime}-20))m bash -c \
+        'python workflow/scripts/methods/dictys/pre.py \
+        -m {input} \
+        -t {output.tmp} \
+        -o {output.pre} && \
+        python workflow/scripts/methods/dictys/p2g.py \
+        -d {output.pre} \
+        -t {output.d} \
+        -p {output.p2g} \
+        -e {params.ext} \
+        -g {input.annotation} && \
+        bash workflow/scripts/methods/dictys/tfb.sh \
+        --input_pre {output.pre} \
+        --input_p2g {output.p2g} \
+        --input_frags {input.frags} \
+        --input_motif {input.motif} \
+        --input_genome {input.genome} \
+        --output_d {output.d} \
+        --output_out {output.tfb} \
+        --threads {threads} && \
+        bash workflow/scripts/methods/dictys/mdl.sh \
+        --output_d {output.d} \
+        --pre_path {output.pre} \
+        --p2g_path {output.p2g} \
+        --tfb_path {output.tfb} \
+        --annot {input.annotation} \
+        --distance {params.ext} \
+        --n_p2g_links {params.n_p2g_links} \
+        --threads {threads} \
+        --out_path {output.out}'
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "cre,gene,score" }}' > {output.out}
+        fi
         """

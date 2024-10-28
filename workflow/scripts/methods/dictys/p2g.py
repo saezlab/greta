@@ -33,7 +33,7 @@ atac_X = pd.DataFrame(np.zeros((data['atac'].var.index.shape[0], 1)), index=atac
 atac_X.to_csv(atac_filename, sep="\t", compression="gzip")
 
 # Identify all peaks that are within Xbp of annotated TSS
-os.system(f'python3 -m dictys chromatin tssdist --cut {distance//2} {rna_filename} {atac_filename} {annot} {dist_filename}')
+os.system(f'python3 -m dictys chromatin tssdist --cut {distance} {rna_filename} {atac_filename} {annot} {dist_filename}')
 
 # Convert distance to score for p2g
 df = pd.read_csv(dist_filename, sep='\t').rename(columns={'region': 'cre', 'target': 'gene', 'dist': 'score'})

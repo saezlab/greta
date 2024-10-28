@@ -37,7 +37,7 @@ def make_combs_rules(w, mthds, baselines, rule_name):
                 format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
             )
     for mth in mthds:
-        if (mth != 'scenicplus') and (mth != 'dictys'):  # TODO: remove once src scenic
+        if mth != 'scenicplus':  # TODO: remove once src scenic
             rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
     for bsl in baselines:
         rule_outputs.append(format_rule(out, w=w, pre=bsl))
