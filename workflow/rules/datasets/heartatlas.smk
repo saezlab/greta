@@ -1,8 +1,10 @@
 rule download_fragments_heart:
-    threads: 1
+    threads: 7
+    singularity: 'workflow/envs/figr.sif'
     output:
         tar=temp(local('datasets/heartatlas/fragments.tar')),
-        frag=expand('datasets/heartatlas/{sample}.frags.tsv.gz', sample=config['datasets']['heartatlas']['samples'])
+        frag=expand('datasets/heartatlas/{sample}.frags.tsv.gz', sample=config['datasets']['heartatlas']['samples']),
+        tbis=expand('datasets/heartatlas/{sample}.frags.tsv.gz.tbi', sample=config['datasets']['heartatlas']['samples'])
     params:
         tar=config['datasets']['heartatlas']['url']['tar']
     shell:
@@ -11,11 +13,13 @@ rule download_fragments_heart:
         wget --no-verbose '{params.tar}' -O '{output.tar}'
         tar -xvf '{output.tar}' -C "$data_path"
         rm "$data_path"/*.tbi
+        rm {output.tar}
         for file in $data_path/*_atac_fragments.tsv.gz; do
-            new_file=$(echo "$file" | sed 's/_atac_fragments.tsv.gz/.frags.tsv.gz/')
-            mv "$file" "$new_file"
-            bash workflow/scripts/datasets/format_frags.sh $new_file
-        done
+            base_name=$(basename "$file" _atac_fragments.tsv.gz);
+            new_file="${{base_name#*_}}.frags.tsv.gz";
+            mv $file $data_path/$new_file
+        done && \
+        ls $data_path/*.frags.tsv.gz | xargs -n 1 -P {threads} bash workflow/scripts/datasets/format_frags.sh
         """
 
 

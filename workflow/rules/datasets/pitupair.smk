@@ -1,8 +1,10 @@
 rule download_pitupair:
     threads: 1
+    singularity: 'workflow/envs/figr.sif'
     output:
         gex=temp(local('datasets/pitupair/multiome_original.h5')),
         frags='datasets/pitupair/smpl.frags.tsv.gz',
+        tbis='datasets/pitupair/smpl.frags.tsv.gz.tbi',
         annot=temp(local('datasets/pitupair/annot.csv'))
     params:
         gex=config['datasets']['pitupair']['url']['gex'],

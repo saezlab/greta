@@ -1,8 +1,12 @@
 rule download_brain:
-    threads: 1
+    threads: 34
+    singularity: 'workflow/envs/figr.sif'
     output:
-        tar='datasets/brain/GSE193688.tar', 
+        tar=temp(local('datasets/brain/GSE193688.tar')),
         annot=temp(local('datasets/brain/raw_annot.csv')),
+        frags=expand('datasets/brain/{sample}.frags.tsv.gz', sample=config['datasets']['brain']['samples']),
+        tbis=expand('datasets/brain/{sample}.frags.tsv.gz.tbi', sample=config['datasets']['brain']['samples']),
+        gex=temp(local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=config['datasets']['brain']['samples']))),
     params:
         full_dataset=config['datasets']['brain']['url']['full_dataset'],
         annot=config['datasets']['brain']['url']['annot'],
@@ -12,28 +16,15 @@ rule download_brain:
         echo "Downloading tar file"
         wget --no-verbose '{params.full_dataset}' -O '{output.tar}'
         wget --no-verbose '{params.annot}' -O '{output.annot}'
-        """
-
-
-rule extract_files_brain:
-    threads: 1
-    input:
-        tar=rules.download_brain.output.tar,
-    output:
-        frags=expand('datasets/brain/{sample}.frags.tsv.gz', sample=config['datasets']['brain']['samples']),
-        gex=temp(local(expand('datasets/brain/{sample}_filtered_feature_bc_matrix.h5', sample=config['datasets']['brain']['samples']))),
-    shell:
-        """
-        data_path=$(dirname {input.tar})
         tar -xvf '{input.tar}' -C $data_path
-        rm '{input.tar}'
+        for file in $data_path/*_atac_fragments.tsv.gz; do
+            base_name=$(basename "$file" _atac_fragments.tsv.gz);
+            new_file="${{base_name#*_}}.frags.tsv.gz";
+            mv $file $data_path/$new_file
+        done && \
+        ls $data_path/*.frags.tsv.gz | xargs -n 1 -P {threads} bash workflow/scripts/datasets/format_frags.sh
         rm $data_path/*peaks.bed.gz
         (cd $data_path && for x in GSM*; do    mv $x `echo $x | cut -c 12-`; done)
-        for file in $data_path/*_atac_fragments.tsv.gz; do
-            new_file=$(echo "$file" | sed 's/_atac_fragments.tsv.gz/.frags.tsv.gz/')
-            mv "$file" "$new_file"
-            bash workflow/scripts/datasets/format_frags.sh $new_file
-        done
         """
 
 
@@ -59,7 +50,7 @@ rule prc_annot:
 rule callpeaks_brain:
     threads: 32
     input:
-        frags=rules.extract_files_brain.output.frags,
+        frags=rules.download_brain.output.frags,
         annot=rules.prc_annot.output.annot,
     singularity:
         'workflow/envs/gretabench.sif'
@@ -83,7 +74,7 @@ rule callpeaks_brain:
 rule annotate_brain:
     threads: 1
     input:
-        path_gex=rules.extract_files_brain.output.gex,
+        path_gex=rules.download_brain.output.gex,
         path_peaks=rules.callpeaks_brain.output.peaks,
         path_annot=rules.prc_annot.output.annot,
         path_geneids=rules.download_geneids.output.dr,

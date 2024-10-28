@@ -1,11 +1,13 @@
 rule download_reprofibro:
-    threads: 1
+    threads: 2
+    singularity: 'workflow/envs/figr.sif'
     output:
         tar=temp(local('datasets/reprofibro/RAW.tar')),
         barcodes=temp(local('datasets/reprofibro/barcode_map.tsv.gz')),
         genes=temp(local('datasets/reprofibro/genes.tsv.gz')),
         bars=temp(local(expand('datasets/reprofibro/{sample}.barcodes.tsv.gz', sample=config['datasets']['reprofibro']['samples']))),
         frags=expand('datasets/reprofibro/{sample}.frags.tsv.gz', sample=config['datasets']['reprofibro']['samples']),
+        tbis=expand('datasets/reprofibro/{sample}.frags.tsv.gz.tbi', sample=config['datasets']['reprofibro']['samples']),
         mats=temp(local(expand('datasets/reprofibro/{sample}.matrix.mtx.gz', sample=config['datasets']['reprofibro']['samples']))),
         annot=temp(local('datasets/reprofibro/annot.csv')),
     params:
@@ -16,26 +18,29 @@ rule download_reprofibro:
     shell:
         """
         data_path=$(dirname {output.tar})
-        wget --no-verbose '{params.annot}' -O {output.annot}
-        python workflow/scripts/datasets/reprofibro/prc_annot.py -a {output.annot}
-        wget --no-verbose '{params.tar}' -O {output.tar}
-        tar xvf {output.tar} -C $data_path
-        cd $data_path
-        for file in GSM*_*.frag.bed.gz; do
-            new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.frag\.bed\.gz/\\1.frags.tsv.gz/')
-            mv $file $new_file
-            bash workflow/scripts/datasets/format_frags.sh $new_file
-        done
-        for file in GSM*_*.barcodes.tsv.gz; do
-            new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.barcodes\.tsv\.gz/\\1.barcodes.tsv.gz/')
-            mv $file $new_file
-        done
-        for file in GSM*_*.matrix.mtx.gz; do
-            new_file=$(echo $file | sed -E 's/GSM[0-9]+_([A-Za-z0-9]+)\.matrix\.mtx\.gz/\\1.matrix.mtx.gz/')
-            mv $file $new_file
-        done
-        cd ../../
-        wget --no-verbose '{params.barcodes}' -O {output.barcodes}
+        wget --no-verbose '{params.tar}' -O {output.tar} && \
+        tar xvf {output.tar} -C $data_path && \
+        for file in $data_path/GSM*_D*.frag.bed.gz; do
+            base_name=$(basename "$file" .frag.bed.gz);
+            new_file="${{base_name#*_}}.frags.tsv.gz";
+            mv $file $data_path/$new_file
+        done && \
+        ls $data_path/*.frags.tsv.gz | xargs -n 1 -P {threads} bash workflow/scripts/datasets/format_frags.sh && \
+        for file in $data_path/GSM*_*.barcodes.tsv.gz; do
+            base_name=$(basename "$file" .barcodes.tsv.gz);
+            new_file="${{base_name#*_}}.barcodes.tsv.gz";
+            mv $file $data_path/$new_file;
+        done && \
+        for file in $data_path/GSM*_*.matrix.mtx.gz; do
+            base_name=$(basename "$file" .matrix.mtx.gz);
+            new_file="${{base_name#*_}}.matrix.mtx.gz";
+            mv $file $data_path/$new_file;
+        done && \
+        wget --no-verbose '{params.annot}' -O {output.annot} && \
+        python workflow/scripts/datasets/reprofibro/prc_annot.py -a {output.annot} && \
+        awk 'BEGIN {{FS=OFS=","}} NR==1 {{print $0; next}} {{print $2"_"$1,$2,$3}}' > {output.annot}.tmp && \
+        mv {output.annot}.tmp {output.annot} && \
+        wget --no-verbose '{params.barcodes}' -O {output.barcodes} && \
         wget --no-verbose '{params.genes}' -O {output.genes}
         """
 

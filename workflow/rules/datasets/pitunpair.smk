@@ -1,9 +1,11 @@
 rule download_pitunpair:
     threads: 1
+    singularity: 'workflow/envs/figr.sif'
     output:
         gex=temp(local('datasets/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
         peaks=temp(local('datasets/pitunpair/peaks.original.h5')),
         frags='datasets/pitunpair/smpl.frags.tsv.gz',
+        tbis='datasets/pitunpair/smpl.frags.tsv.gz.tbi',
         annot=temp(local('datasets/pitunpair/annot.csv')),
     params:
         gex=config['datasets']['pitunpair']['url']['rna_mtx'],
@@ -20,24 +22,6 @@ rule download_pitunpair:
         """
 
 
-rule index_frags:
-    threads: 1
-    input:
-        frags=rules.download_pitunpair.output.frags
-    output:
-        index=temp(local('datasets/pitunpair/smpl.frags.tsv.gz.tbi'))
-    params:
-        unzip=rules.download_pitunpair.output.frags.replace('.gz', '')
-    singularity:
-        'workflow/envs/figr.sif'
-    shell:
-        """
-        gunzip -d {input.frags}
-        bgzip {params.unzip}
-        tabix -p bed {input.frags}
-        """
-
-
 rule coembedd_pitunpair:
     threads: 32
     input:
@@ -45,7 +29,7 @@ rule coembedd_pitunpair:
         annot=rules.download_pitunpair.output.annot,
         peaks=rules.download_pitunpair.output.peaks,
         frags=rules.download_pitunpair.output.frags,
-        index=rules.index_frags.output.index
+        tbis=rules.download_pitunpair.output.tbis,
     output:
         cca=temp(local('datasets/pitunpair/cca.rds'))
     singularity: 

@@ -1,10 +1,11 @@
 rule index_frags_fakepair:
     threads: 1
     input:
-        frags=lambda w: map_rules('download_', rule_name='{dname}pair', w.dname, out='frags'),
+        frags=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='frags'),
+        tbis=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='tbis'),
     output:
         frags=temp(local('datasets/fake{dname}pair/smpl.frags.tsv.gz')),
-        index=temp(local('datasets/fake{dname}pair/smpl.frags.tsv.gz.tbi')),
+        tbis=temp(local('datasets/fake{dname}pair/smpl.frags.tsv.gz.tbi')),
     params:
         unzip='datasets/fake{dname}pair/smpl.frags.tsv'
     singularity:
@@ -12,19 +13,17 @@ rule index_frags_fakepair:
     shell:
         """
         cp {input.frags} {output.frags}
-        gunzip -d {output.frags}
-        bgzip {params.unzip}
-        tabix -p bed {output.frags}
+        cp {input.tbis} {output.tbis}
         """
 
 
 rule coem_fakepair:
     threads: 32
     input:
-        gex=lambda w: map_rules('download_', rule_name='{dname}pair', w.dname, out='gex'),
-        peaks=lambda w: map_rules('callpeaks_', rule_name='{dname}pair', w.dname, out='peaks'),
+        gex=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='gex'),
+        peaks=lambda w: map_rules('callpeaks_', rule_name='{dname}pair', w_name=w.dname, out='peaks'),
         frags=rules.index_frags_fakepair.output.frags,
-        index=rules.index_frags_fakepair.output.index,
+        tbis=rules.index_frags_fakepair.output.tbis,
     output:
         cca=temp(local('datasets/fake{dname}pair/cca.rds'))
     singularity:
@@ -45,7 +44,7 @@ rule pair_fakepair:
     threads: 1
     input:
         cca=rules.coem_fakepair.output.cca,
-        annot=lambda w: map_rules('download_', rule_name='{dname}pair', w.dname, out='annot'),
+        annot=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='annot'),
     output:
         barmap=temp(local('datasets/fake{dname}pair/barmap.csv'))
     singularity:

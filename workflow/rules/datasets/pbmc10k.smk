@@ -19,8 +19,10 @@ rule download_geneids:
 
 rule download_pbmc10k:
     threads: 1
+    singularity: 'workflow/envs/figr.sif'
     output:
-        atac_frags='datasets/pbmc10k/smpl.frags.tsv.gz',
+        frags='datasets/pbmc10k/smpl.frags.tsv.gz',
+        tbis='datasets/pbmc10k/smpl.frags.tsv.gz.tbi',
     params:
         matrix=config['datasets']['pbmc10k']['url']['matrix'],
         atac_frags=config['datasets']['pbmc10k']['url']['atac_frags'],
@@ -51,7 +53,7 @@ rule callpeaks_pbmc10k:
     singularity:
         'workflow/envs/gretabench.sif'
     input:
-        frags=rules.download_pbmc10k.output.atac_frags,
+        frags=rules.download_pbmc10k.output.frags,
         annot=rules.prcannot_pbmc10k.output.annot,
     output:
         tmp=temp(directory(local('datasets/pbmc10k/tmp_peaks'))),
