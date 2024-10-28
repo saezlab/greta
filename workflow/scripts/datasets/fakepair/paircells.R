@@ -27,8 +27,13 @@ pairing <- pairCells(
 )
 
 # Filter paired object
+#euc.dist <- function(x1, x2) sqrt(sum((x1 - x2) ^ 2))
+#pairing$dist <- apply(pairing, 1, function(x) { euc.dist(ATAC_PCs[x[1],1:ncol(ATAC_PCs)],RNA_PCs[x[2],1:ncol(RNA_PCs)])})
 pairing <- pairing[order(pairing$dist, decreasing = FALSE), ]
 pairing <- pairing[!duplicated(pairing$ATAC),]
+#atac_pairing <- pairing[!duplicated(pairing$ATAC),]
+#rna_pairing <- pairing[!duplicated(pairing$RNA),]
+#pairing <- merge(atac_pairing, rna_pairing)
 
 # Merge ctype info
 ctypes <- read.csv(path_ctypes)
