@@ -2,13 +2,14 @@ import yaml
 import sys
 import os
 import warnings
-os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
+#os.environ['NUMBA_CACHE_DIR'] = '/tmp/'
+import pathlib
 import argparse
 import scanpy as sc
 import anndata as ad
 import pandas as pd
 import muon as mu
-
+import anndata
 # Init args
 parser = argparse.ArgumentParser()
     # Data and folders
@@ -18,6 +19,7 @@ parser.add_argument('-o', '--out', type=str, help='Path to output directory')
 parser.add_argument('-t', '--temp_dir', type=str, help='Path to temp directory')
 parser.add_argument('--ray_tmp_dir', type=str, help='Path to ray tmp directory')
 parser.add_argument('--tmp_scenicplus', type=str, help='Path to tmp scenicplus directory')
+parser.add_argument('--cistopic_path', type=str, help='Path to cisTopic object')
     # tfb intermediate files
 parser.add_argument('--annotation_direct_path', type=str, help='Path to direct annotation')
 parser.add_argument('--annotation_extended_path', type=str, help='Path to extended annotation')
@@ -54,34 +56,34 @@ parser.add_argument('--top_n_regionTogenes_per_region', type=int, required=False
 parser.add_argument('--min_regions_per_gene', required=True, type=int)
 parser.add_argument('--rho_threshold', type=float, required=False, default=0.05,)
 parser.add_argument('--min_target_genes', type=int, required=False, default=10,)
-parser.add_argument('--output_config', type=str, required=True)   
+parser.add_argument('--output_config', type=str, required=True)
 args = vars(parser.parse_args())
 
 # Set up variables
 frags = args['frags']
 mudata_file = args['mudata']
-output_fname = args['out']
-tmp_scenicplus = args['tmp_scenicplus']
-ray_tmp_dir = os.path.join(args['ray_tmp_dir'])
+output_fname = os.path.join('../../', args['out'])
+tmp_scenicplus = os.path.join('../../', args['tmp_scenicplus'])
+ray_tmp_dir = os.path.join("../..", args['ray_tmp_dir'])
 njobs = args['njobs']
 organism = args['organism']
-dem_results_path = args['dem_results_path']
-cistarget_results_path = args['cistarget_results_path']
+dem_results_path = os.path.join('../../', args['dem_results_path'])
+cistarget_results_path = os.path.join('../../', args['cistarget_results_path'])
 
 if organism == 'hg38':
     organism = "hsapiens"
     species = "homo_sapiens",
-    chromsizes_fname = args['chrom_sizes_h']
-    annot_fname = args['annot_human']
-    cistarget_ranking_db_fname = pathlib.Path(args["cistarget_rankings_human"])
-    cistarget_score_db_fname = pathlib.Path(args["cistarget_scores_human"])
-    path_to_motif_annotations = args["path_to_motif_annotations_human"]
+    chromsizes_fname = os.path.join('../../', args['chrom_sizes_h'])
+    annot_fname = os.path.join('../../', args['annot_human'])
+    cistarget_ranking_db_fname = os.path.join('../../', args["cistarget_rankings_human"])
+    cistarget_score_db_fname = os.path.join('../../', args["cistarget_scores_human"])
+    path_to_motif_annotations = os.path.join('../../', args["path_to_motif_annotations_human"])
 elif organism == 'mm10':
     organism = "mmusculus"
     chromsizes_fname = args['chrom_sizes_m']
     annot_fname = args['annot_mouse']
-    cistarget_ranking_db_fname = pathlib.Path(args["cistarget_rankings_mouse"])
-    cistarget_score_db_fname = pathlib.Path(args["cistarget_scores_mouse"])
+    cistarget_ranking_db_fname = str(pathlib.Path(args["cistarget_rankings_mouse"]))
+    cistarget_score_db_fname = str(pathlib.Path(args["cistarget_scores_mouse"]))
     path_to_motif_annotations = args["path_to_motif_annotations_mouse"]
     species = "mus_musculus"
 annotation_version = "v10nr_clust"
@@ -104,17 +106,25 @@ narrow_peaks_pickle = os.path.join(macs_folder, 'narrow_peaks_dict.pkl')
 consensus_peaks_bed = os.path.join(cis_topic_tmp_dir, 'consensus_region.bed')
 quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
 # cisTopic object path
-cistopic_obj_path = os.path.join(cis_topic_tmp_dir, 'cistopic_obj.pkl')
-GEX_anndata_fname = os.path.join(tmp_scenicplus, 'GEX_anndata.h5ad')
+GEX_anndata_fname = os.path.join(args['tmp_scenicplus'], 'GEX_anndata.h5ad')
 
 # Save GEW anndata from mudata
-mdata = pd.read_csv(mudata_file, sep="\t", index_col=0)
+mdata = mu.read_h5mu(mudata_file)
 rna = mdata["rna"]
+
+# Add a raw slot in the rna adata
+raw_counts = rna.layers["counts"]  # Access the sparse raw counts
+cell_names = rna.obs.index  # Cell names
+gene_names = rna.var.index   # Gene names
+raw_adata = anndata.AnnData(X=raw_counts, obs=rna.obs.copy(), var=rna.var.copy())
+rna.raw = raw_adata
+
 rna.write_h5ad(GEX_anndata_fname)
 
+mudata_file= os.path.join("../..", mudata_file)
 
-config_dic["input_data"]["cisTopic_obj_fname"] = cistopic_obj_path
-config_dic["input_data"]["GEX_anndata_fname"] = GEX_anndata_fname
+config_dic["input_data"]["cisTopic_obj_fname"] = os.path.join("../../", args["cistopic_path"])
+config_dic["input_data"]["GEX_anndata_fname"] = os.path.join("../..", GEX_anndata_fname)
 config_dic["input_data"]["region_set_folder"] = cis_topic_tmp_dir
 config_dic["input_data"]["ctx_db_fname"] = cistarget_ranking_db_fname
 config_dic["input_data"]["dem_db_fname"] = cistarget_score_db_fname
@@ -143,7 +153,7 @@ config_dic["params_general"]["n_cpu"] = njobs
 config_dic["params_general"]["seed"] = 42
 config_dic["params_general"]["temp_dir"] = args['tmp_scenicplus']
 
-config_dic["params_data_preparation"]["bc_transform_func"] = 
+#config_dic["params_data_preparation"]["bc_transform_func"] = "lambda x: x"
 config_dic["params_data_preparation"]["is_multiome"] = True
 config_dic["params_data_preparation"]["key_to_group_by"] = ""
 nr_cells_per_metacells = 10
@@ -151,11 +161,11 @@ config_dic["params_data_preparation"]["direct_annotation"] = "Direct_annot"
 config_dic["params_data_preparation"]["extended_annotation"] = "Orthology_annot"
 config_dic["params_data_preparation"]["species"] = organism
 config_dic["params_data_preparation"]["biomart_host"] = "http://ensembl.org/"
-config_dic["params_data_preparation"]["search_space_upstream"] = args['search_space_upstream']
-config_dic["params_data_preparation"]["search_space_downstream"] = args['search_space_downstream']
-config_dic["params_data_preparation"]["search_space_extend_tss"] = args['search_space_extend_tss']
+config_dic["params_data_preparation"]["search_space_upstream"] = r"'" + args['search_space_upstream'] + r"'"
+config_dic["params_data_preparation"]["search_space_downstream"] = r"'" + args['search_space_downstream'] + r"'"
+config_dic["params_data_preparation"]["search_space_extend_tss"] = r"'" + args['search_space_extend_tss'] + r"'"
 
-config_dic["params_motif_enrichment"]["species"] = species
+#config_dic["params_motif_enrichment"]["species"] = species
 config_dic["params_motif_enrichment"]["annotation_version"] = annotation_version
 config_dic["params_motif_enrichment"]["motif_similarity_fdr"] = 0.05
 config_dic["params_motif_enrichment"]["orthologous_identity_threshold"] = 0.8
@@ -179,12 +189,13 @@ config_dic["params_inference"]["region_to_gene_correlation_method"] = args["regi
 config_dic["params_inference"]["order_regions_to_genes_by"] = args['order_regions_to_genes_by']
 config_dic["params_inference"]["order_TFs_to_genes_by"] = args['order_TFs_to_genes_by']
 config_dic["params_inference"]["gsea_n_perm"] = args['gsea_n_perm']
-config_dic["params_inference"]["quantile_thresholds_region_to_gene"] = args['quantile_thresholds_region_to_gene']
-config_dic["params_inference"]["top_n_regionTogenes_per_gene"] = args['top_n_regionTogenes_per_gene']
-config_dic["params_inference"]["top_n_regionTogenes_per_region"] = args['top_n_regionTogenes_per_region']
+print(args["quantile_thresholds_region_to_gene"])
+config_dic["params_inference"]["quantile_thresholds_region_to_gene"] = r"'" + ' '.join([str(v) for v in args['quantile_thresholds_region_to_gene']]) + r"'"
+config_dic["params_inference"]["top_n_regionTogenes_per_gene"] = r"'" + ' '.join([str(v) for v in args['top_n_regionTogenes_per_gene']]) + r"'"
+config_dic["params_inference"]["top_n_regionTogenes_per_region"] = r"'" + ' '.join([str(v) for v in args['top_n_regionTogenes_per_region']]) + r"'"
 config_dic["params_inference"]["min_regions_per_gene"] = args['min_regions_per_gene']
 config_dic["params_inference"]["rho_threshold"] = args['rho_threshold']
 config_dic["params_inference"]["min_target_genes"] = args['min_target_genes']
 
 with open(args["output_config"], 'w') as file:
-    yaml.dump(config_dic, file, default_flow_style=False)
+    yaml.dump(config_dic, file)
