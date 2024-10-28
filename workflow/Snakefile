@@ -6,13 +6,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir),
 from utils import make_combs
 
 
-def map_rules(rule_prefix, w_name, rule_name='{rule_prefix}_{w_name}', out='out'):
-    rule_name = f'{rule_name}'
+def map_rules(rule_prefix, w_name, out='out'):
+    rule_name=f'{rule_prefix}_{w_name}'
     if hasattr(rules, rule_name):
         return getattr(rules, rule_name).output[out]
     else:
-        print(f'rule_prefix={rule_prefix} w_name={w_name}, out={out}')
-        print(rule_prefix, w_name)
+        print(f'rule_prefix={rule_prefix} w_name={w_name}, out={out}, rule_name={rule_name}')
 
 
 def format_rule(out, w, pre, p2g=None, tfb=None, mdl=None, resource=None):

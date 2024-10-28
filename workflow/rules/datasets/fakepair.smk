@@ -1,8 +1,8 @@
 rule index_frags_fakepair:
     threads: 1
     input:
-        frags=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='frags'),
-        tbis=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='tbis'),
+        frags=lambda w: map_rules('download', w_name='{dname}pair'.format(dname=w.dname), out='frags'),
+        tbis=lambda w: map_rules('download', w_name='{dname}pair'.format(dname=w.dname), out='tbis'),
     output:
         frags=temp(local('datasets/fake{dname}pair/smpl.frags.tsv.gz')),
         tbis=temp(local('datasets/fake{dname}pair/smpl.frags.tsv.gz.tbi')),
@@ -20,8 +20,8 @@ rule index_frags_fakepair:
 rule coem_fakepair:
     threads: 32
     input:
-        gex=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='gex'),
-        peaks=lambda w: map_rules('callpeaks_', rule_name='{dname}pair', w_name=w.dname, out='peaks'),
+        gex=lambda w: map_rules(rule_prefix='download', w_name='{dname}pair'.format(dname=w.dname), out='gex'),
+        peaks=lambda w: map_rules('callpeaks', w_name='{dname}pair'.format(dname=w.dname), out='peaks'),
         frags=rules.index_frags_fakepair.output.frags,
         tbis=rules.index_frags_fakepair.output.tbis,
     output:
@@ -44,7 +44,7 @@ rule pair_fakepair:
     threads: 1
     input:
         cca=rules.coem_fakepair.output.cca,
-        annot=lambda w: map_rules('download_', rule_name='{dname}pair', w_name=w.dname, out='annot'),
+        annot=lambda w: map_rules(rule_prefix='download', w_name='{dname}pair'.format(dname=w.dname), out='annot'),
     output:
         barmap=temp(local('datasets/fake{dname}pair/barmap.csv'))
     singularity:
