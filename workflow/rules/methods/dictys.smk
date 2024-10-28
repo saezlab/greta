@@ -165,3 +165,15 @@ rule mdl_dictys:
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """
+
+
+rule mdl_o_dictys:
+    threads: 1
+    input:
+        mdl=rules.mdl_dictys.output.out,
+    output:
+        out='datasets/{dataset}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.grn.csv'
+    shell:
+        """
+        cp {input.mdl} {output.out}
+        """
