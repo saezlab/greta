@@ -53,7 +53,7 @@ rule pre_dictys:
     shell:
         """
         python workflow/scripts/methods/dictys/pre.py \
-        -m {input} \
+        -m {input.mdata} \
         -t {output.tmp} \
         -o {output.out}
         """
@@ -194,8 +194,9 @@ rule mdl_o_dictys:
         """
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
-        'python workflow/scripts/methods/dictys/pre.py \
-        -m {input} \
+        'mkdir -p {output.d} && \
+        python workflow/scripts/methods/dictys/pre.py \
+        -m {input.mdata} \
         -t {output.tmp} \
         -o {output.pre} && \
         python workflow/scripts/methods/dictys/p2g.py \
