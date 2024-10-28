@@ -35,6 +35,7 @@ parser.add_argument('-m', '--chrom_sizes_m', required=True)
 parser.add_argument('-j', '--chrom_sizes_h', required=True)
 parser.add_argument('-a', '--annot_human', required=True)
 parser.add_argument('-b', '--annot_mouse', required=True)
+parser.add_argument('--cistopic_path', required=True)
 args = vars(parser.parse_args())
 
 frags = args['frags']
@@ -86,7 +87,7 @@ narrow_peaks_pickle = os.path.join(macs_folder, 'narrow_peaks_dict.pkl')
 consensus_peaks_bed = os.path.join(cis_topic_tmp_dir, 'consensus_region.bed')
 quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
 # cisTopic object path
-cistopic_obj_path = os.path.join(cis_topic_tmp_dir, 'cistopic_obj.pkl')
+cistopic_obj_path = args["cistopic_path"]
 
 os.makedirs(tmp_scenicplus, exist_ok=True)
 #os.makedirs(ray_tmp_dir, exist_ok=True)
@@ -114,7 +115,7 @@ for batch_id in batch_ids:
     # Add batch_id to fragments_dict
     fragments_dict[batch_id] = fragments_files[batch_id]
     # create tabix file
-    print("Create index files ('{fragments_file}.tbi')")
+    print("Create index files ('{}.tbi')".format(fragments_files[batch_id]))
     try:
         pysam.tabix_index(fragments_files[batch_id], preset="bed")
     except OSError:
@@ -127,7 +128,7 @@ for batch_id in batch_ids:
             batch_id + '_', '')
 
 
-cell_data['barcode'] = cell_data['barcode'].str.split('-1').str[0] + '-1'
+cell_data['barcode'] = cell_data['batch'].astype(str) + '_' + cell_data['barcode']
 cell_data.index = cell_data['barcode']
 cell_data.head(3)
 
@@ -1215,15 +1216,18 @@ for sample_id in fragments_dict:
     cistopic_obj_list.append(cistopic_obj)
 
 cistopic_obj = pycisTopic.cistopic_class.merge(cistopic_obj_list)
-cistopic_obj.add_cell_data(cell_data, split_pattern='-')
+cistopic_obj.add_cell_data(cell_data, split_pattern='___')
+cistopic_obj.cell_data.index = cistopic_obj.cell_data.index.str.split('___', expand=True).get_level_values(0)
+cistopic_obj.cell_names = cistopic_obj.cell_data.index
 
+print(cistopic_obj.cell_data)
 pickle.dump(
     cistopic_obj,
-    open(os.path.join(cis_topic_tmp_dir, "cistopic_obj.pkl"), "wb")
+    open(os.path.join(cis_topic_tmp_dir, "intermediar_cistopic_obj.pkl"), "wb")
 )
 
 cistopic_obj = pickle.load(
-    open(os.path.join(cis_topic_tmp_dir, "cistopic_obj.pkl"), "rb")
+    open(os.path.join(cis_topic_tmp_dir, "intermediar_cistopic_obj.pkl"), "rb")
 )
 
 import pycisTopic.lda_models
@@ -1255,13 +1259,11 @@ model = pycisTopic.lda_models.evaluate_models(
 cistopic_obj.add_LDA_model(model)
 pickle.dump(
     cistopic_obj,
-    open(os.path.join(
-        cis_topic_tmp_dir, "cistopic_obj.pkl"), "wb")
+    open(args["cistopic_path"], "wb")
 )
 
 pickle.load(
-    open(os.path.join(
-        cis_topic_tmp_dir, "cistopic_obj.pkl"), "rb")
+    open(args["cistopic_path"], "rb")
 )
 
 # Now, we keep only variable regions
@@ -1356,8 +1358,10 @@ diff_regions = (df_diff_regions["Chromosome"] +
                 "-" + df_diff_regions["End"].astype(str)).values
 
 # Transform as mudata object
+print(cistopic_obj.cell_data)
+print(mudata["rna"].obs_names)
 # Match RNA barcode
-mudata["rna"].obs_names = cell_data.index + "___smpl"
+#mudata["rna"].obs_names = cell_data.index + "___smpl"
 import scenicplus.data_wrangling.adata_cistopic_wrangling
 new_mudata = scenicplus.data_wrangling.adata_cistopic_wrangling.process_multiome_data(
     GEX_anndata=mudata["rna"],
@@ -1367,6 +1371,8 @@ new_mudata = scenicplus.data_wrangling.adata_cistopic_wrangling.process_multiome
     bc_transform_func=lambda x: x,
     )
 
+#new_mudata.obs_names = pd.Series(new_mudata.obs.index).str.split("___", expand=True)[0]
+print(new_mudata.obs_names)
 pre_atac = new_mudata["scATAC"][:, new_mudata["scATAC"].var.index.isin(
     diff_regions)]
 # rename regions
