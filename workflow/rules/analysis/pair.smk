@@ -1,16 +1,16 @@
-rule pair_corr:
+rule pair_real_cor:
     threads: 1
     input:
         pair='datasets/{dname}pair/cases/{case}/mdata.h5mu',
         npair='datasets/{dname}npair/cases/{case}/mdata.h5mu',
     output:
-        cors='analysis/pair/{dname}.{case}.cors_vals.csv',
-        stat='analysis/pair/{dname}.{case}.cors_stat.csv',
+        cors='analysis/pair/{dname}.{case}.real_corvals.csv',
+        stat='analysis/pair/{dname}.{case}.real_corsstat.csv',
     singularity:
         'workflow/envs/gretabench.sif'
     shell:
         """
-        python workflow/scripts/analysis/pair/cors_and_stat.py \
+        python workflow/scripts/analysis/pair/real_cors.py \
         -a {input.pair} \
         -b {input.npair} \
         -c {output.cors} \
@@ -18,21 +18,25 @@ rule pair_corr:
         """
 
 
-rule pair_closek:
+rule pair_fake_stats:
     threads: 1
     input:
         mdata='datasets/{dname}pair/cases/{case}/mdata.h5mu',
         barmap='datasets/fake{dname}pair/barmap.csv',
     output:
-        ks='analysis/pair/{dname}.{case}.closek.csv',
+        knn='analysis/pair/{dname}.{case}.fake_knn.csv',
+        cor='analysis/pair/{dname}.{case}.fake_cor.csv',
+        prp='analysis/pair/{dname}.{case}.fake_prp.csv',
     singularity:
         'workflow/envs/gretabench.sif'
     shell:
         """
-        python workflow/scripts/analysis/pair/closek.py \
+        python workflow/scripts/analysis/pair/fake_stats.py \
         -a {input.mdata} \
         -b {input.barmap} \
-        -c {output.ks} \
+        -c {output.knn} \
+        -d {output.cor} \
+        -e {output.prp}
         """
 
 
