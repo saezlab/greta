@@ -38,7 +38,7 @@ rule download_reprofibro:
         done && \
         wget --no-verbose '{params.annot}' -O {output.annot} && \
         python workflow/scripts/datasets/reprofibro/prc_annot.py -a {output.annot} && \
-        awk 'BEGIN {{FS=OFS=","}} NR==1 {{print $0; next}} {{print $2"_"$1,$2,$3}}' > {output.annot}.tmp && \
+        awk 'BEGIN {{FS=OFS=","}} NR==1 {{print $0; next}} {{print $2"_"$1,$2,$3}}' {output.annot} > {output.annot}.tmp && \
         mv {output.annot}.tmp {output.annot} && \
         wget --no-verbose '{params.barcodes}' -O {output.barcodes} && \
         wget --no-verbose '{params.genes}' -O {output.genes}

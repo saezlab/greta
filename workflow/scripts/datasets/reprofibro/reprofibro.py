@@ -32,6 +32,7 @@ path_output = args['path_output']
 
 # Read annots and barmap
 obs = pd.read_csv(path_annot, index_col=0)
+obs.index = [i.split('_')[1] for i in obs.index]
 bar_map = pd.read_csv(path_barmap, sep='\t').set_index('RNA_bc')['ATAC_bc'].to_dict()
 
 # Read gene ids
@@ -96,6 +97,7 @@ mdata = md.MuData(
     {'rna': rna, 'atac': atac,},
     obs=obs
 )
+
 
 # Write
 mdata.write(path_output)
