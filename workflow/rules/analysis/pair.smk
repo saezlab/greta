@@ -1,5 +1,6 @@
 rule pair_real_cor:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         pair='datasets/{dname}pair/cases/{case}/mdata.h5mu',
         npair='datasets/{dname}npair/cases/{case}/mdata.h5mu',
@@ -20,6 +21,7 @@ rule pair_real_cor:
 
 rule pair_fake_stats:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata='datasets/{dname}pair/cases/{case}/mdata.h5mu',
         barmap='datasets/fake{dname}pair/barmap.csv',
@@ -42,6 +44,7 @@ rule pair_fake_stats:
 
 rule pair_sim:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         p='analysis/topo/{dname}pair.{case}.sims_mult.csv',
         n='analysis/topo/{dname}npair.{case}.sims_mult.csv',

@@ -1,16 +1,16 @@
 rule extract_tss_figr:
+    threads: 1
+    singulatiry: 'workflow/envs/figr.sif'
     output:
         "gdata/alltss/figr.csv"
-    singulatiry:
-	'workflow/envs/figr.sif'
     shell:
         """
         Rscript scripts/analysis/tss/figr.R {output}
         """
 
 rule extract_tss_dictys:
-    conda:
-        '../../envs/dictys.yaml'
+    threads: 1
+    conda: '../../envs/dictys.yaml'
     params:
         url_gtf="http://ftp.ensembl.org/pub/release-107/gtf/homo_sapiens/Homo_sapiens.GRCh38.107.gtf.gz"
     output:
@@ -29,10 +29,10 @@ rule extract_tss_dictys:
         """
 
 rule extract_tss_celloracle:
+    threads: 1
+    singulatiry: 'workflow/envs/celloracle.sif'
     output:
         o="gdata/alltss/celloracle.csv"
-    singulatiry:
-        'workflow/envs/celloracle.sif'
     shell:
         """
         python scripts/analysis/tss/celloracle.py \
@@ -40,40 +40,40 @@ rule extract_tss_celloracle:
         """
 
 rule extract_tss_hummus:
+    threads: 1
+    singulatiry: 'workflow/envs/hummus.sif'
     output:
         "gdata/alltss/hummus.csv"
-    singulatiry:
-        'workflow/envs/hummus.sif'
     shell:
         """
         Rscript scripts/analysis/tss/hummus.R {output}
         """
 
 rule extract_tss_pando:
+    threads: 1
+    singulatiry: 'workflow/envs/pando.sif'
     output:
         "gdata/alltss/pando.csv"
-    singulatiry:
-        'workflow/envs/pando.sif'
     shell:
         """
         Rscript scripts/analysis/tss/pando.R {output}
         """
 
 rule extract_tss_granie:
+    threads: 1
+    singulatiry: 'workflow/envs/granie.sif'
     output:
         "gdata/alltss/granie.csv"
-    singulatiry:
-        'workflow/envs/granie.sif'
     shell:
         """
         Rscript scripts/analysis/tss/granie.R {output}
         """
 
 rule extract_tss_scenicplus:
+    threads: 1
+    singulatiry: 'workflow/envs/scenicplus.sif'
     output:
         h="gdata/alltss/scenicplus.csv"
-    singulatiry:
-        'workflow/envs/scenicplus.sif'
     shell:
         """
         python scripts/analysis/tss/scenicplus.py \
@@ -81,14 +81,16 @@ rule extract_tss_scenicplus:
         """
 
 rule compare_tss:
+    threads: 16
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         g="gdata/alltss/granie.csv",
         s="gdata/alltss/scenicplus.csv",
         c="gdata/alltss/celloracle.csv",
         m="gdata/alltss/hummus.csv",
-	p="gdata/alltss/pando.csv",
+    	p="gdata/alltss/pando.csv",
         f="gdata/alltss/figr.csv",
-	d="gdata/alltss/dictys.csv"
+    	d="gdata/alltss/dictys.csv"
     output:
         o="/analysis/alltss/ocoef.csv"
     shell:
@@ -100,8 +102,8 @@ rule compare_tss:
         -c {input.c} \
         -p {input.p} \
         -f {input.f} \
-	-m {input.m} \
-	-d {input.d} \
+    	-m {input.m} \
+    	-d {input.d} \
         -o {output.o} 
         echo "Done"
         """

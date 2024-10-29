@@ -1,5 +1,6 @@
 rule topo_mult:
     threads: 32
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         lambda w: make_combs_rules(w=w, mthds=mthds, baselines=baselines, rule_name='grn_run')
     output:
