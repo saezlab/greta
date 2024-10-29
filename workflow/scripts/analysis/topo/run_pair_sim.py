@@ -39,7 +39,7 @@ for path in tqdm(paths):
     df = pd.read_csv(path).drop_duplicates(['source', 'target'], keep='first')
     dfs.append(df)
     stat = get_grn_stats(df)
-    stats.append(['name'] + stat)
+    stats.append(['name'] + list(stat))
 
 # Store as df
 cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'mean_reg_size', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']

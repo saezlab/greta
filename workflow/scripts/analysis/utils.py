@@ -4,7 +4,7 @@ import os
 
 
 def get_grn_name(grn_path):
-    name = os.path.basename(path).replace('.grn.csv', '').replace('.csv', '')
+    name = os.path.basename(grn_path).replace('.grn.csv', '').replace('.csv', '')
     pre, p2g, tfb, mdl = name.split('.')
     if (pre == p2g) & (p2g == tfb) & (tfb == mdl):
         name = pre
