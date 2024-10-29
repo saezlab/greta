@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[42]:
-
-
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
 from itertools import combinations
@@ -55,20 +49,20 @@ def transform(data):
 def overlap_coef_per_gene(gene, data1, data2):
     filt1 = data1[data1.Name == gene]
     filt2 = data2[data2.Name == gene]
-    
+
     if filt1.empty or filt2.empty:
         return {'Gene': gene, 'Overlap_Coef': 0}
     overlap = filt1.intersect(filt2)
-    
+
     # Calculate overlap coefficient
     if overlap.empty:
         overlap_coef = 0  # No overlap
     else:
         if overlap.length == 0:
-            overlap_coef = 1
+            overlap_coef = 0
         else:
             overlap_coef = overlap.length / min(filt1.length, filt2.length)
-    
+
     return {'Gene': gene, 'Overlap_Coef': overlap_coef}
 
 # Define the function to parallelize
@@ -88,7 +82,7 @@ def calculate_all_overlap_coef(datasets, dataset_names, max_workers=32):
                 if result is not None:
                     results.append(result)
 
-        if results:  
+        if results:
             overlap_coef_df = pd.DataFrame(results)
             overlap_coef_df["Annotation1"] = name1
             overlap_coef_df["Annotation2"] = name2
