@@ -1,4 +1,4 @@
-localrules: download_motifs, download_gene_annotations, download_cistarget
+localrules: download_motifs, download_gene_annotations, download_cistarget, download_genomesizes
 
 
 rule download_motifs:
@@ -60,6 +60,7 @@ rule pre_scenicplus:
         annot_h=rules.download_gene_annotations.output.h,
     output:
         out='datasets/{dataset}/cases/{case}/runs/scenicplus.pre.h5mu',
+        cistopic_obj=temp(local('datasets/{dataset}/cases/{case}/runs/cistopic_obj.pkl')),
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
@@ -83,7 +84,8 @@ rule pre_scenicplus:
         -n {params.n_cores} \
         -a {input.annot_m} \
         -b {input.annot_h} \
-        --ray_tmp_dir '{params.ray_tmp_dir}'
+        --ray_tmp_dir '{params.ray_tmp_dir}' \
+        --cistopic_path {output.cistopic_obj}
         """
 
 
@@ -239,28 +241,30 @@ rule mdl_o_scenicplus:
     input:
         # data
         frags=list_frags_files,
-        mdata=rules.extract_case.output.mdata,
+        mdata='datasets/{dataset}/cases/all/mdata.h5mu',
+#        mdata=rules.extract_case.output.mdata,
         # annotations
         chrom_sizes_h=rules.download_genomesizes.output.hg38,
         chrom_sizes_m=rules.download_genomesizes.output.mm10,
-        annot_m=rules.download_gene_annotations.output.m,
-        annot_h=rules.download_gene_annotations.output.h,
+#        annot_m=rules.download_gene_annotations.output.m,
+#        annot_h=rules.download_gene_annotations.output.h,
         path_to_motif_annotations_human=rules.download_motifs.output.h,
         path_to_motif_annotations_mouse=rules.download_motifs.output.m,
         # cistarget
         cistarget_rankings_human=rules.download_cistarget.output.human_rankings,
         cistarget_scores_human=rules.download_cistarget.output.human_scores,
-
+        # cistopic
+        cistopic_obj=rules.pre_scenicplus.output.cistopic_obj
     params:
         n_cores=32,
         organism=lambda w: config['datasets'][w.dataset]['organism'],
-        temp_numba_cache_dir=".tmp",
+        temp_numba_cache_dir=".scenicplus_tmp",
         ray_tmp_dir="/tmp",
-        temp_dir=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp/src/'))),
+        temp_dir=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp/'))),
         tmp_scenicplus=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))),
         # p2g params
-        search_space_upstream="1000 150000",
-        search_space_downstream="1000 150000",
+        search_space_upstream="1000000 1000000", #"1000 150000",
+        search_space_downstream="1000000 1000000", #"1000 150000",
         search_space_extend_tss="10 10",
         remove_promoters=False,  # Fixed to False in the snakemake pipeline
         use_gene_boundaries=False,  # Fixed to False in the snakemake pipeline
@@ -272,12 +276,17 @@ rule mdl_o_scenicplus:
         order_regions_to_genes_by="importance",
         order_TFs_to_genes_by="importance",
         gsea_n_perm=1000,
-        quantile_thresholds_region_to_gene="0.85 0.90 0.95",
+        quantile_thresholds_region_to_gene="0.01 0.1 0.85 0.9 0.95", #"0.85 0.90 0.95",
         top_n_regionTogenes_per_gene="5 10 15",
         top_n_regionTogenes_per_region="",
         min_regions_per_gene=0,
-        rho_threshold=0.05,
-        min_target_genes=10,
+        rho_threshold=0, #0.05,
+        min_target_genes=1, #0,
+        # Only download in scenicplus snakemake if not already existing
+        annot_m = "aertslab/genomes/mm10/o_scenciplus_mm10_ensdb_v79.tsv",
+        annot_h = "aertslab/genomes/hg38/o_scenciplus_hg38_ensdb_v86.tsv",
+        chrom_sizes_h="aertslab/genomes/hg38/o_scenciplus_hg38_chromsizes.tsv",
+        chrom_sizes_m="aertslab/genomes/mm10/o_scenciplus_mm10_chromsizes.tsv",
     singularity:
         'workflow/envs/scenicplus.sif'
     output:
@@ -287,25 +296,29 @@ rule mdl_o_scenicplus:
         annotation_direct_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_direct.h5ad"),
         annotation_extended_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_extended.h5ad"),
         tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.tf_names.txt"),
+        search_space_path = temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.search_space.tsv"),
     shell:
         """
-        mkdir $(pwd)/{params.temp_numba_cache_dir}
-        export NUMBA_CACHE_DIR=$(pwd)/{params.temp_numba_cache_dir}
-        
-        mkdir -p scplus_pipeline
-        scenicplus init_snakemake --out_dir scplus_pipeline
+        export NUMBA_CACHE_DIR=$(pwd)/{params.temp_dir}
+
+        cp datasets/pbmc10k/cases/all/runs/scenicplus.scenicplus.scenicplus.dem.hdf5 {output.dem_results}        
+        scplus_pipeline=scplus_pipeline_{wildcards.dataset}_{wildcards.case}        
+
+        mkdir -p  $scplus_pipeline
+        scenicplus init_snakemake --out_dir $scplus_pipeline
 
         python workflow/scripts/methods/scenicplus/src_config.py \
         -f {input.frags} \
         -i {input.mdata} \
-        -m {input.chrom_sizes_m} \
-        -j {input.chrom_sizes_h} \
+        -m {params.chrom_sizes_m} \
+        -j {params.chrom_sizes_h} \
+        --cistopic_path {input.cistopic_obj} \
         -o {output.out} \
         -t {params.temp_dir} \
         -g {params.organism} \
         -c {params.n_cores} \
-        -a {input.annot_m} \
-        -b {input.annot_h} \
+        -a {params.annot_m} \
+        -b {params.annot_h} \
         -r {input.cistarget_rankings_human} \
         -s {input.cistarget_scores_human} \
         --path_to_motif_annotations_human {input.path_to_motif_annotations_human}\
@@ -334,106 +347,11 @@ rule mdl_o_scenicplus:
         --annotation_direct_path {output.annotation_direct_path}\
         --annotation_extended_path {output.annotation_extended_path}\
         --tf_names_path {output.tf_names_path}\
-        --output_config "scplus_pipeline/Snakemake/config/config.yaml"
-        """
+        --search_space_path {output.search_space_path}\
+        --output_config $scplus_pipeline/Snakemake/config/config.yaml
 
-#rule mdl_o_scenicplus:
-#    threads: 32
-#    input:
-#        # data
-#        frags=list_frags_files,
-#        mdata=rules.extract_case.output.mdata,
-#        # annotations
-#        chrom_sizes_h=rules.download_genomesizes.output.hg38,
-#        chrom_sizes_m=rules.download_genomesizes.output.mm10,
-#        annot_m=rules.download_gene_annotations.output.m,
-#        annot_h=rules.download_gene_annotations.output.h,
-#        path_to_motif_annotations_human=rules.download_motifs.output.h,
-#        path_to_motif_annotations_mouse=rules.download_motifs.output.m,
-#        # cistarget
-#        cistarget_rankings_human=rules.download_cistarget.output.human_rankings,
-#        cistarget_scores_human=rules.download_cistarget.output.human_scores,
-#    params:
-#        # general params
-#        n_cores=32,
-#        organism=lambda w: config['datasets'][w.dataset]['organism'],
-#        ray_tmp_dir="/tmp",
-#        temp_dir=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp/src/'))),
-#        tmp_scenicplus=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))), 
-#        # p2g params
-#        search_space_upstream="1000 150000",
-#        search_space_downstream="1000 150000",
-#        search_space_extend_tss="10 10",
-#        remove_promoters=False,  # Fixed to False in the snakemake pipeline
-#        use_gene_boundaries=False,  # Fixed to False in the snakemake pipeline
-#        region_to_gene_importance_method="GBM",
-#        region_to_gene_correlation_method="SR",
-#        # tfb params
-#        # mdl params
-#        method_mdl="GBM",
-#        order_regions_to_genes_by="importance",
-#        order_TFs_to_genes_by="importance",
-#        gsea_n_perm=1000,
-#        quantile_thresholds_region_to_gene="0.85 0.90 0.95",
-#        top_n_regionTogenes_per_gene="5 10 15",
-#        top_n_regionTogenes_per_region="",
-#        min_regions_per_gene=0,
-#        rho_threshold=0.05,
-#        min_target_genes=10,
-#    singularity:
-#        'workflow/envs/scenicplus.sif'
-#    output:
-#        out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv',
-#        cistarget_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.cistarget.hdf5"),
-#        dem_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.dem.hdf5"),
-#        annotation_direct_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_direct.h5ad"),
-#        annotation_extended_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_extended.h5ad"),
-#        tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.tf_names.txt"),
-#    resources:
-#        mem_mb=512000,
-#        runtime=360,
-#    shell:
-#        """
-#        python workflow/scripts/methods/scenicplus/src.py \
-#        -f {input.frags} \
-#        -i {input.mdata} \
-#        -m {input.chrom_sizes_m} \
-#        -j {input.chrom_sizes_h} \
-#        -o {output.out} \
-#        -t {params.temp_dir} \
-#        -g {params.organism} \
-#        -c {params.n_cores} \
-#        -a {input.annot_m} \
-#        -b {input.annot_h} \
-#        -r {input.cistarget_rankings_human} \
-#        -s {input.cistarget_scores_human} \
-#        --path_to_motif_annotations_human {input.path_to_motif_annotations_human}\
-#        --path_to_motif_annotations_mouse {input.path_to_motif_annotations_mouse}\
-#        --ray_tmp_dir {params.ray_tmp_dir} \
-#        --tmp_scenicplus {params.tmp_scenicplus} \
-#        --search_space_upstream "{params.search_space_upstream}" \
-#        --search_space_downstream "{params.search_space_downstream}" \
-#        --search_space_extend_tss "{params.search_space_extend_tss}" \
-#        --remove_promoters {params.remove_promoters} \
-#        --use_gene_boundaries {params.use_gene_boundaries} \
-#        --region_to_gene_importance_method {params.region_to_gene_importance_method} \
-#        --region_to_gene_correlation_method {params.region_to_gene_correlation_method} \
-#        --method_mdl {params.method_mdl} \
-#        --order_regions_to_genes_by {params.order_regions_to_genes_by} \
-#        --order_TFs_to_genes_by {params.order_TFs_to_genes_by} \
-#        --gsea_n_perm {params.gsea_n_perm} \
-#        --quantile_thresholds_region_to_gene {params.quantile_thresholds_region_to_gene} \
-#        --top_n_regionTogenes_per_gene {params.top_n_regionTogenes_per_gene} \
-#        --top_n_regionTogenes_per_region {params.top_n_regionTogenes_per_region} \
-#        --min_regions_per_gene {params.min_regions_per_gene} \
-#        --rho_threshold {params.rho_threshold} \
-#        --min_target_genes {params.min_target_genes} \
-#        --cistarget_results {output.cistarget_results} \
-#        --dem_results {output.dem_results} \
-#        --annotation_direct_path {output.annotation_direct_path}\
-#        --annotation_extended_path {output.annotation_extended_path}\
-#        --tf_names_path {output.tf_names_path}\
-#        """
-#        
-#
-#
+        cd $scplus_pipeline/Snakemake/
+        snakemake --cores {params.n_cores} --keep-incomplete
+        
+        rm -r $(pwd)/{params.temp_dir}
+        """

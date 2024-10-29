@@ -24,6 +24,7 @@ parser.add_argument('--cistopic_path', type=str, help='Path to cisTopic object')
 parser.add_argument('--annotation_direct_path', type=str, help='Path to direct annotation')
 parser.add_argument('--annotation_extended_path', type=str, help='Path to extended annotation')
 parser.add_argument('--tf_names_path', type=str, help='Path to TF names')
+parser.add_argument('--search_space_path', type=str, help='Search space path')
 parser.add_argument('--cistarget_results_path', required=True)
 parser.add_argument('--dem_results_path', required=True)
     # General parameters
@@ -133,21 +134,21 @@ config_dic["input_data"]["path_to_motif_annotations"] = path_to_motif_annotation
 config_dic["output_data"]["combined_GEX_ACC_mudata"] = os.path.join(tmp_scenicplus, 'combined_GEX_ACC_mudata.h5mu')
 config_dic["output_data"]["dem_result_fname"] = dem_results_path
 config_dic["output_data"]["ctx_result_fname"] = cistarget_results_path
-config_dic["output_data"]["output_fname_dem_html"] = os.path.join(tmp_scenicplus, 'dem_results.html')
-config_dic["output_data"]["output_fname_ctx_html"] = os.path.join(tmp_scenicplus, 'ctx_results.html')
+config_dic["output_data"]["output_fname_dem_html"] = os.path.join(tmp_scenicplus, 'o_scenciplus_dem_results.html')
+config_dic["output_data"]["output_fname_ctx_html"] = os.path.join(tmp_scenicplus, 'o_scenicplus_ctx_results.html')
 config_dic["output_data"]["cistromes_direct"] = args['annotation_direct_path']
 config_dic["output_data"]["cistromes_extended"] = args['annotation_extended_path']
 config_dic["output_data"]["tf_names"] = args['tf_names_path']
 config_dic["output_data"]["genome_annotation"] = annot_fname
 config_dic["output_data"]["chromsizes"] = chromsizes_fname
-config_dic["output_data"]["search_space"] = args['search_space_upstream']
-config_dic["output_data"]["tf_to_gene_adjacencies"] = os.path.join(tmp_scenicplus, 'tf_to_gene_adjacencies.tsv')
-config_dic["output_data"]["region_to_gene_adjacencies"] = os.path.join(tmp_scenicplus, 'region_to_gene_adjacencies.tsv')
-config_dic["output_data"]["eRegulons_direct"] = os.path.join(tmp_scenicplus, 'eRegulons_direct.tsv')
-config_dic["output_data"]["eRegulons_extended"] = os.path.join(tmp_scenicplus, 'eRegulons_extended.tsv')
-config_dic["output_data"]["AUCell_direct"] = os.path.join(tmp_scenicplus, 'AUCell_direct.h5mu')
-config_dic["output_data"]["AUCell_extended"] = os.path.join(tmp_scenicplus, 'AUCell_extended.h5mu')
-config_dic["output_data"]["scplus_mdata"] = os.path.join(tmp_scenicplus, 'scplus_mdata.h5mu')
+config_dic["output_data"]["search_space"] = args['search_space_path']
+config_dic["output_data"]["tf_to_gene_adjacencies"] = os.path.join(tmp_scenicplus, 'o_scenciplus_tf_to_gene_adjacencies.tsv')
+config_dic["output_data"]["region_to_gene_adjacencies"] = os.path.join(tmp_scenicplus, 'o_scenciplus_region_to_gene_adjacencies.tsv')
+config_dic["output_data"]["eRegulons_direct"] = os.path.join(tmp_scenicplus, 'o_scenciplus_eRegulons_direct.tsv')
+config_dic["output_data"]["eRegulons_extended"] = os.path.join(tmp_scenicplus, 'o_scenciplus_eRegulons_extended.tsv')
+config_dic["output_data"]["AUCell_direct"] = os.path.join(tmp_scenicplus, 'o_scenciplus_AUCell_direct.h5mu')
+config_dic["output_data"]["AUCell_extended"] = os.path.join(tmp_scenicplus, 'o_scenciplus_AUCell_extended.h5mu')
+config_dic["output_data"]["scplus_mdata"] = os.path.join(tmp_scenicplus, 'o_scenciplus_scplus_mdata.h5mu')
 
 config_dic["params_general"]["n_cpu"] = njobs
 config_dic["params_general"]["seed"] = 42
@@ -161,9 +162,9 @@ config_dic["params_data_preparation"]["direct_annotation"] = "Direct_annot"
 config_dic["params_data_preparation"]["extended_annotation"] = "Orthology_annot"
 config_dic["params_data_preparation"]["species"] = organism
 config_dic["params_data_preparation"]["biomart_host"] = "http://ensembl.org/"
-config_dic["params_data_preparation"]["search_space_upstream"] = r"'" + args['search_space_upstream'] + r"'"
-config_dic["params_data_preparation"]["search_space_downstream"] = r"'" + args['search_space_downstream'] + r"'"
-config_dic["params_data_preparation"]["search_space_extend_tss"] = r"'" + args['search_space_extend_tss'] + r"'"
+config_dic["params_data_preparation"]["search_space_upstream"] = '{}'.format(args['search_space_upstream'])
+config_dic["params_data_preparation"]["search_space_downstream"] =  '{}'.format(args['search_space_downstream'])
+config_dic["params_data_preparation"]["search_space_extend_tss"] = '{}'.format(args['search_space_extend_tss'])
 
 #config_dic["params_motif_enrichment"]["species"] = species
 config_dic["params_motif_enrichment"]["annotation_version"] = annotation_version
@@ -190,12 +191,13 @@ config_dic["params_inference"]["order_regions_to_genes_by"] = args['order_region
 config_dic["params_inference"]["order_TFs_to_genes_by"] = args['order_TFs_to_genes_by']
 config_dic["params_inference"]["gsea_n_perm"] = args['gsea_n_perm']
 print(args["quantile_thresholds_region_to_gene"])
-config_dic["params_inference"]["quantile_thresholds_region_to_gene"] = r"'" + ' '.join([str(v) for v in args['quantile_thresholds_region_to_gene']]) + r"'"
-config_dic["params_inference"]["top_n_regionTogenes_per_gene"] = r"'" + ' '.join([str(v) for v in args['top_n_regionTogenes_per_gene']]) + r"'"
-config_dic["params_inference"]["top_n_regionTogenes_per_region"] = r"'" + ' '.join([str(v) for v in args['top_n_regionTogenes_per_region']]) + r"'"
+config_dic["params_inference"]["quantile_thresholds_region_to_gene"] = ' '.join([str(v) for v in args['quantile_thresholds_region_to_gene']])
+config_dic["params_inference"]["top_n_regionTogenes_per_gene"] = ' '.join([str(v) for v in args['top_n_regionTogenes_per_gene']])
+config_dic["params_inference"]["top_n_regionTogenes_per_region"] = ' '.join([str(v) for v in args['top_n_regionTogenes_per_region']])
 config_dic["params_inference"]["min_regions_per_gene"] = args['min_regions_per_gene']
 config_dic["params_inference"]["rho_threshold"] = args['rho_threshold']
 config_dic["params_inference"]["min_target_genes"] = args['min_target_genes']
 
+
 with open(args["output_config"], 'w') as file:
-    yaml.dump(config_dic, file)
+    yaml.dump(config_dic, file, default_flow_style=False)

@@ -81,7 +81,7 @@ bigwig_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files")
 bed_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bed_paths.pkl')
 bw_pickle = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files", 'bw_paths.pkl')
 # MACS paths
-macs_folder = os.path.join(ray_tmp_dir, "MACS")
+macs_folder = os.path.join(cis_topic_tmp_dir, "MACS")
 narrow_peaks_pickle = os.path.join(macs_folder, 'narrow_peaks_dict.pkl')
 # Consensus peaks paths
 consensus_peaks_bed = os.path.join(cis_topic_tmp_dir, 'consensus_region.bed')
@@ -135,7 +135,7 @@ cell_data.head(3)
 # Get chromosome sizes (for hg38 here)
 #chromsizes = pd.read_csv(chromsizes_url, sep='\t', header=None)
 chromsizes = pd.read_csv(chromsizes_fname, sep='\t', header=None)
-
+print(chromsizes_fname)
 chromsizes.columns = ['Chromosome', 'End']
 chromsizes['Start'] = [0]*chromsizes.shape[0]
 chromsizes = chromsizes.loc[:, ['Chromosome', 'Start', 'End']]
