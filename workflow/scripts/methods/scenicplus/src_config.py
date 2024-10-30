@@ -18,7 +18,6 @@ parser.add_argument('-i', '--mudata', type=str, help='Path to metadata file')
 parser.add_argument('-o', '--out', type=str, help='Path to output directory')
 parser.add_argument('-t', '--temp_dir', type=str, help='Path to temp directory')
 parser.add_argument('--ray_tmp_dir', type=str, help='Path to ray tmp directory')
-parser.add_argument('--tmp_scenicplus', type=str, help='Path to tmp scenicplus directory')
 parser.add_argument('--cistopic_path', type=str, help='Path to cisTopic object')
     # tfb intermediate files
 parser.add_argument('--annotation_direct_path', type=str, help='Path to direct annotation')
@@ -64,7 +63,7 @@ args = vars(parser.parse_args())
 frags = args['frags']
 mudata_file = args['mudata']
 output_fname = os.path.join('../../', args['out'])
-tmp_scenicplus = os.path.join('../../', args['tmp_scenicplus'])
+temp_dir = os.path.join('../../', args['temp_dir'])
 ray_tmp_dir = os.path.join("../..", args['ray_tmp_dir'])
 njobs = args['njobs']
 organism = args['organism']
@@ -94,7 +93,7 @@ with open(args["output_config"]) as file:
     config_dic = yaml.load(file, Loader=yaml.BaseLoader)
 
 print(config_dic)
-cis_topic_tmp_dir = os.path.join(tmp_scenicplus, 'cisTopic')
+cis_topic_tmp_dir = os.path.join(temp_dir, 'cisTopic')
 quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
 bed_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bed_files")
 bigwig_folder = os.path.join(cis_topic_tmp_dir, "pseudobulk_bw_files")
@@ -107,7 +106,7 @@ narrow_peaks_pickle = os.path.join(macs_folder, 'narrow_peaks_dict.pkl')
 consensus_peaks_bed = os.path.join(cis_topic_tmp_dir, 'consensus_region.bed')
 quality_control_dir = os.path.join(cis_topic_tmp_dir, 'quality_control')
 # cisTopic object path
-GEX_anndata_fname = os.path.join(args['tmp_scenicplus'], 'GEX_anndata.h5ad')
+GEX_anndata_fname = os.path.join(args["temp_dir"], 'GEX_anndata.h5ad')
 
 # Save GEW anndata from mudata
 mdata = mu.read_h5mu(mudata_file)
@@ -131,28 +130,28 @@ config_dic["input_data"]["ctx_db_fname"] = cistarget_ranking_db_fname
 config_dic["input_data"]["dem_db_fname"] = cistarget_score_db_fname
 config_dic["input_data"]["path_to_motif_annotations"] = path_to_motif_annotations
 
-config_dic["output_data"]["combined_GEX_ACC_mudata"] = os.path.join(tmp_scenicplus, 'combined_GEX_ACC_mudata.h5mu')
+config_dic["output_data"]["combined_GEX_ACC_mudata"] = os.path.join(temp_dir, 'combined_GEX_ACC_mudata.h5mu')
 config_dic["output_data"]["dem_result_fname"] = dem_results_path
 config_dic["output_data"]["ctx_result_fname"] = cistarget_results_path
-config_dic["output_data"]["output_fname_dem_html"] = os.path.join(tmp_scenicplus, 'o_scenciplus_dem_results.html')
-config_dic["output_data"]["output_fname_ctx_html"] = os.path.join(tmp_scenicplus, 'o_scenicplus_ctx_results.html')
+config_dic["output_data"]["output_fname_dem_html"] = os.path.join(temp_dir, 'o_scenciplus_dem_results.html')
+config_dic["output_data"]["output_fname_ctx_html"] = os.path.join(temp_dir, 'o_scenicplus_ctx_results.html')
 config_dic["output_data"]["cistromes_direct"] = args['annotation_direct_path']
 config_dic["output_data"]["cistromes_extended"] = args['annotation_extended_path']
 config_dic["output_data"]["tf_names"] = args['tf_names_path']
 config_dic["output_data"]["genome_annotation"] = annot_fname
 config_dic["output_data"]["chromsizes"] = chromsizes_fname
 config_dic["output_data"]["search_space"] = args['search_space_path']
-config_dic["output_data"]["tf_to_gene_adjacencies"] = os.path.join(tmp_scenicplus, 'o_scenciplus_tf_to_gene_adjacencies.tsv')
-config_dic["output_data"]["region_to_gene_adjacencies"] = os.path.join(tmp_scenicplus, 'o_scenciplus_region_to_gene_adjacencies.tsv')
-config_dic["output_data"]["eRegulons_direct"] = os.path.join(tmp_scenicplus, 'o_scenciplus_eRegulons_direct.tsv')
-config_dic["output_data"]["eRegulons_extended"] = os.path.join(tmp_scenicplus, 'o_scenciplus_eRegulons_extended.tsv')
-config_dic["output_data"]["AUCell_direct"] = os.path.join(tmp_scenicplus, 'o_scenciplus_AUCell_direct.h5mu')
-config_dic["output_data"]["AUCell_extended"] = os.path.join(tmp_scenicplus, 'o_scenciplus_AUCell_extended.h5mu')
-config_dic["output_data"]["scplus_mdata"] = os.path.join(tmp_scenicplus, 'o_scenciplus_scplus_mdata.h5mu')
+config_dic["output_data"]["tf_to_gene_adjacencies"] = os.path.join(temp_dir, 'o_scenciplus_tf_to_gene_adjacencies.tsv')
+config_dic["output_data"]["region_to_gene_adjacencies"] = os.path.join(temp_dir, 'o_scenciplus_region_to_gene_adjacencies.tsv')
+config_dic["output_data"]["eRegulons_direct"] = os.path.join(temp_dir, 'o_scenciplus_eRegulons_direct.tsv')
+config_dic["output_data"]["eRegulons_extended"] = os.path.join(temp_dir, 'o_scenciplus_eRegulons_extended.tsv')
+config_dic["output_data"]["AUCell_direct"] = os.path.join(temp_dir, 'o_scenciplus_AUCell_direct.h5mu')
+config_dic["output_data"]["AUCell_extended"] = os.path.join(temp_dir, 'o_scenciplus_AUCell_extended.h5mu')
+config_dic["output_data"]["scplus_mdata"] = os.path.join(temp_dir, 'o_scenciplus_scplus_mdata.h5mu')
 
 config_dic["params_general"]["n_cpu"] = njobs
 config_dic["params_general"]["seed"] = 42
-config_dic["params_general"]["temp_dir"] = args['tmp_scenicplus']
+config_dic["params_general"]["temp_dir"] = args['temp_dir']
 
 #config_dic["params_data_preparation"]["bc_transform_func"] = "lambda x: x"
 config_dic["params_data_preparation"]["is_multiome"] = True
