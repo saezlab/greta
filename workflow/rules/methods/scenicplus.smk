@@ -59,12 +59,12 @@ rule pre_scenicplus:
         annot_m=rules.download_gene_annotations.output.m,
         annot_h=rules.download_gene_annotations.output.h,
     output:
+        tmp_scenicplus=directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp')),
         out='datasets/{dataset}/cases/{case}/runs/scenicplus.pre.h5mu',
         cistopic_obj=temp(local('datasets/{dataset}/cases/{case}/runs/cistopic_obj.pkl')),
     singularity:
         'workflow/envs/scenicplus.sif'
     params:
-        tmp_scenicplus=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))), 
         ray_tmp_dir="/tmp",
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         n_cores=32
@@ -79,7 +79,7 @@ rule pre_scenicplus:
         -m {input.chrom_sizes_m} \
         -j {input.chrom_sizes_h} \
         -o {output.out} \
-        -t {params.tmp_scenicplus} \
+        -t {output.tmp_scenicplus} \
         -g {params.organism} \
         -n {params.n_cores} \
         -a {input.annot_m} \
@@ -260,8 +260,7 @@ rule mdl_o_scenicplus:
         organism=lambda w: config['datasets'][w.dataset]['organism'],
         temp_numba_cache_dir=".scenicplus_tmp",
         ray_tmp_dir="/tmp",
-        temp_dir=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp/'))),
-        tmp_scenicplus=temp(directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp'))),
+        tmp_dir=directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp')),
         # p2g params
         search_space_upstream="1000000 1000000", #"1000 150000",
         search_space_downstream="1000000 1000000", #"1000 150000",
@@ -299,7 +298,7 @@ rule mdl_o_scenicplus:
         search_space_path = temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.search_space.tsv"),
     shell:
         """
-        export NUMBA_CACHE_DIR=$(pwd)/{params.temp_dir}
+        export NUMBA_CACHE_DIR=$(pwd)/{params.tmp_dir}
 
         cp datasets/pbmc10k/cases/all/runs/scenicplus.scenicplus.scenicplus.dem.hdf5 {output.dem_results}        
         scplus_pipeline=scplus_pipeline_{wildcards.dataset}_{wildcards.case}        
@@ -314,7 +313,7 @@ rule mdl_o_scenicplus:
         -j {params.chrom_sizes_h} \
         --cistopic_path {input.cistopic_obj} \
         -o {output.out} \
-        -t {params.temp_dir} \
+        -t {params.tmp_dir} \
         -g {params.organism} \
         -c {params.n_cores} \
         -a {params.annot_m} \
@@ -324,7 +323,6 @@ rule mdl_o_scenicplus:
         --path_to_motif_annotations_human {input.path_to_motif_annotations_human}\
         --path_to_motif_annotations_mouse {input.path_to_motif_annotations_mouse}\
         --ray_tmp_dir {params.ray_tmp_dir} \
-        --tmp_scenicplus {params.tmp_scenicplus} \
         --search_space_upstream "{params.search_space_upstream}" \
         --search_space_downstream "{params.search_space_downstream}" \
         --search_space_extend_tss "{params.search_space_extend_tss}" \
@@ -353,5 +351,11 @@ rule mdl_o_scenicplus:
         cd $scplus_pipeline/Snakemake/
         snakemake --cores {params.n_cores} --keep-incomplete
         
-        rm -r $(pwd)/{params.temp_dir}
+        cd ../../
+        python workflow/scripts/methods/scenicplus/src_merging.py \
+        --grn_extended {params.tmp_dir}/o_scenicplus_eRegulons_extended.tsv\
+        --grn_direct {params.tmp_dir}/o_scenicplus_eRegulons_direct.tsv\
+        --output {output.out}
+        
+        rm -r $(pwd)/{params.tmp_dir}
         """
