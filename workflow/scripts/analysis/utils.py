@@ -18,7 +18,9 @@ def get_grn_stats(grn):
     n_t = grn['target'].unique().size
     n_r = grn.groupby(['source']).count()['target'].mean()
     
-    tf_grn = grn[grn['target'].isin(grn['source'])]
+    tfs = set(grn['source']) & set(grn['target'])
+    msk = grn['source'].isin(tfs) & grn['target'].isin(tfs)
+    tf_grn = grn.loc[msk, :]
     tf_g = ig.Graph.TupleList(list(zip(tf_grn['source'], tf_grn['target'])), directed=True)
     tf_bet = np.mean(tf_g.betweenness())
     tf_odg = np.mean(tf_g.outdegree())
@@ -55,33 +57,29 @@ def parallel_ocoeff_chunk(index_pairs_chunk, dfs):
     return [parallel_ocoeff(pair, dfs) for pair in index_pairs_chunk]
 
 
-def make_combs_rules(w, mthds, baselines, rule_name):
+def make_combs(path, mthds, name):
     from itertools import product
-    out = getattr(rules, rule_name).output.out
-    rule_outputs = []
-    if w.dataset not in nocombs_datasets:
-        for pre, p2g, tfb, mdl in product(mthds, repeat=4):
-            rule_outputs.append(
-                format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
-            )
-    for mth in mthds:
-        if mth != 'scenicplus':  # TODO: remove once src scenic
-            rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
-    for bsl in baselines:
-        rule_outputs.append(format_rule(out, w=w, pre=bsl))
-    return rule_outputs
-
-
-def make_combs_pair(path, mthds, baselines, name):
+    s = '{0}.{1}.{2}.{3}.' + name + '.csv'
+    combinations = product(mthds, repeat=4)
     strings = []
+    for combo in combinations:
+        formatted_string = path + s.format(*combo)
+        strings.append(formatted_string)
+
     # Add src
     s = '{m}.{m}.{m}.{m}.' + name + '.csv'
     for m in mthds:
-        if m != 'scenicplus':  # TODO: remove when ready
-            formatted_string = path + s.format(m='o_' + m)
-            strings.append(formatted_string)
-    # Add bsl
-    for bsl in baselines:
-        formatted_string = path + s.format(m=bsl)
+        formatted_string = path + s.format(m='o_' + m)
         strings.append(formatted_string)
+
+    # Add indv nets
+    s = path + 'random.random.random.random.' + name + '.csv'
+    strings.append(s)
+    s = path + 'scenic.scenic.scenic.scenic.' + name + '.csv'
+    strings.append(s)
+    s = path + 'collectri.collectri.collectri.collectri.' + name + '.csv'
+    strings.append(s)
+    s = path + 'dorothea.dorothea.dorothea.dorothea.' + name + '.csv'
+    strings.append(s)
+
     return strings

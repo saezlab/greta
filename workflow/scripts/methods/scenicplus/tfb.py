@@ -569,7 +569,7 @@ run_motif_enrichment_dem(
     path_to_motif_annotations=path_to_motif_annotations,
     annotation_version=annotation_version,
     motif_similarity_fdr=0.05,
-    orthologous_identity_threshold=0.8,
+    orthologous_identity_threshold=0.0,
     annotations_to_use=["Direct_annot", "Orthology_annot"],
     write_html=False,
     max_bg_regions=dem_max_bg_regions,

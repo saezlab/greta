@@ -39,13 +39,11 @@ for path in tqdm(paths):
     df = pd.read_csv(path).drop_duplicates(['source', 'target'], keep='first')
     dfs.append(df)
     stat = get_grn_stats(df)
-    stats.append(stat)
+    stats.append(['name'] + list(stat))
 
 # Store as df
-cols = ['n_tfs', 'n_edges', 'n_targets', 'mean_reg_size', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']
+cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'mean_reg_size', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']
 stats = pd.DataFrame(stats, columns=cols)
-stats.insert(0, 'name', names)
-
 
 print('Computing pairwise overlap coefficients...')
 chunk_size = 100  # Adjust based on profiling

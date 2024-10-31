@@ -4,7 +4,7 @@ import yaml
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'analysis')))
-from utils import make_combs_pair
+from utils import make_combs
 from tqdm import tqdm
 import argparse
 
@@ -49,27 +49,23 @@ def compute_stats(ref_path, prd_path):
 with open('config/config.yaml') as stream:
     config = yaml.safe_load(stream)
 mthds = list(config['methods'].keys())
-baselines = config['baselines']
 
 
-combs_scores = make_combs_pair(
-    path='analysis/pair/{d}.{c}/'.format(d=dataset, c=case),
+combs_scores = make_combs(
+    path='analysis/metrics/pred/pair/{d}/{d}.{c}/'.format(d=dataset, c=case),
     mthds=mthds,
-    baselines=baselines,
     name='scores',
 )
 
-combs_pair = make_combs_pair(
+combs_pair = make_combs(
     path='datasets/{d}pair/cases/{c}/runs/'.format(d=dataset, c=case),
     mthds=mthds,
-    baselines=baselines,
     name='grn',
 )
 
-combs_npair = make_combs_pair(
+combs_npair = make_combs(
     path='datasets/{d}npair/cases/{c}/runs/'.format(d=dataset, c=case),
     mthds=mthds,
-    baselines=baselines,
     name='grn',
 )
 
