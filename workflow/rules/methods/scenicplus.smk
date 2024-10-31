@@ -282,25 +282,31 @@ rule mdl_o_scenicplus:
         rho_threshold=0, #0.05,
         min_target_genes=1, #0,
         # Only download in scenicplus snakemake if not already existing
-        annot_m = "aertslab/genomes/mm10/o_scenciplus_mm10_ensdb_v79.tsv",
-        annot_h = "aertslab/genomes/hg38/o_scenciplus_hg38_ensdb_v86.tsv",
-        chrom_sizes_h="aertslab/genomes/hg38/o_scenciplus_hg38_chromsizes.tsv",
-        chrom_sizes_m="aertslab/genomes/mm10/o_scenciplus_mm10_chromsizes.tsv",
-    singularity:
-        'workflow/envs/scenicplus.sif'
-    output:
-        out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv',
+        annot_m = "aertslab/genomes/mm10/o_scenicplus_mm10_ensdb_v79.tsv",
+        annot_h = "aertslab/genomes/hg38/o_scenicplus_hg38_ensdb_v86.tsv",
+        chrom_sizes_h="aertslab/genomes/hg38/o_scenicplus_hg38_chromsizes.tsv",
+        chrom_sizes_m="aertslab/genomes/mm10/o_scenicplus_mm10_chromsizes.tsv",
         cistarget_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.cistarget.hdf5"),
         dem_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.dem.hdf5"),
         annotation_direct_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_direct.h5ad"),
         annotation_extended_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_extended.h5ad"),
         tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.tf_names.txt"),
         search_space_path = temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.search_space.tsv"),
+    singularity:
+        'workflow/envs/scenicplus.sif'
+    output:
+        out='datasets/{dataset}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv',
+#        cistarget_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.cistarget.hdf5"),
+#        dem_results=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.dem.hdf5"),
+#        annotation_direct_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_direct.h5ad"),
+#        annotation_extended_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.annotation_extended.h5ad"),
+#        tf_names_path=temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.tf_names.txt"),
+#        search_space_path = temp("datasets/{dataset}/cases/{case}/runs/o_scenicplus.search_space.tsv"),
     shell:
         """
         export NUMBA_CACHE_DIR=$(pwd)/{params.tmp_dir}
 
-        cp datasets/pbmc10k/cases/all/runs/scenicplus.scenicplus.scenicplus.dem.hdf5 {output.dem_results}        
+        cp datasets/pbmc10k/cases/all/runs/scenicplus.scenicplus.scenicplus.dem.hdf5 {params.dem_results}        
         scplus_pipeline=scplus_pipeline_{wildcards.dataset}_{wildcards.case}        
 
         mkdir -p  $scplus_pipeline
@@ -340,12 +346,12 @@ rule mdl_o_scenicplus:
         --min_regions_per_gene {params.min_regions_per_gene} \
         --rho_threshold {params.rho_threshold} \
         --min_target_genes {params.min_target_genes} \
-        --cistarget_results {output.cistarget_results} \
-        --dem_results {output.dem_results} \
-        --annotation_direct_path {output.annotation_direct_path}\
-        --annotation_extended_path {output.annotation_extended_path}\
-        --tf_names_path {output.tf_names_path}\
-        --search_space_path {output.search_space_path}\
+        --cistarget_results {params.cistarget_results} \
+        --dem_results {params.dem_results} \
+        --annotation_direct_path {params.annotation_direct_path}\
+        --annotation_extended_path {params.annotation_extended_path}\
+        --tf_names_path {params.tf_names_path}\
+        --search_space_path {params.search_space_path}\
         --output_config $scplus_pipeline/Snakemake/config/config.yaml
 
         cd $scplus_pipeline/Snakemake/
@@ -357,5 +363,5 @@ rule mdl_o_scenicplus:
         --grn_direct {params.tmp_dir}/o_scenicplus_eRegulons_direct.tsv\
         --output {output.out}
         
-        rm -r $(pwd)/{params.tmp_dir}
+        rm -r $scplus_pipeline/
         """
