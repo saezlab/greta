@@ -262,8 +262,8 @@ rule mdl_o_scenicplus:
         ray_tmp_dir="/tmp",
         tmp_dir=directory(local('datasets/{dataset}/cases/{case}/runs/scenicplus_tmp')),
         # p2g params
-        search_space_upstream="1000000 1000000", #"1000 150000",
-        search_space_downstream="1000000 1000000", #"1000 150000",
+        search_space_upstream="1000 150000",
+        search_space_downstrea="1000 150000",
         search_space_extend_tss="10 10",
         remove_promoters=False,  # Fixed to False in the snakemake pipeline
         use_gene_boundaries=False,  # Fixed to False in the snakemake pipeline
@@ -275,12 +275,12 @@ rule mdl_o_scenicplus:
         order_regions_to_genes_by="importance",
         order_TFs_to_genes_by="importance",
         gsea_n_perm=1000,
-        quantile_thresholds_region_to_gene="0.01 0.1 0.85 0.9 0.95", #"0.85 0.90 0.95",
+        quantile_thresholds_region_to_gene="0.85 0.90 0.95",
         top_n_regionTogenes_per_gene="5 10 15",
         top_n_regionTogenes_per_region="",
         min_regions_per_gene=0,
-        rho_threshold=0, #0.05,
-        min_target_genes=1, #0,
+        rho_threshold=0.05,
+        min_target_genes=10,
         # Only download in scenicplus snakemake if not already existing
         annot_m = "aertslab/genomes/mm10/o_scenicplus_mm10_ensdb_v79.tsv",
         annot_h = "aertslab/genomes/hg38/o_scenicplus_hg38_ensdb_v86.tsv",
@@ -306,9 +306,10 @@ rule mdl_o_scenicplus:
         """
         export NUMBA_CACHE_DIR=$(pwd)/{params.tmp_dir}
 
-        cp datasets/pbmc10k/cases/all/runs/scenicplus.scenicplus.scenicplus.dem.hdf5 {params.dem_results}        
-        scplus_pipeline=scplus_pipeline_{wildcards.dataset}_{wildcards.case}        
+# to remove
+#        cp datasets/pbmc10k/cases/all/runs/scenicplus.scenicplus.scenicplus.dem.hdf5 {params.dem_results}        
 
+        scplus_pipeline=scplus_pipeline_{wildcards.dataset}_{wildcards.case}
         mkdir -p  $scplus_pipeline
         scenicplus init_snakemake --out_dir $scplus_pipeline
 
