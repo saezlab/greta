@@ -241,7 +241,7 @@ rule mdl_o_scenicplus:
     input:
         # data
         frags=list_frags_files,
-        mdata='datasets/{dataset}/cases/all/mdata.h5mu',
+        mdata='datasets/{dataset}/cases/{case}/mdata.h5mu',
 #        mdata=rules.extract_case.output.mdata,
         # annotations
         chrom_sizes_h=rules.download_genomesizes.output.hg38,
