@@ -51,10 +51,11 @@ rule pair_sim:
     singularity:
         'workflow/envs/gretabench.sif'
     output:
-        make_combs(
+        make_combs_pair(
             path='analysis/pair/{dname}.{case}/',
             mthds=mthds,
-            name='scores',
+            baselines=baselines,
+            name='scores'
         )
     shell:
         """

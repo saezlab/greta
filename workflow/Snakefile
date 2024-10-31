@@ -3,7 +3,7 @@ min_version('7.29.0')
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'analysis')))
-from utils import make_combs
+from utils import make_combs_pair
 
 
 def map_rules(rule_prefix, w_name, out='out'):
