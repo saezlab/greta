@@ -1,5 +1,5 @@
 rule pre_figr:
-    threads: 32
+    threads: 1
     input:
         mdata=rules.extract_case.output.mdata,
     singularity:
@@ -13,12 +13,13 @@ rule pre_figr:
         """
         cp {input.mdata} {output.out}
         Rscript workflow/scripts/methods/figr/pre.R \
-        {output.out}
+        {output.out} \
+        {threads}
         """
 
 
 rule p2g_figr:
-    threads: 32
+    threads: 1
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
     singularity:
@@ -43,6 +44,7 @@ rule p2g_figr:
         {params.ext} \
         {params.thr_p2g_pval} \
         {params.ncres} \
+        {threads} \
         {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
@@ -51,7 +53,7 @@ rule p2g_figr:
 
 
 rule tfb_figr:
-    threads: 32
+    threads: 1
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
@@ -76,6 +78,7 @@ rule tfb_figr:
         {input.p2g} \
         {params.cellK} \
         {params.dorcK} \
+        {threads} \
         {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
@@ -84,7 +87,7 @@ rule tfb_figr:
 
 
 rule mdl_figr:
-    threads: 32
+    threads: 1
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),

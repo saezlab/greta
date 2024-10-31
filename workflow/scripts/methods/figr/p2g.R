@@ -13,9 +13,8 @@ organism <- args[7]
 ext <- as.numeric(args[8])
 thr_pval <- as.numeric(args[9])
 ncres <- as.numeric(args[10])
-path_out <- args[11]
-
-nCores <- 32
+nCores <- as.numeric(args[11])
+path_out <- args[12]
 
 # Read data
 print('Open object')
