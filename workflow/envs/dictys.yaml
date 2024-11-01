@@ -4,6 +4,7 @@ channels:
   - pytorch
   - lingfeiwang
   - bioconda
+  - nvidia
 dependencies:
   - python=3.10
   - mamba
@@ -11,5 +12,5 @@ dependencies:
   - pytorch
   - torchvision
   - torchaudio
-  - cpuonly
+  - pytorch-cuda=11.7
   - mudata

@@ -10,12 +10,14 @@ parser.add_argument('--pre_path', required=True)
 parser.add_argument('--p2g_path', required=True)
 parser.add_argument('--exp_path', required=True)
 parser.add_argument('--pks_path', required=True)
+parser.add_argument('--use_p2g' , required=True)
 
 args = vars(parser.parse_args())
 pre_path = args['pre_path']
 p2g_path = args['p2g_path']
 exp_path = args['exp_path']
 pks_path = args['pks_path']
+use_p2g  = args['use_p2g' ]
 
 
 # Write the RNA matrix
@@ -23,8 +25,13 @@ data = mu.read(pre_path)
 rna_X = pd.DataFrame(np.array(data['rna'].layers['counts'].todense()).T, columns=data['rna'].obs.index, index=data['rna'].var.index)
 rna_X.to_csv(exp_path, sep="\t", compression="gzip")
 
-# Read in p2g and keep only peaks that are wide enough for footprinting
-all_atac_peak = np.unique(pd.read_csv(p2g_path)['cre'])
+if use_p2g:
+    # Read in p2g and keep only peaks that are wide enough for footprinting
+    all_atac_peak = np.unique(pd.read_csv(p2g_path)['cre'])
+else:
+    # From the consensus peak list, keep only peaks that are wide enough for footprinting
+    all_atac_peak = np.unique([n.replace(':', '-') for n in data['atac'].var.index])
+
 all_atac_peak = pd.DataFrame([n.split('-') for n in all_atac_peak])
 all_atac_peak.columns = ['chr', 'srt', 'end']
 all_atac_peak['srt'] = all_atac_peak['srt'].astype(int)

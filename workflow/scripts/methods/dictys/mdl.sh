@@ -12,6 +12,7 @@ while [[ "$#" -gt 0 ]]; do
         --distance) distance="$2"; shift ;;
         --n_p2g_links) n_p2g_links="$2"; shift ;;
         --threads) threads="$2"; shift ;;
+        --device) device="$2"; shift ;;
         --out_path) out_path="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
@@ -36,7 +37,7 @@ $tfb_path $pre_path $output_d/peaks.tsv.gz $output_d/expr.tsv.gz $output_d/tfb.t
 python -m dictys chromatin tssdist --cut $distance $output_d/expr.tsv.gz $output_d/peaks.tsv.gz $annot $output_d/tssdist.tsv.gz && \
 python -m dictys chromatin linking $output_d/tfb.tsv.gz $output_d/tssdist.tsv.gz $output_d/linking.tsv.gz && \
 python -m dictys chromatin binlinking $output_d/linking.tsv.gz $output_d/binlinking.tsv.gz $n_p2g_links && \
-python -m dictys network reconstruct --nth $threads $output_d/expr.tsv.gz $output_d/binlinking.tsv.gz $output_d/net_weight.tsv.gz $output_d/net_meanvar.tsv.gz $output_d/net_covfactor.tsv.gz $output_d/net_loss.tsv.gz $output_d/net_stats.tsv.gz && \
+python -m dictys network reconstruct --device $device --nth $threads $output_d/expr.tsv.gz $output_d/binlinking.tsv.gz $output_d/net_weight.tsv.gz $output_d/net_meanvar.tsv.gz $output_d/net_covfactor.tsv.gz $output_d/net_loss.tsv.gz $output_d/net_stats.tsv.gz && \
 python -m dictys network normalize --nth $threads $output_d/net_weight.tsv.gz $output_d/net_meanvar.tsv.gz $output_d/net_covfactor.tsv.gz $output_d/net_nweight.tsv.gz && \
 python -c "import pandas as pd, numpy as np, sys, os; \
 weights = pd.read_csv(sys.argv[1], sep='\t', index_col=0); \
