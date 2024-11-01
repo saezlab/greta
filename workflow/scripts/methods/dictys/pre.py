@@ -31,11 +31,11 @@ rna_df = pd.read_csv(tmp_path, sep='\t', compression="gzip", index_col=0)
 genes, barcodes = rna_df.index.values.astype('U'), rna_df.columns.values.astype('U')
 rna = mdata.mod['rna']
 rna = rna[barcodes, :][:, genes].copy()
-rna.X = rna.layers['counts'].todense().copy()
+rna.X = rna.layers['counts'].todense().A.copy()
 
 # Process atac
 atac = mdata.mod['atac']
-atac.X = atac.layers['counts'].todense().copy()
+atac.X = atac.layers['counts'].todense().A.copy()
 
 # Update
 mdata.mod['rna'] = rna

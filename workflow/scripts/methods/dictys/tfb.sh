@@ -12,6 +12,7 @@ while [[ "$#" -gt 0 ]]; do
         --output_d) output_d="$2"; shift ;;
         --output_out) output_out="$2"; shift ;;
         --threads) threads="$2"; shift ;;
+        --use_p2g) use_p2g="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
     shift
@@ -27,7 +28,8 @@ python workflow/scripts/methods/dictys/extract_data.py \
 --pre_path "$input_pre" \
 --p2g_path "$input_p2g" \
 --exp_path "$output_d/expr.tsv.gz" \
---pks_path "$output_d/peaks.bed" && \
+--pks_path "$output_d/peaks.bed" \
+--use_p2g "$use_p2g" && \
 for b_file in $output_d/barcodes_*; do
     ctype=$(basename "$b_file" | sed 's/barcodes_//; s/.txt//')
     bam_name="$output_d/reads_$ctype.bam"
