@@ -156,7 +156,6 @@ config_dic["params_general"]["temp_dir"] = args['temp_dir']
 #config_dic["params_data_preparation"]["bc_transform_func"] = "lambda x: x"
 config_dic["params_data_preparation"]["is_multiome"] = True
 config_dic["params_data_preparation"]["key_to_group_by"] = ""
-nr_cells_per_metacells = 10
 config_dic["params_data_preparation"]["direct_annotation"] = "Direct_annot"
 config_dic["params_data_preparation"]["extended_annotation"] = "Orthology_annot"
 config_dic["params_data_preparation"]["species"] = organism
@@ -165,7 +164,6 @@ config_dic["params_data_preparation"]["search_space_upstream"] = '{}'.format(arg
 config_dic["params_data_preparation"]["search_space_downstream"] =  '{}'.format(args['search_space_downstream'])
 config_dic["params_data_preparation"]["search_space_extend_tss"] = '{}'.format(args['search_space_extend_tss'])
 
-#config_dic["params_motif_enrichment"]["species"] = species
 config_dic["params_motif_enrichment"]["annotation_version"] = annotation_version
 config_dic["params_motif_enrichment"]["motif_similarity_fdr"] = 0.05
 config_dic["params_motif_enrichment"]["orthologous_identity_threshold"] = 0.8

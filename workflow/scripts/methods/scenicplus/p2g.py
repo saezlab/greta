@@ -20,8 +20,6 @@ import pandas as pd
 import polars as pl
 import numpy as np
 import scenicplus.data_wrangling.gene_search_space
-# import scenicplus.enhancer_to_gene
-# from scenicplus.enhancer_to_gene import calculate_regions_to_genes_relationships
 import pyranges as pr
 
 

@@ -53,6 +53,7 @@ parser.add_argument('-z', '--path_to_motif_annotations_mouse')
 parser.add_argument('-y', '--path_to_motif_annotations_human')
 parser.add_argument('-k', '--temp_dir')
 parser.add_argument('-j', '--ray_tmp_dir')
+parser.add_argument('-e', '--gannot')
 args = parser.parse_args()
 
 mudata_path = args.mudata
@@ -67,6 +68,7 @@ organism = args.organism
 njobs = args.njobs
 temp_dir = args.temp_dir
 ray_tmp_dir = args.ray_tmp_dir
+path_to_genome_annotation = args.gannot
 
 output_cistromes_annotations_direct = args.annotation_direct_path
 output_cistromes_annotations_extended = args.annotation_extended_path
@@ -561,8 +563,8 @@ run_motif_enrichment_dem(
     dem_db_fname=dem_scores_fname,
     output_fname_dem_result=dem_results_path,
     output_fname_dem_html="",
-    n_cpu=32,
-    path_to_genome_annotation="aertslab/genomes/hg38/hg38_ensdb_v86.csv",
+    n_cpu=njobs,
+    path_to_genome_annotation=path_to_genome_annotation,
     temp_dir=temp_dir,
     species=species,
     fraction_overlap_w_dem_database=0.4,
@@ -596,7 +598,7 @@ run_motif_enrichment_cistarget(
     region_sets,
     cistarget_db,
     output_fname_cistarget_result=cistarget_results_path,
-    n_cpu=32,
+    n_cpu=njobs,
     fraction_overlap_w_cistarget_database=0.4,
     auc_threshold=0.005,
     nes_threshold=3,

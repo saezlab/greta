@@ -1,34 +1,44 @@
-import pybiomart as pbm
+from scenicplus.cli.commands import download_gene_annotation_chromsizes
+import os
 import argparse
-import numpy as np
+import pandas as pd
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-j', '--hsapiens', required=True)
-parser.add_argument('-m', '--mmusculus', required=True)
+parser.add_argument('-g', '--gann', required=True, nargs='+')
+parser.add_argument('-c', '--cist', required=True, nargs='+')
+parser.add_argument('-s', '--csiz', required=True, nargs='+')
 args = parser.parse_args()
 
-organisms = {"hsapiens": args.hsapiens, "mmusculus": args.mmusculus}
 
+for gann, cist, csiz in zip(args.gann, args.cist, args.csiz):
+    org = os.path.basename(gann).split('_')[0]
+    if org == 'hg38':
+        species = "hsapiens"
+    elif org == 'mm10':
+        species = 'mmusculus'
+    else:
+        raise ValueError(f'Organism {org} not implemented.')
 
-for organism in organisms:
-    if organism == 'hsapiens':
-        dataset = pbm.Dataset(name='hsapiens_gene_ensembl',  host='http://www.ensembl.org')
-    if organism == 'mmusculus':
-        dataset = pbm.Dataset(name='mmusculus_gene_ensembl',  host='http://www.ensembl.org')
-
-    annot = dataset.query(
-        attributes=[
-            'chromosome_name',
-            'transcription_start_site',
-            'strand', 'external_gene_name',
-            'transcript_biotype'
-            ])
-    annot['Chromosome/scaffold name'] = annot['Chromosome/scaffold name'].to_numpy(dtype = str)
-    filter = annot['Chromosome/scaffold name'].str.contains('CHR|GL|JH|MT')
-    annot = annot[~filter]
-    annot['Chromosome/scaffold name'] = annot['Chromosome/scaffold name'].str.replace(r'(\b\S)', r'chr\1')
-    annot.columns = ['Chromosome', 'Start', 'Strand', 'Gene', 'Transcript_type']
-    annot = annot[annot.Transcript_type == 'protein_coding']
-    annot["Strand"] = annot["Strand"].replace({1: "+", -1: "-"})
-    annot.Start = annot.Start.astype(np.int32)
-    annot.to_csv(organisms[organism], sep="\t", index=False)
+    download_gene_annotation_chromsizes(
+        species=species,
+        genome_annotation_out_fname=gann,
+        chromsizes_out_fname=csiz,
+        biomart_host="http://ensembl.org/",
+        use_ucsc_chromosome_style=True
+    )
+    df = pd.read_csv(gann, sep="\t")
+    df['Start'] = df['Start'] - 1
+    df['Score'] = '.'
+    df = df[['Chromosome', 'Start', 'End', 'Gene', 'Score', 'Strand', 'Transcript_type']]
+    with open(cist, "w") as f:
+        f.write("# " + "\t".join(df.columns) + "\n")
+        for i, row in df.iterrows():
+            text = '{c}\t{s}\t{e}\t{g}\t{r}\t{t}\n'.format(
+                c=row['Chromosome'],
+                s=row['Start'],
+                e=row['End'],
+                g=row['Gene'],
+                r=row['Score'],
+                t=row['Strand']
+            )
+            f.write(text)
