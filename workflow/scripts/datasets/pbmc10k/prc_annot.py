@@ -28,6 +28,7 @@ rna = snap.read(snap.datasets.pbmc10k_multiome(modality='RNA', type='h5ad'), bac
 rna.obs['batch'] = 'smpl'
 annot = rna.obs.rename(columns={'cell_type': 'celltype'})[['batch', 'celltype']]
 annot.index.name = None
+annot.index = ['smpl_' + i.replace('-1', '') for i in annot.index]
 
 # Write
 annot.to_csv(path_annot)

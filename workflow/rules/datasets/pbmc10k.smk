@@ -28,8 +28,8 @@ rule download_pbmc10k:
         atac_frags=config['datasets']['pbmc10k']['url']['atac_frags'],
     shell:
         """
-        wget --no-verbose '{params.atac_frags}' -O '{output.atac_frags}'
-        bash workflow/scripts/datasets/format_frags.sh {output.atac_frags}
+        wget --no-verbose '{params.atac_frags}' -O '{output.frags}'
+        bash workflow/scripts/datasets/format_frags.sh {output.frags}
         """
 
 

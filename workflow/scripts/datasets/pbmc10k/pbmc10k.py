@@ -46,10 +46,9 @@ rna.var.index.name = None
 obs = pd.read_csv(path_annot, index_col=0)
 
 # Add celltype annotation
-sample_id = 'smpl'
-rna.obs['celltype'] = obs[obs['batch'] == sample_id]['celltype']
-rna.obs['batch'] = sample_id
-rna.obs_names = [sample_id + '_' + o.split('-1')[0] for o in rna.obs_names]
+rna.obs_names = ['smpl_' + i.replace('-1', '') for i in rna.obs_names]
+rna = rna[obs.index, :].copy()
+rna.obs = obs
 
 # Filter faulty gene symbols
 ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
@@ -74,7 +73,6 @@ atac = ad.read_h5ad(path_peaks)
 atac = atac[rna.obs_names].copy()
 
 # Create mdata
-obs.index = [sample_id + '_' + b.split('-1')[0] for b in obs.index]
 mdata = md.MuData(
     {'rna': rna, 'atac': atac,},
     obs=obs
