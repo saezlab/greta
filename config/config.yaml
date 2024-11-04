@@ -11,6 +11,10 @@ methods:
         a: 10
         p: 0.001
         n: 2000
+    dictys:
+        ext: 500000
+        device: 'cuda:0'
+        n_p2g_links: 20
     figr:
         ext: 500000
         thr_p2g_pval: 0.1
@@ -47,10 +51,6 @@ methods:
         min_regions_per_gene: 0
         rho_threshold: 0.05
         min_target_genes: 10
-    dictys:
-        ext: 500000
-        device: 'cuda:0'
-        n_p2g_links: 20
 
 baselines: ['collectri', 'dorothea', 'random', 'scenic']
 
