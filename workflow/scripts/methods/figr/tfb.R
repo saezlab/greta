@@ -196,5 +196,10 @@ tfb <- left_join(
     select(cre, tf, score) %>%
     arrange(cre, desc(score))
 
+if (any(is.infinite(tfb$score))) {
+  max_finite <- max(tfb$score[is.finite(tfb$score)])
+  tfb$score[is.infinite(tfb$score)] <- max_finite
+}
+
 # Write
 write.csv(x = tfb, file = path_out, row.names=FALSE)
