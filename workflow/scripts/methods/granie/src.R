@@ -53,10 +53,10 @@ GRN <- GRaNIE::initializeGRN(
 GRN = GRaNIE::addData(
     GRN,
     counts_peaks = atac_data,
-    normalization_peaks = "DESeq2_sizeFactors",
+    normalization_peaks = "none",
     idColumn_peaks = 'peakID',
     counts_rna = rna_data,
-    normalization_rna = "limma_quantile",
+    normalization_rna = "none",
     idColumn_RNA = 'ENSEMBL',
     sampleMetadata = NULL,
     genomeAnnotationSource = 'AnnotationHub',

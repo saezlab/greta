@@ -118,7 +118,7 @@ rule tfb_granie:
 
 
 rule mdl_granie:
-    threads: 32
+    threads: 1
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
@@ -180,6 +180,11 @@ rule mdl_o_granie:
         timeout $(({resources.runtime}-20))m bash -c \
         'python workflow/scripts/methods/granie/pre.py \
         -i {input.mdata} \
+        -o {output.h} && \
+        Rscript workflow/scripts/methods/granie/pre.R \
+        {output.h} && \
+        python workflow/scripts/methods/granie/pre_post.py \
+        -i {output.h} \
         -o {output.h} && \
         Rscript workflow/scripts/methods/granie/src.R \
         {output.h} \

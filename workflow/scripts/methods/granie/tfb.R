@@ -51,9 +51,6 @@ if (nrow(p2g) == 0){
 }
 p2g$cre <- format_peaks(p2g$cre)
 p2g$gene <- unname(gids[p2g$gene])
-
-# Subset data by p2g
-atac_data <- dplyr::filter(atac_data, peakID %in% p2g$cre)
                         
 # Init GRN object
 GRN <- GRaNIE::initializeGRN(
@@ -93,20 +90,39 @@ GRN = GRaNIE::overlapPeaksAndTFBS(
     forceRerun = TRUE
 )
 
-# Extact and process tfb
-tfb <- GRN@data$TF$TF_peak_overlap
-sparse <- summary(tfb)
-tfb <- data.frame(
-    cre = rownames(tfb)[sparse$i],
-    motif = colnames(tfb)[sparse$j]
+# Calculate tfb corr
+GRN@connections$TF_peaks$`0` = GRaNIE:::.computeTF_peak.fdr(
+    GRN,
+    perm = 0,
+    connectionTypes = c("expression"),
+    corMethod = 'pearson',
+    removeNegativeCorrelation = FALSE,
+    maxFDRToStore = 0.3,
+    useGCCorrection = FALSE,
+    percBackground_size = 75,
+    threshold_percentage = 0.05,
+    percBackground_resample = TRUE,
+    plotDetails = FALSE
 )
+permIndex = as.character(0)
+GRN@connections$TF_peaks$`0`$main = GRaNIE:::.optimizeSpaceGRN(stats::na.omit(GRN@connections$TF_peaks$`0`$main))
+GRN@connections$TF_peaks$`1` <- GRN@connections$TF_peaks$`0`
+
+# Extact and process tfb
+tfb <- GRN@connections$TF_peaks$`0`$main
+min_pval <- min(GRN@connections$TF_peaks$`0`$main$TF_peak.fdr[GRN@connections$TF_peaks$`0`$main$TF_peak.fdr != 0])
+tfb <- dplyr::mutate(tfb,
+    score = dplyr::if_else(tfb$TF_peak.fdr == 0, min_pval, tfb$TF_peak.fdr)
+)
+
 motif2ens <- setNames(GRN@annotation$TFs$TF.ENSEMBL, GRN@annotation$TFs$TF.ID)
 tfb <- dplyr::mutate(tfb,
-    tf = gsym[motif2ens[as.character(tfb$motif)]],
-    cre = stringr::str_replace_all(cre, ':', '-')
+    tf = gsym[motif2ens[as.character(tfb$TF.ID)]],
+    cre = stringr::str_replace_all(tfb$peak.ID, ':', '-'),
+    score = -log10(score)
 )
-tfb <- dplyr::summarize(tfb, score = dplyr::n(), .by=c(cre, tf))
-tfb <- dplyr::arrange(tfb, cre, desc(score))
+tfb <- dplyr::select(tfb, tf, cre, score)
+tfb <- dplyr::summarize(tfb, score = mean(score), .by=c(cre, tf))
 
 clean_peaks <- function(peaks) {
   parts <- strsplit(peaks, "[:-]")[[1]]
@@ -118,7 +134,6 @@ clean_peaks <- function(peaks) {
   return(fpeaks)
 }
 tfb$cre <- sapply(tfb$cre, clean_peaks)
-tfb$score <- -log10(10^-(2 + (tfb$score - 1)))
 
 # Write
 write.csv(x = tfb, file = path_out, row.names=FALSE)

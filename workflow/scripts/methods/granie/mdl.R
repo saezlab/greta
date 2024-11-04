@@ -56,11 +56,6 @@ tfb$tf <- unname(gids[tfb$tf])
 p2g$cre <- format_peaks(p2g$cre)
 p2g$gene <- unname(gids[p2g$gene])
 
-# Subset data by p2g and tfb
-p2g <- dplyr::filter(p2g, cre %in% tfb$cre)
-rna_data <- dplyr::filter(rna_data, (ENSEMBL %in% p2g$gene) | (ENSEMBL %in% tfb$tf))
-atac_data <- dplyr::filter(atac_data, peakID %in% tfb$cre)
-
 # Init GRN object
 GRN <- GRaNIE::initializeGRN(
     objectMetadata = NULL,
@@ -101,21 +96,27 @@ clean_peaks <- function(peaks) {
   fpeaks <- paste0(chromosome, ":", start, "-", end)
   return(fpeaks)
 }
-
 row_idx <- as.factor(tfb$cre)
 col_idx <- as.factor(tfb$tf)
-rnames <- sapply(rownames(GRN@data$peaks$counts), clean_peaks)
-GRN@data$TFs$TF_peak_overlap <- Matrix::sparseMatrix(
+tmp_filtered <- Matrix::sparseMatrix(
   i = as.integer(row_idx),
   j = as.integer(col_idx),
   x = 1,
   dims = c(length(levels(row_idx)), length(levels(col_idx))),
   dimnames = list(levels(row_idx), levels(col_idx))
-)[rnames, ]
-GRN@data$TFs$TF_peak_overlap <- cbind(GRN@data$TFs$TF_peak_overlap, isFiltered = 0)
+)
+tmp_filtered <- cbind(tmp_filtered, isFiltered = 0)
+msk <- !(rownames(GRN@data$peaks$counts) %in% rownames(tmp_filtered))
+empty_cres <- rownames(GRN@data$peaks$counts)[msk]
+tmp_unfiltered <- Matrix::Matrix(0, nrow = length(empty_cres), ncol = length(colnames(tmp_filtered))-1, sparse = TRUE)
+rownames(tmp_unfiltered) <- empty_cres
+tmp_unfiltered <- cbind(tmp_unfiltered, isFiltered = 0)
+colnames(tmp_unfiltered) <- colnames(tmp_filtered)
+GRN@data$TFs$TF_peak_overlap <- rbind(tmp_filtered, tmp_unfiltered)
+GRN@data$TFs$TF_peak_overlap <- GRN@data$TFs$TF_peak_overlap[rownames(GRN@data$peaks$counts), ]
 
 # Compute tf-cre corrs
-GRN@connections$TF_peaks$`0`  = GRaNIE:::.computeTF_peak.fdr(
+GRN@connections$TF_peaks$`0` = GRaNIE:::.computeTF_peak.fdr(
     GRN,
     perm = 0,
     connectionTypes = c("expression"),
@@ -134,13 +135,25 @@ GRN@connections$TF_peaks$`1` <- GRN@connections$TF_peaks$`0`
 
 # Add p2g
 # Add peak_gene.r=0.5 and peak_gene.p_raw = 0.01 to bypass filters
-p2g <- dplyr::mutate(
-    p2g,
-    peak_gene.r=0.5,
-    peak_gene.p_raw=0.01,
-    peak.ID=cre,
-    gene.ENSEMBL=gene
-)
+p2g_method <- stringr::str_extract(path_p2g, "[^/.]+(?=\\.p2g)")
+
+if (p2g_method != 'granie'){
+    p2g <- dplyr::mutate(
+        p2g,
+        peak_gene.r=0.5,
+        peak_gene.p_raw=0.001,
+        peak.ID=p2g$cre,
+        gene.ENSEMBL=p2g$gene
+    )
+} else {
+    p2g <- dplyr::mutate(
+        p2g,
+        peak_gene.r=p2g$score,
+        peak_gene.p_raw=p2g$pval,
+        peak.ID=p2g$cre,
+        gene.ENSEMBL=p2g$gene
+    )
+}
 p2g <- dplyr::select(p2g, peak.ID, gene.ENSEMBL, peak_gene.r, peak_gene.p_raw)
 GRN@connections$peak_genes$`0` <- p2g
 GRN@connections$peak_genes$`1` <- GRN@connections$peak_genes$`0`
@@ -149,8 +162,8 @@ GRN@connections$peak_genes$`1` <- GRN@connections$peak_genes$`0`
 GRN = GRaNIE::filterGRNAndConnectGenes(
     GRN,
     TF_peak.fdr.threshold = thr_fdr,
-    peak_gene.fdr.threshold = 0.9,  # Assume is done in respective p2g
-    peak_gene.fdr.method = "none",  # Assume is done in respective p2g
+    peak_gene.fdr.threshold = thr_fdr,
+    peak_gene.fdr.method = "BH",
     gene.types = c("all"),
     allowMissingTFs = FALSE,
     allowMissingGenes = FALSE,

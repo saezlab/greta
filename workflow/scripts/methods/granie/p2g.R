@@ -128,8 +128,7 @@ model_p2g <- function(GRN, overlaps.sub.filt.df, nCores=nCores, chunksize=50000)
 p2g <- model_p2g(GRN, overlaps.sub.filt.df, nCores=nCores, chunksize=1000000)
 
 # Process
-p2g <- dplyr::mutate(p2g, pval=stats::p.adjust(peak_gene.p_raw, method = 'BH'))
-p2g <- dplyr::filter(p2g, pval < 0.2, peak_gene.r > 0)
+p2g <- dplyr::mutate(p2g, pval=peak_gene.p_raw)
 p2g <- dplyr::mutate(
     p2g,
     gene = gsym[as.character(gene.ENSEMBL)],
