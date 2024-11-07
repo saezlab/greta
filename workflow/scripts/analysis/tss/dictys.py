@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[12]:
-
-
 import pandas as pd
 import argparse
 
@@ -15,11 +9,13 @@ out_path = args.path_out
 input_path = args.path_input
 
 # Read file
-bed_df = pd.read_csv(input_path, sep='\t', header=None)
+bed = pd.read_csv(input_path, sep='\t', header=None)
 
 # Process columns
-bed_df.columns = ['Chromosome', 'Start', 'End', 'Name', 'score', 'strand']
-bed_df = bed_df[['Chromosome', 'Start', 'End', 'Name']]
+bed.columns = ['Chromosome', 'Start', 'End', 'Name', 'score', 'strand']
+bed = bed[['Chromosome', 'Start', 'End', 'Name']]
+bed['Start'] = bed['Start'] - 1
+bed['End'] = bed['End'] - 1
 
 # Save file
-bed_df.to_csv(out_path, sep="\t")
+bed.to_csv(out_path, sep="\t", index=False, header=None)

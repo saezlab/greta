@@ -1,10 +1,12 @@
+library(AnnotationHub)
+
+
 # Initiate args
 args <- commandArgs(trailingOnly = F)
 path_out <- args[6]
 
 
-# They use the newest version of the homo sapiens
-library(AnnotationHub)
+# Load db
 ah <- AnnotationHub()
 
 # Get the newest version of annotation
@@ -14,31 +16,24 @@ newestAnno.title = tail(annotationDatasets$title, 1)
 newestAnno.ID = tail(rownames(annotationDatasets), 1)
 ensdb.newest <- ah[[newestAnno.ID]]
 
+# Read
+gr <- ensembldb::genes(ensdb.newest)
 
-# Select columns of interest
-genes.df = as.data.frame(suppressWarnings(ensembldb::genes(ensdb.newest))) %>%
-  tibble::as_tibble() %>%
-  dplyr::mutate(gene.chr = paste0("chr", .data$seqnames)) %>%
-  dplyr::select(-"seqnames") %>%
-  dplyr::rename(gene.ENSEMBL = "gene_id", gene.start = "start", gene.end = "end",
-                gene.strand = "strand", gene.name = "gene_name", gene.type = "gene_biotype") %>%
-  dplyr::select("gene.chr", "gene.start", "gene.end", "gene.strand", "gene.ENSEMBL", "gene.type", "gene.name") %>%
-  tidyr::replace_na(list(gene.type = "unknown")) %>%
-  dplyr::mutate(gene.strand = factor(.data$gene.strand, levels = c(1,-1,0), labels = c("+", "-", "*"))) %>%
-  dplyr::mutate_if(is.character, as.factor) %>%
-  dplyr::mutate(gene.type = dplyr::recode_factor(.data$gene.type, lncRNA = "lincRNA")) 
+# Merge overlaps
+merged <- unlist(reduce(split(gr, gr$gene_name)), use.names = TRUE)
 
-# Filter only protein coding
-genes.df <- genes.df %>% dplyr::filter(gene.type == "protein_coding")
+# To df
+chr_names <- paste0("chr", as.character(seqnames(merged)))
+start_pos <- start(merged) - 1
+end_pos <- end(merged) - 1
+gene_names <- names(merged)
+bed <- data.frame(Chromosome = chr_names, Start = start_pos, End = end_pos, Name = gene_names)
 
+# Filter empty names
+bed <- bed[bed$Name != '', ]
 
-# Keep interest columns
-genes.df <- genes.df %>%
-  dplyr::rename(Chromosome = gene.chr, 
-         Start = gene.start, 
-         End = gene.end, 
-         Name = gene.name) %>%
-  dplyr::select(Chromosome, Start, End, Name) 
+# Sort
+bed <- bed[order(bed$Chromosome, bed$Start, bed$End), ]
 
-
-write.csv(x = genes.df, file = path_out)
+# Write
+write.table(x = bed, file = path_out, sep = '\t', row.names = FALSE, quote = FALSE, col.names = FALSE)
