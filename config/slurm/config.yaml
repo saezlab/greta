@@ -1,31 +1,21 @@
-
 cluster-sidecar: "slurm-sidecar.py"
 cluster-cancel: "scancel"
-restart-times: "5"
 jobscript: "slurm-jobscript.sh"
 cluster: "slurm-submit.py"
 cluster-status: "slurm-status.py"
-max-jobs-per-second: "5"
-max-status-checks-per-second: "5"
+restart-times: 5
+max-jobs-per-second: 5
+max-status-checks-per-second: 5
 local-cores: 1
-latency-wait: "15"
-use-conda: "True"
-use-singularity: "True"
-use-envmodules: "True"
-jobs: "64"
-printshellcmds: "True"
-
-# Example resource configuration
+latency-wait: 15
+use-conda: True
+use-singularity: True
+jobs: 64
+printshellcmds: True
+keep-incomplete: True
+notemp: True
 default-resources:
-   - runtime=180
+   - runtime=720
    - mem_mb=64000
    - partition=cpu-single
-   - threads=32
-# # set-threads: map rule names to threads
-# set-threads:
-#   - single_core_rule=1
-#   - multi_core_rule=10
-# # set-resources: map rule names to resources in general
-# set-resources:
-#   - high_memory_rule:mem_mb=12000
-#   - long_running_rule:runtime=1200
+   - threads=1
