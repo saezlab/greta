@@ -1,16 +1,20 @@
 name: dictys
 channels:
-  - conda-forge
-  - pytorch
   - lingfeiwang
   - bioconda
+  - conda-forge
+  - pytorch
   - nvidia
 dependencies:
   - python=3.10
-  - mamba
   - dictys
   - pytorch
   - torchvision
   - torchaudio
   - pytorch-cuda=11.7
   - mudata
+  - pip
+  - pip:
+    - torch --index-url https://download.pytorch.org/whl/cu118
+    - torchvision --index-url https://download.pytorch.org/whl/cu118
+    - torchaudio --index-url https://download.pytorch.org/whl/cu118

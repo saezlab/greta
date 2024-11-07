@@ -1,8 +1,19 @@
-localrules: download_motifs_dictys, download_gene_annotations_dictys
+localrules: install_dictys, download_motifs_dictys, download_gene_annotations_dictys
+
+
+rule install_dictys:
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    output: 'workflow/envs/dictys.txt'
+    shell:
+        """
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
+        touch {output}
+        """
 
 
 rule download_genomes_dictys:
-    conda: '../../envs/dictys.yaml'
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    input: rules.install_dictys.output[0]
     output:
         d=directory('gdata/dictys_genomes/'),
     shell:
@@ -23,8 +34,7 @@ rule download_motifs_dictys:
 
 
 rule download_gene_annotations_dictys:
-    conda:
-        '../../envs/dictys.yaml'
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     params:
         url_gtf="http://ftp.ensembl.org/pub/release-107/gtf/homo_sapiens/Homo_sapiens.GRCh38.107.gtf.gz"
     output:
@@ -40,8 +50,7 @@ rule download_gene_annotations_dictys:
 
 rule pre_dictys:
     threads: 1
-    conda:
-        '../../envs/dictys.yaml'
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     input:
         mdata=rules.extract_case.output.mdata
     output:
@@ -61,8 +70,7 @@ rule pre_dictys:
 
 rule p2g_dictys:
     threads: 1
-    conda:
-        '../../envs/dictys.yaml'
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
@@ -94,8 +102,7 @@ rule p2g_dictys:
 
 rule tfb_dictys:
     threads: 32
-    conda:
-        '../../envs/dictys.yaml'
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
@@ -110,7 +117,7 @@ rule tfb_dictys:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     params:
-        use_p2g=True,
+        use_p2g=False,
     shell:
         """
         set +e
@@ -132,9 +139,8 @@ rule tfb_dictys:
 
 
 rule mdl_dictys:
-    threads: 32
-    conda:
-        '../../envs/dictys.yaml'
+    threads: 4
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
@@ -143,14 +149,16 @@ rule mdl_dictys:
         annotation=rules.download_gene_annotations_dictys.output.bed,
     output:
         d=temp(directory('datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp')),
-        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dicyts.mdl.csv'
+        out='datasets/{dataset}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys.mdl.csv'
     params:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
-        device=config['method']['dictys']['device'],
+        device=config['methods']['dictys']['device'],
     resources:
+        partition='gpu-single',
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
+        slurm="gres=gpu:1",
     shell:
         """
         set +e
@@ -174,7 +182,7 @@ rule mdl_dictys:
 
 rule mdl_o_dictys:
     threads: 32
-    conda: '../../envs/dictys.yaml'
+    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     container: None
     input:
         mdata=rules.extract_case.output.mdata,
@@ -192,11 +200,13 @@ rule mdl_o_dictys:
     params:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
-        device=config['method']['dictys']['device'],
+        device=config['methods']['dictys']['device'],
         use_p2g=False,
     resources:
+        partition='gpu-single',
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
+        slurm="gres=gpu:1",
     shell:
         """
         set +e

@@ -21,6 +21,7 @@ use_p2g  = args['use_p2g' ]
 
 
 # Write the RNA matrix
+pre_type = os.path.basename(pre_path).split('.')[0]
 data = mu.read(pre_path)
 rna_X = pd.DataFrame(np.array(data['rna'].layers['counts'].todense()).T, columns=data['rna'].obs.index, index=data['rna'].var.index)
 rna_X.to_csv(exp_path, sep="\t", compression="gzip")
@@ -37,13 +38,16 @@ all_atac_peak.columns = ['chr', 'srt', 'end']
 all_atac_peak['srt'] = all_atac_peak['srt'].astype(int)
 all_atac_peak['end'] = all_atac_peak['end'].astype(int)
 all_atac_peak = all_atac_peak[(all_atac_peak.end - all_atac_peak.srt) >= 100]
-all_atac_peak = all_atac_peak.sort_values(by=['chr', 'srt'])
+all_atac_peak = all_atac_peak.sort_values(by=['chr', 'srt', 'end'])
 all_atac_peak.to_csv(pks_path, sep='\t', header=False, index=False)
 
 # Store clusters
 clus = sorted(data.obs['celltype'].unique())
 for c in clus:
-    ctype_ids = data[data.obs['celltype'] == c].obs.index
+    if pre_type == 'granie':
+        ctype_ids = data['rna']['rna_b_per_c'][c]
+    else:
+        ctype_ids = data[data.obs['celltype'] == c].obs.index
     c = c.replace(' ', '_')
     with open(os.path.join(os.path.dirname(exp_path), f'barcodes_{c}.txt'), "w") as f:
         for i in ctype_ids:

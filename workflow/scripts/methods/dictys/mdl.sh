@@ -17,14 +17,13 @@ while [[ "$#" -gt 0 ]]; do
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
-done
-
-if [ "$(wc -l < $input_p2g)" -eq 1 ] || [ "$(wc -l < $tfb_path)" -eq 1 ]; then
+done && \
+if [ $(wc -l < $p2g_path) -eq 1 ] || [ $(wc -l < $tfb_path) -eq 1 ]; then
     awk 'BEGIN {{ print "source,target,score,pval" }}' > $output_out
     exit 0
-fi
-
+fi && \
 mkdir -p "$output_d" && \
+python -c "import torch; print('Cuda enabled:', torch.cuda.is_available())" && \
 python -c "import pandas as pd, numpy as np, mudata as mu, sys, os; \
 tfb = pd.read_csv(sys.argv[1]); \
 tfb['cre'] = tfb['cre'].str.replace('-', ':'); \
@@ -35,10 +34,15 @@ rna.to_df().T.to_csv(sys.argv[4], sep='\t', compression='gzip'); \
 tfb.rename(columns={'cre': 'loc', 'tf': 'TF'})[['TF', 'loc', 'score']].to_csv(sys.argv[5], sep='\t', index=False)" \
 $tfb_path $pre_path $output_d/peaks.tsv.gz $output_d/expr.tsv.gz $output_d/tfb.tsv.gz && \
 python -m dictys chromatin tssdist --cut $distance $output_d/expr.tsv.gz $output_d/peaks.tsv.gz $annot $output_d/tssdist.tsv.gz && \
+echo 'Finished tssdist' && \
 python -m dictys chromatin linking $output_d/tfb.tsv.gz $output_d/tssdist.tsv.gz $output_d/linking.tsv.gz && \
+echo 'Finished chromatin linking' && \
 python -m dictys chromatin binlinking $output_d/linking.tsv.gz $output_d/binlinking.tsv.gz $n_p2g_links && \
+echo 'Finished chromatin binlinking' && \
 python -m dictys network reconstruct --device $device --nth $threads $output_d/expr.tsv.gz $output_d/binlinking.tsv.gz $output_d/net_weight.tsv.gz $output_d/net_meanvar.tsv.gz $output_d/net_covfactor.tsv.gz $output_d/net_loss.tsv.gz $output_d/net_stats.tsv.gz && \
+echo 'Finished network reconstruct' && \
 python -m dictys network normalize --nth $threads $output_d/net_weight.tsv.gz $output_d/net_meanvar.tsv.gz $output_d/net_covfactor.tsv.gz $output_d/net_nweight.tsv.gz && \
+echo 'Finished network normalize' && \
 python -c "import pandas as pd, numpy as np, sys, os; \
 weights = pd.read_csv(sys.argv[1], sep='\t', index_col=0); \
 mask = pd.read_csv(sys.argv[2], sep='\t', index_col=0); \
