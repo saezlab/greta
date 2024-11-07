@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'analysis')))
 from utils import make_combs
+home_path = os.path.expanduser("~")
 
 
 def map_rules(rule_prefix, w_name, out='out'):
@@ -31,11 +32,15 @@ def make_combs_rules(w, mthds, baselines, rule_name):
     from itertools import product
     out = getattr(rules, rule_name).output.out
     rule_outputs = []
+    mthds = [m for m in mthds if m != 'scenicplus']
     if w.dataset not in nocombs_datasets:
         for pre, p2g, tfb, mdl in product(mthds, repeat=4):
             rule_outputs.append(
                 format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
             )
+    else:
+        for mth in mthds:
+            rule_outputs.append(format_rule(out, w=w, pre=mth))
     for mth in mthds:
         if mth != 'scenicplus':  # TODO: remove once src scenic
             rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
@@ -93,6 +98,7 @@ include: 'rules/analysis/metrics/utils.smk'
 include: 'rules/analysis/stab.smk'
 include: 'rules/analysis/topo.smk'
 include: 'rules/analysis/pair.smk'
+include: 'rules/analysis/tss.smk'
 
 rule all:
     input:

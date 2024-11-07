@@ -952,7 +952,7 @@ with h5py.File(mudata_file, "r") as f:
 
 for k in obsm:
     dim = pd.DataFrame(obsm[k], index=cell_data.index, columns=[f'{k}__{i}' for i in range(obsm[k].shape[1])])
-    cisTopic_obj.projections["cell"][k] = dim.loc[fbarcodes, :]
+    cistopic_obj.projections["cell"][k] = dim.loc[fbarcodes, :]
 
 # Find variable regions
 imputed_acc_obj = impute_accessibility(
