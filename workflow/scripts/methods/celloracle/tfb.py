@@ -30,11 +30,15 @@ tfb_thr = float(args['tfb_thr'])
 path_out = args['path_out']
 
 # Load annotated peak data.
-peaks = pd.read_csv(path_p2g)
-if peaks.shape[0] == 0:
+p2g = pd.read_csv(path_p2g)
+if p2g.shape[0] == 0:
     tfb = pd.DataFrame(columns=['cre', 'tf', 'score'])
     tfb.to_csv(path_out, index=False)
     exit()
+
+# Here use all peaks instead of p2g as per celloracle vignette
+peaks = mu.read(os.path.join(path_data, 'atac')).var.index.values.astype('U')
+peaks = pd.DataFrame(peaks, columns=['cre'])
 peaks['cre'] = peaks['cre'].str.replace('-', '_')
 
 def decompose_chrstr(peak_str):
