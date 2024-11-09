@@ -1,9 +1,8 @@
-localrules: download_lambert, chrom_gene
+localrules: lambert, chrom_gene
 
 
-rule download_lambert:
-    output:
-        out='gdata/tfs/lambert.csv'
+rule lambert:
+    output: 'gdata/tfs/lambert.csv'
     params:
         url='http://humantfs.ccbr.utoronto.ca/download/v_1.01/TF_names_v_1.01.txt'
     resources:
@@ -27,7 +26,7 @@ rule chrom_gene:
 rule mdl_random:
     input:
         mdata=rules.extract_case.output.mdata,
-        tf=rules.download_lambert.output.out,
+        tf=rules.lambert.output[0],
         cg=rules.chrom_gene.output[0]
     singularity:
         'workflow/envs/gretabench.sif'
