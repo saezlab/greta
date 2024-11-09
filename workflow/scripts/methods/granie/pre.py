@@ -74,7 +74,7 @@ mdata = mu.MuData({
     'rna': rna[inter, :].copy(),
     'atac': atac[inter, :].copy(),
 })
-mdata.obs = mdata.mod['rna'].obs['batch'].copy()
+mdata.obs = mdata.mod['rna'].obs.copy()
 del mdata.mod['rna'].obs
 del mdata.mod['atac'].obs
 

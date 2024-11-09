@@ -31,6 +31,7 @@ geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
 
 # Read barmap
 barmap = pd.read_csv(path_barmap, index_col=0)
+barmap.index.name = None
 
 # Read data
 rna = sc.read_10x_h5(path_expr, genome="GRCh38")
