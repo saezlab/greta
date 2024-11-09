@@ -17,15 +17,12 @@ def get_grn_stats(grn):
     n_e = grn.shape[0]
     n_t = grn['target'].unique().size
     n_r = grn.groupby(['source']).count()['target'].mean()
-    
-    tfs = set(grn['source']) & set(grn['target'])
-    msk = grn['source'].isin(tfs) & grn['target'].isin(tfs)
-    tf_grn = grn.loc[msk, :]
-    tf_g = ig.Graph.TupleList(list(zip(tf_grn['source'], tf_grn['target'])), directed=True)
-    tf_bet = np.mean(tf_g.betweenness())
-    tf_odg = np.mean(tf_g.outdegree())
-    if not tf_g.is_acyclic():
-        tf_eig = np.mean(tf_g.eigenvector_centrality())
+
+    g = ig.Graph.TupleList(list(zip(grn['source'], grn['target'])), directed=True)
+    tf_bet = np.mean(g.betweenness())
+    tf_odg = np.mean(g.outdegree())
+    if not g.is_acyclic():
+        tf_eig = np.mean(g.eigenvector_centrality())
     else:
         tf_eig = 0.
     
