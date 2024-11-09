@@ -7,17 +7,19 @@ import argparse
 
 # Parse args
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--path_tss', required=True, nargs='+')
+parser.add_argument('-a', '--path_tss_a', required=True)
+parser.add_argument('-b', '--path_tss_b', required=True)
 parser.add_argument('-o', '--path_out', required=True)
 args = parser.parse_args()
-path_tss = args.path_tss
+path_tss_a = args.path_tss_a
+path_tss_b = args.path_tss_b
 out_path = args.path_out
 
 
 # Read
 names = []
 pr_tss = []
-for path in path_tss:
+for path in [path_tss_a, path_tss_b]:
     name = os.path.basename(path).replace('.bed', '')
     tss = pd.read_csv(path, sep='\t', header=None)
     tss.columns = ['Chromosome', 'Start', 'End', 'Name']
@@ -26,12 +28,8 @@ for path in path_tss:
     names.append(name)
     pr_tss.append(tss)
 
-
 # Find shared genes
-genes = set()
-genes = genes.union(pr_tss[0].Name)
-for tss in pr_tss[1:]:
-    genes = genes.intersection(tss.Name)
+genes = set().union(pr_tss[0].Name).intersection(pr_tss[1].Name)
 
 # Find genomic overlap coef
 def overlap_coef_per_gene(gene, tss_a, tss_b):
@@ -51,18 +49,19 @@ def overlap_coef_per_gene(gene, tss_a, tss_b):
 
 
 df = []
-for i in range(len(names)):
-    tss_a = pr_tss[i]
-    tss_a = tss_a[tss_a.Name.isin(genes)]
-    name_a = names[i]
-    for j in range(i + 1, len(names)):
-        tss_b = pr_tss[j]
-        tss_b = tss_b[tss_b.Name.isin(genes)]
-        name_b = names[j]
-        print(f"Comparison: {name_a} vs {name_b}")
-        for gene in tqdm(list(genes)):
-            val = overlap_coef_per_gene(gene, tss_a, tss_b)
-            df.append([name_a, name_b, gene, val])
+
+tss_a = pr_tss[0]
+tss_a = tss_a[tss_a.Name.isin(genes)]
+name_a = names[0]
+
+tss_b = pr_tss[1]
+tss_b = tss_b[tss_b.Name.isin(genes)]
+name_b = names[1]
+
+for gene in tqdm(list(genes)):
+    val = overlap_coef_per_gene(gene, tss_a, tss_b)
+    df.append([name_a, name_b, gene, val])
+
 df = pd.DataFrame(df, columns=['tss_a', 'tss_b', 'gene', 'ocoef'])
 
 # Write
