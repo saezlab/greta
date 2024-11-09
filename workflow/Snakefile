@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'analysis')))
 from utils import make_combs
+from itertools import combinations
 home_path = os.path.expanduser("~")
 
 
@@ -89,6 +90,10 @@ include: 'rules/methods/scenicplus.smk'
 include: 'rules/methods/grn.smk'
 include: 'rules/methods/random.smk'
 include: 'rules/methods/scenic.smk'
+
+# Databases
+include: 'rules/dbs/tfm.smk'
+include: 'rules/dbs/cre.smk'
 
 # Analyses
 include: 'rules/analysis/metrics/prior.smk'
