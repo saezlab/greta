@@ -48,15 +48,10 @@ rule pair_sim:
     input:
         p='analysis/topo/{dname}pair.{case}.sims_mult.csv',
         n='analysis/topo/{dname}npair.{case}.sims_mult.csv',
-    singularity:
-        'workflow/envs/gretabench.sif'
-    output:
-        make_combs(
-            path='analysis/pair/{dname}.{case}/',
-            mthds=mthds,
-            name='scores',
-        )
+    output: 'analysis/pair/{dname}.{case}.pvsn.csv'
     shell:
         """
-        python workflow/scripts/analysis/pair/compute_pairsim.py -i {input.p}
+        python workflow/scripts/analysis/pair/pairsim.py \
+        -i {input.p}
+        -o {output}
         """
