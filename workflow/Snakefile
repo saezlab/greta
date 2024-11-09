@@ -93,6 +93,7 @@ include: 'rules/methods/scenic.smk'
 
 # Databases
 include: 'rules/dbs/tfm.smk'
+include: 'rules/dbs/tfb.smk'
 include: 'rules/dbs/cre.smk'
 
 # Analyses

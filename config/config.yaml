@@ -179,24 +179,25 @@ nocombs_datasets: ['pitupair', 'pitunpair']
 dbs:
     hg38:
         tfm:
-            tfmdb: 'https://bio.liclab.net/TF-Marker/public/download/download_TFMarker.csv'
             hpa: 'https://www.proteinatlas.org/download/proteinatlas.tsv.zip'
-        tfbind:
+            tfmdb: 'https://bio.liclab.net/TF-Marker/public/download/download_TFMarker.csv'
+        tfb:
+            max_psize: 750
+            chipatlas:
+                meta: 'https://chip-atlas.dbcls.jp/data/metadata/experimentList.tab'
+                url: 'https://chip-atlas.dbcls.jp/data/hg38/assembled/Oth.ALL.50.{chipatlas_tf}.AllCell.bed'
             unibind:
                 meta: 'config/unibind.csv'
                 url: 'https://unibind.uio.no/static/data/20220914/bulk_Robust/Homo_sapiens/hg38_compressed_TFBSs.bed.gz'
             remap2022:
                 meta: 'config/remap2022.csv'
                 url: 'https://remap.univ-amu.fr/storage/remap2022/hg38/MACS2/remap2022_nr_macs2_hg38_v1_0.bed.gz'
-            chipatlas:
-                meta: 'config/chipatlas.csv'
-                url: 'https://chip-atlas.dbcls.jp/data/hg38/assembled/Oth.ALL.50.{chipatlas_tf}.AllCell.bed'
         cre:
             encode: 'https://downloads.wenglab.org/Registry-V3/GRCh38-cCREs.bed'
-            zhang21: 'https://data.mendeley.com/api/datasets/dr2z4jbcx3/draft/files/91f93222-1a24-49a5-92e3-d9105ec53f91?a=758c37e5-4832-4c91-af89-9a1a83a051b3'
-            phastcons: 'https://github.com/quadbio/Pando/raw/main/data/phastConsElements20Mammals.UCSC.hg38.RData'
             gwascatalogue: 'https://www.ebi.ac.uk/gwas/api/search/downloads/alternative'
+            phastcons: 'https://github.com/quadbio/Pando/raw/main/data/phastConsElements20Mammals.UCSC.hg38.RData'
             promoters: 1000
+            zhang21: 'https://data.mendeley.com/api/datasets/dr2z4jbcx3/draft/files/91f93222-1a24-49a5-92e3-d9105ec53f91?a=758c37e5-4832-4c91-af89-9a1a83a051b3'
         eqtl:
             eqtlcatalogue:
                 meta: 'config/eqtlcatalogue.csv'
