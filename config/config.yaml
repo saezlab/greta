@@ -177,6 +177,8 @@ nocombs_datasets: ['pitupair', 'pitunpair']
 
 # Databases
 dbs:
+    ont:
+        bto: 'https://service.tib.eu/ts4tib/api/ontologies/bto/download'
     hg38:
         tfm:
             hpa: 'https://www.proteinatlas.org/download/proteinatlas.tsv.zip'
@@ -186,12 +188,11 @@ dbs:
             chipatlas:
                 meta: 'https://chip-atlas.dbcls.jp/data/metadata/experimentList.tab'
                 url: 'https://chip-atlas.dbcls.jp/data/hg38/assembled/Oth.ALL.50.{chipatlas_tf}.AllCell.bed'
-            unibind:
-                meta: 'config/unibind.csv'
-                url: 'https://unibind.uio.no/static/data/20220914/bulk_Robust/Homo_sapiens/hg38_compressed_TFBSs.bed.gz'
             remap2022:
-                meta: 'config/remap2022.csv'
+                meta: 'https://remap.univ-amu.fr/storage/remap2022/biotypes/remap2022_hsap_biotypes.xlsx'
                 url: 'https://remap.univ-amu.fr/storage/remap2022/hg38/MACS2/remap2022_nr_macs2_hg38_v1_0.bed.gz'
+            unibind:
+                url: 'https://unibind.uio.no/static/data/20220914/bulk_Robust/Homo_sapiens/hg38_compressed_TFBSs.bed.gz'
         cre:
             encode: 'https://downloads.wenglab.org/Registry-V3/GRCh38-cCREs.bed'
             gwascatalogue: 'https://www.ebi.ac.uk/gwas/api/search/downloads/alternative'

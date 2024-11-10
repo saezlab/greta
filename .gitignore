@@ -146,6 +146,5 @@ benchmarks/
 /datasets/
 gdata/
 workflow/scripts/methods/scenic+/s1.py
-dbs/
 logs/
 *.ipynb

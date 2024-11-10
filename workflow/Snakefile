@@ -92,6 +92,7 @@ include: 'rules/methods/random.smk'
 include: 'rules/methods/scenic.smk'
 
 # Databases
+include: 'rules/dbs/ont.smk'
 include: 'rules/dbs/tfm.smk'
 include: 'rules/dbs/tfb.smk'
 include: 'rules/dbs/cre.smk'
