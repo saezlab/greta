@@ -84,7 +84,7 @@ rule annotate_pitunpair:
         peaks=rules.callpeaks_pitunpair.output.peaks,
         gex=rules.download_pitunpair.output.gex,
         barmap=rules.paircells_pitunpair.output.barmap,
-        gid=lambda w: "dbs/{config['dts']['pitunpair']['organism']}/gen/gid/ensembl.csv",
+        gid=rules.gen_gid_ensmbl.output,
     output:
         out='dts/pitunpair/annotated.h5mu'
     params:

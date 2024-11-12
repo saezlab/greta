@@ -47,7 +47,7 @@ rule annotate_pitupair:
         annot=rules.download_pitupair.output.annot,
         peaks=rules.callpeaks_pitupair.output.peaks,
         gex=rules.download_pitupair.output.gex,
-        gid=lambda w: f"dbs/{config['dts']['pitupair']['organism']}/gen/gid/ensembl.csv",
+        gid=rules.gen_gid_ensmbl.output,
     output: out='dts/pitupair/annotated.h5mu'
     resources: mem_mb=32000
     shell:
