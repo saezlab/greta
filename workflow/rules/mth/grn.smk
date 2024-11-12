@@ -20,7 +20,7 @@ rule mdl_collectri:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        grn=rules.grn_collectri.output,
+        grn=rules.gst_collectri.output,
         proms=rules.cre_promoters.output,
     output:
         out='dts/{dat}/cases/{case}/runs/collectri.collectri.collectri.collectri.mdl.csv'
@@ -42,7 +42,7 @@ rule mdl_dorothea:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        grn=rules.grn_dorothea.output,
+        grn=rules.gst_dorothea.output,
         proms=rules.cre_promoters.output,
     output:
         out='dts/{dat}/cases/{case}/runs/dorothea.dorothea.dorothea.dorothea.mdl.csv'

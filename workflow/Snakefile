@@ -33,8 +33,7 @@ def make_combs_rules(w, mthds, baselines, rule_name):
     from itertools import product
     out = getattr(rules, rule_name).output.out
     rule_outputs = []
-    mthds = [m for m in mthds if m != 'scenicplus']
-    if w.dataset not in nocombs_datasets:
+    if w.dat not in nocombs_datasets:
         for pre, p2g, tfb, mdl in product(mthds, repeat=4):
             rule_outputs.append(
                 format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
@@ -62,7 +61,7 @@ def restart_mem(wildcards, attempt):
 configfile: 'config/config.yaml'
 
 orgms = [k for k in config['dbs'] if k != 'ont']
-mthds = list(config['methods'].keys())
+mthds = [m for m in list(config['methods'].keys()) if m != 'scenicplus']
 baselines = config['baselines']
 
 datasets = list(config['dts'].keys())
@@ -76,7 +75,9 @@ include: 'rules/dbs/tfm.smk'
 include: 'rules/dbs/tfb.smk'
 include: 'rules/dbs/cre.smk'
 include: 'rules/dbs/tss.smk'
-include: 'rules/dbs/grn.smk'
+include: 'rules/dbs/gst.smk'
+include: 'rules/dbs/c2g.smk'
+include: 'rules/dbs/prt.smk'
 
 # Datasets
 include: 'rules/dts/pbmc10k.smk'
