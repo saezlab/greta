@@ -51,11 +51,11 @@ rule callpeaks_reprofibro:
     input:
         frags=rules.download_reprofibro.output.frags,
         annot=rules.download_reprofibro.output.annot,
-    output: peaks=temp(local('datasets/reprofibro/peaks.h5ad'))
+    output: peaks=temp(local('dts/reprofibro/peaks.h5ad'))
     resources: mem_mb=64000
     shell:
         """
-        python workflow/scripts/datasets/callpeaks.py \
+        python workflow/scripts/dts/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
         -n {threads} \
@@ -77,7 +77,7 @@ rule annotate_reprofibro:
     output: out='dts/reprofibro/annotated.h5mu'
     shell:
         """
-        python workflow/scripts/datasets/reprofibro/reprofibro.py \
+        python workflow/scripts/dts/reprofibro/reprofibro.py \
         -a {input.mats} \
         -b {input.bars} \
         -e {input.path_gsym} \

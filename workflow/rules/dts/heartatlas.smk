@@ -68,7 +68,7 @@ rule callpeaks_heartatlas:
         runtime=2160,
     shell:
         """
-        python workflow/scripts/datasets/callpeaks.py \
+        python workflow/scripts/dts/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
         -n {threads} \
@@ -84,10 +84,10 @@ rule annotate_heartatlas:
         path_peaks=rules.callpeaks_heartatlas.output.peaks,
         path_annot=rules.prcannot_heartatlas.output.annot,
         gid=lambda w: "dbs/{config['dts']['heartatlas']['organism']}/gen/gid/ensembl.csv",
-    output: out='datasets/heartatlas/annotated.h5mu'
+    output: out='dts/heartatlas/annotated.h5mu'
     shell:
         """
-        python workflow/scripts/datasets/heartatlas/heartatlas.py \
+        python workflow/scripts/dts/heartatlas/heartatlas.py \
         -a {input.path_h5ad} \
         -b {input.path_annot} \
         -c {input.gid} \
