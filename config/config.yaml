@@ -66,7 +66,7 @@ colors:
         dorothea: '#8c564b'
 
 # Datasets
-datasets:
+dts:
     brain:
         organism: 'hg38'
         url:
@@ -154,6 +154,10 @@ datasets:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+            test:
+                celltypes: 'all'
+                n_hvg: 2048
+                n_hvr: 4096
     reprofibro:
         organism: 'hg38'
         url:
@@ -204,6 +208,11 @@ dbs:
                 meta: 'config/eqtlcatalogue.csv'
                 url: 'http://ftp.ebi.ac.uk/pub/databases/spot/eQTL/susie/'
                 pval: 0.05
+        grn:
+            collectri: 'https://zenodo.org/records/8192729/files/CollecTRI_regulons.csv'
+            dorothea: 'https://github.com/saezlab/dorothea/raw/master/data/dorothea_hs.rda'
+        gen:
+            lambert: 'http://humantfs.ccbr.utoronto.ca/download/v_1.01/TF_names_v_1.01.txt'
         genome:
             name: 'hsapiens_gene_ensembl'
             sizes: 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes'

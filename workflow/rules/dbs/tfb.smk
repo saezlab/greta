@@ -1,10 +1,10 @@
-localrules: tfb_m_chipatlas, tfb_t_chipatlas, tfb_chipatlas, tfb_m_remap2022, tfb_t_remap2022, tfb_remap2022, tfb_t_unibind, tfb_unibind
+localrules: tfb_m_chipatlas, tfb_t_chipatlas, tfb_chipatlas, tfb_m_remap2022, tfb_r_remap2022, tfb_remap2022, tfb_t_unibind, tfb_unibind
 
 
 checkpoint tfb_m_chipatlas:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.lambert.output[0]
+    input: rules.gen_tfs_lambert.output
     output: 'dbs/hg38/tfb/chipatlas/meta.tsv'
     params:
         mta=config['dbs']['hg38']['tfb']['chipatlas']['meta'],
@@ -72,9 +72,9 @@ checkpoint tfb_r_remap2022:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        tfs=rules.lambert.output[0],
+        tfs=rules.gen_tfs_lambert.output,
         mta=rules.tfb_m_remap2022.output
-    output: directory('dbs/hg38/tfb/remap2022/raw')
+    output: directory('dbs/hg38/tfb/remap2022/raw/')
     params:
         url=config['dbs']['hg38']['tfb']['remap2022']['url'],
         max_psize=config['dbs']['hg38']['tfb']['max_psize']
@@ -92,31 +92,20 @@ checkpoint tfb_r_remap2022:
         """
 
 
-rule tfb_t_remap2022:
-    threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
-    input: 'dbs/hg38/tfb/remap2022/raw/{remap2022_tf}.bed'
-    output: 'dbs/hg38/tfb/remap2022/raw/{remap2022_tf}.bed'
-    shell:
-        """
-        bedtools merge -i {output} -c 4,5 -o distinct,distinct > {output}.tmp && \
-        mv {output}.tmp {output}
-        """
-
-
 def remap2022_aggr(wildcards):
-    checkpoints.tfb_r_remap2022.get()
-    tfs = glob_wildcards(f"dbs/hg38/tfb/remap2022/raw/{{tf}}.bed").tf
-    return expand(f"dbs/hg38/tfb/remap2022/raw/{tf}.bed", tf=tfs)
+    remap2022_dir = checkpoints.tfb_r_remap2022.get().output[0]
+    tfs = glob_wildcards(remap2022_dir + "/{tf}.bed").tf
+    return expand(remap2022_dir + '/{tf}.bed', tf=tfs)
 
 
 rule tfb_remap2022:
-    threads: 1
+    threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: remap2022_aggr
     output: 'dbs/hg38/tfb/remap2022/remap2022.bed'
     shell:
         """
+        ls dbs/hg38/tfb/remap2022/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c 'bedtools merge -i "{{}}" > "{{}}.tmp" && mv "{{}}.tmp" "{{}}"' && \
         cat dbs/hg38/tfb/remap2022/raw/*.bed |
         python workflow/scripts/dbs/tfb/aggregate.py > {output}
         """
@@ -125,7 +114,7 @@ rule tfb_remap2022:
 checkpoint tfb_r_unibind:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.lambert.output,
+    input: rules.gen_tfs_lambert.output,
     output: directory('dbs/hg38/tfb/unibind/raw')
     params:
         url=config['dbs']['hg38']['tfb']['unibind']['url'],
@@ -143,22 +132,11 @@ checkpoint tfb_r_unibind:
         """
 
 
-rule tfb_t_unibind:
-    threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
-    input: 'dbs/hg38/tfb/unibind/raw/{unibind_tf}.bed'
-    output: 'dbs/hg38/tfb/unibind/raw/{unibind_tf}.bed'
-    shell:
-        """
-        bedtools merge -i {output} -c 4,5 -o distinct,distinct > {output}.tmp && \
-        mv {output}.tmp {output}
-        """
-
-
 def unibind_aggr(wildcards):
     checkpoints.tfb_r_unibind.get()
-    tfs = glob_wildcards(f"dbs/hg38/tfb/unibind/raw/{{tf}}.bed").tf
-    return expand(f"dbs/hg38/tfb/unibind/raw/{tf}.bed", tf=tfs)
+    unibind_dir = checkpoints.tfb_r_unibind.get().output[0]
+    tfs = glob_wildcards(unibind_dir + "/{tf}.bed")
+    return expand("dbs/hg38/tfb/unibind/raw/{tf}.bed", tf=tfs)
 
 
 rule tfb_unibind:
@@ -168,6 +146,7 @@ rule tfb_unibind:
     output: 'dbs/hg38/tfb/unibind/unibind.bed'
     shell:
         """
+        ls dbs/hg38/tfb/remap2022/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c 'bedtools merge -i "{{}}" > "{{}}.tmp" && mv "{{}}.tmp" "{{}}"' && \
         cat dbs/hg38/tfb/unibind/raw/*.bed |
         python workflow/scripts/dbs/tfb/aggregate.py > {output}
         """

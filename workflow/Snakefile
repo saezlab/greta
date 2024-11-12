@@ -2,7 +2,7 @@ from snakemake.utils import min_version
 min_version('7.29.0')
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'analysis')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'anl')))
 from utils import make_combs
 from itertools import combinations
 home_path = os.path.expanduser("~")
@@ -43,17 +43,16 @@ def make_combs_rules(w, mthds, baselines, rule_name):
         for mth in mthds:
             rule_outputs.append(format_rule(out, w=w, pre=mth))
     for mth in mthds:
-        if mth != 'scenicplus':  # TODO: remove once src scenic
-            rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
+        rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
     for bsl in baselines:
         rule_outputs.append(format_rule(out, w=w, pre=bsl))
     return rule_outputs
 
 
 def list_frags_files(wildcards):
-    return expand('datasets/{dataset}/{sample}.frags.tsv.gz',
-                    dataset=wildcards.dataset,
-                    sample=config['datasets'][wildcards.dataset]['samples'])
+    return expand('dts/{dat}/{smp}.frags.tsv.gz',
+                    dat=wildcards.dat,
+                    smp=config['dts'][wildcards.dat]['samples'])
 
 
 def restart_mem(wildcards, attempt):
@@ -62,50 +61,52 @@ def restart_mem(wildcards, attempt):
 
 configfile: 'config/config.yaml'
 
+orgms = [k for k in config['dbs'] if k != 'ont']
 mthds = list(config['methods'].keys())
 baselines = config['baselines']
 
-datasets = list(config['datasets'].keys())
+datasets = list(config['dts'].keys())
 stab_datasets = config['stab_datasets']
 nocombs_datasets = config['nocombs_datasets']
 
-# Datasets
-include: 'rules/datasets/pbmc10k.smk'
-include: 'rules/datasets/reprofibro.smk'
-include: 'rules/datasets/pitupair.smk'
-include: 'rules/datasets/pitunpair.smk'
-include: 'rules/datasets/fakepair.smk'
-include: 'rules/datasets/heartatlas.smk'
-include: 'rules/datasets/brain.smk'
-include: 'rules/datasets/general.smk'
-
-# Methods
-include: 'rules/methods/celloracle.smk'
-include: 'rules/methods/dictys.smk'
-include: 'rules/methods/pando.smk'
-include: 'rules/methods/granie.smk'
-include: 'rules/methods/figr.smk'
-include: 'rules/methods/hummus.smk'
-include: 'rules/methods/scenicplus.smk'
-include: 'rules/methods/grn.smk'
-include: 'rules/methods/random.smk'
-include: 'rules/methods/scenic.smk'
-
 # Databases
+include: 'rules/dbs/gen.smk'
 include: 'rules/dbs/ont.smk'
 include: 'rules/dbs/tfm.smk'
 include: 'rules/dbs/tfb.smk'
 include: 'rules/dbs/cre.smk'
+include: 'rules/dbs/tss.smk'
+include: 'rules/dbs/grn.smk'
+
+# Datasets
+include: 'rules/dts/pbmc10k.smk'
+include: 'rules/dts/reprofibro.smk'
+include: 'rules/dts/pitupair.smk'
+include: 'rules/dts/pitunpair.smk'
+include: 'rules/dts/fakepair.smk'
+include: 'rules/dts/heartatlas.smk'
+include: 'rules/dts/brain.smk'
+include: 'rules/dts/general.smk'
+
+# Methods
+include: 'rules/mth/celloracle.smk'
+include: 'rules/mth/dictys.smk'
+include: 'rules/mth/pando.smk'
+include: 'rules/mth/granie.smk'
+include: 'rules/mth/figr.smk'
+include: 'rules/mth/grn.smk'
+include: 'rules/mth/random.smk'
+include: 'rules/mth/scenic.smk'
 
 # Analyses
-include: 'rules/analysis/metrics/prior.smk'
-include: 'rules/analysis/metrics/pred.smk'
-include: 'rules/analysis/metrics/mech.smk'
-include: 'rules/analysis/metrics/utils.smk'
-include: 'rules/analysis/stab.smk'
-include: 'rules/analysis/topo.smk'
-include: 'rules/analysis/pair.smk'
-include: 'rules/analysis/tss.smk'
+include: 'rules/anl/metrics/prior.smk'
+include: 'rules/anl/metrics/pred.smk'
+include: 'rules/anl/metrics/mech.smk'
+include: 'rules/anl/metrics/utils.smk'
+include: 'rules/anl/stab.smk'
+include: 'rules/anl/topo.smk'
+include: 'rules/anl/pair.smk'
+include: 'rules/anl/tss.smk'
 
 rule all:
     input:

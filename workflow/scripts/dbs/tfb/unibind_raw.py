@@ -1,19 +1,23 @@
 import os
 import sys
 import pandas as pd
+from tqdm import tqdm
 
 
-tfs = set(pd.read_csv(sys.argv[1], header=None).values.ravel().astype('U'))
-for line in sys.stdin:
-    line = line.replace('\n', '').split('\t')[:4]
-    chrm, start, end, tmp = line[0], line[1], line[2], line[3]
+tfs = set(pd.read_csv(sys.argv[1], header=None).iloc[:, 0].astype('U'))
+file_handles = {}
+for line in tqdm(sys.stdin):
+    chrm, start, end, tmp = line.strip().split('\t')[:4]
     tmp = tmp.split('_')
     if len(tmp) == 4:
-        _, ctype, tf, _ = tmp
+        _, ctype, tf, _ = tmp 
+        start, end = int(start), int(end)
         ctype = ctype.replace('-', ' ').replace(',', ' ').strip()
         tf = tf.strip()
-        start, end = int(start), int(end)
         valid = (tf in tfs) and ('_' not in chrm) and ((start - end) < int(sys.argv[2]))
         if valid:
-            with open(os.path.join(sys.argv[3], f'{tf}.bed'), 'a') as f:
-                f.write(f'{chrm}\t{start}\t{end}\t{tf}\t{ctype}\n')
+            if tf not in file_handles:
+                file_handles[tf] = open(os.path.join(sys.argv[5], f'{tf}.bed'), 'w')
+            file_handles[tf].write(f'{chrm}\t{start}\t{end}\t{tf}\t{",".join(ctypes)}\n')
+for tf in tqdm(file_handles):
+    file_handles[tf].close()
