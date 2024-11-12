@@ -1,4 +1,4 @@
-localrules: c2g_m_eqtlcatalogue, c2g_s_eqtlcatalogue, c2g_eqtlcatalogue
+localrules: c2g_m_eqtlcatalogue, c2g_s_eqtlcatalogue
 
 
 
@@ -61,6 +61,7 @@ checkpoint c2g_g_eqtlcatalogue:
         {output}
         """
 
+
 def eqtlcat_genes(wildcards):
     gdir = checkpoints.c2g_g_eqtlcatalogue.get().output[0]
     genes = glob_wildcards(os.path.join(gdir, "{gene}.bed")).gene
@@ -75,9 +76,8 @@ rule c2g_eqtlcatalogue:
     output: 'dbs/hg38/tfb/eqtlcatalogue/eqtlcatalogue.bed'
     shell:
         """
-        ls dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c '
-        bedtools merge -i "{{}}" -c 4,5 -o distinct,distinct > "{{}}.tmp"' && \
-        cat dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed.tmp |
-        python workflow/scripts/dbs/c2g/eqtlcatalogue_aggr.py > {output} && \
+        ls dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c \
+        'sort -k1,1 -k2,2n "{{}}" | bedtools merge -i - -c 4,5 -o distinct,distinct > "{{}}.tmp"' && \
+        cat dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed.tmp > {output} && \
         rm dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed.tmp
         """
