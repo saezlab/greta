@@ -37,7 +37,7 @@ rule tss_dist:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        c='anl/tss/ocoef.csv',
+        c=rules.tss_aggr.output,
         g='anl/topo/{dat}.{case}.stats_mult.csv'
     output: "anl/tss/{dat}.{case}.dist.csv"
     resources:
