@@ -1,3 +1,6 @@
+localrules: tss_aggr
+
+
 rule tss_gocoef:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -23,15 +26,14 @@ rule tss_aggr:
     singularity: 'workflow/envs/gretabench.sif'
     input: tss_paths
     output: "anl/tss/ocoef.csv"
-    resources:
-        mem_mb=2000,
-        runtime=config['max_mins_per_step'],
     shell:
         """
-        python workflow/scripts/anl/tss/gocoef.py \
-        -t {input} \
-        -o {output}
+        python -c "import pandas as pd; import sys; \
+        tss_paths = sys.argv[1:]; \
+        df = pd.concat([pd.read_csv(tss_path) for tss_path in tss_paths]); \
+        df.to_csv('{output}', index=False);" {input}
         """
+
 
 rule tss_dist:
     threads: 1
