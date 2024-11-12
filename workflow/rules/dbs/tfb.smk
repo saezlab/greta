@@ -1,4 +1,4 @@
-localrules: tfb_m_chipatlas, tfb_t_chipatlas, tfb_chipatlas, tfb_m_remap2022, tfb_r_remap2022, tfb_remap2022, tfb_t_unibind, tfb_unibind
+localrules: tfb_m_chipatlas, tfb_t_chipatlas, tfb_chipatlas, tfb_m_remap2022, tfb_remap2022, tfb_unibind
 
 
 checkpoint tfb_m_chipatlas:
@@ -105,9 +105,11 @@ rule tfb_remap2022:
     output: 'dbs/hg38/tfb/remap2022/remap2022.bed'
     shell:
         """
-        ls dbs/hg38/tfb/remap2022/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c 'bedtools merge -i "{{}}" > "{{}}.tmp" && mv "{{}}.tmp" "{{}}"' && \
-        cat dbs/hg38/tfb/remap2022/raw/*.bed |
-        python workflow/scripts/dbs/tfb/aggregate.py > {output}
+        ls dbs/hg38/tfb/remap2022/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c '
+        bedtools merge -i "{{}}" -c 4,5 -o distinct,distinct > "{{}}.tmp"' && \
+        cat dbs/hg38/tfb/remap2022/raw/*.bed.tmp |
+        python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
+        rm dbs/hg38/tfb/remap2022/raw/*.bed.tmp
         """
 
 
@@ -115,7 +117,7 @@ checkpoint tfb_r_unibind:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.gen_tfs_lambert.output,
-    output: directory('dbs/hg38/tfb/unibind/raw')
+    output: directory('dbs/hg38/tfb/unibind/raw/')
     params:
         url=config['dbs']['hg38']['tfb']['unibind']['url'],
         max_psize=config['dbs']['hg38']['tfb']['max_psize']
@@ -132,21 +134,23 @@ checkpoint tfb_r_unibind:
         """
 
 
-def unibind_aggr(wildcards):
+def unibind_aggr(w):
     checkpoints.tfb_r_unibind.get()
     unibind_dir = checkpoints.tfb_r_unibind.get().output[0]
     tfs = glob_wildcards(unibind_dir + "/{tf}.bed")
-    return expand("dbs/hg38/tfb/unibind/raw/{tf}.bed", tf=tfs)
+    return expand("dbs/hg38/tfb/unibind/raw/{tf}.bed", tf=tfs.tf)
 
 
 rule tfb_unibind:
-    threads: 1
+    threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: unibind_aggr
     output: 'dbs/hg38/tfb/unibind/unibind.bed'
     shell:
         """
-        ls dbs/hg38/tfb/remap2022/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c 'bedtools merge -i "{{}}" > "{{}}.tmp" && mv "{{}}.tmp" "{{}}"' && \
-        cat dbs/hg38/tfb/unibind/raw/*.bed |
-        python workflow/scripts/dbs/tfb/aggregate.py > {output}
+        ls dbs/hg38/tfb/unibind/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c '
+        bedtools merge -i "{{}}" -c 4,5 -o distinct,distinct > "{{}}.tmp"' && \
+        cat dbs/hg38/tfb/unibind/raw/*.bed.tmp |
+        python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
+        rm dbs/hg38/tfb/unibind/raw/*.bed.tmp
         """

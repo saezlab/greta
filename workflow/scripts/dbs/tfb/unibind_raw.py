@@ -17,7 +17,7 @@ for line in tqdm(sys.stdin):
         valid = (tf in tfs) and ('_' not in chrm) and ((start - end) < int(sys.argv[2]))
         if valid:
             if tf not in file_handles:
-                file_handles[tf] = open(os.path.join(sys.argv[5], f'{tf}.bed'), 'w')
-            file_handles[tf].write(f'{chrm}\t{start}\t{end}\t{tf}\t{",".join(ctypes)}\n')
-for tf in tqdm(file_handles):
+                file_handles[tf] = open(os.path.join(sys.argv[3], f'{tf}.bed'), 'w')
+            file_handles[tf].write(f'{chrm}\t{start}\t{end}\t{tf}\t{ctype}\n')
+for tf in file_handles:
     file_handles[tf].close()

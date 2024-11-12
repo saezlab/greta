@@ -16,7 +16,7 @@ for line in tqdm(sys.stdin):
             ctypes = [mta[c] for c in ctype.split(',') if c in mta]
             if ctypes:
                 if tf not in file_handles:
-                    file_handles[tf] = open(os.path.join(sys.argv[5], f'{tf}.bed'), 'w')
+                    file_handles[tf] = open(os.path.join(sys.argv[4], f'{tf}.bed'), 'w')
                 file_handles[tf].write(f'{chrm}\t{start}\t{end}\t{tf}\t{",".join(ctypes)}\n')
-for tf in tqdm(file_handles):
+for tf in file_handles:
     file_handles[tf].close()
