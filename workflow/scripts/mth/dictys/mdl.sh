@@ -13,6 +13,7 @@ while [[ "$#" -gt 0 ]]; do
         --n_p2g_links) n_p2g_links="$2"; shift ;;
         --threads) threads="$2"; shift ;;
         --device) device="$2"; shift ;;
+        --thr_score) thr_score="$2"; shift ;;
         --out_path) out_path="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
@@ -51,4 +52,6 @@ df = [(weights.index[i], weights.columns[j], weights.iloc[i, j]) for i in np.ara
 df = np.array(df); \
 df = pd.DataFrame(df, columns=['source', 'target', 'score']); \
 df['pval'] = 0.01; \
-df.to_csv(sys.argv[3], index=False)" $output_d/net_nweight.tsv.gz $output_d/binlinking.tsv.gz $out_path
+df['score'] = df['score'].astype(float); \
+df = df[df['score'].abs() > float(sys.argv[3])]; \
+df.to_csv(sys.argv[4], index=False)" $output_d/net_nweight.tsv.gz $output_d/binlinking.tsv.gz $thr_score $out_path

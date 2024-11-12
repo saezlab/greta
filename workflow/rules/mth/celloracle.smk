@@ -161,7 +161,7 @@ rule mdl_o_celloracle:
         {output.pp} \
         {output.pc} && \
         python workflow/scripts/mth/celloracle/src.py \
-        -a {input} \
+        -a {input.mdata} \
         -b {output.pp} \
         -c {output.pc} \
         -d {params.organism} \

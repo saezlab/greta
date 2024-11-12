@@ -105,6 +105,7 @@ rule mdl_dictys:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
         device=config['methods']['dictys']['device'],
+        thr_score=config['methods']['dictys']['thr_score'],
     resources:
         partition='gpu-single',
         mem_mb=restart_mem,
@@ -119,12 +120,13 @@ rule mdl_dictys:
         --pre_path {input.pre} \
         --p2g_path {input.p2g} \
         --tfb_path {input.tfb} \
-        --annot {input.annotation} \
+        --annot {input.ann} \
         --distance {params.ext} \
         --n_p2g_links {params.n_p2g_links} \
         --threads {threads} \
-        --out_path {output.out} \
-        --device {params.device}
+        --device {params.device} \
+        --thr_score {params.thr_score} \
+        --out_path {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
@@ -152,7 +154,8 @@ rule mdl_o_dictys:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
         device=config['methods']['dictys']['device'],
-        use_p2g=False,
+        use_p2g=config['methods']['dictys']['use_p2g'],
+        thr_score=config['methods']['dictys']['thr_score'],
     resources:
         partition='gpu-single',
         mem_mb=restart_mem,
@@ -172,7 +175,7 @@ rule mdl_o_dictys:
         -t {output.d} \
         -p {output.p2g} \
         -e {params.ext} \
-        -g {input.annotation} && \
+        -g {input.ann} && \
         bash workflow/scripts/mth/dictys/tfb.sh \
         --input_pre {output.pre} \
         --input_p2g {output.p2g} \
@@ -188,11 +191,12 @@ rule mdl_o_dictys:
         --pre_path {output.pre} \
         --p2g_path {output.p2g} \
         --tfb_path {output.tfb} \
-        --annot {input.annotation} \
+        --annot {input.ann} \
         --distance {params.ext} \
         --n_p2g_links {params.n_p2g_links} \
         --threads {threads} \
         --device {params.device} \
+        --thr_score {params.thr_score} \
         --out_path {output.out}'
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score" }}' > {output.out}

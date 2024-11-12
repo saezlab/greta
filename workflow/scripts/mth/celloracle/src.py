@@ -56,7 +56,7 @@ if __name__ == '__main__':
     # Extract tss information
     tss_annotated = ma.get_tss_info(
         peak_str_list=peaks,
-        ref_genome=organism
+        ref_genome=org
     )
     
     # Integrate
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     # Instantiate TFinfo object
     tfi = ma.TFinfo(
         peak_data_frame=p2g,
-        ref_genome=organism,
+        ref_genome=org,
         genomes_dir=gdir,
     )
     

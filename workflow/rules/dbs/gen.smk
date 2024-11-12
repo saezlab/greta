@@ -23,7 +23,7 @@ rule gen_tfs_lambert:
 rule gen_tfs_scenic:
     output: 'dbs/hg38/gen/tfs/scenic.csv'
     params:
-        url='https://resources.aertslab.org/cistarget/tf_lists/allTFs_hg38.txt'
+        url=config['dbs']['hg38']['gen']['scenic']
     shell:
         "wget --no-verbose '{params.url}' -O {output}"
 
