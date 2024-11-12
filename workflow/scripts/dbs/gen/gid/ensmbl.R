@@ -32,5 +32,6 @@ for (path_org in orgms) {
     org <- sub('^dbs/([^/]+)/.*$', '\\1', path_org)
     org <- org_table[org]
     gid <- get_gene_table(org)
+    gid <- gid[gid$symbol != "", ]
     write.csv(x = gid, file = path_org, row.names=FALSE, quote=FALSE)
 }
