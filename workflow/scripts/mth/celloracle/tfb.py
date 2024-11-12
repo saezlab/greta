@@ -101,8 +101,7 @@ def check_peak_format(peaks_df, gname, gdir):
     return df
 
 # Format and delete peaks
-peaks = check_peak_format(peaks, gname='', gdir=gdir)
-
+peaks = check_peak_format(peaks, gname=org, gdir=gdir)
 # Instantiate TFinfo object
 tfi = ma.TFinfo(
     peak_data_frame=peaks,

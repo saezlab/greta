@@ -30,7 +30,7 @@ args = vars(parser.parse_args())
 path_data = args['path_data']
 path_all_peaks = args['all_peaks']
 path_connections = args['connections']
-organism = args['organism']
+org = args['organism']
 thr_coaccess = float(args['thr'])
 fpr = float(args['fpr'])
 blen = int(args['blen'])
@@ -136,7 +136,8 @@ if __name__ == '__main__':
         return df
     
     # Format and delete peaks
-    p2g = check_peak_format(p2g, gname='celloracle', gdir=f'dbs/{organism}/gen/genome/celloracle/')
+    gdir = f'dbs/{org}/gen/genome/celloracle/'
+    p2g = check_peak_format(p2g, gname=org, gdir=gdir)
     
     # Instantiate TFinfo object
     tfi = ma.TFinfo(

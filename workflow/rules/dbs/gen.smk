@@ -38,7 +38,7 @@ rule gen_gid_ensmbl:
 rule gen_genome_celloracle:
     threads: 4
     singularity: 'workflow/envs/celloracle.sif'
-    output: directory('dbs/hg38/gen/genome/celloracle/hg38/')
+    output: directory('dbs/hg38/gen/genome/celloracle/')
     shell:
         """
         python workflow/scripts/dbs/gen/genome/celloracle.py -o {output} &&
