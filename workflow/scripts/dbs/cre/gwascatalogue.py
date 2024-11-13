@@ -68,4 +68,6 @@ df = df.rename(columns={
 })
 
 # Save
+df = df[['chr_id', 'chr_start', 'chr_end', 'eff_allele', 'trait_name']]
+df['trait_name'] = df['trait_name'].str.strip()
 df.to_csv(inp_path, index=False, header=None, sep='\t')
