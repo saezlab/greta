@@ -186,11 +186,25 @@ dbs:
     ont:
         bto: 'https://service.tib.eu/ts4tib/api/ontologies/bto/download'
     hg38:
+        gen:
+            lambert: 'http://humantfs.ccbr.utoronto.ca/download/v_1.01/TF_names_v_1.01.txt'
+            scenic: 'https://resources.aertslab.org/cistarget/tf_lists/allTFs_hg38.txt'
+        prt:
+            knocktf:
+                meta: 'https://zenodo.org/record/7035528/files/knockTF_meta.csv?download=1'
+                diff: 'https://zenodo.org/record/7035528/files/knockTF_expr.csv?download=1'
+        gst:
+            hall: 'https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/h.all.v2024.1.Hs.symbols.gmt'
+            kegg: 'https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/c2.cp.kegg_legacy.v2024.1.Hs.symbols.gmt'
+            reac: 'https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/c2.cp.reactome.v2024.1.Hs.symbols.gmt'
+            prog: 'https://github.com/saezlab/progeny/raw/master/data/model_human_full.rda'
+        pkn:
+            collectri: 'https://zenodo.org/records/8192729/files/CollecTRI_regulons.csv'
+            dorothea: 'https://github.com/saezlab/dorothea/raw/master/data/dorothea_hs.rda'
         tfm:
             hpa: 'https://www.proteinatlas.org/download/proteinatlas.tsv.zip'
             tfmdb: 'https://bio.liclab.net/TF-Marker/public/download/download_TFMarker.csv'
         tfb:
-            max_psize: 750
             chipatlas:
                 meta: 'https://chip-atlas.dbcls.jp/data/metadata/experimentList.tab'
                 url: 'https://chip-atlas.dbcls.jp/data/hg38/assembled/Oth.ALL.50.{chipatlas_tf}.AllCell.bed'
@@ -203,29 +217,13 @@ dbs:
             encode: 'https://downloads.wenglab.org/Registry-V3/GRCh38-cCREs.bed'
             gwascatalogue: 'https://www.ebi.ac.uk/gwas/api/search/downloads/alternative'
             phastcons: 'https://github.com/quadbio/Pando/raw/main/data/phastConsElements20Mammals.UCSC.hg38.RData'
-            promoters: 1000
+            promoters: None
             zhang21: 'https://data.mendeley.com/api/datasets/dr2z4jbcx3/draft/files/91f93222-1a24-49a5-92e3-d9105ec53f91?a=758c37e5-4832-4c91-af89-9a1a83a051b3'
         c2g:
             eqtlcatalogue:
                 meta: 'https://raw.githubusercontent.com/eQTL-Catalogue/eQTL-Catalogue-resources/refs/heads/master/tabix/tabix_ftp_paths.tsv'
                 url: 'http://ftp.ebi.ac.uk/pub/databases/spot/eQTL/susie/{eqtl_smpl_grp}/{eqtl_tiss}/{eqtl_tiss}.credible_sets.tsv.gz'
                 thr_pval: 1e-5
-        eqtl:
-            eqtlcatalogue:
-                meta: 'config/eqtlcatalogue.csv'
-                url: 'http://ftp.ebi.ac.uk/pub/databases/spot/eQTL/susie/'
-                pval: 0.05
-        gst:
-            collectri: 'https://zenodo.org/records/8192729/files/CollecTRI_regulons.csv'
-            dorothea: 'https://github.com/saezlab/dorothea/raw/master/data/dorothea_hs.rda'
-            hall: 'https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/h.all.v2024.1.Hs.symbols.gmt'
-            kegg: 'https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/c2.cp.kegg_legacy.v2024.1.Hs.symbols.gmt'
-            reac: 'https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2024.1.Hs/c2.cp.reactome.v2024.1.Hs.symbols.gmt'
-            prog: 'https://github.com/saezlab/progeny/raw/master/data/model_human_full.rda'
-        gen:
-            lambert: 'http://humantfs.ccbr.utoronto.ca/download/v_1.01/TF_names_v_1.01.txt'
-            scenic: 'https://resources.aertslab.org/cistarget/tf_lists/allTFs_hg38.txt'
-        prt:
-            knocktf:
-                meta: 'https://zenodo.org/record/7035528/files/knockTF_meta.csv?download=1'
-                diff: 'https://zenodo.org/record/7035528/files/knockTF_expr.csv?download=1'
+tfb_max_psize: 750
+cre_prom_size: 1000
+topo_min_prop: 0.5

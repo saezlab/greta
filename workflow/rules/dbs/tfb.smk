@@ -22,7 +22,7 @@ rule tfb_t_chipatlas:
     output: 'dbs/hg38/tfb/chipatlas/raw/{chipatlas_tf}.bed'
     params:
         url=config['dbs']['hg38']['tfb']['chipatlas']['url'],
-        max_psize=config['dbs']['hg38']['tfb']['max_psize']
+        max_psize=config['tfb_max_psize']
     shell:
         """
         if wget --spider '{params.url}' 2>/dev/null; then
@@ -77,7 +77,7 @@ checkpoint tfb_r_remap2022:
     output: directory('dbs/hg38/tfb/remap2022/raw/')
     params:
         url=config['dbs']['hg38']['tfb']['remap2022']['url'],
-        max_psize=config['dbs']['hg38']['tfb']['max_psize']
+        max_psize=config['tfb_max_psize']
     shell:
         """
         mkdir -p {output} && \
@@ -120,7 +120,7 @@ checkpoint tfb_r_unibind:
     output: directory('dbs/hg38/tfb/unibind/raw/')
     params:
         url=config['dbs']['hg38']['tfb']['unibind']['url'],
-        max_psize=config['dbs']['hg38']['tfb']['max_psize']
+        max_psize=config['tfb_max_psize']
     shell:
         """
         mkdir -p {output} && \
