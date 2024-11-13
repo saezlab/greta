@@ -58,6 +58,7 @@ rule callpeaks_reprofibro:
         python workflow/scripts/dts/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
+        -t '/tmp/reprofibro/' \
         -n {threads} \
         -o {output.peaks}
         """

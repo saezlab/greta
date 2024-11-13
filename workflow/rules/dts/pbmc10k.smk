@@ -35,6 +35,7 @@ rule callpeaks_pbmc10k:
         python workflow/scripts/dts/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
+        -t '/tmp/pbcm10k/' \
         -n {threads} \
         -o {output.peaks}
         """

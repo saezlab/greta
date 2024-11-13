@@ -58,7 +58,7 @@ rule callpeaks_brain:
         python workflow/scripts/dts/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
-        -t {output.tmp} \
+        -t '/tmp/brain/' \
         -n {threads} \
         -o {output.peaks}
         """

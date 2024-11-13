@@ -71,6 +71,7 @@ rule callpeaks_heartatlas:
         python workflow/scripts/dts/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
+        -t '/tmp/heartatlas/' \
         -n {threads} \
         -o {output.peaks}
         """

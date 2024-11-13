@@ -72,6 +72,7 @@ rule callpeaks_pitunpair:
         python workflow/scripts/dts/callpeaks.py \
         -f {input.frags} \
         -a {input.annot} \
+        -t '/tmp/pitunpair/' \
         -n {threads} \
         -o {output.peaks}
         """
