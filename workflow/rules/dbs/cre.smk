@@ -25,7 +25,7 @@ rule cre_gwascatalogue:
         """
         wget --no-verbose '{params.url}' -O {output} && \
         python workflow/scripts/dbs/cre/gwascatalogue.py -i {output} && \
-        sort -k 1,1 -k2,2n {output} > {output}.tmp && \
+        sort -k 1,1 -k2,2n {output} | bedtools merge -i - -c 4,5 -o distinct,distinct -delim "|" > {output}.tmp && \
         mv {output}.tmp {output}
         """
 
@@ -54,7 +54,7 @@ rule cre_promoters:
     singularity: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/cre/promoters/promoters.bed'
     params:
-        wsize=config['dbs']['hg38']['cre']['promoters']
+        wsize=config['cre_prom_size']
     shell:
         """
         Rscript workflow/scripts/dbs/cre/promoters.R \
