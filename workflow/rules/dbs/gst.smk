@@ -5,7 +5,7 @@ rule gst_collectri:
     threads: 1
     input: rules.gen_tfs_lambert.output
     output: 'dbs/hg38/gst/collectri.csv'
-    params: url=config['dbs']['hg38']['gst']['collectri']
+    params: url=config['dbs']['hg38']['pkn']['collectri']
     run:
         import pandas as pd
         net = pd.read_csv(params.url).drop(columns=['resources', 'sign_decision'])
@@ -21,7 +21,7 @@ rule gst_dorothea:
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.gen_tfs_lambert.output
     output: 'dbs/hg38/gst/dorothea.csv'
-    params: url=config['dbs']['hg38']['gst']['dorothea']
+    params: url=config['dbs']['hg38']['pkn']['dorothea']
     shell:
         """
         Rscript -e '
@@ -72,7 +72,9 @@ rule gst_prog:
         prg = pd.read_csv('{output}.rda'); \
         prg = prg.rename(columns={{'gene': 'target', 'pathway': 'source', 'p.value': 'pval'}}); \
         prg = prg[['source', 'target', 'weight', 'pval']]; \
-        prg = prg[prg['pval'] < 0.05]; \
+        prg = prg[prg['pval'] < 1e-5]; \
+        n = prg.groupby('source').size(); \
+        prg = prg[prg['source'].isin(n[n > 5].index)]; \
         prg = prg.sort_values(['source', 'target', 'weight']); \
         prg.to_csv('{output}', index=False)" && \
         rm {output}.rda
