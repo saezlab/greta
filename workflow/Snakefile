@@ -108,6 +108,7 @@ include: 'rules/anl/stab.smk'
 include: 'rules/anl/topo.smk'
 include: 'rules/anl/pair.smk'
 include: 'rules/anl/tss.smk'
+include: 'rules/anl/dbs.smk'
 
 rule all:
     input:
