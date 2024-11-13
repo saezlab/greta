@@ -73,7 +73,7 @@ rule c2g_eqtlcatalogue:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: eqtlcat_genes
-    output: 'dbs/hg38/tfb/eqtlcatalogue/eqtlcatalogue.bed'
+    output: 'dbs/hg38/c2g/eqtlcatalogue/eqtlcatalogue.bed'
     shell:
         """
         ls dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c \
