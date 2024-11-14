@@ -27,10 +27,12 @@ msk = np.any(np.diff(mdata.mod['atac'].X, axis=0), axis=0)
 atac = mdata.mod['atac'][:, msk].copy()
 
 # Save
+obs=mdata.obs.copy()
 mdata = mu.MuData({
     'rna': rna,
     'atac': atac,
 })
+mdata.obs = obs
 
 # Write
 mdata.write(path_out)

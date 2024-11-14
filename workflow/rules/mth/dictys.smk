@@ -88,7 +88,7 @@ rule tfb_dictys:
         fi
         """
 
-
+localrules: mdl_dictys
 rule mdl_dictys:
     threads: 4
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
@@ -107,10 +107,10 @@ rule mdl_dictys:
         device=config['methods']['dictys']['device'],
         thr_score=config['methods']['dictys']['thr_score'],
     resources:
-        partition='gpu-single',
+        partition=lambda w: "cpu-single" if w.pre=='granie' else "gpu-single",
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
-        slurm="gres=gpu:1",
+        slurm=lambda w: "gres=gpu:0" if w.pre=='granie' else "gres=gpu:1",
     shell:
         """
         set +e

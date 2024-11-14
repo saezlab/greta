@@ -18,22 +18,16 @@ while [[ "$#" -gt 0 ]]; do
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
-done && \
-if [ $(wc -l < $p2g_path) -eq 1 ] || [ $(wc -l < $tfb_path) -eq 1 ]; then
-    awk 'BEGIN {{ print "source,target,score,pval" }}' > $output_out
+done
+
+if [ $(wc -l < $p2g_path) -eq 1 ] || [ $(wc -l < $tfb_path) -eq 1 ] || [ $(basename $pre_path | grep -q '^granie' && echo true || echo false) ]; then
+    echo "source,target,score,pval" > "$out_path"
+    mkdir -p "$output_d"
     exit 0
 fi && \
 mkdir -p "$output_d" && \
 python -c "import torch; print('Cuda enabled:', torch.cuda.is_available())" && \
-python -c "import pandas as pd, numpy as np, mudata as mu, sys, os; \
-tfb = pd.read_csv(sys.argv[1]); \
-tfb['cre'] = tfb['cre'].str.replace('-', ':'); \
-peaks = tfb['cre'].unique(); \
-rna = mu.read(os.path.join(sys.argv[2], 'mod', 'rna')); \
-pd.DataFrame(np.zeros((peaks.size, 1)), index=peaks, columns=['placeholder']).to_csv(sys.argv[3], sep='\t', compression='gzip'); \
-rna.to_df().T.to_csv(sys.argv[4], sep='\t', compression='gzip'); \
-tfb.rename(columns={'cre': 'loc', 'tf': 'TF'})[['TF', 'loc', 'score']].to_csv(sys.argv[5], sep='\t', index=False)" \
-$tfb_path $pre_path $output_d/peaks.tsv.gz $output_d/expr.tsv.gz $output_d/tfb.tsv.gz && \
+python workflow/scripts/mth/dictys/before_mdl.py $tfb_path $pre_path $output_d/peaks.tsv.gz $output_d/expr.tsv.gz $output_d/tfb.tsv.gz && \
 python -m dictys chromatin tssdist --cut $distance $output_d/expr.tsv.gz $output_d/peaks.tsv.gz $annot $output_d/tssdist.tsv.gz && \
 echo 'Finished tssdist' && \
 python -m dictys chromatin linking $output_d/tfb.tsv.gz $output_d/tssdist.tsv.gz $output_d/linking.tsv.gz && \
