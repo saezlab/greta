@@ -29,6 +29,6 @@ rule topo_inter:
         python workflow/scripts/anl/topo/inter.py \
         -g {input} \
         -b {baselines} \
-        -p {params.min_prop}
+        -p {params.min_prop} \
         -o {output}
         """
