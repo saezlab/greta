@@ -18,18 +18,24 @@ path_out = args.path_out
 
 # Set variables
 dname, case = os.path.basename(path_cmp).split('.')[:2]
-path_grns = glob.glob(os.path.join('datasets', dname, 'cases', case, 'runs', '*.grn.csv'))
-
+path_grns = glob.glob(os.path.join('dts', dname, 'cases', case, 'runs', '*.grn.csv'))
 def compute_dist_tss(path, mth):
-    grn = pd.read_csv(path).drop_duplicates(['cre', 'target'])
+    if mth.startswith('o_'):
+        grn = pd.read_csv(path)
+        cre_grn = pd.read_csv(path.replace('o_', '')).rename(columns={'tf': 'source', 'gene': 'target'})
+        grn = pd.merge(grn, cre_grn[['source', 'cre', 'target']])
+    else:
+        grn = pd.read_csv(path)
+    mth = mth.replace('o_', '')
+    grn = grn.drop_duplicates(['cre', 'target'])
     grn[['Chromosome', 'Start', 'End']] = grn['cre'].str.split('-', expand=True)
     grn = pr.PyRanges(grn[['Chromosome', 'Start', 'End', 'target']].rename(columns={'target': 'Name'}))
-    tss = pd.read_csv(f'gdata/alltss/{mth}.bed', sep='\t', header=None)
+    tss = pd.read_csv(f'dbs/hg38/gen/tss/{mth}.bed', sep='\t', header=None)
     tss.columns = ['Chromosome', 'Start', 'End', 'Name']
     tss = pr.PyRanges(tss)
     genes = grn.df['Name'].unique().astype('U')
     dists = []
-    for g in genes[:10]:
+    for g in genes:
         g_grn = grn[grn.Name == g]
         g_tss = tss[tss.Name == g]
         dists.append(g_grn.nearest(g_tss, overlap=True).df[['Chromosome', 'Start', 'End', 'Distance']].assign(gene=g))
@@ -41,10 +47,10 @@ def compute_dist_tss(path, mth):
 
 # Compute dists
 dists = []
-path_grns = [p for p in path_grns if not os.path.basename(p).startswith('o_')]
+path_grns = [p for p in path_grns if (os.path.basename(p).startswith('o_')) or (os.path.basename(p).split('.')[0] in baselines)]
+print(path_grns)
 for path_grn in tqdm(path_grns):
     mth = os.path.basename(path_grn).split('.')[0]  # Assume all stp equal
-    print(mth)
     if mth not in baselines:
         dists.append(compute_dist_tss(path_grn, mth))
 dists = pd.concat(dists)
