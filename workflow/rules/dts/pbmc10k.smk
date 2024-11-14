@@ -46,8 +46,8 @@ rule annotate_pbmc10k:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         annot=rules.prcannot_pbmc10k.output.annot,
-        gid=lambda w: "dbs/{config['dts']['pbmc10k']['organism']}/gen/gid/ensembl.csv",
         peaks=rules.callpeaks_pbmc10k.output.peaks,
+        gid=rules.gen_gid_ensmbl.output,
     output: out='dts/pbmc10k/annotated.h5mu'
     resources: mem_mb=32000
     shell:
