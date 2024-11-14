@@ -41,7 +41,7 @@ rule pair_fake_stats:
         -e {output.prp}
         """
 
-
+localrules: pair_sim
 rule pair_sim:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -52,6 +52,6 @@ rule pair_sim:
     shell:
         """
         python workflow/scripts/anl/pair/pairsim.py \
-        -i {input.p}
+        -i {input.p} \
         -o {output}
         """

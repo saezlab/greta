@@ -23,15 +23,18 @@ path_out = args['path_out']
 # Find paths
 dname, case = os.path.basename(path_inp).split('.')[:2]
 dname = dname.replace('pair', '')
-path_pair = sorted(glob.glob(f'datasets/{dname}pair/cases/{case}/runs/*.grn.csv'))
-path_npair = sorted(glob.glob(f'datasets/{dname}npair/cases/{case}/runs/*.grn.csv'))
+path_pair = sorted(glob.glob(f'dts/{dname}pair/cases/{case}/runs/*.grn.csv'))
+path_npair = sorted(glob.glob(f'dts/{dname}npair/cases/{case}/runs/*.grn.csv'))
 
 # Compute ocoef
 df = []
-for i in tqdm(range(path_pair)):
+for i in tqdm(range(len(path_pair))):
     p_path, n_path = path_pair[i], path_npair[i]
     assert os.path.basename(p_path) == os.path.basename(n_path)
     p_grn, n_grn = pd.read_csv(p_path), pd.read_csv(n_path)
     val = ocoeff(p_grn, n_grn, on=['source', 'target'])
-    df.append([p_m_name, val])
+    df.append([os.path.basename(n_path).split(',')[0], val])
 df = pd.DataFrame(df, columns=['mth', 'ocoef'])
+
+# Write
+df.to_csv(path_out, index=False)
