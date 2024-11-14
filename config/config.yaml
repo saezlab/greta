@@ -4,7 +4,7 @@ max_mins_per_step: 1100
 methods:
     celloracle:
         k: 20
-        thr_coaccess: 0.8
+        thr_coaccess: 0.2
         ext: 500000
         fpr: 0.02
         blen: 200
@@ -17,7 +17,7 @@ methods:
         device: 'cuda:0'
         n_p2g_links: 20
         use_p2g: False
-        thr_score: 0.5
+        thr_score: 0.25
     figr:
         ext: 500000
         thr_p2g_pval: 0.1
