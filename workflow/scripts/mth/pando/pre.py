@@ -36,6 +36,8 @@ rna = mdata.mod['rna'].copy()
 inter = np.intersect1d(rna.obs_names, atac.obs_names)
 x_spectral = mdata[inter, :].obsm['X_spectral'].copy()
 x_umap = mdata[inter, :].obsm['X_umap'].copy()
+obs = mdata.obs.copy()
+obs = obs.loc[inter, :]
 mdata = mu.MuData(
     {
     'rna': rna[inter, :].copy(),
@@ -44,6 +46,7 @@ mdata = mu.MuData(
 )
 mdata.obsm['X_spectral'] = x_spectral
 mdata.obsm['X_umap'] = x_umap
+mdata.obs = obs
 
 # Write
 mdata.write(path_out)
