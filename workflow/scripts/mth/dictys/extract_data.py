@@ -45,7 +45,7 @@ all_atac_peak.to_csv(pks_path, sep='\t', header=False, index=False)
 clus = sorted(data.obs['celltype'].unique())
 for c in clus:
     if pre_type == 'granie':
-        ctype_ids = data['rna']['rna_b_per_c'][c]
+        ctype_ids = data['rna'].uns['rna_b_per_c'][c]
     else:
         ctype_ids = data[data.obs['celltype'] == c].obs.index
     c = c.replace(' ', '_')

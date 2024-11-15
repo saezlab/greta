@@ -18,7 +18,8 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done && \
 if [ $(wc -l < $input_p2g) -eq 1 ]; then
-    awk 'BEGIN {{ print "cre,tf,score" }}' > $output_out
+    echo "source,target,score,pval" > "$out_path"
+    mkdir -p "$output_d"
     exit 0
 fi && \
 mkdir -p "$output_d" && \
