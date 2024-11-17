@@ -3,7 +3,6 @@ import numpy as np
 import argparse
 import os
 import re
-from tqdm import tqdm
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import ocoeff
@@ -50,48 +49,46 @@ def get_grn_stats(df):
 df = pd.read_csv(inp_path, sep=' ', header=None)
 dataset = os.path.basename(out_path).replace('.csv', '')
 res = []
-for _, row in tqdm(list(df.iterrows())):
+for _, row in list(df.iterrows()):
     s, time, mem = row[0], row[1], row[2]
-    mth = re.search(r'mdl_o_(.*?)_dataset=', s).group(1)
-    ds = re.search(r'_dataset=(.*?).case=', s).group(1)
+    mth = re.search(r'mdl_o_(.*?)_dat', s).group(1)
+    ds = re.search(r'=(.*?).case=', s).group(1)
     case = re.search(r'case=([\w_]+)', s).group(1)
-    if case.startswith('16384'):
-        if case.startswith('16384_16384_'):
-            cat = 'full'
-            ncells, ngenes, seed = case.split('_')
-            n = 16384
+    
+    if (ds == dataset) or (case != 'all'):
+        if case.startswith('16384'):
+            if case.startswith('16384_16384_'):
+                cat = 'full'
+                ncells, nfeats, seed = case.split('_')
+                n = 16384
+            else:
+                cat = 'fixed_ncells'
+                _, n, seed = case.split('_')
+                ncells, nfeats = 16384, n
+        elif '_16384_' in case:
+            cat = 'fixed_nfeats'
+            n, _, seed = case.split('_')
+            ncells, nfeats = n, 16384
         else:
-            cat = 'fixed_ncells'
-            _, n, seed = case.split('_')
-            ncells, ngenes = 16384, n
-    elif '_16384_' in case:
-        cat = 'fixed_ngenes'
-        n, _, seed = case.split('_')
-        ncells, ngenes = n, 16384
-    else:
-        continue
-    ref = pd.read_csv('datasets/{dataset}/cases/16384_16384_0/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
-                      format(dataset=ds, mth=mth))
-    net = pd.read_csv('datasets/{dataset}/cases/{ncells}_{ngenes}_{seed}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
-                      format(dataset=ds, ncells=ncells, ngenes=ngenes, seed=seed, mth=mth))
-    tmp = pd.DataFrame(index=[0])
-    tmp['dataset'] = ds
-    tmp['mth'] = mth
-    tmp['cat'] = cat
-    tmp['n'] = int(n)
-    tmp['seed'] = int(seed)
-    tmp['h'] = time_to_hours(time)
-    tmp['gb'] = memory_to_gb(mem)
-    tmp['ocoeff'] = ocoeff(ref, net)
-    tmp[['n_sources', 'n_edges', 'n_targets', 'r_size']] = get_grn_stats(net)
-    res.append(tmp)
+            continue
+        ref = pd.read_csv('dts/{dataset}/cases/16384_16384_0/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
+                          format(dataset=ds, mth=mth))
+        net = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
+                          format(dataset=ds, ncells=ncells, nfeats=nfeats, seed=seed, mth=mth))
+        tmp = pd.DataFrame(index=[0])
+        tmp['mth'] = mth
+        tmp['cat'] = cat
+        tmp['n'] = int(n)
+        tmp['seed'] = int(seed)
+        tmp['h'] = time_to_hours(time)
+        tmp['gb'] = memory_to_gb(mem)
+        tmp['ocoeff'] = ocoeff(ref, net)
+        tmp[['n_sources', 'n_edges', 'n_targets', 'r_size']] = get_grn_stats(net)
+        res.append(tmp)
 res = pd.concat(res)
 
 # Drop potential duplicates from sacct
-res = res.drop_duplicates(['dataset', 'mth', 'cat', 'n', 'seed'], keep='first')
-
-# Filter for dataset
-res = res[res['dataset'] == dataset].drop(columns='dataset')
+res = res.drop_duplicates(['mth', 'cat', 'n', 'seed'], keep='last')
 
 # Sort
 res = res.sort_values(['mth', 'cat', 'n', 'seed']).reset_index(drop=True)

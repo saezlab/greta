@@ -42,9 +42,10 @@ def get_stab_paths(config, mthds, baselines, datasets):
 
 d_lst, c_lst, m_lst = get_stab_paths(config, mthds, baselines, stab_datasets)
 
+localrules: run_stab
 rule run_stab:
     threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
+    container: None
     input:
         expand(['dts/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'], zip, dat=d_lst, case=c_lst, mth=m_lst)
     output:
@@ -53,7 +54,7 @@ rule run_stab:
     shell:
         """
         last_date=$(stat -c %y {input[0]} | cut -d ' ' -f 1)
-        last_date=$(date -d '$last_date - 2 days' +%Y-%m-%d)
+        last_date=$(date -d "$last_date - 2 days" +%Y-%m-%d)
         sacct -S $last_date -E $(date -d '23:59:59 today' +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
         awk '/^ +mdl_o_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.tmp}
         python workflow/scripts/anl/stab/run_stab.py \
