@@ -20,7 +20,7 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-if [ $(wc -l < $p2g_path) -eq 1 ] || [ $(wc -l < $tfb_path) -eq 1 ] || [ $(basename $pre_path | grep -q '^granie' && echo true || echo false) ]; then
+if [ $(wc -l < $p2g_path) -eq 1 ] || [ $(wc -l < $tfb_path) -eq 1 ] || [ $(basename $pre_path | grep -q '^granie'; echo $?) -eq 0 ]; then
     echo "source,target,score,pval" > "$out_path"
     mkdir -p "$output_d"
     exit 0
