@@ -16,7 +16,6 @@ def get_grn_stats(grn):
     n_s = grn['source'].unique().size
     n_e = grn.shape[0]
     n_t = grn['target'].unique().size
-    n_r = grn.groupby(['source']).count()['target'].mean()
 
     g = ig.Graph.TupleList(list(zip(grn['source'], grn['target'])), directed=True)
     tf_bet = np.mean(g.betweenness())
@@ -26,7 +25,7 @@ def get_grn_stats(grn):
     else:
         tf_eig = 0.
     
-    return n_s, n_e, n_t, n_r, tf_odg, tf_bet, tf_eig
+    return n_s, n_e, n_t, tf_odg, tf_bet, tf_eig
 
 
 def ocoeff(df_a, df_b, on=['source', 'target']):
