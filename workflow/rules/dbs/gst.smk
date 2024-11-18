@@ -44,8 +44,8 @@ rule gst_dorothea:
 rule gst_pthw:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    output: 'dbs/{org}/gst/{gst_db}.csv',
-    params: url=lambda w: config['dbs'][w.org]['gst'][w.gst_db]
+    output: 'dbs/hg38/gst/{db}.csv',
+    params: url=lambda w: config['dbs']['hg38']['gst'][w.db]
     shell:
         """
         wget --no-verbose '{params.url}' -O {output}.tmp && \

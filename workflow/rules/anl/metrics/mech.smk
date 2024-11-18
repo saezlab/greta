@@ -18,17 +18,17 @@ rule mech_tfa:
 
 
 rule mech_prt:
-    threads: 1
+    threads: 16
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         rsc=rules.prt_knocktf.output.dir,
     output:
-        out='analysis/metrics/mech/prtrb/{db}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/mech/prt/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params: cats='config/prior_cats.json',
     resources:
         mem_mb=restart_mem,
-        runtime=config['max_mins_per_step'],
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         set +e

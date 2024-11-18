@@ -32,7 +32,8 @@ grn = pd.read_csv(grn_path)
 
 if grn.shape[0] > 0:
     # Read resource and filter by cats
-    db = pd.read_csv(resource_path)
+    db = pd.read_csv(resource_path, header=None, sep='\t')
+    db.columns = ['gene', 'ctype']
     with open(cats_path) as f:
         cats = json.load(f)[dataset][case]
     if resource_name in cats:

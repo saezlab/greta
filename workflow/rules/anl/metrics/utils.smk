@@ -1,9 +1,9 @@
-localrules: aggr_type_task_resource
+localrules: aggr_metric
 
 
-rule aggr_type_task_resource:
+rule aggr_metric:
     input:
-        lambda w: make_combs_rules(w=w, mthds=mthds, rule_name='{typ}_{tsk}'.format(typ=w.type, tsk=w.task))
+        lambda w: make_combs_rules(w=w, mthds=mthds, baselines=baselines, rule_name='{typ}_{tsk}'.format(typ=w.type, tsk=w.task))
     output:
         'anl/metrics/{type}/{task}/{db}/{dat}.{case}.scores.csv'
     shell:

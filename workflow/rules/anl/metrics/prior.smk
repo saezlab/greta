@@ -3,6 +3,7 @@ localrules: prior_tfm, prior_cre, prior_c2g
 
 rule prior_tfm:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         db='dbs/hg38/tfm/{db}/{db}.tsv',
@@ -26,11 +27,10 @@ rule prior_tfb:
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         db='dbs/hg38/tfb/{db}/{db}.bed',
-    params:
-        cats='config/prior_cats.json',
     output:
         out='anl/metrics/prior/tfb/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
+        cats='config/prior_cats.json',
         grp='source',
     shell:
         """
@@ -57,7 +57,7 @@ rule prior_cre:
         """
         python workflow/scripts/anl/metrics/prior/gnm.py \
         -a {input.grn} \
-        -b {input.resource} \
+        -b {input.db} \
         -c {params.cats} \
         -f {output}
         """
@@ -69,11 +69,10 @@ rule prior_c2g:
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         resource='dbs/hg38/c2g/{db}/{db}.bed',
-    params:
-        cats='config/prior_cats.json',
     output:
         out='anl/metrics/prior/c2g/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
+        cats='config/prior_cats.json',
         grp='target',
     shell:
         """

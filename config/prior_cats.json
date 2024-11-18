@@ -2,7 +2,7 @@
     "pbmc10k": {
         "all": {
             "tfmdb": ["B cell", "Dendritic cell", "Lymphoid cell", "Macrophage cell", "Macrophages cell", "Macrophagocyte cell", "Mononuclear cell", "Natural killer cell", "Peripheral blood cell", "T cell"],
-            "hpa": ["cells in white pulp", "lymphocytes", "lymphoid tissue", "macrophages"],
+            "hpa": ["B", "Dendritic cells", "Erythroid cells", "Lymphoid tissue", "Macrophages", "Monocytes", "NK", "T"],
             "chipatlas": ["B-Cell", "B-cell (CD19+)", "Bone Marrow Cells", "Bone marrow mononuclear cells", "Bone marrow nuclear cells", "CD20+ B cells", "CD4+ T cells", "CD8+ T cells", "Dendritic Cells", "Macrophages", "Mast Cells", "Memory B cells", "Memory T cells", "Monocytes", "Monocytes-CD14+", "Naive B cells", "Natural Killer T-Cells", "Natural killer cells", "T cells", "Th1 Cells", "Th17 Cells", "Th2 Cells", "Treg"],
             "remap2022": ["B-cell", "CD4", "CD4-pos", "CD8", "T-cell", "Th1", "Th17", "macrophage", "monocyte", "peripheral-blood-mononuclear-cell", "primary-B-cell", "primary-monocyte"],
             "unibind": ["B cells", "CD4 CD25 CD45RA T cells", "CD4 CD25 T cells", "CD4 T cells", "T cells", "Th17 cells", "Th2 cells", "macrophage", "macrophage hypo il", "macrophage il4", "macrophages", "macrophages ifng", "macrophages il4", "macrophages tpp", "monocyte derived macrophages", "monocyte macro", "monocytes blood", "monocytes of peripheral blood", "peripheral blood mononuclear cells"],
