@@ -14,6 +14,7 @@ while [[ "$#" -gt 0 ]]; do
         --threads) threads="$2"; shift ;;
         --device) device="$2"; shift ;;
         --thr_score) thr_score="$2"; shift ;;
+        --use_p2g) use_p2g="$2"; shift ;;
         --out_path) out_path="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
@@ -27,7 +28,7 @@ if [ $(wc -l < $p2g_path) -eq 1 ] || [ $(wc -l < $tfb_path) -eq 1 ] || [ $(basen
 fi && \
 mkdir -p "$output_d" && \
 python -c "import torch; print('Cuda enabled:', torch.cuda.is_available())" && \
-python workflow/scripts/mth/dictys/before_mdl.py $tfb_path $pre_path $output_d/peaks.tsv.gz $output_d/expr.tsv.gz $output_d/tfb.tsv.gz && \
+python workflow/scripts/mth/dictys/before_mdl.py $pre_path $output_d/expr.tsv.gz $use_p2g $p2g_path $output_d/peaks.tsv.gz $tfb_path $output_d/tfb.tsv.gz && \
 python -m dictys chromatin tssdist --cut $distance $output_d/expr.tsv.gz $output_d/peaks.tsv.gz $annot $output_d/tssdist.tsv.gz && \
 echo 'Finished tssdist' && \
 python -m dictys chromatin linking $output_d/tfb.tsv.gz $output_d/tssdist.tsv.gz $output_d/linking.tsv.gz && \

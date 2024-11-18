@@ -52,7 +52,7 @@ rule p2g_dictys:
 
 
 rule tfb_dictys:
-    threads: 32
+    threads: 4
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     container: None
     input:
@@ -88,7 +88,7 @@ rule tfb_dictys:
         fi
         """
 
-localrules: mdl_dictys
+
 rule mdl_dictys:
     threads: 4
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
@@ -106,6 +106,7 @@ rule mdl_dictys:
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
         device=config['methods']['dictys']['device'],
         thr_score=config['methods']['dictys']['thr_score'],
+        use_p2g=True,
     resources:
         partition=lambda w: "cpu-single" if w.pre=='granie' else "gpu-single",
         mem_mb=restart_mem,
@@ -126,6 +127,7 @@ rule mdl_dictys:
         --threads {threads} \
         --device {params.device} \
         --thr_score {params.thr_score} \
+        --use_p2g {params.use_p2g} \
         --out_path {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
@@ -134,7 +136,7 @@ rule mdl_dictys:
 
 
 rule mdl_o_dictys:
-    threads: 32
+    threads: 4
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     container: None
     input:
@@ -154,12 +156,12 @@ rule mdl_o_dictys:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
         device=config['methods']['dictys']['device'],
-        use_p2g=config['methods']['dictys']['use_p2g'],
         thr_score=config['methods']['dictys']['thr_score'],
+        use_p2g=False,
     resources:
         partition='gpu-single',
         mem_mb=restart_mem,
-        runtime=config['max_mins_per_step'],
+        runtime=config['max_mins_per_step'] * 2,
         slurm="gres=gpu:1",
     shell:
         """
@@ -197,6 +199,7 @@ rule mdl_o_dictys:
         --threads {threads} \
         --device {params.device} \
         --thr_score {params.thr_score} \
+        --use_p2g {params.use_p2g} \
         --out_path {output.out}'
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score" }}' > {output.out}
