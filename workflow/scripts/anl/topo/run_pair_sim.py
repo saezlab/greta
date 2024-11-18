@@ -2,6 +2,7 @@ import concurrent.futures
 import pandas as pd
 import numpy as np
 import os
+import glob
 from tqdm import tqdm
 from functools import partial
 import sys
@@ -18,16 +19,15 @@ import argparse
 
 # Init args
 parser = argparse.ArgumentParser()
-parser.add_argument('-p','--paths', required=True, nargs='+')
 parser.add_argument('-t','--stat_path', required=True)
 parser.add_argument('-s','--sim_path', required=True)
 args = vars(parser.parse_args())
 
-
-paths = args['paths']
 stat_path = args['stat_path']
 sim_path = args['sim_path']
 
+dat, case = os.path.basename(stat_path).split('.')[:2]
+paths = glob.glob(os.path.join('dts', dat, 'cases', case, 'runs', '*.grn.csv'))
 
 print('Reading and computing grns stats...')
 names = []
@@ -39,14 +39,14 @@ for path in tqdm(paths):
     df = pd.read_csv(path).drop_duplicates(['source', 'target'], keep='first')
     dfs.append(df)
     stat = get_grn_stats(df)
-    stats.append(['name'] + list(stat))
+    stats.append([name] + list(stat))
 
 # Store as df
-cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'mean_reg_size', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']
+cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']
 stats = pd.DataFrame(stats, columns=cols)
 
 print('Computing pairwise overlap coefficients...')
-chunk_size = 100  # Adjust based on profiling
+chunk_size = 1000  # Adjust
 index_pairs = [(i, j) for i in range(len(names)) for j in range(i + 1, len(names))]
 index_pairs_chunks = [index_pairs[i:i + chunk_size] for i in range(0, len(index_pairs), chunk_size)]
 names_a = []

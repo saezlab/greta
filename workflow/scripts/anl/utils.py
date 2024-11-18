@@ -13,6 +13,8 @@ def get_grn_name(grn_path):
 
 def get_grn_stats(grn):
     import igraph as ig
+    if len(grn) == 0:
+        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
     n_s = grn['source'].unique().size
     n_e = grn.shape[0]
     n_t = grn['target'].unique().size
