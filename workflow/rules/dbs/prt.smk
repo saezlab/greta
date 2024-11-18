@@ -6,6 +6,7 @@ rule prt_knocktf:
     output: 
         meta='dbs/hg38/prt/knocktf/meta.csv',
         diff='dbs/hg38/prt/knocktf/diff.csv',
+        dir=directory('dbs/hg38/prt/knocktf/')
     params:
         url_m=config['dbs']['hg38']['prt']['knocktf']['meta'],
         url_d=config['dbs']['hg38']['prt']['knocktf']['diff'],

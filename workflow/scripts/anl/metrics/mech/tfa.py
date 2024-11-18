@@ -36,7 +36,7 @@ if grn.shape[0] > 0:
     rna = mu.read(os.path.join(data_path, 'mod', 'rna'))
 
     # Read benchmark data
-    mat = pd.read_csv(os.path.join(bnc_path, 'log2fcs.csv'), index_col=0)
+    mat = pd.read_csv(os.path.join(bnc_path, 'diff.csv'), index_col=0)
     obs = pd.read_csv(os.path.join(bnc_path, 'meta.csv'), index_col=0)
     
     # Subset bench data to dataset

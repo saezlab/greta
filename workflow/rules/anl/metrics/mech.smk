@@ -1,16 +1,15 @@
-rule mech_tfact:
+rule mech_tfa:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        rsc='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/perturb/{resource}/',
-    singularity:
-        'workflow/envs/gretabench.sif'
+        rsc=rules.prt_knocktf.output.dir,
     output:
-        out='analysis/metrics/mech/tfact/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
-    params:
-        cats='config/prior_cats.json',
+        out='anl/metrics/mech/tfa/{res}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+    params: cats='config/prior_cats.json',
     shell:
         """
-        python workflow/scripts/analysis/metrics/mech/compute_tfact.py \
+        python workflow/scripts/anl/metrics/mech/tfa.py \
         -i {input.grn} \
         -b {input.rsc} \
         -c {params.cats} \
@@ -18,24 +17,28 @@ rule mech_tfact:
         """
 
 
-rule mech_prtrb:
+rule mech_prt:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        rsc='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/perturb/{resource}/',
-    singularity:
-        'workflow/envs/gretabench.sif'
+        rsc=rules.prt_knocktf.output.dir,
     output:
         out='analysis/metrics/mech/prtrb/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
-    params:
-        cats='config/prior_cats.json',
+    params: cats='config/prior_cats.json',
     resources:
-        mem_mb=64000,
-        runtime=1440,
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
-        python workflow/scripts/analysis/metrics/mech/compute_prtrb.py \
+        set +e
+        timeout $(({resources.runtime}-20))m \
+        python workflow/scripts/anl/metrics/mech/prt.py \
         -i {input.grn} \
         -b {input.rsc} \
         -c {params.cats} \
         -o {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "name,prc,rcl,f01" }}' > {output.out}
+        fi
         """
