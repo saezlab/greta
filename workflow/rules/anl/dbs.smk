@@ -2,7 +2,7 @@ localrules: c2g_m_eqtlcatalogue, c2g_s_eqtlcatalogue
 
 
 
-checkpoint dbs_stats:
+rule dbs_stats:
     threads: 1
     input:
         paths_prt=expand('dbs/hg38/prt/{prt}/meta.csv', prt=config['dbs']['hg38']['prt'].keys()),

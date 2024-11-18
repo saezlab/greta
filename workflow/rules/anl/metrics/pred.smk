@@ -1,18 +1,18 @@
 rule pred_omics:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
-        grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-    singularity:
-        'workflow/envs/gretabench.sif'
+        grn=lambda w: rules.grn_run.output.out.format(**w),
     output:
-        out='analysis/metrics/pred/omics/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/pred/omics/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
-        col_source=lambda w: 'cre' if w.resource == 'gcre' else 'source',
-        col_target=lambda w: 'cre' if w.resource == 'cretf' else 'target',
-        mod_source=lambda w: 'atac' if w.resource == 'gcre' else 'rna',
-        mod_target=lambda w: 'atac' if w.resource == 'cretf' else 'rna',
+        col_source=lambda w: 'cre' if w.db == 'gcre' else 'source',
+        col_target=lambda w: 'cre' if w.db == 'cretf' else 'target',
+        mod_source=lambda w: 'atac' if w.db == 'gcre' else 'rna',
+        mod_target=lambda w: 'atac' if w.db == 'cretf' else 'rna',
     shell:
         """
-        python workflow/scripts/analysis/metrics/pred/compute_omics.py \
+        python workflow/scripts/anl/metrics/pred/omics.py \
         -a {input.grn} \
         -b {params.col_source} \
         -c {params.col_target} \
@@ -23,19 +23,17 @@ rule pred_omics:
 
 
 rule pred_pathway:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
-        grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-    singularity:
-        'workflow/envs/gretabench.sif'
+        grn=lambda w: rules.grn_run.output.out.format(**w),
+        rsc=lambda w: expand('dbs/hg38/gst/{gst_db}.csv', gst_db=config['dbs'][w.org]['gst'][w.gst_db])
     output:
-        out='analysis/metrics/pred/pathway/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
-    params:
-        pw_path='/mnt/sds-hd/sd22b002/projects/GRETA/greta_resources/database/hg38/spred/pways/{resource}.csv'
+        out='analysis/metrics/pred/gsets/{gst_db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
         """
-        python workflow/scripts/analysis/metrics/pred/compute_ptwpred.py \
+        python workflow/scripts/anl/metrics/pred/gsets.py \
         -i {input.grn} \
-        -p {params.pw_path} \
+        -p {input.rsc} \
         -o {output}
         """
-
