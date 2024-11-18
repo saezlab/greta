@@ -5,7 +5,7 @@ rule mech_tfa:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         rsc=rules.prt_knocktf.output.dir,
     output:
-        out='anl/metrics/mech/tfa/{res}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/mech/tfa/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params: cats='config/prior_cats.json',
     shell:
         """
@@ -24,7 +24,7 @@ rule mech_prt:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         rsc=rules.prt_knocktf.output.dir,
     output:
-        out='analysis/metrics/mech/prtrb/{resource}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='analysis/metrics/mech/prtrb/{db}/{dataset}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params: cats='config/prior_cats.json',
     resources:
         mem_mb=restart_mem,
