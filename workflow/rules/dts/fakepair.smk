@@ -1,6 +1,8 @@
+localrules: index_frags_fakepair
+
+
 rule index_frags_fakepair:
     threads: 1
-    singularity: 'workflow/envs/figr.sif'
     input:
         frags=lambda w: map_rules('download', w_name='{dname}pair'.format(dname=w.dname), out='frags'),
         tbis=lambda w: map_rules('download', w_name='{dname}pair'.format(dname=w.dname), out='tbis'),
