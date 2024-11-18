@@ -149,7 +149,7 @@ rule mdl_o_celloracle:
         n=config['methods']['celloracle']['n'],
     resources:
         mem_mb=restart_mem,
-        runtime=config['max_mins_per_step'],
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         set +e

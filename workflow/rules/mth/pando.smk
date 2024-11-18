@@ -143,7 +143,7 @@ rule mdl_o_pando:
         min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
     resources:
         mem_mb=restart_mem,
-        runtime=config['max_mins_per_step'],
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         set +e

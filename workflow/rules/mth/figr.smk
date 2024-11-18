@@ -131,7 +131,7 @@ rule mdl_o_figr:
         thr_score=config['methods']['figr']['thr_score'],
     resources:
         mem_mb=restart_mem,
-        runtime=config['max_mins_per_step'],
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         set +e

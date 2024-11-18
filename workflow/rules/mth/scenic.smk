@@ -15,7 +15,7 @@ rule mdl_scenic:
         out='dts/{dat}/cases/{case}/runs/scenic.scenic.scenic.scenic.mdl.csv'
     resources:
         mem_mb=restart_mem,
-        runtime=config['max_mins_per_step'],
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         # Step 1: Create Loom file
