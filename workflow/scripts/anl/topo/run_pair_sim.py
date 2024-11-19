@@ -33,41 +33,58 @@ print('Reading and computing grns stats...')
 names = []
 dfs = []
 stats = []
+tfs = []
+edges = []
+genes = []
+
 for path in tqdm(paths):
     name = get_grn_name(path)
     names.append(name)
     df = pd.read_csv(path).drop_duplicates(['source', 'target'], keep='first')
-    dfs.append(df)
     stat = get_grn_stats(df)
     stats.append([name] + list(stat))
+    tfs.append(set(df['source']))
+    edges.append(set(df['source'] + '|' + df['target']))
+    genes.append(set(df['target']))
+    
 
 # Store as df
 cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']
 stats = pd.DataFrame(stats, columns=cols)
 
 print('Computing pairwise overlap coefficients...')
-chunk_size = 1000  # Adjust
-index_pairs = [(i, j) for i in range(len(names)) for j in range(i + 1, len(names))]
-index_pairs_chunks = [index_pairs[i:i + chunk_size] for i in range(0, len(index_pairs), chunk_size)]
+
+
+def set_ocoef(a, b):
+    min_s = min(len(a), len(b))
+    if min_s == 0:
+        return np.nan
+    else:
+        inter = len(a & b)
+        return inter / min_s
+
+
 names_a = []
 names_b = []
 tf_coefs = []
 edge_coefs = []
 target_coefs = []
-total_pairs = len(index_pairs)
-processed_pairs = 0
-with tqdm(total=total_pairs, desc="Processing", unit="pair") as pbar:
-    with concurrent.futures.ProcessPoolExecutor(max_workers=64) as executor:
-        for chunk_result in tqdm(executor.map(partial(parallel_ocoeff_chunk, dfs=dfs), index_pairs_chunks)):
-            for res in chunk_result:
-                i, j, tf_coef, edge_coef, target_coef = res
-                names_a.append(names[i])
-                names_b.append(names[j])
-                tf_coefs.append(tf_coef)
-                edge_coefs.append(edge_coef)
-                target_coefs.append(target_coef)
-            processed_pairs += len(chunk_result)
-            pbar.update(len(chunk_result))
+for i in tqdm(range(len(names))):
+    name_a = names[i]
+    tf_a = tfs[i]
+    ed_a = edges[i]
+    gn_a = genes[i]
+    for j in range(i, len(names)):
+        name_b = names[j]
+        tf_b = tfs[j]
+        ed_b = edges[j]
+        gn_b = genes[j]
+        names_a.append(name_a)
+        names_b.append(name_b)
+        tf_coefs.append(set_ocoef(tf_a, tf_b))
+        edge_coefs.append(set_ocoef(ed_a, ed_b))
+        target_coefs.append(set_ocoef(gn_a, gn_b))
+
 
 # Store as df
 sims = pd.DataFrame()
