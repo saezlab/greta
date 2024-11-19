@@ -22,7 +22,7 @@ rule pred_omics:
         """
 
 
-rule pred_pathway:
+rule pred_gsets:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:

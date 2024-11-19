@@ -1,4 +1,4 @@
-localrules: prior_tfm, prior_cre, prior_c2g
+localrules: prior_tfm
 
 
 rule prior_tfm:
