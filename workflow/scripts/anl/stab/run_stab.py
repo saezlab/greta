@@ -23,16 +23,19 @@ def time_to_hours(time_str):
 
 
 def memory_to_gb(memory_str):
-    unit = memory_str[-1]
-    value = int(np.ceil(float(memory_str[:-1])))
-    if unit == 'K':
-        return value / 1048576.0
-    elif unit == 'M':
-        return value / 1024.0
-    elif unit == 'G':
-        return float(value)
+    if memory_str != '0':
+        unit = memory_str[-1]
+        value = int(np.ceil(float(memory_str[:-1])))
+        if unit == 'K':
+            return value / 1048576.0
+        elif unit == 'M':
+            return value / 1024.0
+        elif unit == 'G':
+            return float(value)
+        else:
+            raise ValueError("Unsupported memory unit. Please use K, M, or G.")
     else:
-        raise ValueError("Unsupported memory unit. Please use K, M, or G.")
+        return 0.
 
 
 def get_grn_stats(df):
@@ -51,7 +54,7 @@ dataset = os.path.basename(out_path).replace('.csv', '')
 res = []
 for _, row in list(df.iterrows()):
     s, time, mem = row[0], row[1], row[2]
-    mth = re.search(r'mdl_o_(.*?)_dat', s).group(1)
+    mth = re.search(r'mdl_(.*?)_dat', s).group(1)
     ds = re.search(r'=(.*?).case=', s).group(1)
     case = re.search(r'case=([\w_]+)', s).group(1)
     
@@ -71,12 +74,12 @@ for _, row in list(df.iterrows()):
             ncells, nfeats = n, 16384
         else:
             continue
-        ref = pd.read_csv('dts/{dataset}/cases/16384_16384_0/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
+        ref = pd.read_csv('dts/{dataset}/cases/16384_16384_0/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
                           format(dataset=ds, mth=mth))
-        net = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv'.
+        net = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
                           format(dataset=ds, ncells=ncells, nfeats=nfeats, seed=seed, mth=mth))
         tmp = pd.DataFrame(index=[0])
-        tmp['mth'] = mth
+        tmp['mth'] = mth.replace('o_', '')
         tmp['cat'] = cat
         tmp['n'] = int(n)
         tmp['seed'] = int(seed)
