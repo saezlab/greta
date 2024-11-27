@@ -110,6 +110,9 @@ include: 'rules/anl/pair.smk'
 include: 'rules/anl/tss.smk'
 include: 'rules/anl/dbs.smk'
 
+# Plots
+include: 'rules/plt/fig1.smk'
+
 rule all:
     input:
         ''

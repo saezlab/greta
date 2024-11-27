@@ -59,13 +59,15 @@ baselines: ['collectri', 'dorothea', 'random', 'scenic']
 
 colors:
     nets:
-        celloracle: '#1f77b4'
-        figr: '#ff7f0e'
-        granie: '#2ca02c'
-        pando: '#d62728'
+        celloracle: 'tab:blue'
+        dictys: 'tab:orange'
+        figr: 'tab:green'
+        granie: 'tab:red'
+        pando: 'tab:purple'
+        collectri: 'tab:brown'
+        dorothea: 'tab:pink'
+        scenic: 'tab:cyan'
         random: 'black'
-        collectri: '#9467bd'
-        dorothea: '#8c564b'
 
 # Datasets
 dts:
