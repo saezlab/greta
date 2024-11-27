@@ -74,7 +74,7 @@ rule annotate_reprofibro:
         path_peaks=rules.callpeaks_reprofibro.output.peaks,
         path_annot=rules.download_reprofibro.output.annot,
         path_barmap=rules.download_reprofibro.output.barcodes,
-        gid=lambda w: "dbs/{config['dts']['reprofibro']['organism']}/gen/gid/ensembl.csv",
+        gid=rules.gen_gid_ensmbl.output,
     output: out='dts/reprofibro/annotated.h5mu'
     shell:
         """

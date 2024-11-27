@@ -16,7 +16,6 @@ parser.add_argument('-f','--path_peaks', required=True)
 parser.add_argument('-g','--path_annot', required=True)
 parser.add_argument('-i','--path_barmap', required=True)
 parser.add_argument('-j','--path_geneids', required=True)
-parser.add_argument('-k','--organism', required=True)
 parser.add_argument('-l','--path_output', required=True)
 args = vars(parser.parse_args())
 
@@ -27,7 +26,6 @@ path_peaks = args['path_peaks']
 path_annot = args['path_annot']
 path_barmap = args['path_barmap']
 path_geneids = args['path_geneids']
-organism = args['organism']
 path_output = args['path_output']
 
 # Read annots and barmap
@@ -36,7 +34,6 @@ obs.index = [i.split('_')[1] for i in obs.index]
 bar_map = pd.read_csv(path_barmap, sep='\t').set_index('RNA_bc')['ATAC_bc'].to_dict()
 
 # Read gene ids
-path_geneids = os.path.join(path_geneids, organism + '.csv')
 geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
 
 def read_sample(path_matrix, path_barcodes, path_gsym, bar_map, obs, geneids):
