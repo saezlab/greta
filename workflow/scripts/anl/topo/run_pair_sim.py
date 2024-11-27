@@ -49,7 +49,7 @@ for path in tqdm(paths):
     
 
 # Store as df
-cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'tf_out_degree', 'tf_betweenc', 'tf_eigv']
+cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'odegree', 'betweenc', 'eigv']
 stats = pd.DataFrame(stats, columns=cols)
 
 print('Computing pairwise overlap coefficients...')
