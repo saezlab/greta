@@ -42,6 +42,8 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
         ax.axline([0, 0], [4, 1], linestyle='--', c='gray')
     ax.set_xticks(ax.get_xticks())
     ax.set_xticklabels([int(x.get_text()) * 5 for x in ax.get_xticklabels()])
+    for line in ax.lines:
+        line.set_marker('')
     
     ax = axes[1]
     sns.pointplot(data=df[df['cat'].isin(['fixed_ncells', 'full'])], x='n', y=col, hue='mth', ax=ax, errorbar=None, palette=palette)
@@ -53,6 +55,8 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
         ax.axline([0, 0], [4, 1], linestyle='--', c='gray')
     ax.set_yticks([])
     ax.set_yticklabels([])
+    for line in ax.lines:
+        line.set_marker('')
     
     handles, labels = ax.get_legend_handles_labels()
     fig.legend(handles, labels, loc='center left', bbox_to_anchor=(0.9, 0.5), frameon=False)
