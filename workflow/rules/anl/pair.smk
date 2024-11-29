@@ -41,7 +41,7 @@ rule pair_fake_stats:
         -e {output.prp}
         """
 
-localrules: pair_sim
+
 rule pair_sim:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -54,4 +54,17 @@ rule pair_sim:
         python workflow/scripts/anl/pair/pairsim.py \
         -i {input.p} \
         -o {output}
+        """
+
+
+rule pair_real_qc:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        pair='dts/{dname}pair/cases/{case}/mdata.h5mu',
+        npair='dts/{dname}npair/cases/{case}/mdata.h5mu',
+    output: 'anl/pair/{dname}.{case}.qc.csv'
+    shell:
+        """
+        python workflow/scripts/anl/pair/realqc.py {input.pair} {input.npair} {output}
         """
