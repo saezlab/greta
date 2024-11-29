@@ -83,3 +83,57 @@ rule prior_c2g:
         -d {params.grp} \
         -f {output}
         """
+
+
+
+rule all:
+    input:
+        "results/f01_results.csv"
+
+rule calculate_contingency:
+    input:
+        tf="data/lambert.csv",
+        grn="data/{grn}.csv"
+    output:
+        tmp_cont=temp(local("results/{grn}_contingency.csv"))
+    shell:
+        """
+        python scripts/cont.py -t {input.tf} -m {input.grn} -o {output.tmp_cont}
+        """
+
+rule calculate_f01:
+    input:
+        cont=temp(local("results/{grn}_contingency.csv")),
+        db="data/{database}.csv"
+    output:
+        out=temp(local("results/{grn}_{database}_f01.csv"))
+    shell:
+        """
+        python scripts/f01.py -c {input.cont} -d {input.db} -o {output.out}
+        """
+
+rule merge_results:
+    input:
+        temp(local(expand("results/{grn}_{database}_f01.csv",
+               grn=["granie", "figr", "pando", "random", "collectri"],
+               database=["intact", "pubmed"])))
+    output:
+        "results/f01_results.csv"
+    shell:
+        """
+        python -c "import pandas as pd; import sys; \
+        files = sys.argv[1:]; \
+        df = pd.concat([pd.read_csv(file).assign(Source=file.split('/')[-1].replace('.csv', '')) for file in files]); \
+        df.to_csv('{output}', index=False);" {input}
+        """
+
+
+
+
+
+
+
+
+
+
+
