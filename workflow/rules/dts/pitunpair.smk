@@ -88,8 +88,6 @@ rule annotate_pitunpair:
         gid=rules.gen_gid_ensmbl.output,
     output:
         out='dts/pitunpair/annotated.h5mu'
-    params:
-        organism=config['dts']['pitunpair']['organism'],
     resources: mem_mb=32000
     shell:
         """

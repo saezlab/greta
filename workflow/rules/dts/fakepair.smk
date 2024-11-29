@@ -51,3 +51,20 @@ rule pair_fakepair:
         {input.annot} \
         {output.barmap}
         """
+
+localrules: annotate_fakepitupair
+rule annotate_fakepitupair:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        mdata=rules.annotate_pitupair.output.out,
+        barmap='dts/fakepitupair/barmap.csv',
+    output:
+        out='dts/fakepitupair/annotated.h5mu'
+    shell:
+        """
+        python workflow/scripts/dts/fakepair/fakepair.py \
+        -m {input.mdata} \
+        -b {input.barmap} \
+        -o {output.out}
+        """

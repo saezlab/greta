@@ -19,7 +19,7 @@ parser.add_argument('-e','--prp_path', required=True)
 args = parser.parse_args()
 
 
-# REad
+# Read
 mdata = mu.read(args.mdata_path)
 barmap = pd.read_csv(args.barmap_path)
 
