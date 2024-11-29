@@ -63,8 +63,10 @@ rule pair_real_qc:
     input:
         pair='dts/{dname}pair/cases/{case}/mdata.h5mu',
         npair='dts/{dname}npair/cases/{case}/mdata.h5mu',
-    output: 'anl/pair/{dname}.{case}.qc.csv'
+    output:
+        qc='anl/pair/{dname}.{case}.qc.csv',
+        nc='anl/pair/{dname}.{case}.ncells.csv'
     shell:
         """
-        python workflow/scripts/anl/pair/realqc.py {input.pair} {input.npair} {output}
+        python workflow/scripts/anl/pair/realqc.py {input.pair} {input.npair} {output.qc} {output.nc}
         """

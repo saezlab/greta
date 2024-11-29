@@ -18,15 +18,23 @@ def get_qc_omic(mdata, omic, tpe):
     return obs.assign(omic=omic, type=t)
 
 
+def extract_n_cells(mdata, tpe):
+    return mdata.obs.groupby('celltype', as_index=False).size().sort_values('celltype').assign(type=tpe)
+
+
 # Compute qc
 types = ['paired', 'upaired']
 omics = ['rna', 'atac']
 qc = []
+n_ctps = []
 for mdata, t in zip([pmdata, nmdata], types):
+    n_ctps.append(extract_n_cells(mdata, t))
     for omic in omics:
         qc.append(get_qc_omic(mdata, omic, t))
 qc = pd.concat(qc)
 qc = qc.reset_index(names='barcode')
+n_ctps = pd.concat(n_ctps)
 
 # Write
 qc.to_csv(sys.argv[3], index=False)
+n_ctps.to_csv(sys.argv[4], index=False)

@@ -112,6 +112,7 @@ include: 'rules/anl/dbs.smk'
 
 # Plots
 include: 'rules/plt/fig1.smk'
+include: 'rules/plt/fig2.smk'
 
 rule all:
     input:
