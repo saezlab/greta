@@ -52,6 +52,7 @@ def get_grn_stats(df):
 df = pd.read_csv(inp_path, sep=' ', header=None)
 dataset = os.path.basename(out_path).replace('.csv', '')
 res = []
+seeds = np.array(['0', '1', '2'])
 for _, row in list(df.iterrows()):
     s, time, mem = row[0], row[1], row[2]
     mth = re.search(r'mdl_(.*?)_dat', s).group(1)
@@ -64,6 +65,25 @@ for _, row in list(df.iterrows()):
                 cat = 'full'
                 ncells, nfeats, seed = case.split('_')
                 n = 16384
+                net = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
+                          format(dataset=ds, ncells=ncells, nfeats=nfeats, seed=seed, mth=mth))
+                for s in [s for s in seeds if s != seed]:
+                    ref = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
+                          format(dataset=ds, ncells=ncells, nfeats=nfeats, seed=s, mth=mth))
+                    tmp = pd.DataFrame(index=[0])
+                    tmp['mth'] = mth.replace('o_', '')
+                    tmp['cat'] = cat
+                    tmp['n'] = int(n)
+                    tmp['seed'] = int(seed)
+                    tmp['other_seed'] = int(s)
+                    tmp['h'] = time_to_hours(time)
+                    tmp['gb'] = memory_to_gb(mem)
+                    tmp['s_ocoeff'] = ocoeff(ref, net, on=['source'])
+                    tmp['e_ocoeff'] = ocoeff(ref, net, on=['source', 'target'])
+                    tmp['t_ocoeff'] = ocoeff(ref, net, on=['target'])
+                    tmp[['n_sources', 'n_edges', 'n_targets', 'r_size']] = get_grn_stats(net)
+                    res.append(tmp)
+                continue
             else:
                 cat = 'fixed_ncells'
                 _, n, seed = case.split('_')
@@ -83,6 +103,7 @@ for _, row in list(df.iterrows()):
         tmp['cat'] = cat
         tmp['n'] = int(n)
         tmp['seed'] = int(seed)
+        tmp['other_seed'] = np.nan
         tmp['h'] = time_to_hours(time)
         tmp['gb'] = memory_to_gb(mem)
         tmp['s_ocoeff'] = ocoeff(ref, net, on=['source'])
@@ -93,7 +114,7 @@ for _, row in list(df.iterrows()):
 res = pd.concat(res)
 
 # Drop potential duplicates from sacct
-res = res.drop_duplicates(['mth', 'cat', 'n', 'seed'], keep='last')
+res = res.drop_duplicates(['mth', 'cat', 'n', 'seed', 'other_seed'], keep='last')
 
 # Sort
 res = res.sort_values(['mth', 'cat', 'n', 'seed']).reset_index(drop=True)
