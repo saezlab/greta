@@ -40,31 +40,50 @@ def calculate_k(mdata, omic_a, omic_b, barmap):
     indices = nn.kneighbors(omic.obsm['X_spectral'], return_distance=False)
     df = []
     bar_lst = list(omic.obs_names)
+    ctype_dict = (
+        mdata.obs
+        .reset_index(names='barcode')
+        .groupby('celltype')['barcode']
+        .apply(lambda x: list(x))
+    )
+    ctypes = mdata.obs['celltype'].values
     # Find closest k
+    rng = np.random.default_rng(seed=42)
     for barcode_a, barcode_b in zip(barmap[omic_a.upper()], barmap[omic_b.upper()]):
         i = bar_lst.index(barcode_a)
         knn = indices[i]
-        sorted_barcodes = omic.obs_names.values[knn]
-        k = list(sorted_barcodes).index(barcode_b) + 1
-        df.append([omic_a, barcode_a, k])
-    df = pd.DataFrame(df, columns=['anchor', 'barcode', 'k'])
+        sorted_barcodes = list(omic.obs_names.values[knn])
+        k = sorted_barcodes.index(barcode_b) + 1
+        df.append(['predicted', omic_a, barcode_a, k])
+        barcode_b = rng.choice(ctype_dict[ctypes[i]], size=1)[0]
+        k = sorted_barcodes.index(barcode_b) + 1
+        df.append(['random', omic_a, barcode_a, k])
+    df = pd.DataFrame(df, columns=['type', 'anchor', 'barcode', 'k'])
     return df
 
 
 def fakepair_corr_omic(mdata, omic_a, omic_b, barmap):
     x = mdata.mod[omic_a][barmap[omic_a.upper()]].X
     y = mdata.mod[omic_a][barmap[omic_b.upper()]].X
+    ctype_dict = (
+        mdata[barmap[omic_a.upper()]].obs
+        .reset_index(names='barcode')
+        .reset_index()
+        .groupby('celltype')['index']
+        .apply(lambda x: list(x))
+    )
+    ctypes = mdata.obs['celltype'].values
     df_cor = []
     obs_lst = mdata.obs_names
     var_lst = mdata[omic_a].var_names
+    rng = np.random.default_rng(seed=42)
     for i in range(x.shape[0]):
         obs_name = obs_lst[i]
         stat, pval = st.spearmanr(x[i, :].ravel(), y[i, :].ravel())
-        df_cor.append(['obs', omic_a, obs_name, stat, pval])
-    for j in range(x.shape[1]):
-        var_name = var_lst[j]
-        stat, pval = st.spearmanr(x[:, j].ravel(), y[:, j].ravel())
-        df_cor.append(['var', omic_a, var_name, stat, pval])
+        df_cor.append(['predicted', omic_a, obs_name, stat, pval])
+        r = rng.choice(ctype_dict[ctypes[i]], size=1)[0]
+        stat, pval = st.spearmanr(x[i, :].ravel(), x[r, :].ravel())
+        df_cor.append(['random', omic_a, obs_name, stat, pval])
     df_cor = pd.DataFrame(df_cor, columns=['type', 'omic', 'name', 'stat', 'pval'])
     return df_cor
 
