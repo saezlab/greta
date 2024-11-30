@@ -15,7 +15,6 @@ printshellcmds: True
 keep-incomplete: True
 notemp: True
 rerun-incomplete: False
-quiet: True
 default-resources:
    - runtime=720
    - mem_mb=64000
