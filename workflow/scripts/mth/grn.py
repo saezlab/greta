@@ -48,4 +48,6 @@ grn = pd.merge(grn, mdl, on=['source', 'target'], how='inner').sort_values(['sou
 grn = grn[['source', 'cre', 'target', 'score', 'pval']]
 
 # Write
+if len(grn) > 1000000:
+    grn = pd.DataFrame(columns=['source', 'cre', 'target', 'score', 'pval'])
 grn.to_csv(path_out, index=False)
