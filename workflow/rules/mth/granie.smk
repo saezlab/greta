@@ -49,7 +49,7 @@ rule p2g_granie:
         rm {output}.t
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
-            mkdir {output.t}
+            mkdir -p {output.t}
         fi
         """
 
@@ -83,7 +83,7 @@ rule tfb_granie:
         rm {output}.t
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
-            mkdir {output.t}
+            mkdir -p {output.t}
         fi
         """
 
@@ -118,7 +118,7 @@ rule mdl_granie:
         rm {output}.t
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
-            mkdir {output.t}
+            mkdir -p {output.t}
         fi
         """
 
@@ -164,6 +164,6 @@ rule mdl_o_granie:
         rm {output.t}'
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
-            mkdir {output.t}
+            mkdir -p {output.t}
         fi
         """
