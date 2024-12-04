@@ -52,7 +52,7 @@ rule p2g_dictys:
 
 
 rule tfb_dictys:
-    threads: 4
+    threads: 16
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     container: None
     input:

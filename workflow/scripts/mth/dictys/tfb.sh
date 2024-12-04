@@ -18,7 +18,7 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done && \
 if [ $(wc -l < $input_p2g) -eq 1 ]; then
-    echo "source,target,score,pval" > "$output_out"
+    echo "cre,tf,score" > "$output_out"
     mkdir -p "$output_d"
     exit 0
 fi && \
