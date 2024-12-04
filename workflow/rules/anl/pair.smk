@@ -1,3 +1,6 @@
+localrules: pair_realsim, pair_fakesim
+
+
 rule pair_real_cor:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -42,7 +45,7 @@ rule pair_fake_stats:
         """
 
 
-rule pair_sim:
+rule pair_realsim:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
@@ -52,7 +55,24 @@ rule pair_sim:
     shell:
         """
         python workflow/scripts/anl/pair/pairsim.py \
-        -i {input.p} \
+        -a {input.p} \
+        -b {input.n} \
+        -o {output}
+        """
+
+
+rule pair_fakesim:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        p='anl/topo/{dname}pair.{case}.sims_mult.csv',
+        f='anl/topo/fake{dname}pair.{case}.sims_mult.csv',
+    output: 'anl/pair/{dname}.{case}.pvsf.csv'
+    shell:
+        """
+        python workflow/scripts/anl/pair/pairsim.py \
+        -a {input.p} \
+        -b {input.f} \
         -o {output}
         """
 
