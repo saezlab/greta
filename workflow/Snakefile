@@ -114,6 +114,8 @@ include: 'rules/anl/dbs.smk'
 include: 'rules/plt/fig1.smk'
 include: 'rules/plt/fig2.smk'
 include: 'rules/plt/fig3.smk'
+include: 'rules/plt/fig4.smk'
+include: 'rules/plt/figs.smk'
 
 rule all:
     input:
