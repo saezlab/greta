@@ -15,7 +15,9 @@ def get_qc_omic(mdata, omic, tpe):
     obs, _ = sc.pp.calculate_qc_metrics(
         adata, percent_top=None, log1p=True
     )
-    return obs.assign(omic=omic, type=t)
+    qc = obs.assign(omic=omic, type=t)
+    qc = pd.merge(qc.reset_index(names='barcode'), mdata.obs.reset_index(names='barcode')[['barcode', 'celltype']], on=['barcode'], how='inner')
+    return qc
 
 
 def extract_n_cells(mdata, tpe):
@@ -32,7 +34,6 @@ for mdata, t in zip([pmdata, nmdata], types):
     for omic in omics:
         qc.append(get_qc_omic(mdata, omic, t))
 qc = pd.concat(qc)
-qc = qc.reset_index(names='barcode')
 n_ctps = pd.concat(n_ctps)
 
 # Write

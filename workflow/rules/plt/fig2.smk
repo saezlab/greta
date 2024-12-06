@@ -1,7 +1,7 @@
-localrules: plt_pair
+localrules: plt_fig2
 
 
-rule plt_pair:
+rule plt_fig2:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
@@ -11,7 +11,7 @@ rule plt_pair:
         qc='anl/pair/pitu.all.qc.csv',
         nc='anl/pair/pitu.all.ncells.csv',
         oc='anl/pair/pitu.all.pvsn.csv',
-    output: 'plt/fig2/pair.pdf'
+    output: 'plt/fig2/fig2.pdf'
     shell:
         """
         python workflow/scripts/plt/fig2/pair.py {input.pmd} {input.nmd} {input.ral} {input.qc} {input.nc} {input.oc} {output}

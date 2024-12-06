@@ -79,36 +79,53 @@ ax.legend().set_visible(False)
 ax.legend(loc='lower left', bbox_to_anchor=(0.25, -0.5), frameon=False)
 figs.append(fig)
 
-fig, ax = plt.subplots(1, 1, figsize=(2, 2.5), dpi=150, tight_layout=True)
-sns.violinplot(
-    data=df_qc,
-    x='type',
-    y='log1p_total_counts',
-    hue='omic',
-    density_norm='width',
-    ax=ax,
-    palette=cmap
-)
-ax.set_xlabel('')
-ax.set_ylabel('Total counts (log1p)')
-ax.legend().set_visible(False)
-ax.legend(loc='lower left', bbox_to_anchor=(0.25, -0.5), frameon=False)
-figs.append(fig)
-
-fig, ax = plt.subplots(1, 1, figsize=(2, 2.5), dpi=150, tight_layout=True)
-sns.violinplot(
+fig, ax = plt.subplots(1, 1, figsize=(2, 1.7), dpi=150, tight_layout=True)
+df_qc = df_qc.groupby(['celltype', 'omic', 'type'], as_index=False).mean(numeric_only=True)
+sns.boxplot(
     data=df_qc,
     x='type',
     y='log1p_n_genes_by_counts',
     hue='omic',
-    density_norm='width',
     ax=ax,
-    palette=cmap
+    palette=cmap,
+    fill=None,
+)
+sns.stripplot(
+    data=df_qc,
+    x='type',
+    y='log1p_n_genes_by_counts',
+    hue='omic',
+    ax=ax,
+    palette=cmap,
+    dodge=True
+)
+ax.set_xlabel('')
+ax.set_ylabel('Total counts (log1p)')
+ax.legend().set_visible(False)
+figs.append(fig)
+
+fig, ax = plt.subplots(1, 1, figsize=(2, 1.7), dpi=150, tight_layout=True)
+sns.boxplot(
+    data=df_qc,
+    x='type',
+    y='log1p_n_genes_by_counts',
+    hue='omic',
+    ax=ax,
+    palette=cmap,
+    fill=None,
+)
+sns.stripplot(
+    data=df_qc,
+    x='type',
+    y='log1p_n_genes_by_counts',
+    hue='omic',
+    ax=ax,
+    palette=cmap,
+    dodge=True
 )
 ax.set_xlabel('')
 ax.set_ylabel('Total features (log1p)')
 ax.legend().set_visible(False)
-ax.legend(loc='lower left', bbox_to_anchor=(0.25, -0.5), frameon=False)
 figs.append(fig)
 
 # Format names and filter for o_methods and baselines
