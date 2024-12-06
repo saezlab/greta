@@ -11,7 +11,11 @@ from utils import read_config, savefigs
 def base_stability(df, col, title, mthds, baselines, palette, figs):
     fig, axes = plt.subplots(2, 1, figsize=(1.7, 3), dpi=150, gridspec_kw={'height_ratios': [len(mthds), len(baselines)]})
     ax = axes[0]
-    sns.boxplot(data=df[df['cat'].isin(['full']) & df['mth'].isin(mthds)], y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette)
+    data = df[df['cat'].isin(['full']) & df['mth'].isin(mthds)].copy()
+    data['seeds'] = [''.join(sorted([str(int(sa)), str(int(sb))])) for sa, sb in zip(data['seed'], data['other_seed'])]
+    data = data.drop_duplicates(['mth', 'seeds'])
+    sns.boxplot(data=data, y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette, fliersize=0)
+    sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette)
     ax.tick_params(axis='x', rotation=90)
     ax.set_xlabel('')
     ax.set_ylabel('Methods')
@@ -19,7 +23,11 @@ def base_stability(df, col, title, mthds, baselines, palette, figs):
     ax.set_xlim(-0.05, 1.05)
     
     ax = axes[1]
-    sns.boxplot(data=df[df['cat'].isin(['full']) & df['mth'].isin(baselines)], y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette)
+    data = df[df['cat'].isin(['full']) & df['mth'].isin(baselines)].copy()
+    data['seeds'] = [''.join(sorted([str(int(sa)), str(int(sb))])) for sa, sb in zip(data['seed'], data['other_seed'])]
+    data = data.drop_duplicates(['mth', 'seeds'])
+    sns.boxplot(data=data, y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette, fliersize=0)
+    sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette)
     ax.tick_params(axis='x', rotation=90)
     ax.set_xlabel('Overlap coefficient')
     ax.set_ylabel('Baselines')
@@ -64,8 +72,29 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
     figs.append(fig)
 
 
+def auc(df, typ, title, palette, figs):
+    data = df[df['type'] == typ].pivot(index='mth', columns='cat', values='auc').reset_index()
+    fig, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=150)
+    sns.scatterplot(data, y='fixed_nfeats', x='fixed_ncells', hue='mth', palette=palette)
+    ax.set_xlim(-0.05, 1.05)
+    ax.set_ylim(-0.05, 1.05)
+    ax.axvline(x=0.5, ls='--', color='gray')
+    ax.axhline(y=0.5, ls='--', color='gray')
+    ax.set_xlabel('Stability fixed cells')
+    ax.set_ylabel('Stability fixed features')
+    ticks = np.arange(0, 1.01, 0.25)
+    ax.set_xticks(ticks)
+    ax.set_yticks(ticks)
+    ax.set_title(title)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend().set_visible(False)
+    fig.legend(handles, labels, loc='center left', bbox_to_anchor=(0.9, 0.5), frameon=False)
+    figs.append(fig)
+
+
 # Read
 df = pd.read_csv(sys.argv[1])
+ac = pd.read_csv(sys.argv[2])
 
 # Read config
 config = read_config()
@@ -91,5 +120,9 @@ sampled_stability(df, col='r_size', ylabel='Regulon size', palette=palette, figs
 sampled_stability(df, col='h', ylabel='Time (hours)', palette=palette, figs=figs)
 sampled_stability(df, col='gb', ylabel='Memory (GBs)', palette=palette, figs=figs)
 
+auc(ac, typ='s_ocoeff', title='TFs', palette=palette, figs=figs)
+auc(ac, typ='e_ocoeff', title='Edges', palette=palette, figs=figs)
+auc(ac, typ='t_ocoeff', title='Genes', palette=palette, figs=figs)
+
 # Write
-savefigs(figs, sys.argv[2])
+savefigs(figs, sys.argv[3])

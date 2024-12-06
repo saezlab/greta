@@ -49,15 +49,17 @@ rule run_stab:
     input:
         expand(['dts/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'], zip, dat=d_lst, case=c_lst, mth=m_lst)
     output:
-        tmp=temp('anl/stab/tmp_{dat}.csv'),
-        res='anl/stab/{dat}.csv',
+        res='anl/stab/{dat}.ovc.csv',
+        auc='anl/stab/{dat}.auc.csv',
     shell:
         """
         last_date=$(stat -c %y {input[0]} | cut -d ' ' -f 1)
         last_date=$(date -d "$last_date - 2 days" +%Y-%m-%d)
         sacct -S $last_date -E $(date -d '23:59:59 today' +%Y-%m-%dT%H:%M:%S) --state=COMPLETED --format=Jobname%100,elapsed,MaxRss,State | \
-        awk '/^ +mdl_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.tmp}
+        awk '/^ +mdl_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.res}.tmp &&
         python workflow/scripts/anl/stab/run_stab.py \
-        -i {output.tmp} \
-        -o {output.res}
+        -i {output.res}.tmp \
+        -r {output.res} \
+        -a {output.auc} &&
+        rm {output.res}.tmp
         """

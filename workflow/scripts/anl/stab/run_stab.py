@@ -11,11 +11,13 @@ from utils import ocoeff
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--inp_path', required=True)
-parser.add_argument('-o','--out_path', required=True)
+parser.add_argument('-r','--res_path', required=True)
+parser.add_argument('-a','--auc_path', required=True)
 args = vars(parser.parse_args())
 
 inp_path = args['inp_path']
-out_path = args['out_path']
+res_path = args['res_path']
+auc_path = args['auc_path']
 
 def time_to_hours(time_str):
     h, m, s = map(int, time_str.split(':'))
@@ -50,7 +52,7 @@ def get_grn_stats(df):
 
 # Read
 df = pd.read_csv(inp_path, sep=' ', header=None)
-dataset = os.path.basename(out_path).replace('.csv', '')
+dataset = os.path.basename(res_path).replace('.csv', '')
 res = []
 seeds = np.array(['0', '1', '2'])
 for _, row in list(df.iterrows()):
@@ -119,5 +121,20 @@ res = res.drop_duplicates(['mth', 'cat', 'n', 'seed', 'other_seed'], keep='last'
 # Sort
 res = res.sort_values(['mth', 'cat', 'n', 'seed']).reset_index(drop=True)
 
+# Compute stab score (auc)
+mdf = res.groupby(['mth', 'cat', 'n']).mean().reset_index()
+aucs = []
+types = ['s_ocoeff', 'e_ocoeff', 't_ocoeff']
+for mth in mdf['mth'].sort_values().unique():
+    for cat in ['fixed_nfeats', 'fixed_ncells']:
+        tmp = mdf[(mdf['mth'] == mth) & (mdf['cat'].isin([cat, 'full']))]
+        for typ in types:
+            y = tmp[typ].values
+            x = np.arange(y.size) / (y.size - 1)
+            auc = np.trapezoid(y, x)
+            aucs.append([typ, mth, cat, auc])
+acus = pd.DataFrame(aucs, columns=['type', 'mth', 'cat', 'auc'])
+
 # Write
-res.to_csv(out_path, index=False)
+res.to_csv(res_path, index=False)
+acus.to_csv(auc_path, index=False)
