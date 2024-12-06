@@ -51,14 +51,16 @@ def calculate_k(mdata, omic_a, omic_b, barmap):
     rng = np.random.default_rng(seed=42)
     for barcode_a, barcode_b in zip(barmap[omic_a.upper()], barmap[omic_b.upper()]):
         i = bar_lst.index(barcode_a)
+        ctyp = mdata.obs.loc[barcode_a, 'celltype']
         knn = indices[i]
         sorted_barcodes = list(omic.obs_names.values[knn])
         k = sorted_barcodes.index(barcode_b) + 1
-        df.append(['predicted', omic_a, barcode_a, k])
+        df.append(['predicted', ctyp, omic_a, barcode_a, k])
         barcode_b = rng.choice(ctype_dict[ctypes[i]], size=1)[0]
+        ctyp = mdata.obs.loc[barcode_b, 'celltype']
         k = sorted_barcodes.index(barcode_b) + 1
-        df.append(['random', omic_a, barcode_a, k])
-    df = pd.DataFrame(df, columns=['type', 'anchor', 'barcode', 'k'])
+        df.append(['random', ctyp, omic_a, barcode_a, k])
+    df = pd.DataFrame(df, columns=['type', 'ctype', 'anchor', 'barcode', 'k'])
     return df
 
 
@@ -79,12 +81,13 @@ def fakepair_corr_omic(mdata, omic_a, omic_b, barmap):
     rng = np.random.default_rng(seed=42)
     for i in range(x.shape[0]):
         obs_name = obs_lst[i]
+        ctyp = ctypes[i]
         stat, pval = st.spearmanr(x[i, :].ravel(), y[i, :].ravel())
-        df_cor.append(['predicted', omic_a, obs_name, stat, pval])
-        r = rng.choice(ctype_dict[ctypes[i]], size=1)[0]
+        df_cor.append(['predicted', ctyp, omic_a, obs_name, stat, pval])
+        r = rng.choice(ctype_dict[ctyp], size=1)[0]
         stat, pval = st.spearmanr(x[i, :].ravel(), x[r, :].ravel())
-        df_cor.append(['random', omic_a, obs_name, stat, pval])
-    df_cor = pd.DataFrame(df_cor, columns=['type', 'omic', 'name', 'stat', 'pval'])
+        df_cor.append(['random', ctyp, omic_a, obs_name, stat, pval])
+    df_cor = pd.DataFrame(df_cor, columns=['type', 'ctype', 'omic', 'name', 'stat', 'pval'])
     return df_cor
 
 

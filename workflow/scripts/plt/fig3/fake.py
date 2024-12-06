@@ -10,8 +10,10 @@ from utils import read_config, savefigs
 
 # Read
 df_knn = pd.read_csv(sys.argv[1]).sort_values('anchor', ascending=False)
+df_knn = df_knn.groupby(['type', 'ctype', 'anchor'], as_index=False).mean(numeric_only=True)
 df_cat = pd.read_csv(sys.argv[2])
 df_cor = pd.read_csv(sys.argv[3]).sort_values('omic', ascending=False)
+df_cor = df_cor.groupby(['type', 'ctype', 'omic'], as_index=False).mean(numeric_only=True)
 df_oc = pd.read_csv(sys.argv[4])
 
 # Read config
@@ -23,14 +25,24 @@ baselines = config['baselines']
 # Plot
 figs = []
 fig, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=150, tight_layout=True)
-sns.violinplot(
+sns.boxplot(
     data=df_knn,
     x='anchor',
     y='k',
     hue='type',
-    density_norm='width',
     ax=ax,
+    fill=None,
+    fliersize=0,
 )
+sns.stripplot(
+    data=df_knn,
+    x='anchor',
+    y='k',
+    hue='type',
+    ax=ax,
+    dodge=True
+)
+ax.set_ylim(0, None)
 ax.set_ylabel('K-Neighbor')
 ax.set_xlabel('Anchor')
 ax.legend().set_visible(False)
@@ -47,16 +59,26 @@ ax.set_title('Proportion')
 figs.append(fig)
 
 fig, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=150, tight_layout=True)
-sns.violinplot(
+sns.boxplot(
     data=df_cor,
     x='omic',
     y='stat',
     hue='type',
-    density_norm='width',
     ax=ax,
+    fill=None,
+    fliersize=0,
+)
+sns.stripplot(
+    data=df_cor,
+    x='omic',
+    y='stat',
+    hue='type',
+    ax=ax,
+    dodge=True
 )
 ax.set_ylabel('Spearman\'s ρ')
 ax.set_xlabel('')
+ax.set_ylim(0, 1)
 ax.legend().set_visible(False)
 ax.legend(loc='lower left', bbox_to_anchor=(0.25, -0.5), frameon=False)
 figs.append(fig)
@@ -86,7 +108,6 @@ msk = df_oc['mth'].str.startswith('o_') | df_oc['mth'].isin(baselines)
 df_oc = df_oc.loc[msk]
 df_oc['mth'] = [m.replace('o_', '') for m in df_oc['mth']]
 base_stability(df_oc, col='ocoef', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
-
 
 # Write
 savefigs(figs, sys.argv[5])
