@@ -45,11 +45,9 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
     ax.legend().set_visible(False)
     ax.tick_params(axis='x', rotation=90)
     ax.set_ylabel(ylabel)
-    ax.set_xlabel('Number of features')
+    ax.set_xlabel('Number of cells')
     if plot_diag:
         ax.axline([0, 0], [4, 1], linestyle='--', c='gray')
-    ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels([int(x.get_text()) * 5 for x in ax.get_xticklabels()])
     for line in ax.lines:
         line.set_marker('')
     
@@ -58,11 +56,13 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
     ax.legend().set_visible(False)
     ax.tick_params(axis='x', rotation=90)
     ax.set_ylabel('')
-    ax.set_xlabel('Number of cells')
+    ax.set_xlabel('Number of features')
     if plot_diag:
         ax.axline([0, 0], [4, 1], linestyle='--', c='gray')
     ax.set_yticks([])
     ax.set_yticklabels([])
+    ax.set_xticks(ax.get_xticks())
+    ax.set_xticklabels([int(x.get_text()) * 5 for x in ax.get_xticklabels()])
     for line in ax.lines:
         line.set_marker('')
     
@@ -74,17 +74,16 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
 
 def auc(df, typ, title, palette, figs):
     data = df[df['type'] == typ].pivot(index='mth', columns='cat', values='auc').reset_index()
-    fig, ax = plt.subplots(1, 1, figsize=(3, 3), dpi=150)
+    fig, ax = plt.subplots(1, 1, figsize=(2, 2), dpi=150)
     sns.scatterplot(data, y='fixed_nfeats', x='fixed_ncells', hue='mth', palette=palette)
     ax.set_xlim(-0.05, 1.05)
     ax.set_ylim(-0.05, 1.05)
     ax.axvline(x=0.5, ls='--', color='gray')
     ax.axhline(y=0.5, ls='--', color='gray')
-    ax.set_xlabel('Stability fixed cells')
-    ax.set_ylabel('Stability fixed features')
-    ticks = np.arange(0, 1.01, 0.25)
-    ax.set_xticks(ticks)
-    ax.set_yticks(ticks)
+    ax.set_xlabel('Stability number features')
+    ax.set_ylabel('Stability number cells')
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
+    ax.set_yticks([0, 0.25, 0.5, 0.75, 1])
     ax.set_title(title)
     handles, labels = ax.get_legend_handles_labels()
     ax.legend().set_visible(False)
