@@ -25,6 +25,9 @@ for path in args.paths_prt:
     df.append(['prt', 'tfs', name, n_tfs])
     df.append(['prt', 'exp', name, n_exp])
 
+df.append(['omc', 'genes', 'dataset', 16384])
+df.append(['omc', 'cres', 'dataset', 65536])
+
 # gst
 for path in args.paths_gst:
     name = re.search(r'gst/([^/]+)\.csv$', path).group(1)
