@@ -20,10 +20,14 @@ rule plt_sims:
     input:
         sims='anl/topo/pitupair.all.sims_mult.csv',
         stats='anl/topo/pitupair.all.stats_mult.csv',
+        tss=rules.tss_aggr.output,
+        dst='anl/tss/pitupair.all.dist.csv',
+        net='anl/topo/pitupair.all.inter.csv',
     output: 'plt/fig1/sims.pdf'
     shell:
         """
-        python workflow/scripts/plt/fig1/sims.py {input.sims} {input.stats} {output}
+        python workflow/scripts/plt/fig1/sims.py \
+        {input.sims} {input.stats} {input.tss} {input.dst} {input.net} {output}
         """
 
 
@@ -33,7 +37,6 @@ rule plt_AREG:
     input:
         sims='anl/topo/pitupair.all.sims_mult.csv',
         gann='dbs/hg38/gen/ann/dictys/ann.bed',
-        intr='anl/topo/pitupair.all.inter.csv'
     output: 'plt/fig1/links_AREG.pdf'
     params:
         gene='AREG',
