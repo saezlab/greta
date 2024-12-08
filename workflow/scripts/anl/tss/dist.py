@@ -51,8 +51,7 @@ path_grns = [p for p in path_grns if (os.path.basename(p).startswith('o_')) or (
 print(path_grns)
 for path_grn in tqdm(path_grns):
     mth = os.path.basename(path_grn).split('.')[0]  # Assume all stp equal
-    if mth not in baselines:
-        dists.append(compute_dist_tss(path_grn, mth))
+    dists.append(compute_dist_tss(path_grn, mth))
 dists = pd.concat(dists)
 
 # Write
