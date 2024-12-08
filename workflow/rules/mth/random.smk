@@ -10,6 +10,7 @@ rule mdl_random:
         g_perc=0.25,
         scale=1,
         tf_g_ratio=0.10,
+        w_size=250000,
         seed=42,
     resources:
         mem_mb=restart_mem,
@@ -23,6 +24,7 @@ rule mdl_random:
         -g {params.g_perc} \
         -n {params.scale} \
         -r {params.tf_g_ratio} \
+        -w {params.w_size} \
         -s {params.seed} \
         -o {output.out}
         """

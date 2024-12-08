@@ -1,6 +1,8 @@
 import mudata as mu
 import numpy as np
 import pandas as pd
+import pyranges as pr
+from tqdm import tqdm
 import argparse
 
 
@@ -12,6 +14,7 @@ parser.add_argument('-c','--cg_path', required=True)
 parser.add_argument('-g','--g_perc', required=True)
 parser.add_argument('-n','--scale', required=True)
 parser.add_argument('-r','--tf_g_ratio', required=True)
+parser.add_argument('-w','--w_size', required=True)
 parser.add_argument('-s','--seed', required=True)
 parser.add_argument('-o','--out_path', required=True)
 args = vars(parser.parse_args())
@@ -22,6 +25,7 @@ cg_path = args['cg_path']
 g_perc = float(args['g_perc'])
 scale = float(args['scale'])
 tf_g_ratio = float(args['tf_g_ratio'])
+w_size = int(args['w_size'])
 seed = int(args['seed'])
 out_path = args['out_path']
 
@@ -52,31 +56,59 @@ def run_pre(mdata, seed):
     return mdata
 
 
-def run_p2g(mdata, cg, g_perc, scale, seed):
+def get_window(gannot, target, w_size):
+    target_gr = gannot[gannot.df['Name'] == target]
+    tss = target_gr.df['Start'].values[0] + 1000  # Assumes window of 1000+/-
+    tss_window = pr.from_dict({
+        "Chromosome": target_gr.Chromosome,
+        "Start": tss - w_size,
+        "End": tss + w_size,
+    })
+    return tss_window
+
+
+def get_cres_pr(mdata):
+    cres = [c.split('-') for c in mdata.mod['atac'].var_names.values.astype('U')]
+    cres = pr.PyRanges(pd.DataFrame(cres, columns=['Chromosome', 'Start', 'End']))
+    return cres
+
+
+def get_overlap_cres(gene, cres, w_size):
+    wnd = get_window(gannot, target=gene, w_size=w_size)
+    o_cres = cres.overlap(wnd)
+    if len(o_cres) > 0:
+        o_cres = (
+            o_cres.df
+            .assign(name=lambda x: x['Chromosome'].astype(str) + '-' + x['Start'].astype(str) + '-' + x['End'].astype(str))
+            ['name'].values
+        )
+        return o_cres
+
+
+def run_p2g(mdata, gannot, g_perc, scale, w_size, seed):
     # Read features
     genes = mdata.mod['rna'].var_names.values.astype('U')
-    cres = mdata.mod['atac'].var_names.values.astype('U')
-    genes = genes[np.isin(genes, list(cg.keys()))]
+    cres = get_cres_pr(mdata)
+    g_in_ann = list(set(gannot.df['Name'].values))
+    genes = genes[np.isin(genes, g_in_ann)]
     print(genes.size)
     
     # Randomly sample genes
     rng = np.random.default_rng(seed=seed)
     n = int(np.round(genes.size * g_perc))
     genes = rng.choice(genes, n, replace=False)
-
     n_cres = np.ceil(rng.exponential(scale=scale, size=genes.size))
     
     # Randomly sample peak-gene connections
     df = []
-    for i in range(genes.size):
+    for i in tqdm(range(genes.size)):
         n_cre = int(n_cres[i])
         g = genes[i]
-        chrom = cg[g]
-        chrom_msk = np.char.startswith(cres, chrom)
-        chrom_cres = cres[chrom_msk]
-        r_cres = rng.choice(chrom_cres, np.min([n_cre, chrom_cres.size]), replace=False)
-        for cre in r_cres:
-            df.append([cre, g, 1])
+        o_cres = get_overlap_cres(g, cres, w_size)
+        if o_cres is not None:
+            r_cres = rng.choice(o_cres, np.min([n_cre, o_cres.size]), replace=False)
+            for cre in r_cres:
+                df.append([cre, g, 1])
     df = pd.DataFrame(df, columns=['cre', 'gene', 'score'])
     df = df.sort_values(['cre', 'gene']).drop_duplicates(['cre', 'gene'])
     return df
@@ -128,8 +160,8 @@ def run_mdl(p2g, tfb, tf_g_ratio, seed):
 # Run random
 mdata = mu.read(inp_path)
 mdata = run_pre(mdata, seed)
-cg = pd.read_csv(cg_path, sep='\t', header=None).set_index(3)[0].to_dict()
-p2g = run_p2g(mdata, cg, g_perc, scale, seed)
+gannot = pr.read_bed(cg_path)
+p2g = run_p2g(mdata, gannot, g_perc, scale, w_size, seed)
 tfs = pd.read_csv(tf_path, header=None).loc[:, 0].values.astype('U')
 tfb = run_tfb(mdata, p2g, tfs, scale, seed)
 grn = run_mdl(p2g, tfb, tf_g_ratio, seed)
