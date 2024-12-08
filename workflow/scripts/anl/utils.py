@@ -5,9 +5,6 @@ import os
 
 def get_grn_name(grn_path):
     name = os.path.basename(grn_path).replace('.grn.csv', '').replace('.csv', '')
-    #pre, p2g, tfb, mdl = name.split('.')
-    #if (pre == p2g) & (p2g == tfb) & (tfb == mdl):
-    #    name = pre
     return name
 
 
@@ -21,7 +18,7 @@ def get_grn_stats(grn):
 
     g = ig.Graph.TupleList(list(zip(grn['source'], grn['target'])), directed=True)
     tf_bet = np.mean(g.betweenness())
-    tf_odg = np.mean(g.outdegree())
+    tf_odg = grn.groupby(['source']).size().mean()
     if not g.is_acyclic():
         tf_eig = np.mean(g.eigenvector_centrality())
     else:
