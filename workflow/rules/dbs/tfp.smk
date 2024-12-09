@@ -1,29 +1,27 @@
-# Intact
-rule all:
-    input:
-        "results/intact.csv"
+localrules: download_intact, tfp_intact
+
 
 rule download_intact:
     output:
-        temp("data/intact.txt")
+        temp("dbs/hg38/tfp/intact/raw/intact.txt")
     shell:
         """
-        wget -O data/intact.zip https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.zip
-        unzip -o data/intact.zip -d data/
-        rm data/intact.zip
-        echo "db downloaded"
+        wget --no-verbose https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.zip -O {output}.zip && \
+        unzip -o {output}.zip -d $( dirname {output} ) && \
+        rm {output}.zip
         """
 
-rule process_intact:
+
+rule tfp_intact:
     input:
-        i="data/intact.txt",
-        t="data/lambert.csv"
-    output:
-        o="data/intact.csv"
+        inc=rules.download_intact.output,
+        lmb=rules.gen_tfs_lambert.output,
+        pid=rules.gen_pid_uniprot.output,
+    output: 'dbs/hg38/tfp/intact/intact.tsv'
     shell:
         """
-        python scripts/pre_intact.py -t {input.t} -i {input.i} -o {output.o}
-        echo "intact done"
+        python workflow/scripts/dbs/tfp/intact.py \
+        {input.inc} {input.lmb} {input.pid} {output}
         """
 
 
@@ -125,9 +123,9 @@ rule split_pairs:
 num_chunks = 32  # Adjust this based on the actual number of chunks
 
 # Defineix la llista completa de fitxers de sortida
-rule all:
-    input:
-        expand("results/chunk_{i}_results.txt", i=range(32))
+#rule all:
+#    input:
+#        expand("results/chunk_{i}_results.txt", i=range(32))
 
 
 rule pubmed_search_chunk:

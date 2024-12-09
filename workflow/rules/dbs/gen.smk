@@ -1,5 +1,5 @@
 localrules: gen_tfs_lambert, gen_tfs_scenic
-localrules: gen_gid_ensmbl, gen_genome_celloracle, gen_genome_dictys
+localrules: gen_gid_ensmbl, gen_pid_uniprot, gen_genome_celloracle, gen_genome_dictys
 localrules: gen_ann_dictys, gen_ann_pando
 localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_scenic
 
@@ -33,6 +33,13 @@ rule gen_gid_ensmbl:
     singularity: 'workflow/envs/gretabench.sif'
     output: expand('dbs/{org}/gen/gid/ensembl.csv', org=orgms)
     shell: "Rscript workflow/scripts/dbs/gen/gid/ensmbl.R {output}"
+
+
+rule gen_pid_uniprot:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    output: expand('dbs/{org}/gen/pid/uniprot.csv', org=orgms)
+    shell: "Rscript workflow/scripts/dbs/gen/pid/uniprot.R {output}"
 
 
 rule gen_genome_celloracle:
