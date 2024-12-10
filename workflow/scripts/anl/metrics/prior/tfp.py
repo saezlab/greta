@@ -51,11 +51,14 @@ if grn.shape[0] > 0:
     
     # Compute F score
     tp = len(p_grn & tfp)
-    fp = len(p_grn - tfp)
-    fn = len(tfp - p_grn)
-    rcl = tp / (tp + fn)
-    prc = tp / (tp + fp)
-    f01 = f_beta_score(prc, rcl)
+    if tp > 0:
+        fp = len(p_grn - tfp)
+        fn = len(tfp - p_grn)
+        rcl = tp / (tp + fn)
+        prc = tp / (tp + fp)
+        f01 = f_beta_score(prc, rcl)
+    else:
+        prc, rcl, f01 = 0., 0., 0.
     df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
 else:
     df = pd.DataFrame([[grn_name, np.nan, np.nan, np.nan]], columns=['name', 'prc', 'rcl', 'f01'])
