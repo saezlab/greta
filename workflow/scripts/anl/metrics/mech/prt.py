@@ -97,6 +97,9 @@ if grn.shape[0] > 0:
     oracle = ad.AnnData(oracle.adata.to_df().mean(0).to_frame().T)
     oracle = init_celloracle(oracle, grn, fit_grn=False)
     oracle.coef_matrix = coef_mat
+    tf_n_trgs = (coef_mat != 0).sum(0)
+    tf_n_trgs = set(tf_n_trgs[tf_n_trgs >= 3].index)
+    oracle.all_regulatory_genes_in_TFdict = [t for t in oracle.all_regulatory_genes_in_TFdict if t in tf_n_trgs]
 
     # Read benchmark data
     mat = pd.read_csv(os.path.join(bnc_path, 'diff.csv'), index_col=0)
