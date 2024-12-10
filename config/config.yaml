@@ -198,6 +198,8 @@ dbs:
         tfm:
             hpa: 'https://www.proteinatlas.org/download/proteinatlas.tsv.zip'
             tfmdb: 'https://bio.liclab.net/TF-Marker/public/download/download_TFMarker.csv'
+        tfp:
+            intact: 'https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.zip'
         tfb:
             chipatlas:
                 meta: 'https://chip-atlas.dbcls.jp/data/metadata/experimentList.tab'

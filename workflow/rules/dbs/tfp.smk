@@ -4,9 +4,11 @@ localrules: download_intact, tfp_intact
 rule download_intact:
     output:
         temp("dbs/hg38/tfp/intact/raw/intact.txt")
+    params:
+        url=config['dbs']['hg38']['tfp']['intact']
     shell:
         """
-        wget --no-verbose https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.zip -O {output}.zip && \
+        wget --no-verbose {params.url} -O {output}.zip && \
         unzip -o {output}.zip -d $( dirname {output} ) && \
         rm {output}.zip
         """

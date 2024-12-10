@@ -1,4 +1,4 @@
-localrules: prior_tfm
+localrules: prior_tfm, prior_tfp
 
 
 rule prior_tfm:
@@ -18,6 +18,23 @@ rule prior_tfm:
         -b {input.db} \
         -c {params.cats} \
         -f {output.out}
+        """
+
+
+rule prior_tfp:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
+        db='dbs/hg38/tfp/{db}/{db}.tsv',
+    output:
+        out='anl/metrics/prior/tfp/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+    params:
+        thr_p=0.01,
+    shell:
+        """
+        python workflow/scripts/anl/metrics/prior/tfp.py \
+        {input.grn} {input.db} {params.thr_p} {output.out}
         """
 
 

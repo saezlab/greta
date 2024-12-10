@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-p','--paths_prt', required=True, nargs='+')
 parser.add_argument('-g','--paths_gst', required=True, nargs='+')
 parser.add_argument('-m','--paths_tfm', required=True, nargs='+')
+parser.add_argument('-t','--paths_tfp', required=True, nargs='+')
 parser.add_argument('-b','--paths_tfb', required=True, nargs='+')
 parser.add_argument('-c','--paths_cre', required=True, nargs='+')
 parser.add_argument('-e','--paths_c2g', required=True, nargs='+')
@@ -51,6 +52,16 @@ for path in args.paths_tfm:
     n_cats = len(get_cats(tfm[1]))
     df.append(['tfm', 'tfs', name, n_tfs])
     df.append(['tfm', 'cat', name, n_cats])
+
+
+# tfp
+for path in args.paths_tfp:
+    name = re.search(r'tfp/([^/]+)/', path).group(1)
+    tfp = pd.read_csv(path, sep='\t', header=None)
+    n_tfs = len(set(tfp[0]) | set(tfp[1]))
+    n_prs = len(tfp)
+    df.append(['tfp', 'tfs', name, n_tfs])
+    df.append(['tfp', 'prs', name, n_prs])
 
 # tfb
 for path in args.paths_tfb:
