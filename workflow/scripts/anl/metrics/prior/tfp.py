@@ -43,10 +43,10 @@ tfp = pd.read_csv(sys.argv[2], sep='\t', header=None)
 tfs = set(tfp[0]) | set(tfp[1])
 grn = grn[grn['source'].isin(tfs)]
 tfp = set(['|'.join(sorted([a, b])) for a, b in zip(tfp[0], tfp[1])])
+grn_name = os.path.basename(sys.argv[1]).replace('.grn.csv', '')
 
 if grn.shape[0] > 0:
     # Find pairs
-    grn_name = os.path.basename(sys.argv[1]).replace('.grn.csv', '')
     p_grn = find_pairs(grn, thr_pval=float(sys.argv[3]))
     
     # Compute F score
