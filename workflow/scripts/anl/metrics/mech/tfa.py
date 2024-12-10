@@ -2,8 +2,11 @@ import pandas as pd
 import numpy as np
 import decoupler as dc
 import mudata as mu
-import os
 import json
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import f_beta_score
 import argparse
 
 
@@ -76,8 +79,7 @@ if grn.shape[0] > 0:
     if tp > 0:
         prc = tp / acts.size
         rcl = tp / obs.shape[0]
-        beta = 0.1
-        f01 = ((1 - beta**2) * prc * rcl) / ((prc * beta**2) + rcl)
+        f01 = f_beta_score(prc, rcl)
     else:
         prc, rcl, f01 = 0., 0., 0.
 

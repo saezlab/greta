@@ -2,8 +2,11 @@ import pandas as pd
 import numpy as np
 import mudata as mu
 from tqdm import tqdm
-import os
 import json
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import f_beta_score
 import argparse
 
 
@@ -54,8 +57,7 @@ if grn.shape[0] > 0:
         fn = np.setdiff1d(y, y_pred).size
         prc = tp / (tp + fp)
         rcl = tp / (tp + fn)
-        beta = 0.1
-        f01 = ((1 - beta**2) * prc * rcl) / ((prc * beta**2) + rcl)
+        f01 = f_beta_score(prc, rcl)
     else:
         prc, rcl, f01 = 0., 0., 0.,
     df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])

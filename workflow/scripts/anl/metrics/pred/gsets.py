@@ -3,7 +3,10 @@ import numpy as np
 import mudata as mu
 import decoupler as dc
 import argparse
+import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import f_beta_score
 
 
 # Init args
@@ -42,8 +45,7 @@ def eval_metrics(y_pred, y):
         fn = np.setdiff1d(y, y_pred).size
         prc = tp / (tp + fp)
         rcl = tp / (tp + fn)
-        beta = 0.1
-        f1 = ((1 - beta**2) * prc * rcl) / ((prc * beta**2) + rcl)
+        f1 = f_beta_score(prc, rcl)
     else:
         prc, rcl, f1 = 0., 0., 0.
     return prc, rcl, f1

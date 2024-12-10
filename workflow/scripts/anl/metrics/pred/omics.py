@@ -1,11 +1,14 @@
 import pandas as pd
 import numpy as np
-import os
 import mudata as mu
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
 import scipy
 import argparse
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import f_beta_score
 
 
 # Init args
@@ -69,8 +72,7 @@ if grn.shape[0] > 0:
         universe_size = mdata.mod[mod_target].var_names.size
         rcl = n_hits / universe_size
         prc = n_hits / cor.shape[0]
-        beta = 0.1
-        f01 = ((1 - beta**2) * prc * rcl) / ((prc * beta**2) + rcl)
+        f01 = f_beta_score(prc, rcl)
     else:
         prc, rcl, f01 = 0., 0., 0.
     df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
