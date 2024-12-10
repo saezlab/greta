@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-import decoupler as dc
 import mudata as mu
+import anndata as ad
 import celloracle as co
 import scipy
 import os
@@ -38,7 +38,7 @@ rsc_name = os.path.basename(bnc_path)
 grn = pd.read_csv(grn_path)
 grn = grn.drop_duplicates(['source', 'target'], keep='first')
 
-def init_celloracle(adata, grn):
+def init_celloracle(adata, grn, fit_grn):
     oracle = co.Oracle()
     oracle.adata = adata
     oracle.adata.obsm['X_umap'] = np.zeros((adata.shape[0], 2))
@@ -56,10 +56,11 @@ def init_celloracle(adata, grn):
                                               cluster_name='cluster',
                                               return_as="dict")
     oracle.colorandum = np.array([col_dict[i] for i in oracle.adata.obs['cluster']])
-    # Add grn
     tf_dict = grn.groupby(['target'])['source'].apply(lambda x: sorted(list(x))).to_dict()   # Refit GRN
     oracle.addTFinfo_dictionary(tf_dict)
-    oracle.fit_GRN_for_simulation(alpha=0, GRN_unit="whole")
+    # Add grn
+    if fit_grn:
+        oracle.fit_GRN_for_simulation(alpha=0, GRN_unit="whole")
     return oracle
 
 
@@ -85,7 +86,18 @@ def simulate_delta(oracle, tfs, n_steps=3):
 if grn.shape[0] > 0:
     # Read dataset
     rna = mu.read(os.path.join(data_path, 'mod', 'rna'))
-    
+
+    # Subset data to grn
+    genes = set(grn['source']) | set(grn['target'])
+    rna = rna[:, rna.var_names.isin(genes)]
+
+    # Init object
+    oracle = init_celloracle(rna, grn, fit_grn=True)
+    coef_mat = oracle.coef_matrix
+    oracle = ad.AnnData(oracle.adata.to_df().mean(0).to_frame().T)
+    oracle = init_celloracle(oracle, grn, fit_grn=False)
+    oracle.coef_matrix = coef_mat
+
     # Read benchmark data
     mat = pd.read_csv(os.path.join(bnc_path, 'diff.csv'), index_col=0)
     obs = pd.read_csv(os.path.join(bnc_path, 'meta.csv'), index_col=0)
@@ -99,33 +111,36 @@ if grn.shape[0] > 0:
         obs = obs.loc[msk, :]
         mat = mat.loc[msk, :]
 
-    oracle = init_celloracle(rna, grn)
+    # Subset by overlap with rna
+    genes = list(genes & set(mat.columns))
+    mat = mat.loc[:, genes].copy()
+    
     coefs = []
     pvals = []
     for dataset in tqdm(obs.index):
         # Extract
         tf = obs.loc[dataset, 'TF']
         tf_mat = mat.loc[[dataset], :]
-    
-        try:
+        tf_mat = tf_mat[tf_mat != 0].dropna(axis=1)
+        if tf in oracle.all_regulatory_genes_in_TFdict:
             # Run the simulation for the current TF
-            delta = simulate_delta(oracle, [tf], n_steps=3)
+            x = simulate_delta(oracle, [tf], n_steps=3)
             
             # Compute correlation
-            x = delta.mean(0)
-            y = tf_mat.T[dataset]
-            inter = np.intersect1d(x.index, y.index)
-            x, y = x.loc[inter].values, y.loc[inter]
-            r, p = scipy.stats.spearmanr(x, y)
+            if x.shape[1] > 10:
+                y = tf_mat
+                inter = np.intersect1d(x.columns, y.columns)
+                x, y = x.loc[:, inter].values[0], y.loc[:, inter].values[0]
+                r, p = scipy.stats.spearmanr(x, y)
+            else:
+                r, p = 0, 1
             coefs.append(r)
             pvals.append(p)
-        except:
-            pass
     
     # Compute recall
     coefs = np.array(coefs)
     pvals = np.array(pvals)
-    padj = dc.p_adjust_fdr(pvals)
+    padj = scipy.stats.false_discovery_control(pvals, method='bh')
     tp = np.sum((coefs > 0.05) & (padj < 0.05))
     if tp > 0:
         prc = tp / coefs.size
