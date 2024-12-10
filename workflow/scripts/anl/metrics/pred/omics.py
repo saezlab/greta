@@ -3,6 +3,7 @@ import numpy as np
 import mudata as mu
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
+from tqdm import tqdm
 import scipy
 import argparse
 import sys
@@ -33,7 +34,7 @@ data_path = os.path.join(os.path.dirname(os.path.dirname(grn_path)), 'mdata.h5mu
 
 grn = pd.read_csv(grn_path)
 
-def test_predictability(mdata, train, test, grn, col_source='source', col_target='target', mod_source='rna', mod_target='rna', ntop=None):
+def test_predictability(mdata, train, test, grn, col_source='source', col_target='target', mod_source='rna', mod_target='rna', ntop=5):
     def remove_zeros(X, y):
         msk = y != 0.
         y = y[msk]
@@ -42,7 +43,7 @@ def test_predictability(mdata, train, test, grn, col_source='source', col_target
     net = grn.iloc[np.argsort(-abs(grn['score'])), :].drop_duplicates([col_source, col_target])
     net = net.groupby(col_target)[col_source].apply(lambda x: list(x) if ntop is None else list(x)[:ntop])
     cor = []
-    for target in net.index:
+    for target in tqdm(net.index):
         sources = net[target]
         sources = [s for s in sources if s != target]
         if len(sources) > 0:
