@@ -25,6 +25,32 @@ rule tfp_intact:
         """
 
 
+rule tfp_pubmed_tfs:
+    input: rules.gen_tfs_lambert.output,
+    conda: '../../envs/edirect.yaml'
+    output: 'dbs/hg38/tfp/pubmed/raw/tfs.tsv'
+    shell:
+        """
+        cat {input} | xargs -I {{}} -P 1 bash -c '
+            tf=$(echo {{}} | tr -d "\r" | xargs)
+            if [[ ${{#tf}} -ge 3 ]]; then
+                count=$(esearch -db pubmed -query "$tf[Title/Abstract]" | xtract -pattern ENTREZ_DIRECT -element Count 2>/dev/null)
+                if (( count >= 100)); then
+                    echo -e "$tf\t$count"
+                fi
+            fi' > {output}
+        """
+
+
+rule tfp_pubmed_pairs:
+    input: rules.tfp_pubmed_tfs.output,
+    singularity: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/tfp/pubmed/raw/pairs.tsv'
+    shell:
+        """
+        python workflow/scripts/dbs/tfp/pubmed_pairs.py {input} {output}
+        """
+
 # Pubmed
 # Rule to generate all unique TF pairs and save them to a file
 rule generate_pairs:
@@ -49,43 +75,6 @@ rule generate_pairs:
                 echo "${{tfs[i]}},${{tfs[j]}}" >> {output[0]}
             done
         done
-        """
-
-# Rule to perform PubMed searches for each TF in the list and save results to an output file
-rule search_tf_abstracts:
-    input:
-        input_file = "data/lambert.csv"
-    output:
-        output_file = "results/tf_abstract_counts.txt" # abstracts for each tf
-    shell:
-        """
-        # Initialize output file with a header
-        echo -e "TF\tAbstracts" > {output}
-
-        # Read TFs into an array, cleaning any extra whitespace or control characters
-        tfs=()
-        while IFS= read -r line; do
-            clean_line=$(echo "$line" | tr -d '\r' | xargs)
-            [[ -n "$clean_line" ]] && tfs+=("$clean_line")
-        done < {input}
-
-        # Loop through each TF in the array and perform the PubMed search
-        for tf in "${{tfs[@]}}"; do
-            echo "Searching for $tf in PubMed with Title/Abstract constraint..."
-
-            # Perform the search with title/abstract constraint and get the count of abstracts
-            count=$(esearch -db pubmed -query "$tf[Title/Abstract]" | xtract -pattern ENTREZ_DIRECT -element Count 2>/dev/null)
-
-            # If count is empty, set it to 0
-            if [[ -z "$count" ]]; then
-                count=0
-            fi
-
-            # Append the TF and count to the output file
-            echo -e "$tf\t$count" >> {output}
-        done
-
-        echo "Results saved to {output}"
         """
 
 # Define the input and output files
