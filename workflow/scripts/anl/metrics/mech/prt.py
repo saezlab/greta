@@ -133,7 +133,7 @@ if grn.shape[0] > 0:
                 x, y = x.loc[:, inter].values[0], y.loc[:, inter].values[0]
                 r, p = scipy.stats.spearmanr(x, y)
             else:
-                r, p = 0, 1
+                r, p = 0., 1.
             coefs.append(r)
             pvals.append(p)
     
