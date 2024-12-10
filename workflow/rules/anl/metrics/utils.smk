@@ -28,6 +28,7 @@ rule metric_summ:
             'anl/metrics/pred/gsets/prog/{dat}.{case}.scores.csv',
             'anl/metrics/prior/tfm/hpa/{dat}.{case}.scores.csv',
             'anl/metrics/prior/tfm/tfmdb/{dat}.{case}.scores.csv',
+            'anl/metrics/prior/tfp/intact/{dat}.{case}.scores.csv',
             'anl/metrics/prior/tfb/chipatlas/{dat}.{case}.scores.csv',
             'anl/metrics/prior/tfb/remap2022/{dat}.{case}.scores.csv',
             'anl/metrics/prior/tfb/unibind/{dat}.{case}.scores.csv',
