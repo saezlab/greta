@@ -1,7 +1,8 @@
-localrules: aggr_metric
+localrules: aggr_metric, metric_summ
 
 
 rule aggr_metric:
+    threads: 1
     input:
         lambda w: make_combs_rules(w=w, mthds=mthds, baselines=baselines, rule_name='{typ}_{tsk}'.format(typ=w.type, tsk=w.task))
     output:
@@ -15,6 +16,8 @@ rule aggr_metric:
 
 
 rule metric_summ:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input:
         [
             'anl/metrics/mech/prt/knocktf/{dat}.{case}.scores.csv',
@@ -39,9 +42,8 @@ rule metric_summ:
             'anl/metrics/prior/cre/promoters/{dat}.{case}.scores.csv',
             'anl/metrics/prior/c2g/eqtlcatalogue/{dat}.{case}.scores.csv',
         ]
-    output:
-        'anl/metrics/summary/{dat}.{case}.csv'
+    output: 'anl/metrics/summary/{dat}.{case}.csv'
     shell:
         """
-        echo 'Done'
+        python workflow/scripts/anl/metrics/test.py -m {input} -o {output}
         """
