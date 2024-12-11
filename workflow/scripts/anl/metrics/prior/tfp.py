@@ -45,7 +45,7 @@ grn = grn[grn['source'].isin(tfs)]
 tfp = set(['|'.join(sorted([a, b])) for a, b in zip(tfp[0], tfp[1])])
 grn_name = os.path.basename(sys.argv[1]).replace('.grn.csv', '')
 
-if grn.shape[0] > 0:
+if grn.shape[0] > 1:  # Need at least 2 TFs in grn
     # Find pairs
     p_grn = find_pairs(grn, thr_pval=float(sys.argv[3]))
     
