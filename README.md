@@ -3,7 +3,8 @@ Benchmark of GRN using the GRETA pipeline.
 
 This pipeline uses `Snakemake` to ensure reproducibility.
 
-![GRETA graphical abstract](https://drive.google.com/uc?id=1HpJx1deKivG2DRv3uXp_xLz90R0YfOwU)
+<img src="https://drive.google.com/uc?id=1HpJx1deKivG2DRv3uXp_xLz90R0YfOwU" alt="GRETA graphical abstract" width="500" />
+
 
 ## Installation
 Clone repo:
