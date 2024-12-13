@@ -7,10 +7,13 @@ rule plt_stab:
     input:
         ovc='anl/stab/pitupair.ovc.csv',
         auc='anl/stab/pitupair.auc.csv'
-    output: 'plt/fig1/stab.pdf'
+    output:
+        stab='plt/fig1/stab.pdf',
+        cors='plt/fig1/cors.pdf',
     shell:
         """
-        python workflow/scripts/plt/fig1/stab.py {input.ovc} {input.auc} {output}
+        python workflow/scripts/plt/fig1/stab.py {input.ovc} {input.auc} {output.stab}
+        python workflow/scripts/plt/fig1/cors.py {input.ovc} {output.cors}
         """
 
 
@@ -57,10 +60,11 @@ rule plt_fig1:
     threads: 1
     input:
         stab='plt/fig1/stab.pdf',
+        cors='plt/fig1/cors.pdf',
         sims='plt/fig1/sims.pdf',
         areg='plt/fig1/links_AREG.pdf'
     output: 'plt/fig1/fig1.pdf'
     shell:
         """
-        gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile={output} {input.stab} {input.sims} {input.areg}
+        gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile={output} {input.stab} {input.cors} {input.sims} {input.areg}
         """
