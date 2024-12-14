@@ -122,6 +122,31 @@ def ranking(df, title, palette):
     return fig
 
 
+def runnin_score(df, name_run, palette):
+    step, mth = name_run.split('.')
+    net = []
+    for name in df[df[step] == mth]['name']:
+        net.append(['{0}.{1}'.format(step, mth), name])
+    net = pd.DataFrame(net, columns=['source', 'target'])
+    fig = dc.plot_running_score(
+        df=df.set_index('name'),
+        net=net,
+        set_name=name_run,
+        stat='f01',
+        return_fig=True,
+        cmap='Purples',
+        figsize=(3, 1.5)
+    )
+    fig = fig[0]
+    fig.set_dpi(150)
+
+    color = palette[mth]
+    for line in fig.axes[0].get_lines():
+        line.set_color(color)
+    fig.axes[1].get_children()[0].set_color(color)
+    return fig
+
+
 # Read config
 config = read_config()
 palette = config['colors']['nets']
@@ -130,6 +155,11 @@ baselines = config['baselines']
 
 # Read
 df = pd.read_csv(sys.argv[1])
+d_stab = pd.read_csv(sys.argv[2])
+
+# Filter for sign and select max step for each sign db
+sts = df[df['padj'] < 2.2e-16].copy()
+sts = sts.sort_values('f01', ascending=False).groupby(['metric', 'task', 'db'], as_index=False).head(1)
 
 # Sort
 df['metric'] = pd.Categorical(df['metric'], categories=['mech', 'pred', 'prior'], ordered=True)
@@ -177,6 +207,28 @@ for mtrc in metrics:
     title = f'{mtrc}'
     figs.append(ranking(mtrc_rnks.dropna(), title, palette))
 
+for _, row in sts.iterrows():
+    tmp = read_eval(
+        type_metric=row['metric'],
+        task=row['task'],
+        resource=row['db'],
+        case=row['case'],
+    )
+    name_run = row['stp'] + '.' + row['name']
+    fig = runnin_score(tmp, name_run, palette)
+    fig.suptitle('{0}|{1}|{2}|{3}'.format(row['metric'], row['task'], row['db'], row['case']), y=1.1)
+    figs.append(fig)
+
+d_stab['name'] = 'dictys'
+d_stab['m'] = d_stab['metric'] + '|' + d_stab['task'] + '|' + d_stab['db']
+fig, ax = plt.subplots(1, 1, figsize=(2, 4), dpi=150)
+sns.boxplot(data=d_stab, x='f01', hue='name', y='m', fliersize=0, fill=None, palette={'dictys': 'tab:orange'})
+sns.stripplot(data=d_stab, x='f01', hue='name', y='m', palette={'dictys': 'tab:orange'})
+ax.set_xlabel(r'F$\mathrm{_{0.1}}$')
+ax.set_ylabel('')
+ax.legend().set_visible(False)
+ax.set_yticklabels([tick.get_text().split('|')[-1] for tick in ax.get_yticklabels()])
+figs.append(fig)
 
 # Write
-savefigs(figs, sys.argv[2])
+savefigs(figs, sys.argv[3])
