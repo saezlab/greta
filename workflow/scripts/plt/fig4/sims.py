@@ -4,6 +4,8 @@ import marsilea.plotter as mp
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 import pandas as pd
+import mudata as mu
+import scanpy as sc
 import numpy as np
 import sys
 import os
@@ -85,8 +87,13 @@ palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
 baselines = config['baselines']
 
-df = pd.read_csv(sys.argv[1])
-sts = pd.read_csv(sys.argv[2])
+
+mdata = mu.read(sys.argv[1])
+df_nc = pd.read_csv(sys.argv[2])
+df_qc = pd.read_csv(sys.argv[3])
+df = pd.read_csv(sys.argv[4])
+sts = pd.read_csv(sys.argv[5])
+df_stab = pd.read_csv(sys.argv[6])
 
 # Remove original runs and baselines
 df = df[~(df['name_a'].str.startswith('o_') | df['name_b'].str.startswith('o_'))]
@@ -94,6 +101,83 @@ baselines = ['collectri', 'dorothea', 'random', 'scenic']
 df = df[~(df['name_a'].str.split('.', expand=True)[0].isin(baselines) | df['name_b'].str.split('.', expand=True)[0].isin(baselines))]
 
 figs = []
+
+# Add qc plots
+fig, ax = plt.subplots(1, 1, figsize=(4, 4), dpi=150)
+sc.pl.umap(
+    mdata,
+    color='celltype',
+    ax=ax,
+    frameon=False,
+    add_outline=True,
+    title='',
+)
+figs.append(fig)
+fig, ax = plt.subplots(1, 1, figsize=(1.7, 3), dpi=150)
+sns.barplot(
+    data=df_nc,
+    x='size',
+    y='celltype',
+    ax=ax
+)
+ax.set_xlabel('Number of cells')
+ax.set_ylabel('')
+ax.legend().set_visible(False)
+ax.legend(loc='lower left', bbox_to_anchor=(0.25, -0.5), frameon=False)
+figs.append(fig)
+fig, ax = plt.subplots(1, 1, figsize=(2, 1.7), dpi=150, tight_layout=True)
+df_qc = df_qc.groupby(['celltype', 'omic'], as_index=False).mean(numeric_only=True)
+cmap = {
+    'rna': 'purple',
+    'atac': '#ffd700'
+}
+sns.boxplot(
+    data=df_qc,
+    x='omic',
+    y='log1p_n_genes_by_counts',
+    hue='omic',
+    ax=ax,
+    palette=cmap,
+    fill=None,
+    fliersize=0,
+)
+sns.stripplot(
+    data=df_qc,
+    x='omic',
+    y='log1p_n_genes_by_counts',
+    hue='omic',
+    ax=ax,
+    palette=cmap,
+)
+ax.set_xlabel('')
+ax.set_ylabel('Total counts (log1p)')
+ax.legend().set_visible(False)
+figs.append(fig)
+
+fig, ax = plt.subplots(1, 1, figsize=(2, 1.7), dpi=150, tight_layout=True)
+sns.boxplot(
+    data=df_qc,
+    x='omic',
+    y='log1p_n_genes_by_counts',
+    hue='omic',
+    ax=ax,
+    palette=cmap,
+    fliersize=0,
+    fill=None,
+)
+sns.stripplot(
+    data=df_qc,
+    x='omic',
+    y='log1p_n_genes_by_counts',
+    hue='omic',
+    ax=ax,
+    palette=cmap,
+)
+ax.set_xlabel('')
+ax.set_ylabel('Total features (log1p)')
+ax.legend().set_visible(False)
+figs.append(fig)
+
 for oc in ['tf_oc', 'edge_oc', 'target_oc']:
     mat = df.dropna().pivot(index='name_a', columns='name_b', values=oc).fillna(0)
     mat = mat + mat.T
@@ -103,5 +187,30 @@ for oc in ['tf_oc', 'edge_oc', 'target_oc']:
     figs.append(fixed_pip(mthds, t_sts, mat, title=oc))
     figs.append(sim_mat(mat, t_sts, palette))
 
+fig, axes = plt.subplots(2, 1, figsize=(2, 4), tight_layout=True)
+ax = axes[0]
+sns.barplot(
+    data=df_stab,
+    y='mth',
+    x='ocoeff',
+    hue='mth',
+    ax=ax
+)
+ax.set_xticks([0, 0.5, 1])
+ax.set_xlabel('Edge Overlap\nCoefficient')
+ax.set_ylabel('')
+ax = axes[1]
+sns.barplot(
+    data=df_stab,
+    y='mth',
+    x='stat',
+    hue='mth',
+    ax=ax
+)
+ax.set_xlabel('Pearson ρ')
+ax.set_xticks([0, 0.5, 1])
+ax.set_ylabel('')
+figs.append(fig)
+
 # Write
-savefigs(figs, sys.argv[3])
+savefigs(figs, sys.argv[7])
