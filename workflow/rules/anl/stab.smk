@@ -1,3 +1,5 @@
+localrules: run_stab, stab_ovsd, stab_dictys
+
 def get_stab_paths(config, mthds, baselines, datasets):
     ns = [1024, 2048, 4096, 8192, 16384]
     seeds = [0, 1, 2]
@@ -42,7 +44,6 @@ def get_stab_paths(config, mthds, baselines, datasets):
 
 d_lst, c_lst, m_lst = get_stab_paths(config, mthds, baselines, stab_datasets)
 
-localrules: run_stab
 rule run_stab:
     threads: 1
     container: None
@@ -62,4 +63,33 @@ rule run_stab:
         -r {output.res} \
         -a {output.auc} &&
         rm {output.res}.tmp
+        """
+
+
+rule stab_ovsd:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.topo_mult.output.sims,
+    output: 'anl/stab/{dat}.{case}.ovsd.csv'
+    shell:
+        """
+        python workflow/scripts/anl/stab/ovsd.py {input} {output}
+        """
+
+localrules: stab_dictys
+for i in range(4):
+    config['dts']['pbmc10k']['cases'][str(i)] = config['dts']['pbmc10k']['cases']['all'].copy()
+    config['dts']['pbmc10k']['cases'][str(i)]['n_sample'] = 1000000
+    config['dts']['pbmc10k']['cases'][str(i)]['seed'] = str(i)
+rule stab_dictys:
+    threads: 1
+    container: None
+    input: [[os.path.join(os.path.dirname(p), '{dat}.' + str(case), 'dictys.dictys.dictys.dictys.scores.csv') for p in rules.metric_summ.input] for case in list(range(4)) + ['all']],
+    output: 'anl/stab/dictys/{dat}.scores.csv'
+    shell:
+        """
+        python workflow/scripts/anl/metrics/aggregate.py \
+        -i {input} \
+        -o {output} \
+        -a
         """
