@@ -2,11 +2,10 @@ import pandas as pd
 import numpy as np
 import decoupler as dc
 import mudata as mu
-import json
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import f_beta_score
+from utils import load_cats, f_beta_score
 import argparse
 
 
@@ -14,13 +13,11 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--grn_path', required=True)
 parser.add_argument('-b','--bnc_path', required=True)
-parser.add_argument('-c','--cats_path', required=True)
 parser.add_argument('-o','--out_path', required=True)
 args = vars(parser.parse_args())
 
 grn_path = args['grn_path']
 bnc_path = args['bnc_path']
-cats_path = args['cats_path']
 out_path = args['out_path']
 
 # Extract names and path
@@ -43,8 +40,7 @@ if grn.shape[0] > 0:
     obs = pd.read_csv(os.path.join(bnc_path, 'meta.csv'), index_col=0)
     
     # Subset bench data to dataset
-    with open(cats_path) as f:
-        cats = json.load(f)[dataset][case]
+    cats = load_cats(dataset, case)
     if rsc_name in cats:
         cats = cats[rsc_name]
         msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)

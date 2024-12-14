@@ -2,11 +2,10 @@ import pandas as pd
 import numpy as np
 import mudata as mu
 from tqdm import tqdm
-import json
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import f_beta_score
+from utils import load_cats, f_beta_score
 import argparse
 
 
@@ -14,13 +13,11 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-a','--grn_path', required=True)
 parser.add_argument('-b','--resource_path', required=True)
-parser.add_argument('-c','--cats_path', required=True)
 parser.add_argument('-f','--out_path', required=True)
 args = vars(parser.parse_args())
 
 grn_path = args['grn_path']
 resource_path = args['resource_path']
-cats_path = args['cats_path']
 out_path = args['out_path']
 
 
@@ -37,8 +34,7 @@ if grn.shape[0] > 0:
     # Read resource and filter by cats
     db = pd.read_csv(resource_path, header=None, sep='\t')
     db.columns = ['gene', 'ctype']
-    with open(cats_path) as f:
-        cats = json.load(f)[dataset][case]
+    cats = load_cats(dataset, case)
     if resource_name in cats:
         cats = cats[resource_name]
         print('Filtering for {0} cats'.format(len(cats)))
