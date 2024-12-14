@@ -3,6 +3,13 @@ import numpy as np
 import os
 
 
+def read_config(path_config='config/config.yaml'):
+    import yaml
+    with open(path_config, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+
 def get_grn_name(grn_path):
     name = os.path.basename(grn_path).replace('.grn.csv', '').replace('.csv', '')
     return name
@@ -38,43 +45,3 @@ def ocoeff(df_a, df_b, on=['source', 'target']):
     else:
         coeff = 0.
     return coeff
-
-
-def parallel_ocoeff(index_pair, dfs):
-    i, j = index_pair
-    tf_oc = ocoeff(dfs[i], dfs[j], on=['source'])
-    edge_oc = ocoeff(dfs[i], dfs[j], on=['source', 'target'])
-    target_oc = ocoeff(dfs[i], dfs[j], on=['target'])
-    return i, j, tf_oc, edge_oc, target_oc
-
-
-def parallel_ocoeff_chunk(index_pairs_chunk, dfs):
-    return [parallel_ocoeff(pair, dfs) for pair in index_pairs_chunk]
-
-
-def make_combs(path, mthds, name):
-    from itertools import product
-    s = '{0}.{1}.{2}.{3}.' + name + '.csv'
-    combinations = product(mthds, repeat=4)
-    strings = []
-    for combo in combinations:
-        formatted_string = path + s.format(*combo)
-        strings.append(formatted_string)
-
-    # Add src
-    s = '{m}.{m}.{m}.{m}.' + name + '.csv'
-    for m in mthds:
-        formatted_string = path + s.format(m='o_' + m)
-        strings.append(formatted_string)
-
-    # Add indv nets
-    s = path + 'random.random.random.random.' + name + '.csv'
-    strings.append(s)
-    s = path + 'scenic.scenic.scenic.scenic.' + name + '.csv'
-    strings.append(s)
-    s = path + 'collectri.collectri.collectri.collectri.' + name + '.csv'
-    strings.append(s)
-    s = path + 'dorothea.dorothea.dorothea.dorothea.' + name + '.csv'
-    strings.append(s)
-
-    return strings

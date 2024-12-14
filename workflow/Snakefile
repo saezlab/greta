@@ -3,7 +3,6 @@ min_version('7.29.0')
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'anl')))
-from utils import make_combs
 from itertools import combinations
 home_path = os.path.expanduser("~")
 
@@ -105,11 +104,12 @@ include: 'rules/anl/metrics/prior.smk'
 include: 'rules/anl/metrics/pred.smk'
 include: 'rules/anl/metrics/mech.smk'
 include: 'rules/anl/metrics/utils.smk'
-include: 'rules/anl/stab.smk'
 include: 'rules/anl/topo.smk'
+include: 'rules/anl/stab.smk'
 include: 'rules/anl/pair.smk'
 include: 'rules/anl/tss.smk'
 include: 'rules/anl/dbs.smk'
+include: 'rules/anl/dts.smk'
 
 # Plots
 include: 'rules/plt/fig1.smk'
