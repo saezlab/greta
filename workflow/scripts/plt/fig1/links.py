@@ -15,13 +15,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from utils import read_config, savefigs
 
 
-def read_config(path_config='config/config.yaml'):
-    import yaml
-    with open(path_config, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
-
-
 def norm_score(x, axis=None):
     if np.all(x == x[0]):
         return x
