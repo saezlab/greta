@@ -41,3 +41,14 @@ rule dbs_terms:
         """
         python workflow/scripts/anl/dbs/terms.py -i {input} -o {output}
         """
+
+
+rule dbs_ocoef:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'anl/dbs/stats.csv',
+    output: 'anl/dbs/ocoef.csv',
+    shell:
+        """
+        python workflow/scripts/anl/dbs/ocoef.py {output}
+        """
