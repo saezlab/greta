@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 import numpy as np
+import decoupler as dc
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -138,12 +139,15 @@ def runnin_score(df, name_run, palette):
         figsize=(3, 1.5)
     )
     fig = fig[0]
-    fig.set_dpi(150)
-
     color = palette[mth]
     for line in fig.axes[0].get_lines():
         line.set_color(color)
     fig.axes[1].get_children()[0].set_color(color)
+    fig.axes[0].set_yticks([0, 0.5, 1])
+    fig.axes[0].set_ylabel('Running\nscore')
+    fig.axes[-1].set_yticks([0, 0.5, 1])
+    fig.axes[-1].set_ylabel(r'F$\mathrm{_{0.1}}$')
+    fig.set_dpi(150)
     return fig
 
 

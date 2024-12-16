@@ -1,7 +1,7 @@
-localrules: plt_fig4
+localrules: fig_comb
 
 
-rule plt_fig4:
+rule fig_comb:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
@@ -11,9 +11,9 @@ rule plt_fig4:
         sims='anl/topo/pbmc10k.all.sims_mult.csv',
         stat='anl/topo/pbmc10k.all.stats_mult.csv',
         stab='anl/stab/pitupair.all.ovsd.csv',
-    output: 'plt/fig4/fig4.pdf'
+    output: 'plt/comb/fig.pdf'
     shell:
         """
-        python workflow/scripts/plt/fig4/sims.py {input.mdta} \
+        python workflow/scripts/plt/comb/sims.py {input.mdta} \
         {input.nc} {input.qc} {input.sims} {input.stat} {input.stab} {output}
         """

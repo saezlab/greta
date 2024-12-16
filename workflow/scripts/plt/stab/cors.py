@@ -17,10 +17,11 @@ def robustness(dname, mth):
             x='score_x',
             y='score_y',
             ax=ax,
-            color=palette[name.replace(' scores','')]
+            color=palette[name]
         )
-        ax.set_xlabel('')
-        ax.set_ylabel(name)
+        ax.set_xlabel('Run A edge score')
+        ax.set_ylabel('Run B edge score')
+        ax.set_title(name)
     seeds = [0, 1, 2]
     df = []
     for i, seed_a in enumerate(seeds):
@@ -31,16 +32,15 @@ def robustness(dname, mth):
             path_b = f'dts/{dname}/cases/16384_16384_{seed_b}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'
             grn_b = pd.read_csv(path_b)[['source', 'target', 'score']]
             df.append(pd.merge(grn_a, grn_b, how='inner', on=['source', 'target']).assign(comp=f'{seed_a}_{seed_b}'))
-    fig, axes = plt.subplots(1, 3, figsize=(6, 2), sharey=True, sharex=True)
-    axes = axes.ravel()
-
+    
     mth = mth.replace('o_', '')
     cors = []
     for i in range(len(df)):
-        tmp = df[i]
+        tmp = df[0]
         s, p = ss.pearsonr(tmp['score_x'], tmp['score_y'])
-        scatter(tmp, ax=axes[i], name=f'{mth} scores')
         cors.append([mth, i, s, p])
+    fig, ax = plt.subplots(1, 1, figsize=(2, 2), dpi=150)
+    scatter(tmp, ax=ax, name=f'{mth}')
     cors = pd.DataFrame(cors, columns=['mth', 'pair', 'stat', 'pval'])
     cors['padj'] = ss.false_discovery_control(cors['pval'])
     fig.subplots_adjust(wspace=0.)
