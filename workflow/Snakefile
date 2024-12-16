@@ -112,12 +112,11 @@ include: 'rules/anl/dbs.smk'
 include: 'rules/anl/dts.smk'
 
 # Plots
-include: 'rules/plt/fig1.smk'
-include: 'rules/plt/fig2.smk'
-include: 'rules/plt/fig3.smk'
-include: 'rules/plt/fig4.smk'
-include: 'rules/plt/fig5.smk'
-include: 'rules/plt/fig6.smk'
+include: 'rules/plt/stab.smk'
+include: 'rules/plt/pair.smk'
+include: 'rules/plt/comb.smk'
+include: 'rules/plt/dbs.smk'
+include: 'rules/plt/eval.smk'
 include: 'rules/plt/figs.smk'
 
 rule all:
