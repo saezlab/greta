@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import mudata as mu
 import anndata as ad
-import celloracle as co
+from celloracle import Oracle
+import celloracle.trajectory.oracle_utility as co
 import scipy
 import os
 from tqdm import tqdm
@@ -36,7 +37,7 @@ grn = pd.read_csv(grn_path)
 grn = grn.drop_duplicates(['source', 'target'], keep='first')
 
 def init_celloracle(adata, grn, fit_grn):
-    oracle = co.Oracle()
+    oracle = Oracle()
     oracle.adata = adata
     oracle.adata.obsm['X_umap'] = np.zeros((adata.shape[0], 2))
     oracle.adata.layers['imputed_count'] = oracle.adata.X
@@ -49,7 +50,7 @@ def init_celloracle(adata, grn, fit_grn):
     oracle.high_var_genes = list(oracle.adata.var_names)
     oracle.adata.obs['cluster'] = oracle.adata.obs['cluster'].astype('category')
     oracle.adata.uns['cluster_colors'] = ['#1f77b4']
-    col_dict = co.trajectory.oracle_utility._get_clustercolor_from_anndata(adata=oracle.adata,
+    col_dict = co._get_clustercolor_from_anndata(adata=oracle.adata,
                                               cluster_name='cluster',
                                               return_as="dict")
     oracle.colorandum = np.array([col_dict[i] for i in oracle.adata.obs['cluster']])
@@ -73,7 +74,7 @@ def simulate_delta(oracle, tfs, n_steps=3):
 
     # Retrieve and process the delta values
     delta = pd.DataFrame(oracle.adata.layers['delta_X'], index=oracle.adata.obs_names, columns=oracle.adata.var_names)
-    
+
     # Remove the columns that are 0s.
     delta = delta.loc[:, delta.abs().sum(0) != 0]
 
