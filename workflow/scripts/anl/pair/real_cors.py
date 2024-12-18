@@ -73,7 +73,7 @@ def compute_corrs(pair, npair, omic):
     for i in range(mean_pair.shape[0]):
         obs_name = mean_pair.obs_names[i]
         x = mean_pair.X[i, :].ravel()
-        y = mean_pair.X[i, :].ravel()
+        y = mean_npair.X[i, :].ravel()
         stat, pval = st.spearmanr(x, y)
         df_cor.append(['obs', omic, obs_name, stat, pval])
     df_cor = pd.DataFrame(df_cor, columns=['type', 'omic', 'name', 'stat', 'pval'])
