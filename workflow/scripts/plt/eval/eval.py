@@ -174,7 +174,7 @@ df = df.sort_values(['metric', 'task', 'db', 'stp', 'name'])
 
 # Plot
 figs = []
-figs.append(summary_steps(df, palette, thr_padj=2.2e-22))
+figs.append(summary_steps(df, palette, thr_padj=0.01))
 metrics = {
     'mech': {
         'prt': ['knocktf'],
@@ -194,6 +194,7 @@ metrics = {
 }
 
 case = 'pbmc10k.all'
+rnks = []
 for mtrc in metrics:
     mtrc_rnks = []
     for task in metrics[mtrc]:
@@ -203,6 +204,8 @@ for mtrc in metrics:
             title = f'{mtrc}|{task}|{db}'
             figs.append(ranking(rnk.dropna(), title, palette))
             task_rnks.append(rnk)
+            rnk[['metric', 'task', 'db']] = [mtrc, task, db]
+            rnks.append(rnk)
         task_rnks = average_ranks(task_rnks)
         title = f'{mtrc}|{task}'
         mtrc_rnks.append(task_rnks)
@@ -210,6 +213,29 @@ for mtrc in metrics:
     mtrc_rnks = average_ranks(mtrc_rnks)
     title = f'{mtrc}'
     figs.append(ranking(mtrc_rnks.dropna(), title, palette))
+
+rnks = pd.concat(rnks)
+m = rnks.dropna().mean(numeric_only=True)
+mean_rnk = m['rank']
+mean_f01 = m['f01']
+mrnks = rnks[rnks['fixed']].groupby('pre', as_index=False).mean(numeric_only=True).sort_values('f01', ascending=False)
+
+fig, ax = plt.subplots(1, 1, figsize=(1.5, 1.5), dpi=150)
+sns.scatterplot(
+    data=mrnks,
+    x='rank',
+    y='f01',
+    hue='pre',
+    palette=palette,
+)
+ax.set_xlim(0, None)
+ax.set_ylim(0, 1)
+ax.legend().set_visible(False)
+ax.axvline(mean_rnk, ls='--', color='gray', zorder=0)
+ax.axhline(mean_f01, ls='--', color='gray', zorder=0)
+ax.set_xlabel('Mean rank')
+ax.set_ylabel(r'Mean F$\mathrm{_{0.1}}$')
+figs.append(fig)
 
 for _, row in sts.iterrows():
     tmp = read_eval(
