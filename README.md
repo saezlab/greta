@@ -1,4 +1,4 @@
-# Gene Regulatory nETwork Analysis (GRETA) <img src="https://drive.google.com/uc?id=1nx66ibhwjjnooCRGaxDvX27A3IT7EaPg" align="right" width="120" class="no-scaled-link" alt='GRETA logo' />
+# Gene Regulatory nETwork Analysis (GRETA) <img src="https://drive.google.com/uc?id=1DFGeAuSp8w1kDlMaS4zyeXfepKVW14Ym/" align="right" width="120" class="no-scaled-link" alt='GRETA logo' />
 
 <!-- badges: start -->
 [![GitHub issues](https://img.shields.io/github/issues/saezlab/greta.svg)](https://github.com/saezlab/greta/issues/)
