@@ -24,3 +24,6 @@ Then create a new enviroment specific for `Snakemake`:
 mamba create -c conda-forge -c bioconda -n snakemake snakemake
 mamba activate snakemake
 ```
+
+## Citation
+Badia-i-Mompel et al. Comparison and evaluation of methods to infer gene regulatory networks from multimodal single-cell data. *bioRxiv* (2024) [doi:10.1101/2024.12.20.629764](https://doi.org/10.1101/2024.12.20.629764)
