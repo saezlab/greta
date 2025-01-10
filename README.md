@@ -26,7 +26,7 @@ mamba activate snakemake
 ```
 
 ## Overview
-Due to the magnitude of datasets and analyses, the repository is organized as a reproducible [Snakemake](https://snakemake.readthedocs.io/en/stable/) pipeline:
+Due to the magnitude of datasets and analyses, the repository is organized as a reproducible [Snakemake](https://snakemake.readthedocs.io/en/stable/) pipeline and uses [singularity](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html) images to handle dependencies:
 ```
 greta/
 ├── config/
@@ -52,21 +52,38 @@ greta/
 
 Here are some lines to generate important intermediate outputs:
 ```
-snakemake --profile config/slurm/ dts/pbmc10k/cases/all/mdata.h5mu  # Downloads and processes a dataset, for example pbmc10k
-snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.pre.h5mu  # Computes Pando's preprocessing step on the pbmc10k dataset
-snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.granie.p2g.csv  # Computes GRaNIE's p2g step on Pando's pre
-snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.granie.celloracle.tfb.csv  # Computes CellOracles's tfb step on GRaNIE's p2g
-snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.granie.celloracle.dictys.mdl.csv  # Computes Dictys's mdl step on the previous results
-snakemake --profile config/slurm/ anl/topo/pbmc10k.all.sims_mult.csv  # Runs all possible method combinations, baselines and original implementations
-snakemake --profile config/slurm/ anl/dbs/stats.csv  # Downloads and processess all databases
-snakemake --profile config/slurm/ anl/metrics/mech/prt/knocktf/pbmc10k.all.scores.csv  # Runs the mechanistic metric forecasting (perturbation) for all method combinations
-snakemake --profile config/slurm/ anl/metrics/pbmc10k.all.csv  # Runs the benchmark for all databases and metrics
+# Downloads and processes a dataset, for example pbmc10k
+snakemake --profile config/slurm/ dts/pbmc10k/cases/all/mdata.h5mu
+
+# Computes Pando's preprocessing step on the pbmc10k dataset
+snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.pre.h5mu
+
+# Computes GRaNIE's p2g step on Pando's pre
+snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.granie.p2g.csv
+
+# Computes CellOracles's tfb step on GRaNIE's p2g
+snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.granie.celloracle.tfb.csv
+
+# Computes Dictys's mdl step on the previous results
+snakemake --profile config/slurm/ dts/pbmc10k/cases/all/runs/pando.granie.celloracle.dictys.mdl.csv
+
+# Runs all possible method combinations, baselines and original implementations
+snakemake --profile config/slurm/ anl/topo/pbmc10k.all.sims_mult.csv
+
+# Downloads and processess all databases
+snakemake --profile config/slurm/ anl/dbs/stats.csv
+
+# Runs the mechanistic metric forecasting (perturbation) for all method combinations
+snakemake --profile config/slurm/ anl/metrics/mech/prt/knocktf/pbmc10k.all.scores.csv
+
+# Runs the benchmark for all databases and metrics
+snakemake --profile config/slurm/ anl/metrics/pbmc10k.all.csv
 ```
 
 ## How to
 - [add methods](docs/mth.md)
-- [add datasets]()
-- [add databases]()
+- [add datasets](docs/dts.md)
+- [add databases](docs/dbs.md)
 
 ## Citation
 Badia-i-Mompel et al. Comparison and evaluation of methods to infer gene regulatory networks from multimodal single-cell data. *bioRxiv* (2024) [doi:10.1101/2024.12.20.629764](https://doi.org/10.1101/2024.12.20.629764)
