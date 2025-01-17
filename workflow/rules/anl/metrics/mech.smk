@@ -39,3 +39,21 @@ rule mech_prt:
             awk 'BEGIN {{ print "name,prc,rcl,f01" }}' > {output.out}
         fi
         """
+
+
+rule mech_sim:
+    input:
+        grn="data/scenic.csv",   #change inputs, add tfs gold dictionary
+        data="data/mat.csv"
+    output:
+        out='anl/metrics/mech/prt/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.sim.csv'
+    shell:
+        """
+	python workflow/scripts/anl/metrics/mech/sim.py \ 
+	-g {input.grn} \
+	-d {input.data} \
+	-o {output.out} \
+	"""
+
+
+
