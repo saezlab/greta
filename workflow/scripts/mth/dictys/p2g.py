@@ -39,4 +39,6 @@ os.system(f'python3 -m dictys chromatin tssdist --cut {distance} {rna_filename} 
 df = pd.read_csv(dist_filename, sep='\t').rename(columns={'region': 'cre', 'target': 'gene', 'dist': 'score'})
 df['score'] = -np.abs(df['score'])
 df['cre'] = df['cre'].str.replace(':', '-')
+df = df.sort_values('score', ascending=False).reset_index(drop=True).reset_index(names='rank')
+df['score'] = (1 - (df['rank'] / df['rank'].max()))
 df[['cre', 'gene', 'score']].to_csv(path_out, index=False)
