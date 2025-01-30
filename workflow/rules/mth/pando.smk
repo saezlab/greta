@@ -132,7 +132,7 @@ rule mdl_o_pando:
         mdata=rules.extract_case.output.mdata,
         ann=rules.gen_ann_pando.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_pando.o_pando.o_pando.o_pando.grn.csv'
+        out='dts/{dat}/cases/{case}/runs/o_pando.o_pando.o_pando.o_pando.mdl.csv'
     params:
         exclude_exons=config['methods']['pando']['exclude_exons'],
         ext=config['methods']['pando']['ext'],

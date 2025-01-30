@@ -151,7 +151,7 @@ rule mdl_o_dictys:
         pre=temp(local('dts/{dat}/cases/{case}/runs/o_dictys.pre.h5mu')),
         p2g=temp(local('dts/{dat}/cases/{case}/runs/o_dictys.o_dictys.p2g.csv')),
         tfb=temp(local('dts/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.tfb.csv')),
-        out='dts/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.grn.csv',
+        out='dts/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.mdl.csv',
     params:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
@@ -202,6 +202,6 @@ rule mdl_o_dictys:
         --use_p2g {params.use_p2g} \
         --out_path {output.out}'
         if [ $? -eq 124 ]; then
-            awk 'BEGIN {{ print "cre,gene,score" }}' > {output.out}
+            awk 'BEGIN {{ print "source,target,score" }}' > {output.out}
         fi
         """

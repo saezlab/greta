@@ -120,7 +120,7 @@ rule mdl_o_figr:
     singularity: 'workflow/envs/figr.sif'
     input: rules.extract_case.output.mdata,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_figr.o_figr.o_figr.o_figr.grn.csv'
+        out='dts/{dat}/cases/{case}/runs/o_figr.o_figr.o_figr.o_figr.mdl.csv'
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         ext=config['methods']['figr']['ext'],

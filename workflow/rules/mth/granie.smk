@@ -133,7 +133,7 @@ rule mdl_o_granie:
     output:
         h=temp(local('dts/{dat}/cases/{case}/runs/pre.granie.src.h5mu')),
         t=temp(directory(local('dts/{dat}/cases/{case}/runs/granie_tmp.src'))),
-        out='dts/{dat}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.grn.csv'
+        out='dts/{dat}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.mdl.csv'
     params:
         ext=config['methods']['granie']['ext'],
         thr_fdr=config['methods']['granie']['thr_fdr'],
