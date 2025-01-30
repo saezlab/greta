@@ -1,4 +1,4 @@
-localrules: gen_tss_celloracle, gen_tss_dictys, gen_tss_figr, gen_tss_granie, gen_tss_pando, \
+localrules: gen_tss_celloracle, gen_tss_dictys, gen_tss_figr, gen_tss_granie, gen_tss_pando, gen_tss_scenicplus, \
 gen_tss_collectri, gen_tss_dorothea, gen_tss_random, gen_tss_scenic
 
 
@@ -52,6 +52,21 @@ rule gen_tss_granie:
     shell:
         """
         Rscript workflow/scripts/dbs/gen/tss/granie.R {output}
+        """
+
+
+rule gen_tss_scenicplus:
+    threads: 1
+    singularity: 'workflow/envs/scenicplus.sif'
+    output: 'dbs/hg38/gen/tss/scenicplus.bed'
+    shell:
+        """
+        pycistopic tss get_tss \
+        --output {output} \
+        --name "hsapiens_gene_ensembl" \
+        --to-chrom-source ucsc \
+        --ucsc hg38 \
+        --no-cache
         """
 
 

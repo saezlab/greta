@@ -1,7 +1,9 @@
 localrules: gen_tfs_lambert, gen_tfs_scenic
 localrules: gen_gid_ensmbl, gen_pid_uniprot, gen_genome_celloracle, gen_genome_dictys
+localrules: gen_genome_scenicplus
 localrules: gen_ann_dictys, gen_ann_pando
 localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_scenic
+localrules: gen_motif_scenicplus
 
 
 rule install_dictys:
@@ -63,6 +65,20 @@ rule gen_genome_dictys:
         """
 
 
+rule gen_genome_scenicplus:
+    singularity: 'workflow/envs/scenicplus.sif'
+    output:
+        ann='dbs/hg38/gen/genome/scenicplus/annotation.tsv',
+        csz='dbs/hg38/gen/genome/scenicplus/chromsizes.tsv',
+    shell:
+        """
+        scenicplus prepare_data download_genome_annotations \
+        --species hsapiens \
+        --genome_annotation_out_fname {output.ann} \
+        --chromsizes_out_fname {output.csz}
+        """
+
+
 rule gen_motif_granie:
     threads: 1
     output: directory('dbs/hg38/gen/motif/granie/')
@@ -108,6 +124,33 @@ rule gen_motif_scenic:
     shell:
         """
         wget --no-verbose {params.url} -O {output}
+        """
+
+
+rule gen_motif_scenicplus:
+    threads: 1
+    output:
+        human_rankings="dbs/hg38/gen/motif/scenicplus/human_motif_SCREEN.regions_vs_motifs.rankings.feather",
+        human_scores="dbs/hg38/gen/motif/scenicplus/human_motif_SCREEN.regions_vs_motifs.scores.feather",
+        mouse_rankings="dbs/mm10/gen/motif/scenicplus/mouse_motif_SCREEN.regions_vs_motifs.rankings.feather",
+        mouse_scores="dbs/mm10/gen/motif/scenicplus/mouse_motif_SCREEN.regions_vs_motifs.scores.feather",
+        human_annot="dbs/hg38/gen/motif/scenicplus/motifs-v10nr_clust/nr.hgnc-m0.001-o0.0.tbl",
+        mouse_annot="dbs/mm10/gen/motif/scenicplus/motifs-v10nr_clust/nr.mgi-m0.001-o0.0.tbl",
+    params:
+        human_rankings_url="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/screen/mc_v10_clust/region_based/hg38_screen_v10_clust.regions_vs_motifs.rankings.feather",
+        human_scores_url="https://resources.aertslab.org/cistarget/databases/homo_sapiens/hg38/screen/mc_v10_clust/region_based/hg38_screen_v10_clust.regions_vs_motifs.scores.feather",
+        mouse_rankings_url="https://resources.aertslab.org/cistarget/databases/mus_musculus/mm10/screen/mc_v10_clust/region_based/mm10_screen_v10_clust.regions_vs_motifs.rankings.feather",
+        mouse_scores_url="https://resources.aertslab.org/cistarget/databases/mus_musculus/mm10/screen/mc_v10_clust/region_based/mm10_screen_v10_clust.regions_vs_motifs.scores.feather",
+        human_annot_url="https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl",
+        mouse_annot_url="https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.mgi-m0.001-o0.0.tbl",
+    shell:
+        """
+        wget --no-verbose -O {output.human_rankings} {params.human_rankings_url}
+        wget --no-verbose -O {output.human_scores} {params.human_scores_url}
+        wget --no-verbose -O {output.mouse_rankings} {params.mouse_rankings_url}
+        wget --no-verbose -O {output.mouse_scores} {params.mouse_scores_url}
+        wget --no-verbose -O {output.human_annot} {params.human_annot_url}
+        wget --no-verbose -O {output.mouse_annot} {params.mouse_annot_url}
         """
 
 
