@@ -84,11 +84,14 @@ if grn.df.shape[0] > 0:
                 tps += f_grn.overlap(f_db).df.shape[0]
                 fps += f_grn.overlap(f_db, invert=True).df.shape[0]
                 fns += f_db.overlap(f_grn, invert=True).df.shape[0]
-    else:
+    elif resource_name != 'blacklist':
         tps = grn.overlap(db).df.shape[0]
         fps = grn.overlap(db, invert=True).df.shape[0]
         fns = db.overlap(grn, invert=True).df.shape[0]
-    
+    else:
+        tps = grn.overlap(db, invert=True).df.shape[0]
+        fps = grn.overlap(db).df.shape[0]
+        fns = peaks.overlap(db, invert=True).df.shape[0]
     if tps > 0:
         prc = tps / (tps + fps)
         rcl = tps / (tps + fns)

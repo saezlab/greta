@@ -1,4 +1,15 @@
-localrules: cre_encode, cre_gwascatalogue, cre_phastcons, cre_promoters, cre_zhang21
+localrules: cre_blacklist, cre_encode, cre_gwascatalogue, cre_phastcons, cre_promoters, cre_zhang21
+
+
+rule cre_blacklist:
+    threads: 1
+    output: 'dbs/hg38/cre/blacklist/blacklist.bed'
+    params:
+        url=config['dbs']['hg38']['cre']['blacklist']
+    shell:
+        """
+        wget --no-verbose -O - "{params.url}" | zcat > {output}
+        """
 
 
 rule cre_encode:

@@ -36,6 +36,8 @@ methods:
         rsq_thresh: 0.05
         nvar_thresh: 2
         min_genes_per_module: 3
+    scenicplus:
+        ext: 500000
 
 
 baselines: ['collectri', 'dorothea', 'random', 'scenic']
@@ -210,6 +212,7 @@ dbs:
             unibind:
                 url: 'https://unibind.uio.no/static/data/20220914/bulk_Robust/Homo_sapiens/hg38_compressed_TFBSs.bed.gz'
         cre:
+            blacklist: 'https://github.com/Boyle-Lab/Blacklist/raw/61a04d2c5e49341d76735d485c61f0d1177d08a8/lists/hg38-blacklist.v2.bed.gz'
             encode: 'https://downloads.wenglab.org/Registry-V3/GRCh38-cCREs.bed'
             gwascatalogue: 'https://www.ebi.ac.uk/gwas/api/search/downloads/alternative'
             phastcons: 'https://github.com/quadbio/Pando/raw/main/data/phastConsElements20Mammals.UCSC.hg38.RData'
