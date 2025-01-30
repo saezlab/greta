@@ -38,9 +38,9 @@ From: ubuntu:20.04
     conda activate
 
     # Create env
-    mamba create -y -n=env -c conda-forge -c bioconda \
-    python=3.11.0 \
-    pip \
+    mamba create -y -n env -c conda-forge -c bioconda \
+    python=3.11.8 \
+    pip==24.0 \
     numpy \
     numba \
     macs2 \
@@ -56,7 +56,7 @@ From: ubuntu:20.04
     velocyto.py \
     pygam \
     fa2 \
-    muon==0.1.5 \
+    muon \
     scanpy==1.9.8 \
     polars \
     pyfaidx \
@@ -68,6 +68,7 @@ From: ubuntu:20.04
     leidenalg \
     pyopenssl \
     pandas \
+    pyarrow \
     pybedtools \
     pyranges \
     pybigwig \
@@ -76,29 +77,35 @@ From: ubuntu:20.04
     python-levenshtein \
     python-igraph \
     gseapy \
-    snakemake==8.5.5 \
+    snakemake \
     tqdm \
     jupyterlab \
     scikit-learn \
     scipy \
     joblib \
-    gcc=12.3.0 \
-    gxx=12.3.0 \
+    gcc \
+    gxx \
     libgcc \
     matplotlib \
-    kiwisolver
+    kiwisolver \
+    polars \
+    mallet \
+    dask \
+    rust
 
     # Install scenic+
     conda activate env
-    pip install  igv-jupyter loomxpy
+    pip install igv-jupyter loomxpy
 
     git clone https://github.com/aertslab/scenicplus.git
     cd scenicplus
+    git checkout e82b82f14b76618b850dfe442efc2421bb34f3b4
     pip install .
+    pip install --no-dependencies --force-reinstall git+https://github.com/aertslab/pycisTopic.git@53fe3f7d7514d32d83f0e9baae60a1412eb2b3b7 polars==1.18.0 git+https://github.com/aertslab/scatac_fragment_tools.git@6c1b6263abc82bc09d28a80d8a4baf6ceef4399a
+    
+    # Update memory of mallet
+    sed -i.bak 's/MEMORY=[0-9]\+g/MEMORY=100g/' /opt/conda/envs/env/bin/mallet
 
-    pip install polars==1.0.0 git+https://github.com/aertslab/pycisTopic.git@a40e47c2a90e792e8643992da36e900ed1c7708b   
-    pip uninstall padnas
-    conda install pandas
     # Remove cache for lighter containers
     pip cache purge
     conda clean -a -y
