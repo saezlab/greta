@@ -24,6 +24,7 @@ db = db[db['tf_a'].isin(tfs) & db['tf_b'].isin(tfs)]
 db = db[db['tf_a'] != db['tf_b']].copy()
 db['str'] = ['|'.join(sorted([a, b])) for a, b in zip(db['tf_a'], db['tf_b'])]
 db = db.drop_duplicates('str').sort_values('score', ascending=False)
+db[['tf_a', 'tf_b']] = db['str'].str.split('|', expand=True)
 db = db.drop(columns=['str'])
 
 # Write
