@@ -10,7 +10,7 @@ while [[ "$#" -gt 0 ]]; do
         --path_blist) path_blist="$2"; shift ;;
         --path_tss) path_tss="$2"; shift ;;
         --ntopics) ntopics="$2"; shift ;;
-        --path_ann) path_out="$2"; shift ;;
+        --path_ann) path_ann="$2"; shift ;;
         --path_csz) path_csz="$2"; shift ;;
         --ext) ext="$2"; shift ;;
         --path_rnk) path_rnk="$2"; shift ;;
