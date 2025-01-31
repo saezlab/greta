@@ -37,6 +37,7 @@ methods:
         nvar_thresh: 2
         min_genes_per_module: 3
     scenicplus:
+        ntopics: 50
         ext: 500000
 
 
@@ -49,6 +50,7 @@ colors:
         figr: 'tab:green'
         granie: 'tab:red'
         pando: 'tab:purple'
+        scenicplus: 'tab:olive'
         collectri: 'tab:brown'
         dorothea: 'tab:pink'
         scenic: 'tab:cyan'

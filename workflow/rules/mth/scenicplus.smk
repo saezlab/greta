@@ -15,10 +15,11 @@ rule mdl_o_scenicplus:
         dir=directory('dts/{dat}/cases/{case}/runs/scenicplus/'),
         out='dts/{dat}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv'
     params:
-        ntopics=50,
+        ntopics=config['methods']['scenicplus']['ntopics'],
         ext=config['methods']['scenicplus']['ext'] // 2,
     resources:
-        mem_mb=128000
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'],
     shell:
         """
         mkdir -p {output.dir}

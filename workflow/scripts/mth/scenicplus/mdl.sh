@@ -69,6 +69,3 @@ scenicplus grn_inference eGRN \
 
 # Transform grn into greta format
 python workflow/scripts/mth/scenicplus/egrn.py $new_dir/egrn.tsv $path_out
-
-rm -rf $new_dir
-
