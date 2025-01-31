@@ -60,7 +60,7 @@ def restart_mem(wildcards, attempt):
 configfile: 'config/config.yaml'
 
 orgms = [k for k in config['dbs'] if k != 'ont']
-mthds = [m for m in list(config['methods'].keys()) if m != 'scenicplus']
+mthds = [m for m in list(config['methods'].keys())]
 baselines = config['baselines']
 
 datasets = list(config['dts'].keys())
