@@ -5,7 +5,7 @@ rule mdl_o_scenicplus:
         mdata=rules.extract_case.output.mdata,
         frags=list_frags_files,
         blist=rules.cre_blacklist.output,
-        tss=rules.gen_tss_scenicplus.output,
+        tss=rules.gen_genome_scenicplus.output.tss,
         rnk=rules.gen_motif_scenicplus.output.human_rankings,
         man=rules.gen_motif_scenicplus.output.human_annot,
         scr=rules.gen_motif_scenicplus.output.human_scores,
@@ -18,7 +18,7 @@ rule mdl_o_scenicplus:
         ntopics=config['methods']['scenicplus']['ntopics'],
         ext=config['methods']['scenicplus']['ext'] // 2,
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 4,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -41,7 +41,7 @@ rule mdl_o_scenicplus:
         --threads {threads} \
         --path_out {output.out}
         if [ $? -eq 124 ]; then
-            awk 'BEGIN {{ print "source,target,score" }}' > {output.out}
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """
 
@@ -134,7 +134,7 @@ rule mdl_scenicplus:
     output:
         out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv'
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -151,7 +151,7 @@ rule mdl_scenicplus:
         --threads {threads} \
         --path_out {output.out}
         if [ $? -eq 124 ]; then
-            awk 'BEGIN {{ print "source,target,score" }}' > {output.out}
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         rm -rf $new_dir
         """

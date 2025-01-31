@@ -7,4 +7,5 @@ df = df.reset_index(drop=True).reset_index(names='rank')
 df['score'] = (1 - (df['rank'] / df['rank'].max())) * df['regulation']
 df = df[['TF', 'Gene', 'score']]
 df.columns = ['source', 'target', 'score']
+df['pval'] = 0.01
 df.to_csv(sys.argv[2], index=False)
