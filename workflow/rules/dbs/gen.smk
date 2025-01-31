@@ -70,12 +70,19 @@ rule gen_genome_scenicplus:
     output:
         ann='dbs/hg38/gen/genome/scenicplus/annotation.tsv',
         csz='dbs/hg38/gen/genome/scenicplus/chromsizes.tsv',
+        tss='dbs/hg38/gen/genome/scenicplus/tss.tsv',
     shell:
         """
         scenicplus prepare_data download_genome_annotations \
         --species hsapiens \
         --genome_annotation_out_fname {output.ann} \
         --chromsizes_out_fname {output.csz}
+        pycistopic tss get_tss \
+        --output {output.tss} \
+        --name "hsapiens_gene_ensembl" \
+        --to-chrom-source ucsc \
+        --ucsc hg38 \
+        --no-cache
         """
 
 
