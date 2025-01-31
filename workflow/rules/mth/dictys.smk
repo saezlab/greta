@@ -202,6 +202,6 @@ rule mdl_o_dictys:
         --use_p2g {params.use_p2g} \
         --out_path {output.out}'
         if [ $? -eq 124 ]; then
-            awk 'BEGIN {{ print "source,target,score" }}' > {output.out}
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
         """
