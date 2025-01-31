@@ -1,121 +1,116 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[4]:
-
-
-# Load libraries
-import os
-import argparse
+from pyboolnet import file_exchange, trap_spaces
+import scipy.stats as scs
 import pandas as pd
 import numpy as np
-import pyboolnet
-from pyboolnet import file_exchange, trap_spaces
-from statsmodels.stats.multitest import multipletests
-from scipy.stats import fisher_exact
-from sklearn.preprocessing import StandardScaler
+import decoupler as dc
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import f_beta_score
 
-# Init args
-parser = argparse.ArgumentParser()
-parser.add_argument('-g','--grn_path', required=True)
-parser.add_argument('-d','--data_path', required=True)
-parser.add_argument('-o','--out_path', required=True)
-args = vars(parser.parse_args())
-grn_path = args['grn_path']
-data_path = args['data_path']
-out_path = args['out_path']
+
+def define_bool_rules(grn, operand='&'):
+    targets = grn['target'].unique()
+    rules = ''
+    for target in targets:
+        t_form = f'{target}, '
+        msk = grn['target'] == target
+        pos = ''
+        neg = ''
+        for source, sign in zip(grn.loc[msk, 'source'], grn.loc[msk, 'score']):
+            if sign >= 0:
+                pos += f'{source} | '
+            else:
+                neg += f'!{source} & '
+        pos, neg = pos[:-3], neg[:-3]
+        if (pos != '') and (neg != ''):
+            t_form += f'({pos}) & ({neg})'
+        elif (pos != '') and (neg == ''):
+            t_form += f'{pos}'
+        elif (pos == '') and (neg != ''):
+            t_form += f'{neg}'
+        rules += t_form + '\n'
+        print(t_form)
+    return rules
+
+
+def compute_fisher(hits, ct_set, tfs):
+    a = hits & ct_set
+    b = hits - ct_set
+    c = ct_set - hits
+    d = tfs - a - b - c
+    a, b, c, d = len(a), len(b), len(c), len(d)
+    p = dc.test1r(a, b, c, d)
+    return p
+
+
+def find_hits(sss, ct_sets, tfs, thr_pval):
+    pvals = np.zeros((len(sss), ct_sets.shape[0]))
+    for i, pss in enumerate(sss):
+        hits = set()
+        for k in pss:
+            if pss[k]:
+                hits.add(k)
+        for j, ct_set in enumerate(ct_sets):
+            pvals[i, j] = compute_fisher(hits, ct_set, tfs)
+    pvals = scs.false_discovery_control(pvals, axis=1)
+    df = pd.DataFrame(pvals < thr_pval, columns=ct_sets.index)
+    return df
+
+
+def get_prc_rcl(hits):
+    n_ct_per_ss = hits.sum(1)
+    tp = (n_ct_per_ss == 1).sum()
+    if tp > 0:
+        fp = (n_ct_per_ss != 1).sum()
+        prc = tp / (tp + fp)
+    else:
+        prc = 0
+    
+    n_cts = hits.sum(0)
+    tp = (n_cts > 0).sum()
+    if tp > 0:
+        tn = (n_cts == 0).sum()
+        rcl = tp / (tp + tn)
+    else:
+        rcl = 0
+    return prc, rcl
+
+
+def compute_score(grn, ct_df, thr_pval=0.01):
+    # Find ct sets
+    ct_sets = ct_df.groupby('celltype')['tf'].apply(lambda x: set(x))
+    # Filter for tfs
+    tfs = set(ct_df['tf'])
+    sgrn = grn[(grn['source'].isin(tfs)) & (grn['target'].isin(tfs))]
+    if sgrn.shape[0] >= 5:
+        # Simulate steady states
+        rules = define_bool_rules(sgrn)
+        primes = file_exchange.bnet2primes(rules)
+        sss = trap_spaces.compute_steady_states(primes, max_output=int(100_000))
+        hits = find_hits(sss, ct_sets, tfs, thr_pval)
+        prc, rcl = get_prc_rcl(hits)
+        f01 = f_beta_score(prc, rcl)
+        return prc, rcl, f01
+    else:
+        return np.nan, np.nan, np.nan
+
+
+path_grn = sys.argv[1]
+path_tfs = sys.argv[2]
+thr_pval = float(sys.argv[3])
+path_out = sys.argv[4]
 
 # Load data
-data = pd.read_csv(data_path, index_col = 0)
-grns = pd.read_csv(grn_path, index_col = 0)
+grn_name = os.path.basename(path_grn).replace('.grn.csv', '')
+grn = pd.read_csv(path_grn).drop_duplicates(['source', 'target'])
+ct_df = pd.read_csv(path_tfs)
 
-# Load TF marker data    
-# This is what can be changed
+# Compute score
+prc, rcl, f01 = compute_score(grn, ct_df)
 
+# Transform to df
+df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
 
-# Get the top 15 regulons x cell type based on mat
-scaler = StandardScaler()
-scaled_mat = pd.DataFrame(scaler.fit_transform(data), index=data.index, columns=data.columns)
-ranked_mat = scaled_mat.rank(axis=1, ascending=False, method="min")
-
-# Extract top 15 rankings and convert to dictionary
-top_15_rankings_df = ranked_mat.apply(lambda row: row.nsmallest(15).index, axis=1).apply(pd.Series)
-top_15_rankings_df.columns = [f"Rank_{i+1}" for i in range(top_15_rankings_df.shape[1])]
-gold_standard_dict = top_15_rankings_df.apply(lambda row: row.dropna().tolist(), axis=1).to_dict()
-all_tfs_universe = set(tf for tfs in gold_standard_dict.values() for tf in tfs)
-
-# Calculate steady states
-def analyze_df(grn, mat):
-    # Generate Boolean rules
-    rules = {}
-    for target in grn['target'].unique():
-        target_df = grn[grn['target'] == target]
-        activators = target_df[target_df['score'] == 1]['source'].tolist()
-        inhibitors = target_df[target_df['score'] == -1]['source'].tolist()
-        activator_rule = " | ".join(activators) if activators else ""   # We are using OR not AND.
-        inhibitor_rule = " | ".join([f"!{inh}" for inh in inhibitors]) if inhibitors else ""
-        if activator_rule and inhibitor_rule:
-            rule = f"{activator_rule} & {inhibitor_rule}"
-        elif activator_rule:
-            rule = activator_rule
-        elif inhibitor_rule:
-            rule = inhibitor_rule
-        rules[target] = rule
-
-    bnet = "\n".join([f"{target}, {rule}" for target, rule in rules.items()])
-    primes = file_exchange.bnet2primes(bnet)
-
-    # Compute steady states
-    steady_states = trap_spaces.compute_steady_states(primes, max_output=1000000)  #Change max_output?
-    df_steady = pd.DataFrame(steady_states)
-
-    return df_steady
-df_steady = analyze_df(grns, data)
-
-def compute_adjusted_pvalues(df_steady, gold_standard_dict, all_tfs_universe):
-    all_results = []
-
-    for row_idx, row in df_steady.iterrows():
-        selected_tfs = set(row[row == 1].index.tolist())
-        row_results = []
-
-        for cell_type, gold_standard_tfs in gold_standard_dict.items():
-            gold_standard_set = set(gold_standard_tfs)
-
-            selected_in_gold = len(selected_tfs & gold_standard_set)
-            selected_not_in_gold = len(selected_tfs) - selected_in_gold
-            non_selected_in_gold = len(gold_standard_set) - selected_in_gold
-            non_selected_not_in_gold = len(all_tfs_universe - (selected_tfs.union(gold_standard_set)))
-
-            contingency_table = [
-                [selected_in_gold, selected_not_in_gold],
-                [non_selected_in_gold, non_selected_not_in_gold]
-            ]
-
-            odds_ratio, p_value = fisher_exact(contingency_table, alternative="greater")
-
-            row_results.append({
-                "Row": row_idx,
-                "Cell Type": cell_type,
-                "Odds Ratio": odds_ratio,
-                "P-value": p_value
-            })
-
-        row_df = pd.DataFrame(row_results)
-        row_df["Adjusted P-value"] = multipletests(row_df["P-value"], method="fdr_bh")[1]
-        all_results.append(row_df)
-
-    final_results_df = pd.concat(all_results, ignore_index=True)
-    return final_results_df.pivot(index="Row", columns="Cell Type", values="Adjusted P-value")
-
-df_final = compute_adjusted_pvalues(df_steady, gold_standard_dict, all_tfs_universe)
-
-df_final.to_csv(out_path)
-
-
-
-# In[ ]:
-
-
-
-
+# Write
+df.to_csv(path_out, index=False)
