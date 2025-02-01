@@ -66,7 +66,7 @@ rule mech_sss:
         thr_pval=0.01,
     resources:
         mem_mb=8000,
-        runtime=config['max_mins_per_step'],
+        runtime=60,
     shell:
         """
         set +e

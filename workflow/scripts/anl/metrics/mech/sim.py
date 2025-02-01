@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from utils import f_beta_score
 
 
-def define_bool_rules(grn, operand='&'):
+def define_bool_rules(grn):
     targets = grn['target'].unique()
     rules = ''
     for target in targets:
