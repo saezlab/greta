@@ -43,7 +43,7 @@ rule plt_AREG:
     output: 'plt/stab/links_AREG.pdf'
     params:
         gene='AREG',
-        tfs=['FOSL1', 'FOSL2', 'JUNB', 'JUND'],
+        tfs=['FOSL1', 'FOSL2', 'JUNB'],
         wsize=250000
     shell:
         """
