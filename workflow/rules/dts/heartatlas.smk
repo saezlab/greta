@@ -84,7 +84,7 @@ rule annotate_heartatlas:
         path_h5ad=rules.download_anndata_heart.output.adata,
         path_peaks=rules.callpeaks_heartatlas.output.peaks,
         path_annot=rules.prcannot_heartatlas.output.annot,
-        gid=lambda w: "dbs/{config['dts']['heartatlas']['organism']}/gen/gid/ensembl.csv",
+        gid=rules.gen_gid_ensmbl.output
     output: out='dts/heartatlas/annotated.h5mu'
     shell:
         """
