@@ -17,5 +17,6 @@ path_annot = args['path_annot']
 
 annot = pd.read_csv(path_rannot)
 annot = annot[annot['batch'].isin(samples)]
+annot['barcode'] = annot['batch'] + '_' + annot['barcode']
 annot = annot.set_index('barcode', drop=True)
 annot.to_csv(path_annot, header=True)

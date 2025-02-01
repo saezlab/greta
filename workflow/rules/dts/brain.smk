@@ -16,7 +16,7 @@ rule download_brain:
         echo "Downloading tar file"
         wget --no-verbose '{params.full_dataset}' -O '{output.tar}'
         wget --no-verbose '{params.annot}' -O '{output.annot}'
-        tar -xvf '{input.tar}' -C $data_path
+        tar -xvf '{output.tar}' -C $data_path
         for file in $data_path/*_atac_fragments.tsv.gz; do
             base_name=$(basename "$file" _atac_fragments.tsv.gz);
             new_file="${{base_name#*_}}.frags.tsv.gz";
@@ -71,7 +71,7 @@ rule annotate_brain:
         path_gex=rules.download_brain.output.gex,
         path_peaks=rules.callpeaks_brain.output.peaks,
         path_annot=rules.prc_annot.output.annot,
-        gid=lambda w: "dbs/{config['dts']['brain']['organism']}/gen/gid/ensembl.csv",
+        gid=rules.gen_gid_ensmbl.output,
     output: out='dts/brain/annotated.h5mu'
     shell:
         """

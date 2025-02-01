@@ -64,9 +64,7 @@ dts:
             full_dataset: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE193688&format=file'
             annot: 'https://heibox.uni-heidelberg.de/f/05637a872a384155a951/?dl=1'
         samples:
-            ['C5410', 'C4176', 'YC5928', 'C16007', 'C4322', 'YC5276', 'C4361', 'YC5346', 'C4660', 'YC5813', 'YC5442',
-            'YC914', 'YC5626', 'C4814', 'YC6235', 'C4634', 'YC4345', 'C4691', 'YC5751', 'P02284', 'P4205', 'P4560', 'P4653', 'P4772', 'P4884',
-            'P4919', 'P5318', 'P5331', 'P5626', 'P5662', 'P6259', 'P6320', 'P6323', 'P6326']
+            ['C4322', 'C4691', 'C4634', 'P4884', 'P4919', 'P4205', 'P4653', 'P5331']
         cases:
             all:
                 celltypes: 'all'
