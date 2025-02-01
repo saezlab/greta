@@ -26,6 +26,10 @@ path_out = sys.argv[4]
 # Read
 motifs = mu.read(path_motifs)
 p2g = pd.read_csv(path_p2g)
+if p2g.shape[0] == 0:
+    tfb = pd.DataFrame(columns=['cre', 'tf', 'score'])
+    tfb.to_csv(path_out, index=False)
+    exit()
 
 # Subset by tf genes
 with h5py.File(path_pre, 'r') as f:

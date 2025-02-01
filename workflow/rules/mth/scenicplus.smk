@@ -3,9 +3,7 @@ rule mdl_o_scenicplus:
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        frags=list_frags_files,
         blist=rules.cre_blacklist.output,
-        tss=rules.gen_genome_scenicplus.output.tss,
         rnk=rules.gen_motif_scenicplus.output.human_rankings,
         man=rules.gen_motif_scenicplus.output.human_annot,
         scr=rules.gen_motif_scenicplus.output.human_scores,
@@ -28,9 +26,7 @@ rule mdl_o_scenicplus:
         bash workflow/scripts/mth/scenicplus/o_mdl.sh \
         --new_dir {output.dir} \
         --path_mdata {input.mdata} \
-        --path_frags {input.frags} \
         --path_blist {input.blist} \
-        --path_tss {input.tss} \
         --ntopics {params.ntopics} \
         --path_ann {input.ann} \
         --path_csz {input.csz} \

@@ -6,9 +6,7 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --new_dir) new_dir="$2"; shift ;;
         --path_mdata) path_mdata="$2"; shift ;;
-        --path_frags) path_frags="$2"; shift ;;
         --path_blist) path_blist="$2"; shift ;;
-        --path_tss) path_tss="$2"; shift ;;
         --ntopics) ntopics="$2"; shift ;;
         --path_ann) path_ann="$2"; shift ;;
         --path_csz) path_csz="$2"; shift ;;
@@ -26,14 +24,11 @@ done
 # pre
 python workflow/scripts/mth/scenicplus/topics.py \
 -m $path_mdata \
--s $path_frags \
 -b $path_blist \
--t $path_tss \
--o hg38 \
 -n $ntopics \
 -c $threads \
 -d $new_dir \
--p $new_dir/mdata.h5mu
+-o $new_dir/mdata.h5mu
 
 # p2g
 scenicplus prepare_data search_spance \
@@ -110,7 +105,7 @@ scenicplus grn_inference eGRN \
 --ranking_db_fname $path_rnk \
 --eRegulon_out_fname $new_dir/egrn.tsv \
 --temp_dir $TMPDIR \
---min_target_genes 10 \
+--min_target_genes 0 \
 --n_cpu $threads
 
 python workflow/scripts/mth/scenicplus/egrn.py $new_dir/egrn.tsv $path_out

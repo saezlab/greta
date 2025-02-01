@@ -58,11 +58,17 @@ rule gen_tss_granie:
 rule gen_tss_scenicplus:
     threads: 1
     singularity: 'workflow/envs/scenicplus.sif'
-    input: rules.gen_genome_scenicplus.output.tss
     output: 'dbs/hg38/gen/tss/scenicplus.bed'
     shell:
         """
-        awk -v OFS='\\t' 'NR > 1 && $1 ~ /^chr/ && $4 != "." {{print $1, $2, $3, $4}}' {input} > {output}
+        pycistopic tss get_tss \
+        --output {output}.tmp \
+        --name "hsapiens_gene_ensembl" \
+        --to-chrom-source ucsc \
+        --ucsc hg38 \
+        --no-cache
+        awk -v OFS='\\t' 'NR > 1 && $1 ~ /^chr/ && $4 != "." {{print $1, $2, $3, $4}}' {output}.tmp > {output}
+        rm {output}.tmp
         """
 
 
