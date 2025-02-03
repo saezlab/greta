@@ -105,7 +105,7 @@ scenicplus grn_inference eGRN \
 --ranking_db_fname $path_rnk \
 --eRegulon_out_fname $new_dir/egrn.tsv \
 --temp_dir $TMPDIR \
---min_target_genes 0 \
+--min_target_genes 10 \
 --n_cpu $threads
 
 python workflow/scripts/mth/scenicplus/egrn.py $new_dir/egrn.tsv $path_out

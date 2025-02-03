@@ -1,3 +1,4 @@
+from scenicplus.triplet_score import get_max_rank_of_motif_for_each_TF
 from pycistarget.motif_enrichment_cistarget import cisTargetDatabase
 from pycistarget.utils import load_motif_annotations
 import scipy.sparse as ss
@@ -51,7 +52,7 @@ motif_to_tf = load_motif_annotations(
     motif_similarity_fdr = 0.001,
     orthologous_identity_threshold = 0.0)
 
-# Remove ann if they are not in db
+# Remove ann if they are not in db or cres not in db
 ctx_db = cisTargetDatabase(
     fname=path_db,
     region_sets=get_pr(motifs.obs_names)
@@ -71,6 +72,11 @@ tf_to_motif = get_motifs_for_TF(
 m_msk = motifs.var_names.isin(tf_to_motif)
 motifs = motifs[:, m_msk].copy()
 motifs.var.loc[:, 'motifs'] = [tf_to_motif[v] for v in motifs.var_names]
+
+# Remove regions not found in db
+df = get_max_rank_of_motif_for_each_TF(motifs, path_db)
+inter = motifs.obs_names.intersection(df.index)
+motifs = motifs[inter, :].copy()
 
 # Write
 motifs.write(path_out)

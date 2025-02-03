@@ -1,3 +1,5 @@
+import scipy.sparse as scs
+import anndata as ad
 import pyranges as pr
 import h5py
 import pandas as pd
@@ -37,28 +39,28 @@ with h5py.File(path_pre, 'r') as f:
 tf_msk = motifs.var_names.isin(genes)
 motifs = motifs[:, tf_msk]
 
-# Subset by regions
+# Find shared regions
 mtf_pr = get_pr(motifs.obs_names)
 p2g_pr = get_pr(pd.Index(p2g['cre'].unique()))
-mtf_cres = get_vars(mtf_pr.overlap(p2g_pr))
-motifs = motifs[mtf_cres, :].copy()
-motifs.X = motifs.X.tocoo()
+inter = mtf_pr.join(p2g_pr)
+inter_motifs = get_vars(inter[['Chromosome', 'Start', 'End']])
+inter_p2g = get_vars(pr.PyRanges(inter.df[['Chromosome', 'Start_b', 'End_b']].rename(columns={'Start_b': 'Start', 'End_b': 'End'})))
+
+# Create matching motif anndata
+new_motifs = ad.AnnData(
+    var=pd.DataFrame(index=motifs.var_names),
+    obs=pd.DataFrame(index=inter_p2g),
+    X=scs.csr_matrix((inter_p2g.size, motifs.var_names.size))
+)
+new_motifs[inter_p2g, :].X = motifs[inter_motifs, :].X
 
 # Build df
+new_motifs.X = new_motifs.X.tocoo()
 tfb = pd.DataFrame()
-tfb['cre'] = motifs.obs_names[motifs.X.row]
-tfb['tf'] = motifs.var_names[motifs.X.col]
+tfb['cre'] = new_motifs.obs_names[new_motifs.X.row]
+tfb['tf'] = new_motifs.var_names[new_motifs.X.col]
 tfb['score'] = 5.
 tfb['cre'] = tfb['cre'].str.replace(':', '-')
-
-# Transform cres to pre's format
-tfb_pr = get_pr(pd.Index(tfb['cre'].unique()))
-over = tfb_pr.join(p2g_pr, how='left').df
-over['cre'] = over['Chromosome'].astype(str) + '-' + over['Start'].astype(str) + '-' + over['End'].astype(str)
-over['p2g_cre'] = over['Chromosome'].astype(str) + '-' + over['Start_b'].astype(str) + '-' + over['End_b'].astype(str)
-over = over[['cre', 'p2g_cre']]
-tfb = pd.merge(tfb, over, on='cre')
-tfb = tfb[['p2g_cre', 'tf', 'score']].rename(columns={'p2g_cre': 'cre'})
 
 # Write
 tfb.to_csv(path_out, index=False)

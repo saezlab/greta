@@ -145,11 +145,12 @@ rule mdl_scenicplus:
         --path_tfb {input.tfb} \
         --path_rnk {input.rnk} \
         --threads {threads} \
-        --path_out {output.out}
+        --path_out {output.out} && \
+        rm -rf $new_dir
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
-        rm -rf $new_dir
+        
         """
 
 
