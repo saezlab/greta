@@ -10,7 +10,7 @@ rule fig_comb:
         nc='anl/dts/pbmc10k.all.nc.csv',
         sims='anl/topo/pbmc10k.all.sims_mult.csv',
         stat='anl/topo/pbmc10k.all.stats_mult.csv',
-        stab='anl/stab/pitupair.all.ovsd.csv',
+        stab='anl/stab/pbmc10k.all.ovsd.csv',
     output: 'plt/comb/fig.pdf'
     shell:
         """
