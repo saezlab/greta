@@ -1,30 +1,44 @@
+localrules: prc_annot
+
+
 rule download_brain:
-    threads: 34
+    threads: 8
     singularity: 'workflow/envs/figr.sif'
     output:
-        tar=temp(local('dts/brain/GSE193688.tar')),
         annot=temp(local('dts/brain/raw_annot.csv')),
         frags=expand('dts/brain/{sample}.frags.tsv.gz', sample=config['dts']['brain']['samples']),
         tbis=expand('dts/brain/{sample}.frags.tsv.gz.tbi', sample=config['dts']['brain']['samples']),
         gex=temp(local(expand('dts/brain/{sample}_filtered_feature_bc_matrix.h5', sample=config['dts']['brain']['samples']))),
     params:
-        full_dataset=config['dts']['brain']['url']['full_dataset'],
+        dtsts=config['dts']['brain']['url']['full_dataset'],
         annot=config['dts']['brain']['url']['annot'],
+        samples=config['dts']['brain']['samples'],
+    resources:
+        mem=4000,
     shell:
         """
-        data_path=$(dirname {output.tar})
-        echo "Downloading tar file"
-        wget --no-verbose '{params.full_dataset}' -O '{output.tar}'
-        wget --no-verbose '{params.annot}' -O '{output.annot}'
-        tar -xvf '{output.tar}' -C $data_path
-        for file in $data_path/*_atac_fragments.tsv.gz; do
-            base_name=$(basename "$file" _atac_fragments.tsv.gz);
-            new_file="${{base_name#*_}}.frags.tsv.gz";
-            mv $file $data_path/$new_file
+        allowed_samples=( {params.samples} )
+        data_path=$(dirname {output.annot})
+        curl -s {params.dtsts} | \
+        grep -oP '(?<=acc=)GSM[0-9]+|(?<=<td valign="top">)[A-Za-z0-9]+' | \
+        grep -v '^Illumina' | \
+        paste -d'\t' - - | \
+        while read gsm sample; do
+          if [[ " ${{allowed_samples[@]}} " =~ " $sample " ]]; then
+            base_path="${{gsm:0:7}}nnn"
+            # Download atac frags
+            url_frag="https://ftp.ncbi.nlm.nih.gov/geo/samples/${{base_path}}/${{gsm}}/suppl/${{gsm}}%5F${{sample}}%5Fatac%5Ffragments%2Etsv%2Egz"
+            echo "$url_frag";
+            wget -q "$url_frag" -O "$data_path/${{sample}}.frags.tsv.gz"
+            # Download rna counts
+            url_rna="https://www.ncbi.nlm.nih.gov/geo/download/?acc=${{gsm}}&format=file&file=${{gsm}}%5F${{sample}}%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5"
+            echo "$url_rna";
+            wget -q "$url_rna" -O "$data_path/${{sample}}_filtered_feature_bc_matrix.h5"
+            echo "Downloaded ${{sample}}"
+          fi
         done && \
-        ls $data_path/*.frags.tsv.gz | xargs -n 1 -P {threads} bash workflow/scripts/dts/format_frags.sh
-        rm $data_path/*peaks.bed.gz
-        (cd $data_path && for x in GSM*; do    mv $x `echo $x | cut -c 12-`; done)
+        ls $data_path/*.frags.tsv.gz | xargs -n 1 -P {threads} bash workflow/scripts/dts/format_frags.sh && \
+        wget --no-verbose '{params.annot}' -O '{output.annot}'
         """
 
 
@@ -44,7 +58,7 @@ rule prc_annot:
 
 
 rule callpeaks_brain:
-    threads: 32
+    threads: 8
     singularity: 'workflow/envs/gretabench.sif'
     input:
         frags=rules.download_brain.output.frags,

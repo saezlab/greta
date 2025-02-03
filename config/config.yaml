@@ -61,7 +61,7 @@ dts:
     brain:
         organism: 'hg38'
         url:
-            full_dataset: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE193688&format=file'
+            full_dataset: 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE193688'
             annot: 'https://heibox.uni-heidelberg.de/f/05637a872a384155a951/?dl=1'
         samples:
             ['C4322', 'C4691', 'C4634', 'P4884', 'P4919', 'P4205', 'P4653', 'P5331']
