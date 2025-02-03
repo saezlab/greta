@@ -155,7 +155,7 @@ barstats(stats, col='odegree', title='Regulon size', figs=figs)
 barstats(stats, col='betweenc', title='B. centrality', figs=figs)
 barstats(stats, col='eigv', title='E. centrality', figs=figs)
 
-h = ma.Heatmap(mat, cmap='Purples', width=1.5, height=3.5, label="Overlap\nCoefficient", vmin=0, vmax=1)
+h = ma.Heatmap(mat, cmap='Purples', width=1.5, height=1.5, label="Overlap\nCoefficient", vmin=0, vmax=1)
 h.add_bottom(mp.Labels(mat.columns))
 h.add_left(mp.Labels(mat.index))
 h.render()
