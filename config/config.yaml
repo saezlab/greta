@@ -77,10 +77,8 @@ dts:
             anndata: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Global_raw.h5ad'
             annot: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Adult_Peaks.h5ad'
         samples:
-            ['HCAHeartST10773166_HCAHeartST10781063', 'HCAHeartST10773165_HCAHeartST10781062',
-            'HCAHeart9508627_HCAHeart9508819', 'HCAHeart9508629_HCAHeart9508821',
-            'HCAHeart9845431_HCAHeart9917173', 'HCAHeartST11064575_HCAHeartST11023240',
-            'HCAHeartST11064574_HCAHeartST11023239']
+            ['HCAHeartST10781063', 'HCAHeartST10781062', 'HCAHeart9508819',
+            'HCAHeart9508821', 'HCAHeart9917173', 'HCAHeartST11023240', 'HCAHeartST11023239']
         cases:
             all:
                 celltypes: 'all'
