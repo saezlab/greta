@@ -30,20 +30,20 @@ obs = pd.read_csv(path_annot, index_col=0)
 sngr_dict = {a: b for a, b in zip(obs['sangerid'], obs['batch'])}
 
 # Read gene ids
-geneids = pd.read_csv(path_geneids).set_index('symbol')['id'].to_dict()
+geneids = pd.read_csv(path_geneids).set_index('id')['symbol'].to_dict()
 
 # Read rna
 rna = sc.read_h5ad(path_gex)
 rna = rna[rna.obs['sangerID'].isin(sngr_dict.keys()), :].copy()
 rna.obs_names = [sngr_dict[s] + '_' + i.replace('-1', '').split('_')[-1] for i, s in zip(rna.obs_names, rna.obs['sangerID'])]
 rna.obs = rna.obs[['cell_type']]
-rna.var_names = rna.var['gene_name-new'].astype(str).values
+#rna.var_names = rna.var['gene_name-new'].astype(str).values
 
 # Filter faulty gene symbols
-ensmbls = np.array([geneids[g] if g in geneids else '' for g in rna.var_names])
-msk = ensmbls != ''
+msk = rna.var_names.isin(geneids)
 rna = rna[:, msk].copy()
-rna.var['gene_ids'] = [geneids[g] for g in rna.var_names]
+msk = np.array([True if geneids[e] == g else False for e, g in zip(rna.var_names, rna.var['gene_name-new'])])
+rna = rna[:, msk].copy()
 
 # Basic QC
 sc.pp.filter_cells(rna, min_genes=100)
@@ -52,11 +52,11 @@ del rna.obs['n_genes']
 
 # Remove duplicated genes based on num of cells
 to_remove = []
-for dup in rna.var.index[rna.var.index.duplicated()]:
-    tmp = rna.var.loc[dup]
-    max_idx = tmp.set_index('gene_ids')['n_cells'].idxmax()
-    to_remove.extend(tmp['gene_ids'][tmp['gene_ids'] != max_idx].values)
-rna = rna[:, ~rna.var['gene_ids'].isin(to_remove)].copy()
+for dup in rna.var['gene_name-new'].values[rna.var['gene_name-new'].duplicated()]:
+    tmp = rna.var[rna.var['gene_name-new'] == dup]
+    max_idx = tmp['n_cells'].idxmax()
+    to_remove.extend(tmp.index[tmp.index != max_idx].values)
+rna = rna[:, ~rna.var_names.isin(to_remove)].copy()
 
 # Read atac data
 atac = ad.read_h5ad(path_peaks)
