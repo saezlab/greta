@@ -26,6 +26,8 @@ for path in args.paths_prt:
     df.append(['prt', 'tfs', name, n_tfs])
     df.append(['prt', 'exp', name, n_exp])
 
+df.append(['sss', 'TFs', 'dataset', 1000]) # Around 1k TFs (Lambert)
+df.append(['sss', 'celltypes', 'dataset', 15]) # Around 15 cell types per dataset
 df.append(['omc', 'genes', 'dataset', 16384])
 df.append(['omc', 'cres', 'dataset', 65536])
 

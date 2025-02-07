@@ -80,13 +80,13 @@ for i, metric in enumerate(meta['metric']):
 plt.subplots_adjust(wspace=0, hspace=0.5)
 figs.append(fig)
 
-order = ['knocktf', 'hpa', 'tfmdb', 'intact', 'chipatlas', 'remap2022', 'unibind']
+order = ['knocktf', 'hpa', 'tfmdb', 'europmc', 'intact', 'chipatlas', 'remap2022', 'unibind']
 heatmap(oc, typ='tf', title='TFs', order=order, figs=figs)
 
 order = ['knocktf', 'hall', 'kegg', 'reac', 'prog', 'eqtlcatalogue']
 heatmap(oc, typ='gene', title='Genes', order=order, figs=figs)
 
-order = ['chipatlas', 'remap2022', 'unibind', 'encode', 'gwascatalogue', 'phastcons', 'promoters', 'zhang21']
+order = ['chipatlas', 'remap2022', 'unibind', 'encode', 'gwascatalogue', 'blacklist', 'phastcons', 'promoters', 'zhang21']
 heatmap(oc, typ='bp', title='Base pairs', order=order, figs=figs)
 
 # Write

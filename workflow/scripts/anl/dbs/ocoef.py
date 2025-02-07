@@ -24,6 +24,9 @@ tf_dbs['hpa'] = set(df[0])
 df = pd.read_csv('dbs/hg38/tfm/tfmdb/tfmdb.tsv', sep='\t', header=None)
 tf_dbs['tfmdb'] = set(df[0])
 
+df = pd.read_csv('dbs/hg38/tfp/europmc/europmc.tsv', sep='\t', header=None)
+tf_dbs['europmc'] = set(df[0]) | set(df[1])
+
 df = pd.read_csv('dbs/hg38/tfp/intact/intact.tsv', sep='\t', header=None)
 tf_dbs['intact'] = set(df[0]) | set(df[1])
 
@@ -77,6 +80,7 @@ bp_dbs = dict()
 bp_dbs['chipatlas'] = pr.read_bed('dbs/hg38/tfb/chipatlas/chipatlas.bed')
 bp_dbs['remap2022'] = pr.read_bed('dbs/hg38/tfb/remap2022/remap2022.bed')
 bp_dbs['unibind'] = pr.read_bed('dbs/hg38/tfb/unibind/unibind.bed')
+bp_dbs['blacklist'] = pr.read_bed('dbs/hg38/cre/blacklist/blacklist.bed')
 bp_dbs['encode'] = pr.read_bed('dbs/hg38/cre/encode/encode.bed')
 bp_dbs['gwascatalogue'] = pr.read_bed('dbs/hg38/cre/gwascatalogue/gwascatalogue.bed')
 bp_dbs['phastcons'] = pr.read_bed('dbs/hg38/cre/phastcons/phastcons.bed')
