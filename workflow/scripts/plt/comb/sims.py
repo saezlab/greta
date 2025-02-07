@@ -15,19 +15,19 @@ from utils import read_config, savefigs
 
 def fixed_pip(mthds, sts, mat, title):
     res = []
-    steps = ['pre', 'p2g', 'tfb', 'mdl']
+    steps = ['pre', 'c2g', 'tfb', 'mdl']
     for mth in mthds:
         # Extract steps
-        msk_mth = (sts['pre'] == mth) & (sts['p2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
-        msk_pre = (sts['pre'] != mth) & (sts['p2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
-        msk_p2g = (sts['pre'] == mth) & (sts['p2g'] != mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
-        msk_tfb = (sts['pre'] == mth) & (sts['p2g'] == mth) & (sts['tfb'] != mth) & (sts['mdl'] == mth)
-        msk_mdl = (sts['pre'] == mth) & (sts['p2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] != mth)
+        msk_mth = (sts['pre'] == mth) & (sts['c2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
+        msk_pre = (sts['pre'] != mth) & (sts['c2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
+        msk_c2g = (sts['pre'] == mth) & (sts['c2g'] != mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
+        msk_tfb = (sts['pre'] == mth) & (sts['c2g'] == mth) & (sts['tfb'] != mth) & (sts['mdl'] == mth)
+        msk_mdl = (sts['pre'] == mth) & (sts['c2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] != mth)
         
         # Build df
         df = pd.concat([
             mat.loc[sts[msk_pre].index, sts[msk_mth].index].assign(step=0),
-            mat.loc[sts[msk_p2g].index, sts[msk_mth].index].assign(step=1),
+            mat.loc[sts[msk_c2g].index, sts[msk_mth].index].assign(step=1),
             mat.loc[sts[msk_tfb].index, sts[msk_mth].index].assign(step=2),
             mat.loc[sts[msk_mdl].index, sts[msk_mth].index].assign(step=3),
         ]).reset_index().rename(columns={'{m}.{m}.{m}.{m}'.format(m=mth): 'ocoeff', 'name_a': 'rest'})
@@ -41,7 +41,7 @@ def fixed_pip(mthds, sts, mat, title):
         res.append(df)
     res = pd.concat(res)
     
-    fig, axes = plt.subplots(len(mthds), 1, sharex=True, sharey=True, figsize=(2, 6.25), dpi=150, tight_layout=True)
+    fig, axes = plt.subplots(len(mthds), 1, sharex=True, sharey=True, figsize=(2, 1.5 * len(mthds)), dpi=150, tight_layout=True)
     for i, mth in enumerate(mthds):
         df = res[res['mth'] == mth]
         ax = axes[i]
@@ -56,16 +56,16 @@ def fixed_pip(mthds, sts, mat, title):
 
 
 def sim_mat(mat, sts, palette):
-    h1 = ma.Heatmap(mat, cmap='Purples', width=3, height=3, name="h1", vmax=1, label="Overlap\nCoefficient")
+    h1 = ma.Heatmap(mat, cmap='Purples', width=3, height=3, name="h1", vmax=1, label="Overlap\nCoefficient", cbar_kws=dict(orientation='horizontal'))
     legend=False
-    for cat_col in ['mdl', 'tfb', 'p2g', 'pre']:
+    for cat_col in ['mdl', 'tfb', 'c2g', 'pre']:
         cats = sts[cat_col].to_list()
-        cat_colors = mp.Colors(cats, palette={k: v for k, v in palette.items() if k in cats}, label=cat_col)
+        cat_colors = mp.Colors(cats, palette={k: v for k, v in palette.items() if k in cats}, label=cat_col, legend_kws=dict(title=''))
         if cat_col == 'pre':
             legend=True
-        h1.add_top(cat_colors, pad=0, size=0.25, legend=legend)
+        h1.add_top(cat_colors, pad=0, size=0.15, legend=legend)
     h1.add_dendrogram("left", show=False)
-    h1.add_dendrogram("top")
+    h1.add_dendrogram("top", show=False)
     h1.add_legends(
         side="right",
         stack_by='col',
@@ -182,8 +182,8 @@ for oc in ['tf_oc', 'edge_oc', 'target_oc']:
     mat = df.dropna().pivot(index='name_a', columns='name_b', values=oc).fillna(0)
     mat = mat + mat.T
     np.fill_diagonal(mat.values, 1)
-    t_sts = sts.set_index('name').loc[mat.index]
-    t_sts[['pre', 'p2g', 'tfb', 'mdl']] = t_sts.reset_index()['name_a'].str.split('.', n=4, expand=True).values
+    t_sts = sts.set_index('name').loc[mat.index].rename(columns={'p2g': 'c2g'})
+    t_sts[['pre', 'c2g', 'tfb', 'mdl']] = t_sts.reset_index()['name_a'].str.split('.', n=4, expand=True).values
     figs.append(fixed_pip(mthds, t_sts, mat, title=oc))
     figs.append(sim_mat(mat, t_sts, palette))
 
@@ -194,7 +194,8 @@ sns.barplot(
     y='mth',
     x='ocoeff',
     hue='mth',
-    ax=ax
+    ax=ax,
+    palette=palette
 )
 ax.set_xticks([0, 0.5, 1])
 ax.set_xlabel('Edge Overlap\nCoefficient')
@@ -205,7 +206,8 @@ sns.barplot(
     y='mth',
     x='stat',
     hue='mth',
-    ax=ax
+    ax=ax,
+    palette=palette
 )
 ax.set_xlabel('Pearson ρ')
 ax.set_xticks([0, 0.5, 1])
