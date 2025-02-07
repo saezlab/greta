@@ -29,9 +29,12 @@ def find_pairs(grn, thr_pval):
         s, p = compute_pval(tf_a, tf_b, grn)
         df.append([tf_a, tf_b, s, p])
     df = pd.DataFrame(df, columns=['tf_a', 'tf_b', 'stat', 'pval']).dropna()
-    df['padj'] = ss.false_discovery_control(df['pval'], method='bh')
-    df = df[df['padj'] < thr_pval]
-    pairs = set(['|'.join(sorted([a, b])) for a, b in zip(df['tf_a'], df['tf_b'])])
+    if df.shape[0] > 0:
+        df['padj'] = ss.false_discovery_control(df['pval'], method='bh')
+        df = df[df['padj'] < thr_pval]
+        pairs = set(['|'.join(sorted([a, b])) for a, b in zip(df['tf_a'], df['tf_b'])])
+    else:
+        pairs = set()
     return pairs
 
 
