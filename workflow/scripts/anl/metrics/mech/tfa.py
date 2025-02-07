@@ -41,11 +41,10 @@ if grn.shape[0] > 0:
     
     # Subset bench data to dataset
     cats = load_cats(dataset, case)
-    if rsc_name in cats:
-        cats = cats[rsc_name]
-        msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
-        obs = obs.loc[msk, :]
-        mat = mat.loc[msk, :]
+    cats = cats[rsc_name]
+    msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
+    obs = obs.loc[msk, :]
+    mat = mat.loc[msk, :]
 
     # Compute TF activities
     acts = []

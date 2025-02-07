@@ -2,15 +2,10 @@ import pandas as pd
 import numpy as np
 import mudata as mu
 import anndata as ad
-from celloracle import Oracle
-import celloracle.trajectory.oracle_utility as co
-import scipy
-import os
-from tqdm import tqdm
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import load_cats, f_beta_score
+import appdirs
+import tempfile
 import argparse
 
 
@@ -25,8 +20,20 @@ grn_path = args['grn_path']
 bnc_path = args['bnc_path']
 out_path = args['out_path']
 
-# Extract names and path
 grn_name = os.path.basename(grn_path).replace('.grn.csv', '')
+def user_cache_dir(*args, **kwargs):
+    tmp_dir = tempfile.gettempdir()
+    return os.path.join(tmp_dir, grn_name)
+sys.modules["appdirs"].user_cache_dir = user_cache_dir
+
+from celloracle import Oracle
+import celloracle.trajectory.oracle_utility as co
+import scipy
+from tqdm import tqdm
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils import load_cats, f_beta_score
+
+# Extract names and path
 data_path = os.path.join(os.path.dirname(os.path.dirname(grn_path)), 'mdata.h5mu')
 dataset = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(data_path))))
 case = os.path.basename(os.path.dirname(data_path))
@@ -105,11 +112,10 @@ if grn.shape[0] > 0:
 
     # Subset bench data to dataset
     cats = load_cats(dataset, case)
-    if rsc_name in cats:
-        cats = cats[rsc_name]
-        msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
-        obs = obs.loc[msk, :]
-        mat = mat.loc[msk, :]
+    cats = cats[rsc_name]
+    msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
+    obs = obs.loc[msk, :]
+    mat = mat.loc[msk, :]
 
     # Subset by overlap with rna
     genes = list(genes & set(mat.columns))

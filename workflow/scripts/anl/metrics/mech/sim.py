@@ -17,7 +17,9 @@ def define_bool_rules(grn):
         msk = grn['target'] == target
         pos = ''
         neg = ''
-        for source, sign in zip(grn.loc[msk, 'source'], grn.loc[msk, 'score']):
+        tgrn = grn.loc[msk]
+        tgrn = tgrn.loc[tgrn['score'].abs().sort_values(ascending=False).index].head(10)
+        for source, sign in zip(tgrn['source'], tgrn['score']):
             if sign >= 0:
                 pos += f'{source} | '
             else:
@@ -86,9 +88,14 @@ def compute_score(grn, ct_df, thr_pval=0.01):
     if sgrn.shape[0] >= 5:
         # Simulate steady states
         rules = define_bool_rules(sgrn)
+        print(rules)
+        print('Generating primes ...')
         primes = file_exchange.bnet2primes(rules)
+        print('Primes generated')
+        print('Computing steady states ...')
         sss = trap_spaces.compute_steady_states(primes, max_output=int(100_000))
         hits = find_hits(sss, ct_sets, tfs, thr_pval)
+        print('Done')
         prc, rcl = get_prc_rcl(hits)
         f01 = f_beta_score(prc, rcl)
         return prc, rcl, f01
