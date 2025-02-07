@@ -57,7 +57,8 @@ p2g.to_csv(sys.argv[2], sep='\\t', index=False)" $path_p2g $new_dir/rg_adj.tsv
 python workflow/scripts/mth/scenicplus/motifs.py $path_tfb $path_rnk $new_dir/motifs.h5ad
 
 # Egrn inference
-rho_dichotomize_r2g=$( python -c "import sys, pandas; print('') if (pandas.read_csv(sys.argv[1])['score'] < 0).any() else print('--do_not_rho_dichotomize_r2g');" $path_p2g )
+dichotomize=$( python -c "import sys, pandas; print('') if (pandas.read_csv(sys.argv[1])['score'] < 0).any() else print('--do_not_rho_dichotomize_r2g --do_not_rho_dichotomize_eRegulon');" $path_p2g )
+echo "$dichotomize"
 scenicplus grn_inference eGRN \
 --TF_to_gene_adj_fname $new_dir/tg_adj.tsv \
 --region_to_gene_adj_fname $new_dir/rg_adj.tsv \
@@ -66,7 +67,7 @@ scenicplus grn_inference eGRN \
 --eRegulon_out_fname $new_dir/egrn.tsv \
 --temp_dir $TMPDIR \
 --min_target_genes 10 \
---n_cpu $threads $rho_dichotomize_r2g
+--n_cpu $threads $dichotomize
 
 # Transform grn into greta format
 python workflow/scripts/mth/scenicplus/egrn.py $new_dir/egrn.tsv $path_out
