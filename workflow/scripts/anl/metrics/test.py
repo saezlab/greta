@@ -57,10 +57,6 @@ for m_path in args.path_mtr:
     df.append(m_df)
 df = pd.concat(df)
 df = df[['metric', 'task', 'db', 'stp', 'name', 'case', 'padj', 'f01']]
-df['metric'] = pd.Categorical(df['metric'], categories=['mech', 'pred', 'prior'], ordered=True)
-df['task'] = pd.Categorical(df['task'], categories=['tfa', 'prt', 'omics', 'gsets', 'tfm', 'tfp', 'tfb', 'cre', 'c2g'], ordered=True)
-df['db'] = pd.Categorical(df['db'], categories=['knocktf', 'gcre', 'cretf', 'gtf', 'hall', 'kegg', 'reac', 'prog', 'hpa', 'tfmdb', 'intact', 'chipatlas', 'remap2022', 'unibind', 'encode', 'gwascatalogue', 'phastcons', 'promoters', 'zhang21', 'eqtlcatalogue'], ordered=True)
-df['stp'] = pd.Categorical(df['stp'], categories=['pre', 'p2g', 'tfb', 'mdl'], ordered=True)
 df = df.sort_values(['metric', 'task', 'db', 'stp', 'name'])
 
 # Write
