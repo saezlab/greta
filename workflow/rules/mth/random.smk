@@ -11,7 +11,7 @@ rule mdl_random:
         scale=1,
         tf_g_ratio=0.10,
         w_size=250000,
-        seed=42,
+        seed=lambda w: config['dts']['pitupair']['cases'][w.case].get('seed', 42),
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
