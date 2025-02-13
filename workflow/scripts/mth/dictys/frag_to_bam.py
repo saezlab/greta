@@ -1,13 +1,15 @@
 import pandas as pd
 import argparse, os, sys
-
+import gzip
 
 
 parser = argparse.ArgumentParser(description="Splits fragment file by annotated cell clusters and builds .bam file", usage="")
-parser.add_argument('--fname', required=True)
+parser.add_argument('--fnames', required=True, nargs='+')
+parser.add_argument('--barcodes', required=True)
 
 args = vars(parser.parse_args())
-atac_fname = args['fname']
+atac_fnames = args['fnames']
+barcodes = args['barcodes']
 
 fwflag = 99 # 1 + 2 + 32 + 64
 bwflag = 147 # 1 + 2 + 16 + 128
@@ -49,31 +51,27 @@ sam_header_string = """@HD	SO:coordinate
 @SQ	SN:chrY	LN:57227415
 """
 
-def format_sam(s):
+def format_sam(s, barcodes):
     [chrom, srt, end, bc, rpt] = s.strip().split('\t')
-    if chrom.lower() not in valid_chr:
+    if (chrom.lower() not in valid_chr) or (bc not in barcodes):
         return
     qname = f"{chrom}:{srt}:{end}:{bc}"
     fwpos = int(srt) - lshift + 1          # fragment is 0-index, sam is 1-index (bam is 0-index)
     bwpos = int(end) - rshift + 1 - seqlen # reverse strand, left-most position
     tlen  = bwpos + seqlen - fwpos
     for c in range(int(rpt)):
-        print(f"{qname}:{c}\t{fwflag}\t{chrom}\t{fwpos}\t{mapq}\t" +
-              f"{cigar}\t{rnext}\t{bwpos}\t{tlen}\t{seq}\t{qual}\tCB:Z:{bc}\n", end="")
-        print(f"{qname}:{c}\t{bwflag}\t{chrom}\t{bwpos}\t{mapq}\t" +
-              f"{cigar}\t{rnext}\t{fwpos}\t{tlen*-1}\t{seq}\t{qual}\tCB:Z:{bc}\n", end="")
+        sys.stdout.write(f"{qname}:{c}\t{fwflag}\t{chrom}\t{fwpos}\t{mapq}\t" +
+              f"{cigar}\t{rnext}\t{bwpos}\t{tlen}\t{seq}\t{qual}\tCB:Z:{bc}\n")
+        sys.stdout.write(f"{qname}:{c}\t{bwflag}\t{chrom}\t{bwpos}\t{mapq}\t" +
+              f"{cigar}\t{rnext}\t{fwpos}\t{tlen*-1}\t{seq}\t{qual}\tCB:Z:{bc}\n")
 
-def filter_fragment_file(atac_fname):
-    ref = set(pd.read_csv(atac_fname, header=None).to_numpy().flatten())
-    print(sam_header_string, end="")
-    while True:
-        ls = sys.stdin.readlines(50000)
-        if len(ls) == 0:
-            break
-        t1 = [l.split('\t') for l in ls]
-        wt = [x for x, y in zip(ls, t1) if x[0] != '#' and y[3] in ref]
-        for w in wt:
-            format_sam(w)
+def filter_fragment_file(atac_fname, barcodes):
+    with gzip.open(atac_fname, 'rt', encoding='utf-8') as f:
+        for line in f:
+            format_sam(line, barcodes)
 
+sys.stdout.write(sam_header_string)
+barcodes = set(pd.read_csv(barcodes, header=None)[0].values)
+for atac_fname in atac_fnames:
+    filter_fragment_file(atac_fname, barcodes)
 
-filter_fragment_file(atac_fname)

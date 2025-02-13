@@ -6,7 +6,14 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         --input_pre) input_pre="$2"; shift ;;
         --input_p2g) input_p2g="$2"; shift ;;
-        --input_frags) input_frags="$2"; shift ;;
+        --input_frags)
+            shift
+            while [[ "$#" -gt 0 && "$1" != --* ]]; do
+                input_frags+=("$1")
+                shift
+            done
+            continue
+            ;;
         --input_motif) input_motif="$2"; shift ;;
         --input_genome) input_genome="$2"; shift ;;
         --output_d) output_d="$2"; shift ;;
@@ -40,7 +47,7 @@ for b_file in $output_d/barcodes_*; do
     bind_name="$output_d/bind_$ctype.tsv.gz"
     tfb_bed="$output_d/tfb_$ctype.bed"
     echo "Processing $ctype"
-    zcat "$input_frags" | python workflow/scripts/mth/dictys/frag_to_bam.py --fname "$b_file" | \
+    python workflow/scripts/mth/dictys/frag_to_bam.py --fnames "${input_frags[@]}" --barcodes $b_file | \
     samtools view -b | samtools sort -o "$bam_name" && samtools index "$bam_name" "$bai_name"
     python3 -m dictys chromatin wellington "$bam_name" "$bai_name" "$output_d/peaks.bed" "$foot_name" --nth "$threads" && \
     python3 -m dictys chromatin homer "$foot_name" "$input_motif" "$input_genome" "$output_d/expr.tsv.gz" "$motif_name" "$well_name" "$homer_name" && \
