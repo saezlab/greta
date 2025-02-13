@@ -1,4 +1,4 @@
-localrules: topo_inter
+localrules: topo_inter, topo_fvsd
 
 
 rule topo_mult:
@@ -16,6 +16,19 @@ rule topo_mult:
         python workflow/scripts/anl/topo/run_pair_sim.py \
         -t {output.stats} \
         -s {output.sims}
+        """
+
+
+rule topo_fvsd:
+    threads: 4
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        stats=rules.topo_mult.output.stats,
+        sims=rules.topo_mult.output.sims,
+    output: 'anl/topo/{dat}.{case}.fvsd.csv',
+    shell:
+        """
+        python workflow/scripts/anl/topo/fvsd.py {input.sims} {input.stats} {output}
         """
 
 

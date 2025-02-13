@@ -6,14 +6,16 @@ rule plt_dwns:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         ovc='anl/stab/pitupair.ovc.csv',
-        auc='anl/stab/pitupair.auc.csv'
+        auc='anl/stab/pitupair.auc.csv',
+        wgt='anl/stab/pitupair.wgt.csv',
+        cor='anl/stab/pitupair.cor.csv',
     output:
         stab='plt/stab/dwns.pdf',
         cors='plt/stab/cors.pdf',
     shell:
         """
         python workflow/scripts/plt/stab/stab.py {input.ovc} {input.auc} {output.stab}
-        python workflow/scripts/plt/stab/cors.py {input.ovc} {output.cors}
+        python workflow/scripts/plt/stab/cors.py {input.wgt} {input.cor} {output.cors}
         """
 
 

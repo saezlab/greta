@@ -2,49 +2,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
-import scipy.stats as ss
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import read_config, savefigs
-
-
-def robustness(dname, mth):
-    def scatter(data, ax, name):
-        n = np.min([1000, data.shape[0]])
-        sns.scatterplot(
-            data=data.sample(n=n, replace=False, random_state=42),
-            x='score_x',
-            y='score_y',
-            ax=ax,
-            color=palette[name]
-        )
-        ax.set_xlabel('Run A edge score')
-        ax.set_ylabel('Run B edge score')
-        ax.set_title(name)
-    seeds = [0, 1, 2]
-    df = []
-    for i, seed_a in enumerate(seeds):
-        seed_a = str(seed_a)
-        path_a = f'dts/{dname}/cases/16384_16384_{seed_a}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'
-        grn_a = pd.read_csv(path_a)[['source', 'target', 'score']]
-        for seed_b in seeds[i + 1:]:
-            path_b = f'dts/{dname}/cases/16384_16384_{seed_b}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'
-            grn_b = pd.read_csv(path_b)[['source', 'target', 'score']]
-            df.append(pd.merge(grn_a, grn_b, how='inner', on=['source', 'target']).assign(comp=f'{seed_a}_{seed_b}'))
-    
-    mth = mth.replace('o_', '')
-    cors = []
-    for i in range(len(df)):
-        tmp = df[0]
-        s, p = ss.pearsonr(tmp['score_x'], tmp['score_y'])
-        cors.append([mth, i, s, p])
-    fig, ax = plt.subplots(1, 1, figsize=(2, 2), dpi=150)
-    scatter(tmp, ax=ax, name=f'{mth}')
-    cors = pd.DataFrame(cors, columns=['mth', 'pair', 'stat', 'pval'])
-    cors['padj'] = ss.false_discovery_control(cors['pval'])
-    fig.subplots_adjust(wspace=0.)
-    return cors, fig
 
 
 # Read config
@@ -53,25 +14,43 @@ palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
 baselines = config['baselines']
 
-path_df = sys.argv[1]
-dname = os.path.basename(path_df).split('.')[0]
-df = pd.read_csv(path_df)
-mthds = df[df['cat'] == 'full'].groupby('mth', as_index=False)['e_ocoeff'].mean()
-mthds = mthds[mthds['e_ocoeff'] < 1.]['mth'].values
+path_repl_wgt = sys.argv[1]
+path_repl_cor = sys.argv[2]
+repl_wgt = pd.read_csv(path_repl_wgt)
+repl_cor = pd.read_csv(path_repl_cor)
 
-cors = []
 figs = []
-for mth in mthds:
-    if mth != 'scenic':
-        mth = 'o_' + mth
-    cor, fig = robustness(dname, mth=mth)
-    cors.append(cor)
-    figs.append(fig)
-cors = pd.concat(cors)
+for mth in repl_wgt['mth'].unique():
+    tmp = repl_wgt[repl_wgt['mth'] == mth]
+    if tmp.shape[0] > 1:
+        fig, ax = plt.subplots(1, 1, figsize=(2, 2), dpi=150)
+        max_n = np.max([tmp['score_x'].abs().max(), tmp['score_y'].abs().max()])
+        max_n = max_n + (max_n * 0.05)
+        sns.histplot(
+            data=tmp,
+            x='score_x',
+            y='score_y',
+            cbar=False,
+            cmap='magma',
+            stat='proportion',
+            vmin=0.,
+            vmax=1e-2,
+            bins=(50, 50),
+            cbar_kws=dict(label='Proportion', shrink=0.5, aspect=5, orientation='horizontal')
+        )
+        ax.set_xlabel('Run A edge score')
+        ax.set_ylabel('Run B edge score')
+        ax.set_xlim(-max_n, max_n)
+        ax.set_ylim(-max_n, max_n)
+        ax.set_title(mth)
+        figs.append(fig)
+        
 
 fig, ax = plt.subplots(1, 1, figsize=(1.5, 1), dpi=150)
-sns.boxplot(data=cors, x='stat', y='mth', hue='mth', fill=None, ax=ax, palette=palette)
-sns.stripplot(data=cors, x='stat', y='mth', hue='mth', ax=ax, palette=palette)
+order = mthds + baselines
+order = [m for m in order if m in repl_cor['mth'].unique()]
+sns.boxplot(data=repl_cor, x='stat', y='mth', hue='mth', fill=None, ax=ax, palette=palette, order=order)
+sns.stripplot(data=repl_cor, x='stat', y='mth', hue='mth', ax=ax, palette=palette, order=order)
 ax.set_xlabel('Pearson ρ')
 ax.set_ylabel('')
 ax.set_xticks([0, 0.5, 1])
@@ -79,4 +58,4 @@ ax.set_xlim(-0.05, 1.05)
 figs.append(fig)
 
 # Write
-savefigs(figs, sys.argv[2])
+savefigs(figs, sys.argv[3])

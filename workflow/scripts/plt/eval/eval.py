@@ -54,7 +54,7 @@ def summary_steps(df, palette, thr_padj=0.05):
 def average_ranks(df_list):
     df = pd.concat(df_list)
     df = df.groupby('name')[['rank', 'f01']].mean().sort_values('f01', ascending=False).reset_index()
-    df[['pre', 'p2g', 'tfb', 'mdl']] = df['name'].str.split('.', n=4, expand=True)
+    df[['pre', 'c2g', 'tfb', 'mdl']] = df['name'].str.split('.', n=4, expand=True)
     df = df.drop(columns='rank').reset_index(names='rank')
     df['fixed'] = [np.unique(n.split('.')).size == 1 for n in df['name']]
     return df
@@ -63,7 +63,7 @@ def average_ranks(df_list):
 def read_eval(type_metric, task, resource, case, load_originals=False):
     path = 'anl/metrics/{0}/{1}/{2}/{3}.scores.csv'.format(type_metric, task, resource, case)
     df = pd.read_csv(path).sort_values('f01', ascending=False)
-    df[['pre', 'p2g', 'tfb', 'mdl']] = df['name'].str.split('.', n=4, expand=True)
+    df[['pre', 'c2g', 'tfb', 'mdl']] = df['name'].str.split('.', n=4, expand=True)
     if not load_originals:
         df = df[~df['pre'].str.startswith('o_')]
     df = df.reset_index(drop=True).reset_index(names='rank')
@@ -74,10 +74,11 @@ def read_eval(type_metric, task, resource, case, load_originals=False):
 def ranking(df, title, palette):
     def cat_mat(df, ax, palette):
         cats = list(df['pre'].unique())
-        mat = df[['pre', 'p2g', 'tfb', 'mdl']].copy().T.rename({'p2g': 'c2g'})
+        spalette = {k: v for k, v in palette.items() if k in cats}
+        mat = df[['pre', 'c2g', 'tfb', 'mdl']].copy().T
         for col in mat.columns:
             mat[col] = [cats.index(i) for i in mat[col]]
-        mat_palette = {cats.index(k): v for k, v in palette.items()}
+        mat_palette = {cats.index(k): v for k, v in spalette.items()}
         cmap = sns.color_palette([mat_palette[key] for key in sorted(mat_palette)])
         sns.heatmap(mat, cmap=cmap, yticklabels=True, xticklabels='auto', cbar=None, ax=ax)
         ax.set_xlim(-10, df['rank'].max() + 10)
@@ -159,6 +160,7 @@ baselines = config['baselines']
 
 # Read
 df = pd.read_csv(sys.argv[1])
+df['stp'] = df['stp'].str.replace('p2g', 'c2g')
 d_stab = pd.read_csv(sys.argv[2])
 
 # Filter for sign and select max step for each sign db
@@ -167,9 +169,9 @@ sts = sts.sort_values('f01', ascending=False).groupby(['metric', 'task', 'db'], 
 
 # Sort
 df['metric'] = pd.Categorical(df['metric'], categories=['mech', 'pred', 'prior'], ordered=True)
-df['task'] = pd.Categorical(df['task'], categories=['tfa', 'prt', 'omics', 'gsets', 'tfm', 'tfp', 'tfb', 'cre', 'c2g'], ordered=True)
-df['db'] = pd.Categorical(df['db'], categories=['knocktf', 'gcre', 'cretf', 'gtf', 'hall', 'kegg', 'reac', 'prog', 'hpa', 'tfmdb', 'intact', 'chipatlas', 'remap2022', 'unibind', 'encode', 'gwascatalogue', 'phastcons', 'promoters', 'zhang21', 'eqtlcatalogue'], ordered=True)
-df['stp'] = pd.Categorical(df['stp'], categories=['pre', 'p2g', 'tfb', 'mdl'], ordered=True)
+df['task'] = pd.Categorical(df['task'], categories=['tfa', 'prt', 'sss', 'omics', 'gsets', 'tfm', 'tfp', 'tfb', 'cre', 'c2g'], ordered=True)
+df['db'] = pd.Categorical(df['db'], categories=['knocktf', 'sss', 'gcre', 'cretf', 'gtf', 'hall', 'kegg', 'reac', 'prog', 'hpa', 'tfmdb', 'europmc', 'intact', 'chipatlas', 'remap2022', 'unibind', 'blacklist', 'encode', 'gwascatalogue', 'phastcons', 'promoters', 'zhang21', 'eqtlcatalogue'], ordered=True)
+df['stp'] = pd.Categorical(df['stp'], categories=['pre', 'c2g', 'tfb', 'mdl'], ordered=True)
 df = df.sort_values(['metric', 'task', 'db', 'stp', 'name'])
 
 # Plot
@@ -179,6 +181,7 @@ metrics = {
     'mech': {
         'prt': ['knocktf'],
         'tfa': ['knocktf'],
+        'sss': ['sss']
     },
     'pred': {
         'omics': ['gtf', 'cretf', 'gcre'],
@@ -186,9 +189,9 @@ metrics = {
     },
     'prior': {
         'tfm': ['hpa', 'tfmdb'],
-        'tfp': ['intact'],
+        'tfp': ['europmc', 'intact'],
         'tfb': ['chipatlas', 'remap2022', 'unibind'],
-        'cre': ['encode', 'phastcons', 'gwascatalogue', 'promoters', 'zhang21'],
+        'cre': ['blacklist', 'encode', 'phastcons', 'gwascatalogue', 'promoters', 'zhang21'],
         'c2g': ['eqtlcatalogue']
     },
 }
@@ -249,16 +252,19 @@ for _, row in sts.iterrows():
     fig.suptitle('{0}|{1}|{2}|{3}'.format(row['metric'], row['task'], row['db'], row['case']), y=1.1)
     figs.append(fig)
 
-d_stab['name'] = 'dictys'
+d_stab['name'] = [r.split('.')[0] for r in d_stab['name']]
 d_stab['m'] = d_stab['metric'] + '|' + d_stab['task'] + '|' + d_stab['db']
-fig, ax = plt.subplots(1, 1, figsize=(2, 4), dpi=150)
-sns.boxplot(data=d_stab, x='f01', hue='name', y='m', fliersize=0, fill=None, palette={'dictys': 'tab:orange'})
-sns.stripplot(data=d_stab, x='f01', hue='name', y='m', palette={'dictys': 'tab:orange'})
-ax.set_xlabel(r'F$\mathrm{_{0.1}}$')
-ax.set_ylabel('')
-ax.legend().set_visible(False)
-ax.set_yticklabels([tick.get_text().split('|')[-1] for tick in ax.get_yticklabels()])
-figs.append(fig)
+for name in d_stab['name'].unique():
+    fig, ax = plt.subplots(1, 1, figsize=(2, 4), dpi=150)
+    tmp = d_stab[d_stab['name'] == name]
+    sns.boxplot(data=tmp, x='f01', hue='name', y='m', fliersize=0, fill=None, palette=palette)
+    sns.stripplot(data=tmp, x='f01', hue='name', y='m', palette=palette)
+    ax.set_xlabel(r'F$\mathrm{_{0.1}}$')
+    ax.set_ylabel('')
+    ax.legend().set_visible(False)
+    ax.set_yticklabels([tick.get_text().split('|')[-1] for tick in ax.get_yticklabels()])
+    ax.set_title(name)
+    figs.append(fig)
 
 # Write
 savefigs(figs, sys.argv[3])

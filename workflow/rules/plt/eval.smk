@@ -6,7 +6,7 @@ rule fig_eval:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         smr='anl/metrics/summary/pbmc10k.all.csv',
-        dct='anl/stab/dictys/pbmc10k.scores.csv',
+        dct='anl/stab/unsmthds/pbmc10k.scores.csv',
     output: 'plt/eval/fig.pdf'
     shell:
         """
