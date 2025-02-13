@@ -60,7 +60,10 @@ def test_predictability(mdata, train, test, grn, col_source='source', col_target
                     s, p = scipy.stats.spearmanr(pred_y, test_y)  # Spearman to control for outliers
                     cor.append([target, pred_y.size, len(sources), s, p])
     cor = pd.DataFrame(cor, columns=['target', 'n_obs', 'n_vars', 'coef', 'pval'])
-    cor['padj'] = scipy.stats.false_discovery_control(cor['pval'], method='bh')
+    if cor.shape[0] > 0:
+        cor['padj'] = scipy.stats.false_discovery_control(cor['pval'], method='bh')
+    else:
+        cor['padj'] = pd.Series(dtype=float)
     return cor
 
 if grn.shape[0] > 0:
