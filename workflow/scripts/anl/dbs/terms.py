@@ -14,7 +14,7 @@ args = vars(parser.parse_args())
 db_paths = args['db_paths']
 path_out = args['path_out']
 
-non_term_dbs = ['encode', 'promoters', 'zhang21', 'phastcons']
+non_term_dbs = ['blacklist', 'encode', 'promoters', 'zhang21', 'phastcons']
 df = []
 for db_path in db_paths:
     db_name = os.path.basename(os.path.dirname(db_path))
@@ -37,7 +37,10 @@ for db_path in db_paths:
             terms = np.sort(db['Tissue.Type'].unique())
         elif 'catalogue' in db_name:
             db = pd.read_csv(db_path, header=None, sep='\t', usecols=[4])[4]
-            terms = np.sort(db.unique())
+            terms = set()
+            for r in tqdm(db):
+                terms.update(r.split(','))
+            terms = sorted(terms)
         else:
             raise ValueError('db {db} of task {task} has no defined terms'.format(db=db_name, task=task))
         for term in terms:
