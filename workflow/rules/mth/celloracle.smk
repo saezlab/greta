@@ -110,6 +110,9 @@ rule mdl_celloracle:
         runtime=config['max_mins_per_step'],
     shell:
         """
+        export MKL_NUM_THREADS=1
+        export OPENBLAS_NUM_THREADS=1
+        export NUMEXPR_NUM_THREADS=1
         set +e
         timeout $(({resources.runtime}-20))m \
         python workflow/scripts/mth/celloracle/mdl.py \
@@ -152,6 +155,9 @@ rule mdl_o_celloracle:
         runtime=config['max_mins_per_step'] * 2,
     shell:
         """
+        export MKL_NUM_THREADS=1
+        export OPENBLAS_NUM_THREADS=1
+        export NUMEXPR_NUM_THREADS=1
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
         'Rscript workflow/scripts/mth/celloracle/src.R \
