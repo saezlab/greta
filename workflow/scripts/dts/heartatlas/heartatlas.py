@@ -1,7 +1,5 @@
 import os
 import scanpy as sc
-import snapatac2 as snap
-from snapatac2.datasets import _datasets, datasets
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -57,6 +55,9 @@ for dup in rna.var['gene_name-new'].values[rna.var['gene_name-new'].duplicated()
     max_idx = tmp['n_cells'].idxmax()
     to_remove.extend(tmp.index[tmp.index != max_idx].values)
 rna = rna[:, ~rna.var_names.isin(to_remove)].copy()
+
+# Update gene names
+rna.var_names = [geneids[g] for g in rna.var_names]
 
 # Read atac data
 atac = ad.read_h5ad(path_peaks)
