@@ -39,7 +39,11 @@ for db_path in db_paths:
             db = pd.read_csv(db_path, header=None, sep='\t', usecols=[4])[4]
             terms = set()
             for r in tqdm(db):
-                terms.update(r.split(','))
+                r = r.split(',')
+                if isinstance(r, str):
+                    r = [r]
+                for s_r in r:
+                    terms.update(s_r.split('|'))
             terms = sorted(terms)
         else:
             raise ValueError('db {db} of task {task} has no defined terms'.format(db=db_name, task=task))
