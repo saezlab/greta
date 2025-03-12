@@ -3,6 +3,7 @@ import numpy as np
 import pyranges as pr
 import mudata as mu
 from tqdm import tqdm
+import re
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -54,7 +55,7 @@ if grn.df.shape[0] > 0:
     db = pr.read_bed(resource_path)
     cats = load_cats(dataset, case)
     if resource_name in cats:
-        cats = cats[resource_name]
+        cats = [re.escape(c) for c in cats[resource_name]]
         print('Filtering for {0} cats'.format(len(cats)))
         db = db[db.df['Score'].str.contains('|'.join(cats))]
     

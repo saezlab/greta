@@ -4,6 +4,7 @@ import mudata as mu
 from tqdm import tqdm
 import sys
 import os
+import re
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import load_cats, f_beta_score
 import argparse
@@ -36,7 +37,7 @@ if grn.shape[0] > 0:
     db.columns = ['gene', 'ctype']
     cats = load_cats(dataset, case)
     if resource_name in cats:
-        cats = cats[resource_name]
+        cats = [re.escape(c) for c in cats[resource_name]]
         print('Filtering for {0} cats'.format(len(cats)))
         db = db[db['ctype'].str.contains('|'.join(cats))]
     

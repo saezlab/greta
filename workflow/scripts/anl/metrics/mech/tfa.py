@@ -4,6 +4,7 @@ import decoupler as dc
 import mudata as mu
 import sys
 import os
+import re
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import load_cats, f_beta_score
 import argparse
@@ -41,7 +42,7 @@ if grn.shape[0] > 0:
     
     # Subset bench data to dataset
     cats = load_cats(dataset, case)
-    cats = cats[rsc_name]
+    cats = [re.escape(c) for c in cats[rsc_name]]
     msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
     obs = obs.loc[msk, :]
     mat = mat.loc[msk, :]
