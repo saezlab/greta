@@ -4,6 +4,7 @@ import mudata as mu
 import anndata as ad
 import sys
 import os
+import re
 import appdirs
 import tempfile
 import argparse
@@ -112,7 +113,7 @@ if grn.shape[0] > 0:
 
     # Subset bench data to dataset
     cats = load_cats(dataset, case)
-    cats = cats[rsc_name]
+    cats = [re.escape(c) for c in cats[rsc_name]]
     msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
     obs = obs.loc[msk, :]
     mat = mat.loc[msk, :]
@@ -132,11 +133,13 @@ if grn.shape[0] > 0:
             # Run the simulation for the current TF
             x = simulate_delta(oracle, [tf], n_steps=3)
             
+            # Intersect
+            y = tf_mat
+            inter = np.intersect1d(x.columns, y.columns)
+            x, y = x.loc[:, inter].values[0], y.loc[:, inter].values[0]
+
             # Compute correlation
-            if x.shape[1] > 10:
-                y = tf_mat
-                inter = np.intersect1d(x.columns, y.columns)
-                x, y = x.loc[:, inter].values[0], y.loc[:, inter].values[0]
+            if x.size >= 10:
                 r, p = scipy.stats.spearmanr(x, y)
             else:
                 r, p = 0., 1.
