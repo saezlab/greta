@@ -114,6 +114,8 @@ rule mdl_dictys:
         slurm=lambda w: "gres=gpu:0" if w.pre=='granie' else "gres=gpu:1",
     shell:
         """
+        module load devel/cuda
+        export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
         set +e
         timeout $(({resources.runtime}-20))m \
         bash workflow/scripts/mth/dictys/mdl.sh \
@@ -165,6 +167,8 @@ rule mdl_o_dictys:
         slurm="gres=gpu:1",
     shell:
         """
+        module load devel/cuda
+        export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
         'mkdir -p {output.d} && \
