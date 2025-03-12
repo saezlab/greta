@@ -21,6 +21,9 @@ atac[['sangerID', 'batch']] = atac['combinedID'].str.split('_', expand=True)
 atac.index = [b + '_' + i.split('-')[0].split('_')[-1] for i, b in zip(atac.index, atac['batch'])]
 atac = atac.rename(columns={'cell_type': 'celltype', 'sangerID': 'sangerid'})
 atac = atac[['celltype', 'batch', 'sangerid']]
+ctype_counts = atac.groupby('celltype', as_index=False).size()
+ctypes = ctype_counts[ctype_counts['size'] >= 100]['celltype'].values.astype(str)
+atac = atac[atac['celltype'].isin(ctypes)]
 
 # Write
 atac.to_csv(path_annot)
