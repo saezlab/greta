@@ -2,7 +2,7 @@ rule pre_granie:
     threads: 1
     singularity: 'workflow/envs/granie.sif'
     input:
-        img=workflow/envs/granie.sif,
+        img='workflow/envs/granie.sif',
         mdata=rules.extract_case.output.mdata
     output:
         out='dts/{dat}/cases/{case}/runs/granie.pre.h5mu'

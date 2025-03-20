@@ -2,7 +2,7 @@ rule pre_pando:
     threads: 32
     singularity: 'workflow/envs/pando.sif'
     input:
-        img=workflow/envs/pando.sif,
+        img='workflow/envs/pando.sif',
         mdata=rules.extract_case.output.mdata,
         ann=rules.gen_ann_pando.output,
     output:

@@ -2,7 +2,7 @@ rule pre_celloracle:
     threads: 32
     singularity: 'workflow/envs/celloracle.sif'
     input:
-        img=workflow/envs/celloracle.sif,
+        img='workflow/envs/celloracle.sif',
         mdata=rules.extract_case.output.mdata
     output:
         out='dts/{dat}/cases/{case}/runs/celloracle.pre.h5mu'

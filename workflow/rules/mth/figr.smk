@@ -2,7 +2,7 @@ rule pre_figr:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
     input:
-        img=workflow/envs/figr.sif,
+        img='workflow/envs/figr.sif',
         mdata=rules.extract_case.output.mdata
     output:
         out='dts/{dat}/cases/{case}/runs/figr.pre.h5mu'
