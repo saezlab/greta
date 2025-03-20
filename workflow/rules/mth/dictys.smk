@@ -4,7 +4,9 @@ localrules: install_dictys
 rule pre_dictys:
     threads: 1
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
-    input: rules.extract_case.output.mdata
+    input:
+        img=rules.install_dictys.output,
+        mdata=rules.extract_case.output.mdata
     output:
         tmp='dts/{dat}/cases/{case}/runs/dictys_pre_expr.tsv.gz',
         out='dts/{dat}/cases/{case}/runs/dictys.pre.h5mu',
@@ -14,7 +16,7 @@ rule pre_dictys:
     shell:
         """
         python workflow/scripts/mth/dictys/pre.py \
-        -m {input} \
+        -m {input.mdata} \
         -t {output.tmp} \
         -o {output.out}
         """
@@ -114,8 +116,6 @@ rule mdl_dictys:
         slurm=lambda w: "gres=gpu:0" if w.pre=='granie' else "gres=gpu:1",
     shell:
         """
-        module load devel/cuda
-        export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
         set +e
         timeout $(({resources.runtime}-20))m \
         bash workflow/scripts/mth/dictys/mdl.sh \
@@ -167,8 +167,6 @@ rule mdl_o_dictys:
         slurm="gres=gpu:1",
     shell:
         """
-        module load devel/cuda
-        export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
         'mkdir -p {output.d} && \

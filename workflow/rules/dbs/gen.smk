@@ -33,6 +33,7 @@ rule gen_tfs_scenic:
 rule gen_gid_ensmbl:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: expand('dbs/{org}/gen/gid/ensembl.csv', org=orgms)
     shell: "Rscript workflow/scripts/dbs/gen/gid/ensmbl.R {output}"
 

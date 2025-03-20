@@ -2,6 +2,7 @@ rule mdl_o_scenicplus:
     threads: 32
     singularity: 'workflow/envs/scenicplus.sif'
     input:
+        img=workflow/envs/scenicplus.sif,
         mdata=rules.extract_case.output.mdata,
         blist=rules.cre_blacklist.output,
         rnk=rules.gen_motif_scenicplus.output.human_rankings,

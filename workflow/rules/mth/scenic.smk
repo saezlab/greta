@@ -2,6 +2,7 @@ rule mdl_scenic:
     threads: 16
     singularity: 'workflow/envs/scenicplus.sif'
     input:
+        img=workflow/envs/scenicplus.sif,
         mdata=rules.extract_case.output.mdata,
         tf=rules.gen_tfs_scenic.output,
         proms=rules.cre_promoters.output,

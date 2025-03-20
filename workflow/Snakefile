@@ -54,7 +54,10 @@ def list_frags_files(wildcards):
 
 
 def restart_mem(wildcards, attempt):
-    return (2 ** (4 + attempt)) * 1000
+    mem = (2 ** (4 + attempt)) * 1000
+    if wildcards.dat in big_datasets:
+        mem = mem * 2
+    return mem
 
 
 configfile: 'config/config.yaml'
@@ -66,6 +69,10 @@ baselines = config['baselines']
 datasets = list(config['dts'].keys())
 stab_datasets = config['stab_datasets']
 nocombs_datasets = config['nocombs_datasets']
+big_datasets = config['big_datasets']
+
+# Get singularities
+include: 'rules/img/img.smk'
 
 # Databases
 include: 'rules/dbs/gen.smk'

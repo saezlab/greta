@@ -1,7 +1,9 @@
 rule pre_granie:
     threads: 1
     singularity: 'workflow/envs/granie.sif'
-    input: rules.extract_case.output.mdata,
+    input:
+        img=workflow/envs/granie.sif,
+        mdata=rules.extract_case.output.mdata
     output:
         out='dts/{dat}/cases/{case}/runs/granie.pre.h5mu'
     resources:
@@ -10,7 +12,7 @@ rule pre_granie:
     shell:
         """
         python workflow/scripts/mth/granie/pre.py \
-        -i {input} \
+        -i {input.mdata} \
         -o {output.out} && \
         Rscript workflow/scripts/mth/granie/pre.R \
         {output.out} && \
