@@ -1,5 +1,5 @@
 rule pre_pando:
-    threads: 32
+    threads: 1
     singularity: 'workflow/envs/pando.sif'
     input:
         img='workflow/envs/pando.sif',
@@ -32,7 +32,7 @@ rule pre_pando:
 
 
 rule p2g_pando:
-    threads: 32
+    threads: 1
     singularity: 'workflow/envs/pando.sif'
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
@@ -60,7 +60,7 @@ rule p2g_pando:
 
 
 rule tfb_pando:
-    threads: 32
+    threads: 1
     singularity: 'workflow/envs/pando.sif'
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
