@@ -70,6 +70,19 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+    breast:
+        organism: 'hg38'
+        url:
+            tar: 'https://datasets.cellxgene.cziscience.com/32e9543f-f40f-4698-b877-8c7a67a5e266-fragment.tsv.bgz'
+            anndata: 'https://datasets.cellxgene.cziscience.com/ab8821d8-7548-4592-b83e-f308ad36b312.h5ad'
+        samples:
+            ['Pool1', 'Pool3', 'Pool4', 'Pool5', 'Pool6', 'Pool7', 'Pool8', 'Pool9',
+            'Pool11', 'Pool12', 'Pool13', 'Pool14', 'Pool15', 'Pool17', 'Pool23', 'Pool25']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     heartatlas:
         organism: 'hg38'
         url:

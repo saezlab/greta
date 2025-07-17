@@ -95,6 +95,7 @@ include: 'rules/dts/fakepair.smk'
 include: 'rules/dts/heartatlas.smk'
 include: 'rules/dts/brain.smk'
 include: 'rules/dts/general.smk'
+include: 'rules/dts/breast.smk'
 
 # Methods
 include: 'rules/mth/celloracle.smk'
