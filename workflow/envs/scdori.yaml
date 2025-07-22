@@ -1,0 +1,12 @@
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python==3.12
+  - bedtools
+  - htslib
+  - pip
+  - pip:
+    - tangermeme==0.4.0
+    - git+https://github.com/bioFAM/scDoRI.git@ead0de7901aa9f4f4040af578f50c947534e8dd0#egg=scdori
+    - muon
