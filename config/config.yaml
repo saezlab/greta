@@ -76,8 +76,8 @@ dts:
             tar: 'https://datasets.cellxgene.cziscience.com/32e9543f-f40f-4698-b877-8c7a67a5e266-fragment.tsv.bgz'
             anndata: 'https://datasets.cellxgene.cziscience.com/ab8821d8-7548-4592-b83e-f308ad36b312.h5ad'
         samples:
-            ['Pool1', 'Pool3', 'Pool4', 'Pool5', 'Pool6', 'Pool7', 'Pool8', 'Pool9',
-            'Pool11', 'Pool12', 'Pool13', 'Pool14', 'Pool15', 'Pool17', 'Pool23', 'Pool25']
+            ['ID1', 'ID2', 'ID3', 'ID4', 'ID5', 'ID6', 'ID7', 'ID8',
+            'ID9', 'ID10', 'ID11', 'ID12', 'ID13', 'ID14', 'ID15', 'ID16']
         cases:
             all:
                 celltypes: 'all'
