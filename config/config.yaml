@@ -83,6 +83,18 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+    KPMP:
+        organism: 'hg38'
+        url:
+            tar: 'https://zenodo.org/api/records/8029990/files-archive'
+        samples:
+            ['20210421E', '20210421F', '20210421G', '20210421H', '20210804A', '20210804C', 
+            '20210820A', '20210820B', '20210901A', '20210901B', '20210917A', '20210917B']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     heartatlas:
         organism: 'hg38'
         url:
