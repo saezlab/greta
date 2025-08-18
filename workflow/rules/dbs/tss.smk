@@ -5,6 +5,7 @@ gen_tss_collectri, gen_tss_dorothea, gen_tss_random, gen_tss_scenic
 rule gen_tss_celloracle:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/gen/tss/celloracle.bed'
     shell:
         """
@@ -28,6 +29,7 @@ rule gen_tss_dictys:
 rule gen_tss_figr:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
+    input: 'workflow/envs/figr.sif'
     output: 'dbs/hg38/gen/tss/figr.bed'
     shell:
         """
@@ -38,6 +40,7 @@ rule gen_tss_figr:
 rule gen_tss_pando:
     threads: 1
     singularity: 'workflow/envs/pando.sif'
+    input: 'workflow/envs/pando.sif'
     output: 'dbs/hg38/gen/tss/pando.bed'
     shell:
         """
@@ -48,6 +51,7 @@ rule gen_tss_pando:
 rule gen_tss_granie:
     threads: 1
     singularity: 'workflow/envs/granie.sif'
+    input: 'workflow/envs/granie.sif'
     output: 'dbs/hg38/gen/tss/granie.bed'
     shell:
         """
@@ -58,6 +62,7 @@ rule gen_tss_granie:
 rule gen_tss_scenicplus:
     threads: 1
     singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
     output: 'dbs/hg38/gen/tss/scenicplus.bed'
     shell:
         """
@@ -74,39 +79,51 @@ rule gen_tss_scenicplus:
 
 rule gen_tss_collectri:
     threads: 1
-    input: rules.cre_promoters.output
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        img='workflow/envs/gretabench.sif',
+        prom=rules.cre_promoters.output
     output: 'dbs/hg38/gen/tss/collectri.bed'
     shell:
         """
-        cp {input} {output}
+        cp {input.prom} {output}
         """
 
 
 rule gen_tss_dorothea:
     threads: 1
-    input: rules.cre_promoters.output
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        img='workflow/envs/gretabench.sif',
+        prom=rules.cre_promoters.output
     output: 'dbs/hg38/gen/tss/dorothea.bed'
     shell:
         """
-        cp {input} {output}
+        cp {input.prom} {output}
         """
 
 
 rule gen_tss_random:
     threads: 1
-    input: rules.cre_promoters.output
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        img='workflow/envs/gretabench.sif',
+        prom=rules.cre_promoters.output
     output: 'dbs/hg38/gen/tss/random.bed'
     shell:
         """
-        cp {input} {output}
+        cp {input.prom} {output}
         """
 
 
 rule gen_tss_scenic:
     threads: 1
-    input: rules.cre_promoters.output
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        img='workflow/envs/gretabench.sif',
+        prom=rules.cre_promoters.output
     output: 'dbs/hg38/gen/tss/scenic.bed'
     shell:
         """
-        cp {input} {output}
+        cp {input.prom} {output}
         """

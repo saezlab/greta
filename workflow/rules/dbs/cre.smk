@@ -3,6 +3,8 @@ localrules: cre_blacklist, cre_encode, cre_gwascatalogue, cre_phastcons, cre_pro
 
 rule cre_blacklist:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/cre/blacklist/blacklist.bed'
     params:
         url=config['dbs']['hg38']['cre']['blacklist']
@@ -15,6 +17,7 @@ rule cre_blacklist:
 rule cre_encode:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/cre/encode/encode.bed'
     params:
         url=config['dbs']['hg38']['cre']['encode']
@@ -29,6 +32,7 @@ rule cre_encode:
 rule cre_gwascatalogue:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/cre/gwascatalogue/gwascatalogue.bed'
     params:
         url=config['dbs']['hg38']['cre']['gwascatalogue']
@@ -44,6 +48,7 @@ rule cre_gwascatalogue:
 rule cre_phastcons:
     threads: 1
     singularity: 'workflow/envs/pando.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/cre/phastcons/phastcons.bed'
     params:
         url=config['dbs']['hg38']['cre']['phastcons']
@@ -63,6 +68,7 @@ rule cre_phastcons:
 rule cre_promoters:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/cre/promoters/promoters.bed'
     params:
         wsize=config['cre_prom_size']
@@ -77,6 +83,7 @@ rule cre_promoters:
 rule cre_zhang21:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/cre/zhang21/zhang21.bed'
     params:
         url=config['dbs']['hg38']['cre']['zhang21']

@@ -4,6 +4,7 @@ localrules: prc_annot
 rule download_brain:
     threads: 8
     singularity: 'workflow/envs/figr.sif'
+    input: 'workflow/envs/figr.sif'
     output:
         annot=temp(local('dts/brain/raw_annot.csv')),
         frags=expand('dts/brain/{sample}.frags.tsv.gz', sample=config['dts']['brain']['samples']),
@@ -45,13 +46,15 @@ rule download_brain:
 rule prc_annot:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.download_brain.output.annot,
+    input:
+        img='workflow/envs/gretabench.sif',
+        annot=rules.download_brain.output.annot,
     output: annot=temp(local('dts/brain/annot.csv')),
     params: samples=config['dts']['brain']['samples'],
     shell:
         """
         python workflow/scripts/dts/brain/prc_annot.py \
-        -a {input} \
+        -a {input.annot} \
         -b {params.samples} \
         -c {output.annot}
         """

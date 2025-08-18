@@ -4,6 +4,7 @@ localrules: c2g_m_eqtlcatalogue, c2g_s_eqtlcatalogue
 
 checkpoint c2g_m_eqtlcatalogue:
     threads: 1
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/c2g/eqtlcatalogue/meta.tsv'
     params: url=config['dbs']['hg38']['c2g']['eqtlcatalogue']['meta']
     shell: 
@@ -16,7 +17,9 @@ checkpoint c2g_m_eqtlcatalogue:
 checkpoint c2g_s_eqtlcatalogue:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.gen_gid_ensmbl.output,
+    input:
+        img='workflow/envs/gretabench.sif',
+        gid=rules.gen_gid_ensmbl.output,
     output: 'dbs/hg38/c2g/eqtlcatalogue/raw/{eqtl_smpl_grp}.{eqtl_tiss}.bed',
     params:
         url=config['dbs']['hg38']['c2g']['eqtlcatalogue']['url'],
@@ -27,7 +30,7 @@ checkpoint c2g_s_eqtlcatalogue:
         wget --no-verbose --tries 15 --wait=10 --random-wait --retry-connrefused --max-redirect=3 --waitretry=1 '{params.url}' -O - | \
         zcat | \
         python workflow/scripts/dbs/c2g/eqtlcat_smpl.py \
-        {input} \
+        {input.gid} \
         '{params.thr_pval}' \
         {output}
         """

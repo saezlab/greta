@@ -1,6 +1,7 @@
 rule download_reprofibro:
     threads: 2
     singularity: 'workflow/envs/figr.sif'
+    input: 'workflow/envs/figr.sif'
     output:
         tar=temp(local('dts/reprofibro/RAW.tar')),
         barcodes=temp(local('dts/reprofibro/barcode_map.tsv.gz')),
@@ -49,6 +50,7 @@ rule callpeaks_reprofibro:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input:
+        img='workflow/envs/gretabench.sif',
         frags=rules.download_reprofibro.output.frags,
         annot=rules.download_reprofibro.output.annot,
     output: peaks=temp(local('dts/reprofibro/peaks.h5ad'))

@@ -21,6 +21,7 @@ rule tfm_hpa:
 rule tfm_tfmdb:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/tfm/tfmdb/tfmdb.tsv'
     params:
         url=config['dbs']['hg38']['tfm']['tfmdb']

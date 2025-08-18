@@ -18,7 +18,7 @@ checkpoint tfb_m_chipatlas:
 rule tfb_t_chipatlas:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: 'dbs/hg38/tfb/chipatlas/meta.tsv'
+    input: rules.tfb_m_chipatlas.output
     output: 'dbs/hg38/tfb/chipatlas/raw/{chipatlas_tf}.bed'
     params:
         url=config['dbs']['hg38']['tfb']['chipatlas']['url'],

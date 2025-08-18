@@ -3,6 +3,8 @@ localrules: prt_knocktf
 
 rule prt_knocktf:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 
         meta='dbs/hg38/prt/knocktf/meta.csv',
         diff='dbs/hg38/prt/knocktf/diff.csv',

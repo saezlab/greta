@@ -44,6 +44,7 @@ rule gst_dorothea:
 rule gst_pthw:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/gst/{db}.csv',
     params: url=lambda w: config['dbs']['hg38']['gst'][w.db]
     shell:
@@ -60,6 +61,7 @@ rule gst_pthw:
 rule gst_prog:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/gst/prog.csv',
     params: url=lambda w: config['dbs']['hg38']['gst']['prog']
     shell:

@@ -17,12 +17,17 @@ rule install_dictys:
 
 rule gen_tfs_lambert:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/gen/tfs/lambert.csv'
     params: url=config['dbs']['hg38']['gen']['lambert']
     shell: "wget --no-check-certificate --no-verbose '{params.url}' -O {output}"
 
 
 rule gen_tfs_scenic:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/gen/tfs/scenic.csv'
     params:
         url=config['dbs']['hg38']['gen']['scenic']
@@ -41,6 +46,7 @@ rule gen_gid_ensmbl:
 rule gen_pid_uniprot:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: expand('dbs/{org}/gen/pid/uniprot.csv', org=orgms)
     shell: "Rscript workflow/scripts/dbs/gen/pid/uniprot.R {output}"
 
@@ -48,6 +54,7 @@ rule gen_pid_uniprot:
 rule gen_genome_celloracle:
     threads: 4
     singularity: 'workflow/envs/celloracle.sif'
+    input: 'workflow/envs/celloracle.sif'
     output: directory('dbs/hg38/gen/genome/celloracle/')
     shell:
         """
@@ -57,6 +64,7 @@ rule gen_genome_celloracle:
 
 
 rule gen_genome_dictys:
+    threads: 4
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     input: rules.install_dictys.output
     output: directory('dbs/hg38/gen/genome/dictys/')
@@ -67,7 +75,9 @@ rule gen_genome_dictys:
 
 
 rule gen_genome_scenicplus:
+    threads: 4
     singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
     output:
         ann='dbs/hg38/gen/genome/scenicplus/annotation.tsv',
         csz='dbs/hg38/gen/genome/scenicplus/chromsizes.tsv',
@@ -89,6 +99,8 @@ rule gen_genome_scenicplus:
 
 rule gen_motif_granie:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: directory('dbs/hg38/gen/motif/granie/')
     shell:
         """
@@ -102,6 +114,9 @@ rule gen_motif_granie:
 
 
 rule gen_motif_dictys:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     params: url="https://hocomoco11.autosome.org/final_bundle/hocomoco11/full/HUMAN/mono/HOCOMOCOv11_full_HUMAN_mono_homer_format_0.0001.motif"
     output: 'dbs/hg38/gen/motif/dictys/dictys.motif'
     shell:
@@ -111,6 +126,9 @@ rule gen_motif_dictys:
 
 
 rule gen_motif_scenic_rnk:
+    threads: 1
+    singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
     output:
         sml='dbs/hg38/gen/motif/scenic/hg38_500bp_up_100bp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather',
         big='dbs/hg38/gen/motif/scenic/hg38_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather'
@@ -126,6 +144,8 @@ rule gen_motif_scenic_rnk:
 
 rule gen_motif_scenic:
     threads: 1
+    singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
     params:
         url="https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.hgnc-m0.001-o0.0.tbl"
     output: "dbs/hg38/gen/motif/scenic/nr.hgnc-m0.001-o0.0.tbl"
@@ -137,6 +157,8 @@ rule gen_motif_scenic:
 
 rule gen_motif_scenicplus:
     threads: 1
+    singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
     output:
         human_rankings="dbs/hg38/gen/motif/scenicplus/human_motif_SCREEN.regions_vs_motifs.rankings.feather",
         human_scores="dbs/hg38/gen/motif/scenicplus/human_motif_SCREEN.regions_vs_motifs.scores.feather",
@@ -163,9 +185,11 @@ rule gen_motif_scenicplus:
 
 
 rule gen_ann_dictys:
+    threads: 4
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
     params:
         url="http://ftp.ensembl.org/pub/release-107/gtf/homo_sapiens/Homo_sapiens.GRCh38.107.gtf.gz"
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/gen/ann/dictys/ann.bed'
     shell:
         """
@@ -177,7 +201,9 @@ rule gen_ann_dictys:
 
 
 rule gen_ann_pando:
+    threads: 1
     singularity: 'workflow/envs/pando.sif'
+    input: 'workflow/envs/pando.sif'
     output: 'dbs/hg38/gen/ann/pando/ann.csv'
     shell:
         """

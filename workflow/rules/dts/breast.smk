@@ -3,6 +3,7 @@ localrules: prcannot_breast
 rule download_fragments_breast:
     threads: 7
     singularity: 'workflow/envs/figr.sif'
+    input: 'workflow/envs/figr.sif'
     output:
         tar=temp(local('dts/breast/fragments.tsv.bgz')),
         frag=expand('dts/breast/{sample}.frags.tsv.gz', sample=config['dts']['breast']['samples'])
@@ -35,27 +36,26 @@ rule download_fragments_breast:
 
 rule download_anndata_breast:
     threads: 1
-    output:
-        adata=temp(local('dts/breast/multiome_raw.h5ad')),
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: temp(local('dts/breast/multiome_raw.h5ad')),
     params:
         adata=config['dts']['breast']['url']['anndata']
     shell:
         """
-        wget --no-verbose '{params.adata}' -O '{output.adata}'
+        wget --no-verbose '{params.adata}' -O '{output}'
         """
         
 rule prcannot_breast:
     threads: 1
-    singularity:
-        'workflow/envs/gretabench.sif'
-    input: rules.download_anndata_breast.output.adata,
-    output:
-        annot=temp(local('dts/breast/annot.csv'))
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.download_anndata_breast.output,
+    output: temp(local('dts/breast/annot.csv'))
     shell:
         """
         python workflow/scripts/dts/breast/breast_annot.py \
         -i {input} \
-        -o {output.annot}
+        -o {output}
         """
 
 rule callpeaks_breast:
@@ -63,7 +63,7 @@ rule callpeaks_breast:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         frags=rules.download_fragments_breast.output.frag,
-        annot=rules.prcannot_breast.output.annot,
+        annot=rules.prcannot_breast.output,
     output: peaks=temp(local('dts/breast/peaks.h5ad'))
     resources:
         mem_mb=128000,
@@ -82,9 +82,9 @@ rule annotate_breast:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        path_h5ad=rules.download_anndata_breast.output.adata,
+        path_h5ad=rules.download_anndata_breast.output,
         path_peaks=rules.callpeaks_breast.output.peaks,
-        path_annot=rules.prcannot_breast.output.annot,
+        path_annot=rules.prcannot_breast.output,
         gid=rules.gen_gid_ensmbl.output
     output: out='dts/breast/annotated.h5mu'
     shell:

@@ -1,6 +1,7 @@
 rule download_pbmc10k:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
+    input: 'workflow/envs/figr.sif'
     output:
         frags='dts/pbmc10k/smpl.frags.tsv.gz',
         tbis='dts/pbmc10k/smpl.frags.tsv.gz.tbi',
@@ -17,6 +18,7 @@ rule download_pbmc10k:
 rule prcannot_pbmc10k:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
     output: annot=temp(local('dts/pbmc10k/annot.csv')),
     shell:
         "python workflow/scripts/dts/pbmc10k/prc_annot.py -a {output.annot}"

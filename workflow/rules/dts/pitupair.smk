@@ -1,6 +1,7 @@
 rule download_pitupair:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
+    input: 'workflow/envs/figr.sif'
     output:
         gex=temp(local('dts/pitupair/multiome_original.h5')),
         frags='dts/pitupair/smpl.frags.tsv.gz',
@@ -25,6 +26,7 @@ rule callpeaks_pitupair:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input:
+        img='workflow/envs/gretabench.sif',
         frags=rules.download_pitupair.output.frags,
         annot=rules.download_pitupair.output.annot,
     output: peaks=temp(local('dts/pitupair/peaks.h5ad'))

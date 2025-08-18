@@ -1,6 +1,7 @@
 rule download_pitunpair:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
+    input: 'workflow/envs/figr.sif'
     output:
         gex=temp(local('dts/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
         peaks=temp(local('dts/pitunpair/peaks.original.h5')),
@@ -63,6 +64,7 @@ rule callpeaks_pitunpair:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input:
+        img='workflow/envs/gretabench.sif',
         frags=rules.download_pitunpair.output.frags,
         annot=rules.paircells_pitunpair.output.barmap,
     output: peaks=temp(local('dts/pitunpair/peaks.h5ad')),
