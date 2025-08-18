@@ -41,7 +41,7 @@ methods:
         ext: 500000
 
 
-baselines: ['collectri', 'dorothea', 'random', 'scenic']
+baselines: ['collectri', 'dorothea', 'pearson', 'random', 'scenic', 'spearman']
 
 colors:
     nets:
