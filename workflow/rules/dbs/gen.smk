@@ -96,6 +96,24 @@ rule gen_genome_scenicplus:
         --no-cache
         """
 
+rule gen_genome_inferelator:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output:
+        gtf='dbs/hg38/gen/genome/inferelator/annotation.gtf.gz',
+        tfa=temp(local('dbs/hg38/gen/genome/inferelator/tmp_genome.fa')),
+        fa='dbs/hg38/gen/genome/inferelator/genome.fa.gz',
+    shell:
+        """
+        wget --no-verbose 'https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.refGene.gtf.gz' -O {output.gtf}
+        wget --no-verbose 'http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz' -O {output.tfa}.gz
+        gunzip {output.tfa}.gz
+        bgzip {output.tfa}
+        cp {output.tfa}.gz {output.fa}
+        mv {output.tfa}.gz {output.tfa}
+        """
+
 
 rule gen_motif_granie:
     threads: 1
@@ -181,6 +199,21 @@ rule gen_motif_scenicplus:
         wget --no-verbose -O {output.mouse_scores} {params.mouse_scores_url}
         wget --no-verbose -O {output.human_annot} {params.human_annot_url}
         wget --no-verbose -O {output.mouse_annot} {params.mouse_annot_url}
+        """
+
+
+rule gen_motif_inferelator:
+    threads: 4
+    singularity: 'workflow/envs/inferelator.sif'
+    output:
+        zip=temp(local('dbs/hg38/gen/motif/inferelator/pwm.zip')),
+        dir=directory('dbs/hg38/gen/motif/inferelator/pwm'),
+        meme='dbs/hg38/gen/motif/inferelator/cisbp.meme'
+    shell:
+        """
+        wget --no-verbose 'https://cisbp.ccbr.utoronto.ca/tmp/Homo_sapiens_2025_08_22_6:07_pm.zip' -O {output.zip}
+        unzip {output.zip} -d {output.dir}
+        python -m inferelator_prior.pwm_to_meme --motif {output.dir}/pwms_all_motifs/* --info {output.dir}/TF_Information_all_motifs_plus.txt --out {output.meme}
         """
 
 

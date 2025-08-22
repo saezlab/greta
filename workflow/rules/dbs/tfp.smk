@@ -3,8 +3,6 @@ localrules: download_intact, tfp_intact, tfp_europmc
 
 rule download_intact:
     threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
-    input: 'workflow/envs/gretabench.sif'
     output: temp("dbs/hg38/tfp/intact/raw/intact.txt")
     params:
         url=config['dbs']['hg38']['tfp']['intact']
