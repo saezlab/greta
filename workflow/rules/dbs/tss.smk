@@ -26,6 +26,17 @@ rule gen_tss_dictys:
         """
 
 
+rule gen_tss_directnet:
+    threads: 1
+    singularity: 'workflow/envs/directnet.sif'
+    input: rules.gen_genome_inferelator.output.gtf
+    output: 'dbs/hg38/gen/tss/directnet.bed'
+    shell:
+        """
+        python workflow/scripts/dbs/gen/tss/directnet.py {input} {output}
+        """
+
+
 rule gen_tss_figr:
     threads: 1
     singularity: 'workflow/envs/figr.sif'

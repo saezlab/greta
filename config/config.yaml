@@ -18,6 +18,8 @@ methods:
         n_p2g_links: 20
         use_p2g: False
         thr_score: 0.25
+    directnet:
+        ext: 500000
     figr:
         ext: 500000
         thr_p2g_pval: 0.1
@@ -28,6 +30,8 @@ methods:
     granie:
         ext: 500000
         thr_fdr: 0.2
+    inferelator:
+        ext: 500000
     pando:
         exclude_exons: 'TRUE'
         ext: 500000

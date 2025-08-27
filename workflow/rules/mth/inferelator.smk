@@ -11,8 +11,7 @@ rule mdl_o_inferelator:
         tmp=temp(local(directory('dts/{dat}/cases/{case}/runs/tmp_o_inferelator/'))),
         out='dts/{dat}/cases/{case}/runs/o_inferelator.o_inferelator.o_inferelator.o_inferelator.mdl.csv'
     params:
-        ext=500_000 // 2,
-        tandem=100,
+        ext=config['methods']['inferelator']['ext'] // 2,
     shell:
         """
         export TMPDIR={output.tmp}
