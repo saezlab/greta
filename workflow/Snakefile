@@ -96,7 +96,7 @@ include: 'rules/dts/heartatlas.smk'
 include: 'rules/dts/brain.smk'
 include: 'rules/dts/general.smk'
 include: 'rules/dts/breast.smk'
-include: 'rules/dts/KPMP.smk'
+include: 'rules/dts/kidney.smk'
 
 # Methods
 include: 'rules/mth/celloracle.smk'
