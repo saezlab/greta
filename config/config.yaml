@@ -103,13 +103,14 @@ dts:
     lung:
         organism: 'hg38'
         url:
-            geo: 'https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM7729nnn/GSM7729472/suppl'
+            geo: 'https://www.ncbi.nlm.nih.gov/geo/download'
             annot: 'https://drive.google.com/uc?export=download&id=1Ky-jPYD6eWQ1RELzHF9VJIbEZdeALExw'
         samples:
             ['FN1', 'FN2', 'FN3', 'FN4']  # Filter for Non-Smoker Females
-        geoids:
-            ['GSM7729458%5FFN1', 'GSM7729459%5FFN2', 'GSM7729460%5FFN3', 'GSM7729461%5FFN4',
-             'GSM7729474%5FFN1', 'GSM7729475%5FFN2', 'GSM7729476%5FFN3', 'GSM7729477%5FFN4']
+        gex_geoids:
+            ['GSM7729458%5FFN1', 'GSM7729459%5FFN2', 'GSM7729460%5FFN3', 'GSM7729461%5FFN4']
+        atac_geoids:
+            ['GSM7729474%5FFN1', 'GSM7729475%5FFN2', 'GSM7729476%5FFN3', 'GSM7729477%5FFN4']
         cases:
             all:
                 celltypes: 'all'
