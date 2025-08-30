@@ -1,73 +1,65 @@
-localrules: prcannot_breast
+localrules: prcannot_breast, annotate_breast
+
 
 rule download_fragments_breast:
-    threads: 7
+    threads: 16
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        tar=temp(local('dts/breast/fragments.tsv.bgz')),
         frag=expand('dts/breast/{sample}.frags.tsv.gz', sample=config['dts']['breast']['samples'])
     params:
-        tar=config['dts']['breast']['url']['tar']
+        tar=config['dts']['breast']['url']['tar'],
+        samples=config['dts']['breast']['samples'],
+    resources:
+        mem_mb=8000,
     shell:
         """
-        data_path=$(dirname "{output.tar}")
-        wget --no-verbose '{params.tar}' -O '{output.tar}'
-        # Decompress and split by pool
-        gunzip -c {output.tar} | \
-        awk 'BEGIN {{OFS="\\t"}} {{
-            split($4, arr, "_");           # arr[1]=barcode, arr[2]=pool id
-            gsub("-1", "", arr[1]);        # remove trailing -1
-            pool = "ID" arr[2];          
-            new_barcode = pool "_" arr[1];
-            print $1, $2, $3, new_barcode, $5 >> "dts/breast/" pool ".frags.tsv"
-        }}'
-
-        # Compress each file with bgzip
-        for f in dts/breast/ID*.frags.tsv; do
-            bgzip -f -c "$f" > "$f.gz"
-            tabix -p bed "$f.gz"
-            rm "$f"
-            rm "$f.gz.tbi"
-        done
-
-        rm '{output.tar}'
+        paths=({output.frag})
+        path_breast=$(dirname "${{paths[0]}}")
+        path_tmp=$path_breast/tmp.tsv.bgz
+        wget --no-verbose '{params.tar}' -O $path_tmp
+        # Process each pool in parallel (one core per pool)
+        parallel -j{threads} workflow/scripts/dts/breast/write_sample.sh {{}} "$path_breast" "$path_tmp" ::: {params.samples}
+        # Compress each sample
+        ls $path_breast/*.frags.tsv | xargs -n 1 -P {threads} bash workflow/scripts/dts/breast/compress_sample.sh && \
+        rm $path_breast/tmp.tsv.bgz
         """
-
-rule download_anndata_breast:
-    threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
-    input: 'workflow/envs/gretabench.sif'
-    output: temp(local('dts/breast/multiome_raw.h5ad')),
-    params:
-        adata=config['dts']['breast']['url']['anndata']
-    shell:
-        """
-        wget --no-verbose '{params.adata}' -O '{output}'
-        """
+        
         
 rule prcannot_breast:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.download_anndata_breast.output,
-    output: temp(local('dts/breast/annot.csv'))
+    input:
+        img='workflow/envs/gretabench.sif',
+        gid=rules.gen_gid_ensmbl.output,
+    output:
+        rna=temp(local('dts/breast/rna.h5ad')),
+        ann=temp(local('dts/breast/annot.csv'))
+    params:
+        adata=config['dts']['breast']['url']['anndata'],
     shell:
         """
-        python workflow/scripts/dts/breast/breast_annot.py \
-        -i {input} \
-        -o {output}
+        path_breast=$(dirname {output.rna})
+        wget --no-verbose '{params.adata}' -O "${{path_breast}}/tmp.h5ad"
+        python workflow/scripts/dts/breast/annot.py \
+        "${{path_breast}}/tmp.h5ad" \
+        {input.gid} \
+        {output.rna} \
+        {output.ann}
+        rm $path_breast/tmp.h5ad
         """
+
 
 rule callpeaks_breast:
     threads: 8
     singularity: 'workflow/envs/gretabench.sif'
     input:
         frags=rules.download_fragments_breast.output.frag,
-        annot=rules.prcannot_breast.output,
+        annot=rules.prcannot_breast.output.ann,
     output: peaks=temp(local('dts/breast/peaks.h5ad'))
     resources:
         mem_mb=128000,
-        runtime=2160,
+        runtime=720,
     shell:
         """
         python workflow/scripts/dts/callpeaks.py \
@@ -78,21 +70,20 @@ rule callpeaks_breast:
         -o {output.peaks}
         """
 
+
 rule annotate_breast:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        path_h5ad=rules.download_anndata_breast.output,
+        path_rna=rules.prcannot_breast.output.rna,
         path_peaks=rules.callpeaks_breast.output.peaks,
-        path_annot=rules.prcannot_breast.output,
-        gid=rules.gen_gid_ensmbl.output
+        path_ann=rules.prcannot_breast.output.ann,
     output: out='dts/breast/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/breast/breast.py \
-        -a {input.path_h5ad} \
+        -a {input.path_rna} \
         -b {input.path_peaks} \
-        -c {input.path_annot} \
-        -e {input.gid} \
+        -c {input.path_ann} \
         -f {output}
         """
