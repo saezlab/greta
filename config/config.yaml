@@ -87,6 +87,18 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+    eye:
+        organism: 'hg38'
+        url:
+            tar: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE196235&format=file'
+            ann: 'https://drive.google.com/uc?export=download&id=19C8I3ZwtI-WKXOj_RSF_KoY4ySWoPl-5'
+        samples:
+            ['LGS1OD', 'LGS1OS', 'LGS3OD', 'LGS3OS']  # Filter for Females
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     kidney:
         organism: 'hg38'
         url:
@@ -116,7 +128,7 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
-    heartatlas:
+    heart:
         organism: 'hg38'
         url:
             tar: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/fragments.tar'
@@ -147,24 +159,6 @@ dts:
         samples:
             ['smpl']
         cases:
-            test:
-                celltypes: 'Naive B;CD14 Mono;CD16 Mono'
-                n_hvg: 4096
-                n_hvr: 8192
-            tcell:
-                celltypes: 'CD4 TCM;CD4 Naive;CD8 Naive;Treg;CD4 TEM;MAIT;CD8 TEM_1;CD8 TEM_2;gdT;CD8 TEM_2'
-                n_hvg: 2048
-                n_hvr: 16384
-            bcell:
-                celltypes: 'Naive B;Intermediate B;Memory B'
-                n_hvg: 4096
-                n_hvr: 16384
-                root: 'Naive B'
-            mono:
-                celltypes: 'CD14 Mono;CD16 Mono'
-                n_hvg: 4096
-                n_hvr: 16384
-                root: 'CD14 Mono'
             all:
                 celltypes: 'all'
                 n_hvg: 16384
@@ -196,10 +190,6 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
-            test:
-                celltypes: 'all'
-                n_hvg: 2048
-                n_hvr: 4096
     reprofibro:
         organism: 'hg38'
         url:

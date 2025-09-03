@@ -1,4 +1,4 @@
-localrules: prcannot_heartatlas
+localrules: prcannot_heart
 
 
 rule download_fragments_heart:
@@ -6,11 +6,11 @@ rule download_fragments_heart:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        tar=temp(local('dts/heartatlas/fragments.tar')),
-        frag=expand('dts/heartatlas/{sample}.frags.tsv.gz', sample=config['dts']['heartatlas']['samples']),
-        tbis=expand('dts/heartatlas/{sample}.frags.tsv.gz.tbi', sample=config['dts']['heartatlas']['samples'])
+        tar=temp(local('dts/heart/fragments.tar')),
+        frag=expand('dts/heart/{sample}.frags.tsv.gz', sample=config['dts']['heart']['samples']),
+        tbis=expand('dts/heart/{sample}.frags.tsv.gz.tbi', sample=config['dts']['heart']['samples'])
     params:
-        tar=config['dts']['heartatlas']['url']['tar']
+        tar=config['dts']['heart']['url']['tar']
     shell:
         """
         data_path=$(dirname "{output.tar}")
@@ -32,11 +32,11 @@ rule download_anndata_heart:
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
     output:
-        adata=temp(local('dts/heartatlas/multiome_raw.h5ad')),
-        annot=temp(local('dts/heartatlas/atac.h5ad'))
+        adata=temp(local('dts/heart/multiome_raw.h5ad')),
+        annot=temp(local('dts/heart/atac.h5ad'))
     params:
-        adata=config['dts']['heartatlas']['url']['anndata'],
-        annot=config['dts']['heartatlas']['url']['annot']
+        adata=config['dts']['heart']['url']['anndata'],
+        annot=config['dts']['heart']['url']['annot']
     shell:
         """
         wget --no-verbose '{params.adata}' -O '{output.adata}'
@@ -44,26 +44,26 @@ rule download_anndata_heart:
         """
 
 
-rule prcannot_heartatlas:
+rule prcannot_heart:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.download_anndata_heart.output.annot,
-    output: temp(local('dts/heartatlas/annot.csv'))
+    output: temp(local('dts/heart/annot.csv'))
     shell:
         """
-        python workflow/scripts/dts/heartatlas/heart_annot.py \
+        python workflow/scripts/dts/heart/heart_annot.py \
         -i {input} \
         -o {output}
         """
 
 
-rule callpeaks_heartatlas:
+rule callpeaks_heart:
     threads: 8
     singularity: 'workflow/envs/gretabench.sif'
     input:
         frags=rules.download_fragments_heart.output.frag,
-        annot=rules.prcannot_heartatlas.output,
-    output: peaks=temp(local('dts/heartatlas/peaks.h5ad'))
+        annot=rules.prcannot_heart.output,
+    output: peaks=temp(local('dts/heart/peaks.h5ad'))
     resources:
         mem_mb=128000,
         runtime=2160,
@@ -78,18 +78,18 @@ rule callpeaks_heartatlas:
         """
 
 
-rule annotate_heartatlas:
+rule annotate_heart:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
         path_h5ad=rules.download_anndata_heart.output.adata,
-        path_peaks=rules.callpeaks_heartatlas.output.peaks,
-        path_annot=rules.prcannot_heartatlas.output,
+        path_peaks=rules.callpeaks_heart.output.peaks,
+        path_annot=rules.prcannot_heart.output,
         gid=rules.gen_gid_ensmbl.output
-    output: out='dts/heartatlas/annotated.h5mu'
+    output: out='dts/heart/annotated.h5mu'
     shell:
         """
-        python workflow/scripts/dts/heartatlas/heartatlas.py \
+        python workflow/scripts/dts/heart/heart.py \
         -a {input.path_h5ad} \
         -b {input.path_peaks} \
         -c {input.path_annot} \
