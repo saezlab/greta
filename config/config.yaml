@@ -205,7 +205,18 @@ dts:
                 n_hvg: 16384
                 n_hvr: 65536
                 root: 'Fibroblast-like'
-
+    skin:
+        organism: 'hg38'
+        url:
+            tar: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE207335&format=file'
+            ann: 'https://drive.google.com/uc?export=download&id=1K9vkCBNP0HugUqStYYevlVwd-lTsGllp'
+        samples:
+            ['S1', 'S2']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
 
 
 stab_datasets: ['pitupair']

@@ -99,6 +99,7 @@ include: 'rules/dts/breast.smk'
 include: 'rules/dts/kidney.smk'
 include: 'rules/dts/lung.smk'
 include: 'rules/dts/eye.smk'
+include: 'rules/dts/skin.smk'
 
 # Methods
 include: 'rules/mth/celloracle.smk'

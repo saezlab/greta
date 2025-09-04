@@ -1,3 +1,5 @@
+localrules: annotate_eye
+
 rule download_eye:
     threads: 4
     singularity: 'workflow/envs/gretabench.sif'
