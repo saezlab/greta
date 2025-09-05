@@ -1,0 +1,31 @@
+name: scgpt
+
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+
+dependencies:
+  - python=3.11
+  - pip
+  # Math and data processing
+  - pandas
+  - numpy=1.26.*
+  - numba=0.59.*
+  - einops
+  - scipy>=1.10,<1.12
+  - scanpy>=1.9
+  - anndata>=0.9
+  - mudata>=0.2
+  - muon
+  # PyTorch stack (from pytorch channel)
+  - pytorch=2.3.1
+  - torchvision=0.18.1
+  - torchaudio=2.3.1
+  - pytorch-cuda=12.1
+  # Other
+  - tqdm
+  - pip:
+      - torchtext==0.16.2
+      - scgpt
+      - gdown
