@@ -87,6 +87,19 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+    embryo:
+        organism: 'hg38'
+        url:
+            tar: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218314&format=file'
+            rna: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218314&format=file&file=GSE218314%5Fhuman%5Fmodel%5FRNA%5Fmatrix%2Erds%2Egz'
+            ann: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218314&format=file&file=GSE218314%5Fhuman%5Fmodel%5Fmetadata%2Ecsv%2Egz'
+        samples:
+            ['D4', 'D6', 'D8']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
     eye:
         organism: 'hg38'
         url:
