@@ -63,6 +63,17 @@ rule gen_genome_celloracle:
         """
 
 
+rule gen_genome_crema:
+    threads: 1
+    #singularity: 'workflow/envs/crema.sif' # TODO
+    #input: 'workflow/envs/crema.sif'
+    output: 'dbs/hg38/gen/genome/crema/genome.bed'
+    shell:
+        """
+        wget 'https://raw.githubusercontent.com/zidongzh/CREMA/refs/heads/main/crema_resource/genomes/human.hg38.genome.bed' -O {output}
+        """
+
+
 rule gen_genome_dictys:
     threads: 4
     conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
@@ -113,6 +124,18 @@ rule gen_genome_inferelator:
         cp {output.tfa}.gz {output.fa}
         mv {output.tfa}.gz {output.tfa}
         """
+
+
+rule gen_motif_crema:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/gen/motif/crema/jaspar.rds'
+    shell:
+        """
+        wget 'https://github.com/zidongzh/CREMA/raw/refs/heads/main/crema_resource/tf_motifs/data_rds/motifs_pwmlist_human_jaspar.rds' -O {output}
+        """
+
 
 
 rule gen_motif_granie:

@@ -12,6 +12,10 @@ methods:
         a: 10
         p: 0.001
         n: 2000
+    crema:
+        ext: 500000
+        site_extension: 200
+        thr_fdr: 0.05
     dictys:
         ext: 500000
         device: 'cuda:0'

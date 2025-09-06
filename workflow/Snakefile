@@ -104,6 +104,7 @@ include: 'rules/dts/embryo.smk'
 
 # Methods
 include: 'rules/mth/celloracle.smk'
+include: 'rules/mth/crema.smk'
 include: 'rules/mth/dictys.smk'
 include: 'rules/mth/directnet.smk'
 include: 'rules/mth/pando.smk'
