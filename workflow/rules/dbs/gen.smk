@@ -65,8 +65,8 @@ rule gen_genome_celloracle:
 
 rule gen_genome_crema:
     threads: 1
-    #singularity: 'workflow/envs/crema.sif' # TODO
-    #input: 'workflow/envs/crema.sif'
+    singularity: 'workflow/envs/crema.sif'
+    input: 'workflow/envs/crema.sif'
     output: 'dbs/hg38/gen/genome/crema/genome.bed'
     shell:
         """

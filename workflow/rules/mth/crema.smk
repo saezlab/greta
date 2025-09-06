@@ -1,6 +1,6 @@
 rule mdl_o_crema:
     threads: 1
-    #singularity: 'workflow/envs/crema.sif'
+    singularity: 'workflow/envs/crema.sif'
     input:
         mdata=rules.extract_case.output.mdata,
         gen=rules.gen_genome_crema.output,
