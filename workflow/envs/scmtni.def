@@ -1,0 +1,96 @@
+Bootstrap: docker
+From: debian:stretch
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    export CC=gcc
+    export CXX=g++
+    export CXXFLAGS="-std=gnu++14"
+    export LD_LIBRARY_PATH=/opt/conda/envs/env/lib:$LD_LIBRARY_PATH 
+
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate env
+
+%post
+    # Fix broken stretch APT sources by using archived repositories
+    sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /etc/apt/sources.list
+    sed -i 's|http://security.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list
+    sed -i '/stretch-updates/d' /etc/apt/sources.list
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+
+    apt update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+
+    # Install GCC 6 and other dependencies via apt
+    apt install -y build-essential gcc-6 g++-6 libstdc++6 \
+                   cmake wget curl git libcurl4-openssl-dev libssl-dev \
+                   libxml2-dev libcairo2-dev libxt-dev libopenblas-dev bedtools tabix gawk \
+                   libgmp-dev libmpfr-dev libmpc-dev texinfo ca-certificates
+
+    # Set GCC 6 as default compiler
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-6
+    update-alternatives --set gcc /usr/bin/gcc-6
+
+    # Verify GCC version
+    gcc --version
+    g++ --version
+
+    #########################
+    # Install Miniforge + env
+    #########################
+
+    wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+    bash Miniforge3.sh -b -p "/opt/conda"
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate
+
+    # Install system GSL headers (provides gsl/*.h, version 2.4-ish)
+    apt install -y libgsl-dev
+
+    mamba create -y -n env -c conda-forge -c bioconda \
+        python=3.10 \
+        pip \
+        numpy=1.24.3 \
+        pandas=2.2.3 \
+        scanpy=1.11.0 \
+        networkx=3.4.2 \
+        scipy=1.15.2 \
+        anndata=0.11.3 \
+        r-base=4.3 \
+        bioconductor-biomart \
+        gsl=2.7
+
+    # Use env by path
+    export PATH=/opt/conda/envs/env/bin:$PATH
+
+    # Install mudata via pip
+    pip install mudata==0.3.2
+
+
+
+    ##########################
+    # Clone and build scMTNI #
+    ##########################
+    cd /opt
+    git clone https://github.com/Roy-lab/scMTNI.git
+    cd scMTNI/Code
+
+    # Use system headers, but link to conda GSL runtime
+    make LDFLAGS="-L/opt/conda/envs/env/lib -lgsl -lgslcblas -lm"
+
+    # Give exec permissions to rankEdges script
+    chmod +x /opt/scMTNI/Scripts/genPriorNetwork/rankEdges
+
+
+    #########################
+    # Install liftOver      #
+    #########################
+
+    cd /opt
+    # Download Linux 64-bit version
+    wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/liftOver
+    chmod +x liftOver
+    # Add to PATH (already included in %environment PATH)
+    mv liftOver /opt/conda/bin/

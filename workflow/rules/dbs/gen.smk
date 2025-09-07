@@ -2,7 +2,7 @@ localrules: gen_tfs_lambert, gen_tfs_scenic
 localrules: gen_gid_ensmbl, gen_pid_uniprot, gen_genome_celloracle, gen_genome_dictys
 localrules: gen_genome_scenicplus
 localrules: gen_ann_dictys, gen_ann_pando
-localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_scenic
+localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_scenic, gen_motif_scmtni
 localrules: gen_motif_scenicplus
 
 
@@ -224,6 +224,39 @@ rule gen_motif_scenicplus:
         wget --no-verbose -O {output.human_annot} {params.human_annot_url}
         wget --no-verbose -O {output.mouse_annot} {params.mouse_annot_url}
         """
+
+rule gen_motif_scmtni:
+    threads: 1
+    output: 
+        raw=directory('dbs/hg38/gen/motif/scmtni/RawMotifFiles'),
+        motifs_dir = directory('dbs/hg38/gen/motif/scmtni/motif_files'),
+        promoters_dir = directory('dbs/hg38/gen/motif/scmtni/promoter_files')
+    params: 
+        url="https://zenodo.org/records/8323399/files/RawMotifFiles.tar.gz?download=1"
+    shell:
+        """
+        wget --no-verbose {params.url} -O {output.raw}.tar.gz && \
+        mkdir -p {output.raw} && \
+        tar -xvf {output.raw}.tar.gz -C {output.raw} && \
+        mkdir -p {output.motifs_dir} {output.promoters_dir} && \
+        find {output.raw} -maxdepth 1 -type f -name "*.txt" -exec mv {{}} {output.motifs_dir}/ \; && \
+        find {output.raw} -maxdepth 1 -type f -name "*.bed" -exec mv {{}} {output.promoters_dir}/ \; && \
+        rm {output.raw}.tar.gz && \
+        rm -rf {output.raw}
+        """
+
+rule download_liftover_chains:
+    threads: 1
+    output:
+        hg38ToHg19 = "dbs/chain_files/hg38ToHg19.over.chain.gz"
+    params:
+        url_hg38ToHg19 = "http://hgdownload.cse.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz"
+    shell:
+        """
+        mkdir -p dbs/chain_files
+        wget --no-verbose {params.url_hg38ToHg19} -O {output.hg38ToHg19}
+        """
+
 
 
 rule gen_motif_inferelator:
