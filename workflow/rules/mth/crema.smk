@@ -11,6 +11,9 @@ rule mdl_o_crema:
         ext=config['methods']['crema']['ext'] // 2,
         site_extension=config['methods']['crema']['site_extension'],
         thr_fdr=config['methods']['crema']['thr_fdr'],
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         # Extract annot

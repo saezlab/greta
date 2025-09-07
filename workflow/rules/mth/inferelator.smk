@@ -12,6 +12,9 @@ rule mdl_o_inferelator:
         out='dts/{dat}/cases/{case}/runs/o_inferelator.o_inferelator.o_inferelator.o_inferelator.mdl.csv'
     params:
         ext=config['methods']['inferelator']['ext'] // 2,
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         export TMPDIR={output.tmp}

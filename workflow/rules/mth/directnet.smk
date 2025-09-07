@@ -9,6 +9,9 @@ rule mdl_o_directnet:
         out='dts/{dat}/cases/{case}/runs/o_directnet.o_directnet.o_directnet.o_directnet.mdl.csv'
     params:
         ext=config['methods']['directnet']['ext'] // 2,
+    resources:
+        mem_mb=restart_mem,
+        runtime=config['max_mins_per_step'] * 2,
     shell:
         """
         Rscript workflow/scripts/mth/directnet/src.R \
