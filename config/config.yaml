@@ -47,9 +47,14 @@ methods:
     scenicplus:
         ntopics: 50
         ext: 500000
+    scgpt:
+        batch_size: 16
+        device: 'cuda:0'
+        n_hvg: 16384
+        min_score: 0.9
 
 
-baselines: ['collectri', 'dorothea', 'pearson', 'random', 'scenic', 'spearman']
+baselines: ['collectri', 'dorothea', 'grnboost', 'pearson', 'random', 'scenic', 'scgpt', 'spearman']
 
 colors:
     nets:

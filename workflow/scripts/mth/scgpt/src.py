@@ -38,6 +38,7 @@ from contextlib import contextmanager
 
 import numpy as np
 import pandas as pd
+import pyranges as pr
 import torch
 import torch.nn.functional as F
 
@@ -99,6 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--model_dir", default=os.environ.get("SCGPT_MODEL_DIR", "./save/scGPT_human"),
                    help="Path to scGPT checkpoint dir (vocab.json, args.json, best_model.pt).")
     p.add_argument("--tfs", required=True, help="Path to headless one-column TF.csv (gene symbols).")
+    p.add_argument("--promoters", required=True, help="Path to gene promoter regions.")
     p.add_argument("--out", required=True, help="Output GRN CSV (source,target,score).")
     p.add_argument("--attn_npy", default=None, help="Optional path to save the averaged attention (.npy).")
 
@@ -114,7 +116,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--batch_size", type=int, default=32, help="Batch size for encoder forward.")
 
     # GRN building
-    p.add_argument("--top_k_per_source", type=int, default=1000, help="Top-K targets per TF.")
+    p.add_argument("--top_k_per_source", type=int, default=10000, help="Top-K targets per TF.")
     p.add_argument("--min_score", type=float, default=0.75, help="Min score threshold for edges, 0=none, 1.0=max.")
     p.add_argument("--min_top_q", type=int, default=0, help="Ensure at least this many edges per TF.")
     p.add_argument("--drop_self_loops", action="store_true", help="Drop source->source edges.")
@@ -130,13 +132,21 @@ def build_parser() -> argparse.ArgumentParser:
 # ---------------------------
 # Loaders
 # ---------------------------
-def load_adata(path: Path) -> AnnData:
-    if path.suffix == ".h5mu":
-        mdata = mu.read(path)
-        return mdata.mod["rna"].copy()
-    if path.suffix == ".h5ad":
-        return sc.read(path)
-    raise ValueError(f"Unsupported data format: {path.suffix}. Use .h5ad or .h5mu")
+def load_adata(path: Path, path_proms: Path):
+    mdata = mu.read(path)
+    proms = pr.read_bed(path_proms)
+    genes = mdata.mod['rna'].var_names.astype('U')
+    peaks = mdata.mod['atac'].var_names.astype('U')
+    peaks = pd.DataFrame(peaks, columns=['cre'])
+    peaks[['Chromosome', 'Start', 'End']] = peaks['cre'].str.split('-', n=2, expand=True)
+    peaks = pr.PyRanges(peaks[['Chromosome', 'Start', 'End']])
+    proms = proms[proms.Name.astype('U').isin(genes)]
+    proms = proms.overlap(peaks)
+    proms.cre = proms.df['Chromosome'].astype(str) + '-' + proms.df['Start'].astype(str) + '-' + proms.df['End'].astype(str)
+    proms = proms.df[['cre', 'Name']].rename(columns={'Name': 'target'})
+    rna = mdata.mod["rna"].copy()
+    rna.obs = mdata.obs
+    return rna, proms
 
 def ensure_checkpoint(model_dir: Path):
     vocab_file = model_dir / "vocab.json"
@@ -199,7 +209,7 @@ def _ensure_binned_layer(adata: AnnData, n_bins: int, data_is_raw: bool = False,
         binning=n_bins,
         result_binned_key="X_binned",
     )
-    pre(adata)
+    pre(adata, batch_key='batch')
     return adata
 
 def _intersect_with_vocab(adata: AnnData, vocab: GeneVocab) -> AnnData:
@@ -535,6 +545,7 @@ def build_and_save_grn(
     avg_attn: np.ndarray,
     gene_names: List[str],
     tfs_path: str,
+    proms: pd.DataFrame,
     out_csv: str,
     top_k: int,
     min_score: float,
@@ -557,6 +568,8 @@ def build_and_save_grn(
         drop_self_loops=drop_self_loops,
         restrict_targets_to_tfs=restrict_targets_to_tfs,
     )
+    grn = pd.merge(grn, proms, how='inner')[['source', 'cre', 'target', 'score']]
+    grn = grn.sort_values(['source', 'target', 'cre'])
     _write_grn_csv(grn, out_csv)
     return grn
 
@@ -576,7 +589,7 @@ def run(args: argparse.Namespace) -> None:
 
     # Load & preprocess data
     data_path = Path(args.data)
-    adata = load_adata(data_path)
+    adata, proms = load_adata(data_path, path_proms=args.promoters)
     LOGGER.info("Loaded data: %s cells × %s genes", adata.n_obs, adata.n_vars)
     adata = preprocess_and_intersect(adata, vocab, args.n_bins, args.data_is_raw, args.n_hvg)
 
@@ -604,6 +617,7 @@ def run(args: argparse.Namespace) -> None:
         avg_attn=avg_attn,
         gene_names=gene_names,
         tfs_path=args.tfs,
+        proms=proms,
         out_csv=args.out,
         top_k=args.top_k_per_source,
         min_score=args.min_score,

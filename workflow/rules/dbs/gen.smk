@@ -15,6 +15,7 @@ rule install_dictys:
         touch {output}
         """
 
+
 rule gen_tfs_lambert:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'

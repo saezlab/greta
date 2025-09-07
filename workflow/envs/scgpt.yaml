@@ -25,6 +25,8 @@ dependencies:
   - pytorch-cuda=12.1
   # Other
   - tqdm
+  - ipython
+  - bioconda::pyranges
   - pip:
       - torchtext==0.16.2
       - scgpt
