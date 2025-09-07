@@ -3,10 +3,11 @@ localrules: install_dictys
 
 rule pre_dictys:
     threads: 1
-    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
     input:
         img=rules.install_dictys.output,
-        mdata=rules.extract_case.output.mdata
+        mdata=rules.extract_case.output.mdata,
+        dictys=rules.install_dictys.output,
     output:
         tmp='dts/{dat}/cases/{case}/runs/dictys_pre_expr.tsv.gz',
         out='dts/{dat}/cases/{case}/runs/dictys.pre.h5mu',
@@ -24,10 +25,11 @@ rule pre_dictys:
 
 rule p2g_dictys:
     threads: 1
-    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         ann=rules.gen_ann_dictys.output,
+        dictys=rules.install_dictys.output,
     output:
         d=temp(directory(local('dts/{dat}/cases/{case}/runs/{pre}_dictys_tmp/'))),
         out='dts/{dat}/cases/{case}/runs/{pre}.dictys.p2g.csv',
@@ -55,7 +57,7 @@ rule p2g_dictys:
 
 rule tfb_dictys:
     threads: 16
-    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
     container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
@@ -63,6 +65,7 @@ rule tfb_dictys:
         frags=list_frags_files,
         motif=rules.gen_motif_dictys.output,
         genome=rules.gen_genome_dictys.output,
+        dictys=rules.install_dictys.output,
     output:
         d=temp(directory('dts/{dat}/cases/{case}/runs/{pre}.{p2g}.dictys_tmp')),
         out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.dictys.tfb.csv'
@@ -93,13 +96,14 @@ rule tfb_dictys:
 
 rule mdl_dictys:
     threads: 4
-    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
     container: None
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
         ann=rules.gen_ann_dictys.output,
+        dictys=rules.install_dictys.output,
     output:
         d=temp(directory('dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp')),
         out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys.mdl.csv'
@@ -139,14 +143,15 @@ rule mdl_dictys:
 
 rule mdl_o_dictys:
     threads: 4
-    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
     container: None
     input:
         mdata=rules.extract_case.output.mdata,
         ann=rules.gen_ann_dictys.output,
         frags=list_frags_files,
         motif=rules.gen_motif_dictys.output,
-        genome=rules.gen_genome_dictys.output
+        genome=rules.gen_genome_dictys.output,
+        dictys=rules.install_dictys.output,
     output:
         tmp='dts/{dat}/cases/{case}/runs/o_dictys_pre_expr.tsv.gz',
         d=temp(directory(local('dts/{dat}/cases/{case}/runs/o_dictys_dictys_tmp/'))),

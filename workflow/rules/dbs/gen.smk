@@ -7,7 +7,7 @@ localrules: gen_motif_scenicplus
 
 
 rule install_dictys:
-    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
     output: 'workflow/envs/dictys.txt'
     shell:
         """
@@ -77,7 +77,7 @@ rule gen_genome_crema:
 
 rule gen_genome_dictys:
     threads: 4
-    conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
     input: rules.install_dictys.output
     output: directory('dbs/hg38/gen/genome/dictys/')
     shell:
