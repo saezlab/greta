@@ -12,6 +12,7 @@ rule mdl_o_scgpt:
         device=config['methods']['scgpt']['device'],
         n_hvg=config['methods']['scgpt']['n_hvg'],
         min_score=config['methods']['scgpt']['min_score'],
+        model_dir=dbs/hg38/gen/genome/scgpt/,
     resources:
         partition='gpu-single',
         mem_mb=restart_mem,
@@ -30,5 +31,6 @@ rule mdl_o_scgpt:
         --min_score {params.min_score} \
         --min_top_q 5 \
         --verbose \
+        --model_dir {params.model_dir} \
         --out {output.out}
         """
