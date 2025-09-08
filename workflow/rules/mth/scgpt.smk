@@ -12,7 +12,7 @@ rule mdl_o_scgpt:
         device=config['methods']['scgpt']['device'],
         n_hvg=config['methods']['scgpt']['n_hvg'],
         min_score=config['methods']['scgpt']['min_score'],
-        model_dir=dbs/hg38/gen/genome/scgpt/,
+        model_dir='dbs/hg38/gen/genome/scgpt',
     resources:
         partition='gpu-single',
         mem_mb=restart_mem,

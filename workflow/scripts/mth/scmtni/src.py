@@ -26,15 +26,15 @@ args = vars(parser.parse_args())
 path_mudata = args['path_mudata']
 path_output = args['path_output']
 path_chainFiles = args['path_chainFiles']
-motif_file = args['motifs_dir']
-promoter_file = args['promoter_dir']
+motif_file = args['motif_file']
+promoter_file = args['promoter_file']
 
 
 # liftover files
 liftover_path = "/opt/conda/bin/liftOver"  # path to the liftOver binary in sif image
 input_bed = os.path.join(path_output, "peaks_hg38.bed")
 output_bed = os.path.join(path_output, "peaks_hg19.bed")
-unmapped_file = s.path.join(path_output, "unmapped.bed")
+unmapped_file = os.path.join(path_output, "unmapped.bed")
 
 # narrow peak Paths
 narrowPeak_paths = "peaks_by_cluster"

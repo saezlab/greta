@@ -35,5 +35,6 @@ rule mdl_o_crema:
         {params.ext} \
         {params.site_extension} \
         {params.thr_fdr} \
-        {output.out}
+        {output.out} && \
+        rm -r $path_tmp
         """

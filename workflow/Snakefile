@@ -117,6 +117,7 @@ include: 'rules/mth/grn.smk'
 include: 'rules/mth/random.smk'
 include: 'rules/mth/scenic.smk'
 include: 'rules/mth/scgpt.smk'
+include: 'rules/mth/scmtni.smk'
 
 # Analyses
 include: 'rules/anl/metrics/prior.smk'
