@@ -17,14 +17,16 @@ import shutil
 parser = argparse.ArgumentParser()
 parser.add_argument('-a','--path_mudata', required=True)
 parser.add_argument('-b','--path_output', required=True)
-parser.add_argument('-c','--path_chainFiles', required=True)
-parser.add_argument('-d','--motif_file', required=True)
-parser.add_argument('-e','--promoter_file', required=True)
+parser.add_argument('-c','--path_outfile', required=False, default=None)
+parser.add_argument('-d','--path_chainFiles', required=True)
+parser.add_argument('-e','--motif_file', required=True)
+parser.add_argument('-f','--promoter_file', required=True)
 
 args = vars(parser.parse_args())
 
 path_mudata = args['path_mudata']
 path_output = args['path_output']
+path_outfile = args['path_outfile']
 path_chainFiles = args['path_chainFiles']
 motif_file = args['motif_file']
 promoter_file = args['promoter_file']
@@ -610,4 +612,4 @@ def merge_networks(results_dir, output_file):
     return consensus_df
 
 # Example usage:
-consensus = merge_networks(path_output, os.path.join(path_output, "consensus_network.csv"))
+consensus = merge_networks(path_outfile)

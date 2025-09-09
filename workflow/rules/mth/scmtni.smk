@@ -7,6 +7,7 @@ rule mdl_o_scmtni:
         motifs=rules.gen_motif_scmtni.output.motifs_dir,
         promoters=rules.gen_motif_scmtni.output.promoters_dir,
     output:
+        outdir=temp(directory('dts/{dat}/cases/{case}/runs/o_scmtni/')),
         out='dts/{dat}/cases/{case}/runs/o_scmtni.o_scmtni.o_scmtni.o_scmtni.mdl.csv'
     resources:
         mem_mb=restart_mem,
@@ -15,8 +16,9 @@ rule mdl_o_scmtni:
         """
         python workflow/scripts/mth/scmtni/src.py \
         -a {input.mdata} \
-        -b {output.out} \
-        -c {input.chainfiles} \
-        -d {input.motifs} \
-        -e {input.promoters}
+        -b {output.outdir} \
+        -c {output.out} \
+        -d {input.chainfiles} \
+        -e {input.motifs} \
+        -f {input.promoters}
         """
