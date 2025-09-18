@@ -134,7 +134,7 @@ bed_df.columns = ["chrom", "start", "end"]
 bed_df["start"] = bed_df["start"].astype(int)
 bed_df["end"] = bed_df["end"].astype(int)
 
-bed_df.to_csv(os.path.join(path_output, input_bed), sep="\t", header=False, index=False)
+bed_df.to_csv(input_bed, sep="\t", header=False, index=False)
 
 ## Run liftOver from Python
 subprocess.run([

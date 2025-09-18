@@ -14,11 +14,15 @@ rule mdl_o_scmtni:
         runtime=config['max_mins_per_step'] * 2,
     shell:
         """
+        path_out=$(dirname {output.out})
+        path_out=$path_out/tmp_o_scmtni
+        mkdir -p $path_out
         python workflow/scripts/mth/scmtni/src.py \
         -a {input.mdata} \
-        -b {output.outdir} \
+        -b $path_out \
         -c {output.out} \
         -d {input.chainfiles} \
         -e {input.motifs} \
         -f {input.promoters}
+        rm -rf $path_out
         """
