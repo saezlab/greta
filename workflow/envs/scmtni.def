@@ -87,10 +87,5 @@ From: debian:stretch
     #########################
     # Install liftOver      #
     #########################
-
-    cd /opt
-    # Download Linux 64-bit version
-    wget http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/liftOver
-    chmod +x liftOver
-    # Add to PATH (already included in %environment PATH)
-    mv liftOver /opt/conda/bin/
+    
+    mamba install -n env -c bioconda ucsc-liftover
