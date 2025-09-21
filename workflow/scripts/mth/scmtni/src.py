@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt  # Import else compiling error
 import pandas as pd
 import numpy as np
+import scanpy as sc
 import networkx as nx
 from scipy.spatial.distance import pdist, squareform
 from scipy.sparse.csgraph import minimum_spanning_tree
@@ -33,7 +34,7 @@ promoter_file = args['promoter_file']
 
 
 # liftover files
-liftover_path = "/opt/conda/bin/liftOver"  # path to the liftOver binary in sif image
+liftover_path = "liftOver"  # path to the liftOver binary in sif image
 input_bed = os.path.join(path_output, "peaks_hg38.bed")
 output_bed = os.path.join(path_output, "peaks_hg19.bed")
 unmapped_file = os.path.join(path_output, "unmapped.bed")
@@ -53,7 +54,7 @@ mdata.obs['celltype'] = mdata.obs['celltype'].str.replace(" ", "_")
 
 
 #--------------------------------------------------------------------------------------
-# Compute cell lineage tree 
+# Compute cell lineage tree
 print("Computing cell lineage tree...")
 ## Get clusters
 clusters = mdata.obs['celltype']
@@ -224,7 +225,7 @@ for celltype, cells in mdata.obs.groupby("celltype").groups.items():
     df["pValue"] = -1
     df["qValue"] = -1
     df["peak"] = -1
-    
+
     # Save in narrowPeak format
     df = df[template_cols]
     out_path = os.path.join(path_output, f"{celltype}.narrowPeak")
@@ -254,19 +255,19 @@ for cluster in celltypes.unique():
     expr_cluster = expr.loc[cells_in_cluster]  # subset matrix
 
     # transpose → rows = genes, cols = cells
-    expr_cluster = expr_cluster.T  
+    expr_cluster = expr_cluster.T
 
     # rename genes to include cluster suffix
     expr_cluster.index = [f"{g}_{cluster}" for g in expr_cluster.index]
 
     # save to file
-    outfile = path_output / f"{cluster}.table"
+    outfile = os.path.join(path_output, f"{cluster}.table")
     expr_cluster.to_csv(outfile, sep="\t")
 
     print(f"Saved: {outfile}")
 
 #--------------------------------------------------------------------------------------
-# Create filelist 
+# Create filelist
 print("Creating filelist...")
 
 # directory where you stored the per-cluster tables
