@@ -20,8 +20,8 @@ parser.add_argument('-a','--path_mudata', required=True)
 parser.add_argument('-b','--path_output', required=True)
 parser.add_argument('-c','--path_outfile', required=False, default=None)
 parser.add_argument('-d','--path_chainFiles', required=True)
-parser.add_argument('-e','--motif_file', required=True)
-parser.add_argument('-f','--promoter_file', required=True)
+parser.add_argument('-e','--motif_dir', required=True)
+parser.add_argument('-f','--promoter_dir', required=True)
 
 args = vars(parser.parse_args())
 
@@ -29,8 +29,10 @@ path_mudata = args['path_mudata']
 path_output = args['path_output']
 path_outfile = args['path_outfile']
 path_chainFiles = args['path_chainFiles']
-motif_file = args['motif_file']
-promoter_file = args['promoter_file']
+motif_dir = args['motif_file']
+motif_file = os.path.join(motif_dir, "human_all_motifs_sorted_clean.txt")
+promoter_dir = args['promoter_file']
+promoter_file = os.path.join(promoter_dir, "Homo_sapiens.GRCm37.74.TSS.5000.bed")
 
 
 # liftover files
@@ -348,21 +350,21 @@ def sort_bed(in_file, out_file):
 #------------------------
 # 2. Run bedtools intersects
 #------------------------
-def run_bedtools_intersects(cell_types, outdir, outdir2, motifs_file, promoter_file, bedtools_path="/opt/scMTNI/Scripts/genPriorNetwork/bedtools"):
-    Path(outdir2).mkdir(parents=True, exist_ok=True)
+def run_bedtools_intersects(cell_types, outdir, motif_file, promoter_file, bedtools_path="/opt/scMTNI/Scripts/genPriorNetwork/bedtools"):
+    Path(outdir).mkdir(parents=True, exist_ok=True)
     for cluster in cell_types:
         peaks_file = Path(outdir) / f"{cluster}.sorted.narrowPeak"
-        motifs_out = Path(outdir2) / f"motifs_in_{cluster}"
-        tss_out = Path(outdir2) / f"TSS_in_{cluster}"
+        motif_out = Path(outdir) / f"motifs_in_{cluster}"
+        tss_out = Path(outdir) / f"TSS_in_{cluster}"
 
-        if not motifs_out.exists():
+        if not motif_out.exists():
             subprocess.run([
                 bedtools_path, "intersect", "-a", str(peaks_file),
-                "-b", motifs_file, "-wb", "-sorted"
-            ], stdout=open(motifs_out, "w"), check=True)
-            print(f"Generated {motifs_out}")
+                "-b", motif_file, "-wb", "-sorted"
+            ], stdout=open(motif_out, "w"), check=True)
+            print(f"Generated {motif_out}")
         else:
-            print(f"Skipping {motifs_out}, already exists")
+            print(f"Skipping {motif_out}, already exists")
 
         if not tss_out.exists():
             subprocess.run([
@@ -377,18 +379,18 @@ def run_bedtools_intersects(cell_types, outdir, outdir2, motifs_file, promoter_f
 #------------------------
 # 3. Map motifs to genes
 #------------------------
-def run_map_motifs_to_genes(cell_types, outdir2, outdir3, motif2tf_file):
-    Path(outdir3).mkdir(parents=True, exist_ok=True)
+def run_map_motifs_to_genes(cell_types, outdir, motif2tf_file):
+    Path(outdir).mkdir(parents=True, exist_ok=True)
     for cluster in cell_types:
-        outfile = Path(outdir3) / f"{cluster}_network.txt"
+        outfile = Path(outdir) / f"{cluster}_network.txt"
         if outfile.exists():
             print(f"Skipping {outfile}, already exists")
             continue
         subprocess.run([
             "python", "/opt/scMTNI/Scripts/genPriorNetwork/mapMot2Gene.py",
             "--mot2tf", motif2tf_file,
-            "--mot2peak", str(Path(outdir2) / f"motifs_in_{cluster}"),
-            "--peak2gene", str(Path(outdir2) / f"TSS_in_{cluster}"),
+            "--mot2peak", str(Path(outdir) / f"motifs_in_{cluster}"),
+            "--peak2gene", str(Path(outdir) / f"TSS_in_{cluster}"),
             "--outfile", str(outfile)
         ], check=True)
         print(f"Mapped motifs -> genes for {cluster}")
@@ -397,14 +399,14 @@ def run_map_motifs_to_genes(cell_types, outdir2, outdir3, motif2tf_file):
 #------------------------
 # 4. Filter prior network
 #------------------------
-def run_filter_prior_network(cell_types, datadir, outdir3, outdir4):
-    Path(outdir4).mkdir(parents=True, exist_ok=True)
+def run_filter_prior_network(cell_types, outdir, outdir_prior):
+    Path(outdir_prior).mkdir(parents=True, exist_ok=True)
     for sample in cell_types:
-        regfile = Path(datadir) / f"{sample}_allregulators.txt"
-        genefile = Path(datadir) / f"{sample}_allGenes.txt"
-        netfile0 = Path(outdir3) / f"{sample}_network.txt"
-        netfile = Path(outdir3) / f"{sample}.txt"
-        outfile = Path(outdir4) / f"{sample}_network.txt"
+        regfile = Path(outdir) / f"{sample}_allregulators.txt"
+        genefile = Path(outdir) / f"{sample}_allGenes.txt"
+        netfile0 = Path(outdir) / f"{sample}_network.txt"
+        netfile = Path(outdir) / f"{sample}.txt"
+        outfile = Path(outdir_prior) / f"{sample}_network.txt"
 
         if outfile.exists():
             print(f"Skipping {outfile}, already exists")
@@ -432,25 +434,25 @@ def run_filter_prior_network(cell_types, datadir, outdir3, outdir4):
 #------------------------
 # 5. Filter top edges
 #------------------------
-def run_filter_top_edges(datadir, outdir4):
-    outdir4 = Path(outdir4)
-    outdir4.mkdir(parents=True, exist_ok=True)
+def run_filter_top_edges(outdir_prior, outdir_top02):
+    outdir_top02 = Path(outdir_top02)
+    outdir_top02.mkdir(parents=True, exist_ok=True)
     # Here we assume the Rscript produces files in outdir4
     subprocess.run([
         "Rscript", "--vanilla", "/opt/scMTNI/Scripts/genPriorNetwork/filtertop20Pedges_mod.R",
-        datadir, str(outdir4)
+        outdir_prior, str(outdir_top02)
     ], check=True)
-    print(f"Filtered top edges -> {outdir4}")
+    print(f"Filtered top edges -> {outdir_top02}")
 
 
 #------------------------
 # 6. Percentile ranking
 #------------------------
-def run_percentile_ranking(cell_types, outdir4, outdir5):
-    Path(outdir5).mkdir(parents=True, exist_ok=True)
+def run_percentile_ranking(cell_types, outdir_top02, outdir_ranked):
+    Path(outdir_ranked).mkdir(parents=True, exist_ok=True)
     for sample in cell_types:
-        networkfile = Path(outdir4) / f"{sample}_network.txt"
-        outfile = Path(outdir5) / f"{sample}_network.txt"
+        networkfile = Path(outdir_top02) / f"{sample}_network.txt"
+        outfile = Path(outdir_ranked) / f"{sample}_network.txt"
         if outfile.exists():
             print(f"Skipping {outfile}, already exists")
             continue
@@ -478,45 +480,41 @@ for ct in celltypes:
 print("Running bedtools intersects...")
 run_bedtools_intersects(cell_types=celltypes, 
                         outdir = path_output,
-                        outdir2 = path_output,
-                        motifs_file = motif_file,
+                        motif_file = motif_file,
                         promoter_file = promoter_file)
 
 
 print("Mapping motifs to genes...")
 run_map_motifs_to_genes(cell_types=celltypes,
-                        outdir2 = path_output,
-                        outdir3 = path_output,
+                        outdir = path_output,
                         motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
 
 print("Filtering prior network...")
 run_filter_prior_network(cell_types=celltypes, 
-                        datadir= path_output, 
-                        outdir3= path_output, 
-                        outdir4= os.path.join(path_output, "prior_networks/"))
+                        outdir= path_output, 
+                        outdir_prior= os.path.join(path_output, "prior_networks/"))
 
 print("Filtering top 20% edges...")
-run_filter_top_edges(datadir = path_output, 
-                    outdir4 = os.path.join(path_output, "prior_networks_top0.2/"))
+run_filter_top_edges(outdir_prior = os.path.join(path_output, "prior_networks/"), 
+                    outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"))
 
 
 print("Running percentile ranking...")
 run_percentile_ranking(cell_types=celltypes, 
-                       outdir4 = os.path.join(path_output, "prior_networks_top0.2/"), 
-                       outdir5 = os.path.join(path_output, "prior_networks_ranked/"))
+                    outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"), 
+                    outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"))
 
 
 #---------------------------------------------------------------------------------
 # Move filtered and ranked prior networks to main output dir
 
-def move_ranked_networks(cell_types, outdir5, path_output):
-    outdir5 = Path(outdir5)
-    path_output = Path(path_output)
-    path_output.mkdir(parents=True, exist_ok=True)
+def move_ranked_networks(cell_types, outdir_ranked, outdir):
+    outdir_ranked = Path(outdir_ranked)
+    outdir = Path(outdir)
 
     for sample in cell_types:
-        ranked_file = outdir5 / f"{sample}_network.txt"
-        dest_file = path_output / f"{sample}_network.txt"
+        ranked_file = outdir_ranked / f"{sample}_network.txt"
+        dest_file = outdir / f"{sample}_network.txt"
 
         if not ranked_file.exists():
             print(f"Skipping {sample}, ranked file does not exist: {ranked_file}")
@@ -530,8 +528,8 @@ def move_ranked_networks(cell_types, outdir5, path_output):
 
 
 move_ranked_networks(cell_types=celltypes, 
-                     outdir5 = os.path.join(path_output, "prior_networks_ranked/"),
-                     path_output = path_output)
+                     outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"),
+                     outdir = path_output)
 
 #-------------------------------------------------------------------------------------
 # Run scMTNI
@@ -575,9 +573,9 @@ run_scmtni(
 # Merge networks across cell types
 
 
-def merge_networks(results_dir, output_file):
+def merge_networks(outdir, output_file):
     edges = {}
-    files = glob.glob(results_dir + "Results/*/fold0/var_mb_pw_k50.txt")
+    files = glob.glob(outdir + "Results/*/fold0/var_mb_pw_k50.txt")
 
     for file in files:
         df = pd.read_csv(file, sep="\t", header=None, names=["source", "target", "weight"])
@@ -613,4 +611,4 @@ def merge_networks(results_dir, output_file):
     return consensus_df
 
 # Example usage:
-consensus = merge_networks(path_outfile)
+consensus = merge_networks(outdir=path_output, output_file=path_outfile)
