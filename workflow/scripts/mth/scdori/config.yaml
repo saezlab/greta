@@ -1,0 +1,143 @@
+# Unified configuration for preprocessing and training in scDoRI
+scDoRIConfig:
+  # General settings
+  logging_level: INFO
+  random_seed: 3141
+
+  # File structure
+  ## Input Paths
+  base_dir: "/omics/groups/OE0596/internal/thorben/scDORI" # Needs to be set
+  data_dir: "/omics/groups/OE0596/internal/thorben/scDORI/data"  # Relative to base_dir
+  genome_dir: "human_genome_files"
+  motif_directory: "motif_database"
+
+  ## Output Path
+  ### Preprocessing
+  output_subdir_name: "generated"
+
+  ### Weights and models
+  weight_dir: "/home/t159g/dataGPU/scDoRI/weights" # Needs to be set
+  weights_folder_scdori: "weights_directory_scdori"
+  weights_folder_grn: "weights_directory_grn"
+  model_dir: "models"
+
+  # Input data
+  ## Multiomics data
+  rna_adata_file_name: "anndata.h5ad" # Needs to be set
+  atac_adata_file_name: "PeakMatrix_anndata.h5ad" # Needs to be set
+  mudata_file_name: "mdata.h5mu" # Needs to be set
+
+  ## Reference genome and species
+  species: "human" # Needs to be set
+  genome_assembly: "hg38" # Needs to be set
+  gtf_url: "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_47/gencode.v47.primary_assembly.basic.annotation.gtf.gz"
+  chrom_sizes_url: null
+  fasta_url: null
+  # chrom_sizes_file: "hg38.chrom.sizes" # Generated automatically
+
+  # Output
+  ## Processed files
+  rna_metacell_file: "rna_processed.h5ad"
+  atac_metacell_file: "atac_processed.h5ad"
+
+  ## Distance matrix input
+  gene_peak_distance_file: "gene_peak_distance_exp.npy"
+  insilico_chipseq_act_file: "insilico_chipseq_act.npy"
+  insilico_chipseq_rep_file: "insilico_chipseq_rep.npy"
+
+  ## Model weights
+  best_scdori_model_path: "best_scdori_final.pth"
+  best_grn_model_path: "best_grn.pth"
+
+  # Preprocessing parameters
+  ## Gene/TF selection
+  mitochondrial_prefix: "mt-"
+  genes_user: []
+  tfs_user: []
+  motif_database: "cisbp"
+  num_genes: 4000
+  num_tfs: 300
+  min_cells_per_gene: 4
+
+  ## Genomic window and peaks
+  window_size: 80000 # Needs to be set
+  num_peaks: 90000
+  peak_std_batch_key: "leiden"
+  batch_key: "batch"
+  batch_col: "batch"
+  leiden_resolution: 10.0
+  keep_promoter_peaks: False
+  promoter_col: "promoter_col"
+
+  ## In silico ChIP-seq and correlation
+  motif_match_pvalue_threshold: 0.001
+  correlation_percentile: 99
+  n_bg_peaks_for_corr: 5000
+  peak_distance_scaling_factor: 20000
+
+  # Model and training settings
+  ## Model architecture
+  batch_size_cell: 128
+  dim_encoder1: 500
+  dim_encoder2: 200
+  num_topics: 30
+  batch_size_cell_prediction: 256
+
+  ## Training parameters
+  epoch_warmup_1: 5
+  max_scdori_epochs: 800
+  max_grn_epochs: 400
+  update_encoder_in_grn: false
+  update_peak_gene_in_grn: false
+  update_topic_peak_in_grn: false
+  update_topic_tf_in_grn: false
+  eval_frequency: 1
+  phase1_patience: 40
+  grn_val_patience: 5
+
+  ## Learning rates
+  learning_rate_scdori: 0.005
+  learning_rate_grn: 0.001
+
+  ## Loss weights
+  ### Phase 1 weights (warmup_1)
+  weight_atac_phase1: 1.0
+  weight_tf_phase1: 200.0
+  weight_rna_phase1: 0.0
+  weight_rna_grn_phase1: 0.0
+
+  ### Phase 1 weights (warmup_2)
+  weight_atac_phase2: 1.0
+  weight_tf_phase2: 200.0
+  weight_rna_phase2: 20.0
+  weight_rna_grn_phase2: 0.0
+
+  ### Phase 2 (GRN) weights
+  weight_atac_grn: 1.0
+  weight_tf_grn: 200.0
+  weight_rna_grn: 20.0
+  weight_rna_from_grn: 20.0
+
+  ### Regularization
+  l1_penalty_topic_tf: 0.001
+  l2_penalty_topic_tf: 0.0
+  l1_penalty_topic_peak: 0.001
+  l2_penalty_topic_peak: 0.001
+  l1_penalty_gene_peak: 0.001
+  l2_penalty_gene_peak: 0.005
+  l1_penalty_grn_activator: 0.00005
+  l1_penalty_grn_repressor: 0.0
+
+  # TF expression settings
+  tf_expression_mode: "True"
+  tf_expression_clamp: 0.1
+  cells_per_topic: 200
+
+  # UMAP parameters
+  umap_n_neighbors: 15
+  umap_min_dist: 0.1
+  umap_random_state: 42
+
+  # Significance testing
+  significance_cutoffs: [0.001, 0.005, 0.01, 0.05]
+  num_permutations: 1000

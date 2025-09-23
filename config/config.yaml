@@ -44,6 +44,8 @@ methods:
         rsq_thresh: 0.05
         nvar_thresh: 2
         min_genes_per_module: 3
+    scdori:
+        ext: 500000
     scenicplus:
         ntopics: 50
         ext: 500000
@@ -52,6 +54,8 @@ methods:
         device: 'cuda:0'
         n_hvg: 16384
         min_score: 0.9
+    scmtni:
+        ext: 500000
 
 
 baselines: ['collectri', 'dorothea', 'grnboost', 'pearson', 'random', 'scenic', 'scgpt', 'spearman']
