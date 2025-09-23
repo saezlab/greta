@@ -354,7 +354,7 @@ def sort_bed(in_file, out_file):
 #------------------------
 # 2. Run bedtools intersects
 #------------------------
-def run_bedtools_intersects(cell_types, outdir, motif_file, promoter_file, bedtools_path="/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/bedtools"):
+def run_bedtools_intersects(cell_types, outdir, motif_file, promoter_file, bedtools_path="bedtools"):
     Path(outdir).mkdir(parents=True, exist_ok=True)
     for cluster in cell_types:
         peaks_file = Path(outdir) / f"{cluster}.sorted.narrowPeak"
