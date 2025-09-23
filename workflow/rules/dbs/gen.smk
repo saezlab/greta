@@ -225,6 +225,7 @@ rule gen_motif_scenicplus:
         wget --no-verbose -O {output.mouse_annot} {params.mouse_annot_url}
         """
 
+
 rule gen_motif_scmtni:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -237,16 +238,17 @@ rule gen_motif_scmtni:
     shell:
         """
         path_raw=$(dirname {output.motifs_dir})
-        path_raw=$path_raw/RawMotifFiles
         wget --no-verbose {params.url} -O $path_raw.tar.gz && \
         mkdir -p $path_raw && \
         tar -xvf $path_raw.tar.gz -C $path_raw && \
+        path_raw=$path_raw/RawMotifFiles && \
         mkdir -p {output.motifs_dir} {output.promoters_dir} && \
-        find $path_raw -maxdepth 1 -type f -name "*.txt" -exec mv {{}} {output.motifs_dir}/ \; && \
-        find $path_raw -maxdepth 1 -type f -name "*.bed" -exec mv {{}} {output.promoters_dir}/ \; && \
+        mv $path_raw/human_all_motifs_sorted_clean.txt {output.motifs_dir}/  && \
+        mv $path_raw/Homo_sapiens.GRCh37.74.TSS.5000.bed {output.promoters_dir}/ && \
         rm $path_raw.tar.gz && \
         rm -rf $path_raw
         """
+
 
 rule download_liftover_chains:
     threads: 1

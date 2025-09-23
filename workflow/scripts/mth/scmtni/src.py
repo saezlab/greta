@@ -22,6 +22,9 @@ parser.add_argument('-c','--path_outfile', required=False, default=None)
 parser.add_argument('-d','--path_chainFiles', required=True)
 parser.add_argument('-e','--motif_dir', required=True)
 parser.add_argument('-f','--promoter_dir', required=True)
+parser.add_argument('-g','--window_size', required=True)
+parser.add_argument('-i','--threads', required=True)
+
 
 args = vars(parser.parse_args())
 
@@ -29,10 +32,12 @@ path_mudata = args['path_mudata']
 path_output = args['path_output']
 path_outfile = args['path_outfile']
 path_chainFiles = args['path_chainFiles']
-motif_dir = args['motif_file']
+motif_dir = args['motif_dir']
 motif_file = os.path.join(motif_dir, "human_all_motifs_sorted_clean.txt")
-promoter_dir = args['promoter_file']
-promoter_file = os.path.join(promoter_dir, "Homo_sapiens.GRCm37.74.TSS.5000.bed")
+promoter_dir = args['promoter_dir']
+promoter_file = os.path.join(promoter_dir, "Homo_sapiens.GRCh37.74.TSS.5000.bed")
+window_size = int(args['window_size'])
+threads = int(args['threads'])
 
 
 # liftover files
@@ -46,7 +51,7 @@ narrowPeak_paths = "peaks_by_cluster"
 
 
 
-n_jobs = 32
+n_jobs = threads
 
 #-------------------------------------------------------------------------------------
 

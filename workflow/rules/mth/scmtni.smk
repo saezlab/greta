@@ -7,8 +7,9 @@ rule mdl_o_scmtni:
         motifs=rules.gen_motif_scmtni.output.motifs_dir,
         promoters=rules.gen_motif_scmtni.output.promoters_dir,
     output:
-        outdir=temp(directory('dts/{dat}/cases/{case}/runs/o_scmtni/')),
         out='dts/{dat}/cases/{case}/runs/o_scmtni.o_scmtni.o_scmtni.o_scmtni.mdl.csv'
+    params:
+        ext=config['methods']['scmtni']['ext'],
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'] * 2,
@@ -23,6 +24,8 @@ rule mdl_o_scmtni:
         -c {output.out} \
         -d {input.chainfiles} \
         -e {input.motifs} \
-        -f {input.promoters}
+        -f {input.promoters} \
+        -g {params.ext} \
+        -i {threads}
         rm -rf $path_out
         """
