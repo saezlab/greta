@@ -334,7 +334,6 @@ print(f"PreparescMTNIinputfiles.py finished, results in {outdir}")
 # Generate prior network
 print("Generating prior network...")
 
-
 #------------------------
 # 1. Sort BED files
 #------------------------
@@ -355,7 +354,7 @@ def sort_bed(in_file, out_file):
 #------------------------
 # 2. Run bedtools intersects
 #------------------------
-def run_bedtools_intersects(cell_types, outdir, motif_file, promoter_file, bedtools_path="/opt/scMTNI/Scripts/genPriorNetwork/bedtools"):
+def run_bedtools_intersects(cell_types, outdir, motif_file, promoter_file, bedtools_path="/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/bedtools"):
     Path(outdir).mkdir(parents=True, exist_ok=True)
     for cluster in cell_types:
         peaks_file = Path(outdir) / f"{cluster}.sorted.narrowPeak"
@@ -392,7 +391,7 @@ def run_map_motifs_to_genes(cell_types, outdir, motif2tf_file):
             print(f"Skipping {outfile}, already exists")
             continue
         subprocess.run([
-            "python", "/opt/scMTNI/Scripts/genPriorNetwork/mapMot2Gene.py",
+            "python", "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/mapMot2Gene.py",
             "--mot2tf", motif2tf_file,
             "--mot2peak", str(Path(outdir) / f"motifs_in_{cluster}"),
             "--peak2gene", str(Path(outdir) / f"TSS_in_{cluster}"),
@@ -427,7 +426,7 @@ def run_filter_prior_network(cell_types, outdir, outdir_prior):
 
         # Run filtering script
         subprocess.run([
-            "python", "/opt/scMTNI/Scripts/genPriorNetwork/filterpriornetwork.py",
+            "python", "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/filterpriornetwork.py",
             "--regfile", str(regfile),
             "--genefile", str(genefile),
             "--netfile", str(netfile),
@@ -439,15 +438,14 @@ def run_filter_prior_network(cell_types, outdir, outdir_prior):
 #------------------------
 # 5. Filter top edges
 #------------------------
-def run_filter_top_edges(outdir_prior, outdir_top02):
-    outdir_top02 = Path(outdir_top02)
-    outdir_top02.mkdir(parents=True, exist_ok=True)
+def run_filter_top_edges(outdir, outdir_prior):
     # Here we assume the Rscript produces files in outdir4
     subprocess.run([
-        "Rscript", "--vanilla", "/opt/scMTNI/Scripts/genPriorNetwork/filtertop20Pedges_mod.R",
-        outdir_prior, str(outdir_top02)
+        "Rscript", "--vanilla", "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/filtertop20Pedges_mod.R",
+        str(outdir), 
+        str(outdir_prior)
     ], check=True)
-    print(f"Filtered top edges -> {outdir_top02}")
+    print(f"Filtered top edges")
 
 
 #------------------------
@@ -462,7 +460,7 @@ def run_percentile_ranking(cell_types, outdir_top02, outdir_ranked):
             print(f"Skipping {outfile}, already exists")
             continue
         subprocess.run([
-            "/opt/scMTNI/Scripts/genPriorNetwork/rankEdges",
+            "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/rankEdges",
             str(networkfile),
             str(outfile),
             "incr"
@@ -492,7 +490,7 @@ run_bedtools_intersects(cell_types=celltypes,
 print("Mapping motifs to genes...")
 run_map_motifs_to_genes(cell_types=celltypes,
                         outdir = path_output,
-                        motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
+                        motif2tf_file= "/home/lorna/Desktop/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
 
 print("Filtering prior network...")
 run_filter_prior_network(cell_types=celltypes, 
@@ -500,15 +498,14 @@ run_filter_prior_network(cell_types=celltypes,
                         outdir_prior= os.path.join(path_output, "prior_networks/"))
 
 print("Filtering top 20% edges...")
-run_filter_top_edges(outdir_prior = os.path.join(path_output, "prior_networks/"), 
-                    outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"))
+run_filter_top_edges(outdir = path_output, 
+                    outdir_prior = os.path.join(path_output, "prior_networks/"))
 
 
 print("Running percentile ranking...")
 run_percentile_ranking(cell_types=celltypes, 
                     outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"), 
                     outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"))
-
 
 #---------------------------------------------------------------------------------
 # Move filtered and ranked prior networks to main output dir
