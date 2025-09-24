@@ -391,7 +391,7 @@ def run_map_motifs_to_genes(cell_types, outdir, motif2tf_file):
             print(f"Skipping {outfile}, already exists")
             continue
         subprocess.run([
-            "python", "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/mapMot2Gene.py",
+            "python", "/opt/scMTNI/Scripts/genPriorNetwork/mapMot2Gene.py",
             "--mot2tf", motif2tf_file,
             "--mot2peak", str(Path(outdir) / f"motifs_in_{cluster}"),
             "--peak2gene", str(Path(outdir) / f"TSS_in_{cluster}"),
@@ -426,7 +426,7 @@ def run_filter_prior_network(cell_types, outdir, outdir_prior):
 
         # Run filtering script
         subprocess.run([
-            "python", "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/filterpriornetwork.py",
+            "python", "/opt/scMTNI/Scripts/genPriorNetwork/filterpriornetwork.py",
             "--regfile", str(regfile),
             "--genefile", str(genefile),
             "--netfile", str(netfile),
@@ -441,7 +441,7 @@ def run_filter_prior_network(cell_types, outdir, outdir_prior):
 def run_filter_top_edges(outdir, outdir_prior):
     # Here we assume the Rscript produces files in outdir4
     subprocess.run([
-        "Rscript", "--vanilla", "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/filtertop20Pedges_mod.R",
+        "Rscript", "--vanilla", "/opt/scMTNI/Scripts/genPriorNetwork/filtertop20Pedges_mod.R",
         str(outdir), 
         str(outdir_prior)
     ], check=True)
@@ -460,7 +460,7 @@ def run_percentile_ranking(cell_types, outdir_top02, outdir_ranked):
             print(f"Skipping {outfile}, already exists")
             continue
         subprocess.run([
-            "/home/lorna/Desktop/scMTNI/Scripts/genPriorNetwork/rankEdges",
+            "/opt/scMTNI/Scripts/genPriorNetwork/rankEdges",
             str(networkfile),
             str(outfile),
             "incr"
@@ -490,7 +490,7 @@ run_bedtools_intersects(cell_types=celltypes,
 print("Mapping motifs to genes...")
 run_map_motifs_to_genes(cell_types=celltypes,
                         outdir = path_output,
-                        motif2tf_file= "/home/lorna/Desktop/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
+                        motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
 
 print("Filtering prior network...")
 run_filter_prior_network(cell_types=celltypes, 
