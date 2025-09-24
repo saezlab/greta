@@ -23,9 +23,9 @@ scDoRIConfig:
 
   # Input data
   ## Multiomics data
-  rna_adata_file_name: "anndata.h5ad" # Needs to be set
-  atac_adata_file_name: "PeakMatrix_anndata.h5ad" # Needs to be set
-  mudata_file_name: "mdata.h5mu" # Needs to be set
+  rna_adata_file_name: "anndata.h5ad" # Set either both adata objects or the .h5mu object
+  atac_adata_file_name: "PeakMatrix_anndata.h5ad"
+  mudata_file_name: "mdata.h5mu" 
 
   ## Reference genome and species
   species: "human" # Needs to be set
