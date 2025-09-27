@@ -145,7 +145,7 @@ grn = define_target_genes(
   multilayer_f = multilayer_f,
   njobs = n_cores
 )
-print(grn[,1:5])
+print(grn[1:5,])
 #get only gene, peaks and score columns
 grn <- grn[, c("gene", "tf", "score")]
 colnames(grn) <- c("source", "target",  "score")
