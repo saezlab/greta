@@ -12,7 +12,7 @@ rule mdl_o_hummus:
         organism=lambda w: config['dts'][w.dat]['organism'],
         num_workers=24
     resources:
-#        mem_mb=restart_mem,
+        mem_mb=restart_mem,
         runtime=config['max_mins_per_step'] * 2,
     shell:
         """
