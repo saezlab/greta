@@ -1,0 +1,183 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+
+%environment
+    export PATH=/opt/:$PATH
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    mamba activate env
+
+    export CONDA_PREFIX="/opt/conda/envs/env"
+    export NUMBA_CACHE_DIR="${NUMBA_CACHE_DIR:-${TMPDIR:-${XDG_CACHE_HOME:-$HOME/.cache}}/numba}"
+
+    # Tell reticulate exactly which Python to use
+    export RETICULATE_PYTHON="/opt/conda/envs/env/bin/python"
+
+    # (optional, helps R find its libs from the env)
+    export R_HOME="/opt/conda/envs/env/lib/R"
+    export R_LIBS_USER="/opt/conda/envs/env/lib/R/library"
+
+%post
+
+    # update apt
+    apt update -y
+
+    # basic packages (~2 min)
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+    apt install -y build-essential  \
+                   gcc \
+                   libstdc++6 \
+                   cmake \
+                   wget \
+                   curl \
+                   libcurl4-openssl-dev \
+                   libssl-dev \
+                   libxml2-dev \
+                   libcairo2-dev \
+                   libxt-dev \
+                   libopenblas-dev \
+                   bedtools \
+                   git \
+                   libblas-dev \
+                   liblapack-dev
+
+    # conda
+    wget -O Miniforge3.sh "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+    bash Miniforge3.sh -b -p "/opt/conda"
+    . "/opt/conda/etc/profile.d/conda.sh"
+    . "/opt/conda/etc/profile.d/mamba.sh"
+    conda activate
+
+    # Create env
+    mamba create -y -n env -c conda-forge -c bioconda \
+    python=3.10 \
+    r-tidyverse \
+    bioconductor-rhdf5 \
+    bioconductor-annotationdbi \
+    bioconductor-annotationfilter \
+    bioconductor-batchelor \
+    bioconductor-biocfilecache \
+    bioconductor-biocgenerics \
+    bioconductor-biocsingular \
+    bioconductor-biomart \
+    bioconductor-biostrings \
+    bioconductor-biovizbase \
+    bioconductor-bsgenome \
+    bioconductor-bsgenome.hsapiens.ucsc.hg38 \
+    bioconductor-bsgenome.mmusculus.ucsc.mm10 \
+    bioconductor-chromvar \
+    bioconductor-cner \
+    bioconductor-delayedarray=0.26.6 \
+    bioconductor-delayedmatrixstats \
+    bioconductor-ensdb.hsapiens.v86 \
+    bioconductor-ensdb.mmusculus.v79 \
+    bioconductor-ensembldb \
+    bioconductor-genomeinfodbdata=1.2.10 \
+    bioconductor-genomicalignments \
+    bioconductor-genomicfeatures \
+    bioconductor-genomicranges=1.52.0 \
+    bioconductor-hdf5array \
+    bioconductor-iranges=2.34.1 \
+    bioconductor-jaspar2020 \
+    bioconductor-keggrest \
+    bioconductor-motifmatchr \
+    bioconductor-omnipathr \
+    bioconductor-protgenerics \
+    bioconductor-rhdf5 \
+    bioconductor-rhdf5filters \
+    bioconductor-rsamtools=2.16.0 \
+    bioconductor-rtracklayer=1.60.0 \
+    bioconductor-s4vectors=0.38.1 \
+    bioconductor-scuttle \
+    bioconductor-singlecellexperiment \
+    bioconductor-sparsearray \
+    bioconductor-sparsematrixstats=1.12.2 \
+    bioconductor-summarizedexperiment=1.30.2 \
+    bioconductor-tfbstools=1.38.0 \
+    bioconductor-variantannotation \
+    bioconductor-zlibbioc \
+    r-argparse \
+    r-brio \
+    r-bslib \
+    r-checkmate \
+    r-cli \
+    r-data.table \
+    r-deldir \
+    r-desc \
+    r-devtools \
+    r-doparallel \
+    r-dorng \
+    r-dotcall64 \
+    r-dplyr \
+    r-dt \
+    r-e1071 \
+    r-fansi \
+    r-filelock \
+    r-foreign \
+    r-ggrastr \
+    r-grr \
+    r-gtools \
+    r-htmltable \
+    r-httpuv \
+    r-jpeg \
+    r-jsonlite \
+    r-lme4 \
+    r-lubridate \
+    r-matrix \
+    r-nlme \
+    r-plotly \
+    r-pracma \
+    r-processx \
+    r-progress \
+    r-rcpparmadillo \
+    r-rcppeigen \
+    r-reshape2 \
+    r-reticulate \
+    r-rlang \
+    r-rpart \
+    r-rprojroot \
+    r-seuratobject \
+    r-sf \
+    r-shiny \
+    r-signac \
+    r-sp \
+    r-spam \
+    r-spdep \
+    r-stringi \
+    r-stringr \
+    r-terra \
+    r-tidyr \
+    r-timechange \
+    r-units \
+    r-vgam \
+    r-vroom \
+    r-waldo \
+    r-withr \
+    r-wk \
+    r-xfun \
+    r-xml \
+    r-yaml \
+    r-base=4.3 \
+    bioconductor-dirichletmultinomial \
+    r-biocmanager
+
+    # Install python dependencies for hummus (arboreto and CIRCE to replace GENIE3 and Cicero)
+    mamba activate env
+    
+    pip install \
+    muon \
+    circe-py \
+    pyarrow \
+    "git+https://github.com/aertslab/arboreto.git" \
+    "git+https://github.com/cantinilab/HuMMuS.git@dask_update#subdirectory=hummuspy"
+
+    # Install hummus R package from github
+    Rscript -e "BiocManager::install('DirichletMultinomial', force = TRUE)"
+    Rscript -e "devtools::install_github('cantinilab/HuMMuS', upgrade = 'never')"
+
+    Rscript -e "BiocManager::install('TFBSTools', type = 'source', force = TRUE)"
+
+    # Remove cache for lighter containers
+    pip cache purge
+    conda clean -a -y
