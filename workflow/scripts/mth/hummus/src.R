@@ -46,7 +46,6 @@ atac_X <- indata$mod$atac$X
 colnames(atac_X) <- indata$mod$atac$obs$`_index`
 rownames(atac_X) <- indata$mod$atac$var$`_index`
 atac_X = atac_X[,1:2]
-print(atac_X[1:3,1:3])
 h5closeAll()
 
 # Create a HuMMuS object through a Seurat object
