@@ -5,6 +5,7 @@ dependencies:
   - python==3.12
   - bedtools
   - htslib
+  - contourpy
   - pip
   - pip:
     - "tangermeme>0.4,<0.5"

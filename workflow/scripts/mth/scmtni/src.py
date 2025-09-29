@@ -441,7 +441,7 @@ def run_filter_prior_network(cell_types, outdir, outdir_prior):
 def run_filter_top_edges(outdir, outdir_prior):
     # Here we assume the Rscript produces files in outdir4
     subprocess.run([
-        "Rscript", "--vanilla", "/opt/scMTNI/Scripts/genPriorNetwork/filtertop20Pedges_mod.R",
+        "Rscript", "--vanilla", "/opt/scMTNI/Scripts/genPriorNetwork/filtertop20Pedges.R",
         str(outdir), 
         str(outdir_prior)
     ], check=True)
