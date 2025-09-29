@@ -237,16 +237,19 @@ rule gen_motif_scmtni:
         url="https://zenodo.org/records/8323399/files/RawMotifFiles.tar.gz?download=1"
     shell:
         """
-        path_raw=$(dirname {output.motifs_dir})
-        wget --no-verbose {params.url} -O $path_raw.tar.gz && \
-        mkdir -p $path_raw && \
-        tar -xvf $path_raw.tar.gz -C $path_raw && \
-        path_raw=$path_raw/RawMotifFiles && \
-        mkdir -p {output.motifs_dir} {output.promoters_dir} && \
-        mv $path_raw/human_all_motifs_sorted_clean.txt {output.motifs_dir}/  && \
-        mv $path_raw/Homo_sapiens.GRCh37.74.TSS.5000.bed {output.promoters_dir}/ && \
-        rm $path_raw.tar.gz && \
-        rm -rf $path_raw
+        base_dir=$(dirname {output.motifs_dir})
+        tarfile=$base_dir/RawMotifFiles.tar.gz
+
+        mkdir -p $base_dir
+        wget --no-verbose {params.url} -O $tarfile
+
+        tar -xvf $tarfile -C $base_dir
+
+        mkdir -p {output.motifs_dir} {output.promoters_dir}
+        mv $base_dir/RawMotifFiles/human_all_motifs_sorted_clean.txt {output.motifs_dir}/
+        mv $base_dir/RawMotifFiles/Homo_sapiens.GRCh37.74.TSS.5000.bed {output.promoters_dir}/
+
+        rm $tarfile
         """
 
 
