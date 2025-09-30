@@ -33,6 +33,7 @@ scDoRIConfig:
   gtf_url: "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_47/gencode.v47.primary_assembly.basic.annotation.gtf.gz"
   chrom_sizes_url: null
   fasta_url: null
+  motif_url: "https://github.com/bioFAM/scDoRI/blob/main/assets/motif_database/"
   # chrom_sizes_file: "hg38.chrom.sizes" # Generated automatically
 
   # Output

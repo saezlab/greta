@@ -3,6 +3,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import muon as mu
+import os
+import urllib.request
 
 from scdori.pp import ( # type: ignore
     #ppConfig,
@@ -76,6 +78,11 @@ def wrapper_scdori_preprocessing(ppConfig):
     data_rna = filter_protein_coding_genes(data_rna, gtf_df)
 
     motif_path = motif_dir / f"{ppConfig.motif_database}_{ppConfig.species}.meme"
+
+    # Downloading custom motif database from scdoris github
+    if not os.path.exists(motif_path):
+        urllib.request.urlretrieve(ppConfig.motif_url + os.path.basename(motif_path), motif_path)
+    
     tf_names_all = []
     with open(motif_path) as f:
         for line in f:

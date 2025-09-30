@@ -86,8 +86,13 @@ def load_config_from_yaml_or_cmdline(yaml_path: str, cmdline_args: dict = None):
             setattr(ppConfig, key, val)
         if hasattr(trainConfig, key):
             setattr(trainConfig, key, val)
-        if key == 'mudata_file_name':
-            setattr(ppConfig, key, val)
+        else:
+            # Adding custom preprocessing parameters to ppConfig
+            if not hasattr(ppConfig, key):
+                logger.info(f"Added additional parameter {key} to ppConfig: -> {val}")
+                setattr(ppConfig, key, val)
+        # if key == 'mudata_file_name':
+        #     setattr(ppConfig, key, val)
         
     return ppConfig, trainConfig
 
