@@ -53,7 +53,7 @@ def wrapper_scdori_preprocessing(ppConfig):
     # Checking if mudata object was provided (instead of two separate anndata objects)
     if ppConfig.mudata_file_name.endswith(".h5mu"):
         logger.info("Detected mudata object, using it for preprocessing.")
-        mdata = mu.read(data_dir / ppConfig.mudata_file_name)
+        mdata = mu.read(ppConfig.mudata_file_name)
         mdata.push_obs()
         data_rna = mdata.mod["rna"].copy()
         data_atac = mdata.mod["atac"].copy()

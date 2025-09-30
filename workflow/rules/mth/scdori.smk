@@ -23,5 +23,6 @@ rule mdl_o_scdori:
         window_size={params.ext} \
         base_dir=$path_out \
         data_dir=$path_out/data \
-        weight_dir=$path_out/weights
+        weight_dir=$path_out/weights \
+        mudata_file_name=mdata
         """
