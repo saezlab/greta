@@ -34,6 +34,8 @@ methods:
     granie:
         ext: 500000
         thr_fdr: 0.2
+    hummus:
+        ext: 500000
     inferelator:
         ext: 500000
     pando:

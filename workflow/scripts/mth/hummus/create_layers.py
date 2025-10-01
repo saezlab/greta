@@ -9,6 +9,7 @@ parser.add_argument('-f', '--path_data', required=True)
 parser.add_argument('-r', '--rna_layer', required=True)
 parser.add_argument('-a', '--atac_layer', required=True)
 parser.add_argument('-o', '--organism', required=True)
+parser.add_argument('-w', '--wsize', required=True)
 parser.add_argument('-d', '--tmp_dir', required=False, default='/tmp/hummus_tmp/')
 parser.add_argument('-c', '--num_workers', required=True)
 
@@ -18,6 +19,7 @@ path_data = args['path_data']
 path_rna_layer = args['rna_layer']
 path_atac_layer = args['atac_layer']
 organism = args["organism"]
+wsize = int(args['wsize'])
 tmp_dir = args['tmp_dir']
 n_cpu = int(args['num_workers'])
 
@@ -164,13 +166,14 @@ if __name__ == "__main__":
         )
     grnboost2_network.to_csv(
         path_rna_layer,
-        index=False)
+        index=False
+    )
 
     # create atac layer
     atac = ci.add_region_infos(data["atac"], sep=(":", "-"))
     #   atac = ci.metacells.compute_metacells(atac)
 
-    ci.compute_atac_network(atac)
+    ci.compute_atac_network(atac, window_size=wsize, distance_constraint=wsize//2)
     circe_network = ci.extract_atac_links(atac)
     circe_network = circe_network[circe_network["score"] > 0]
     circe_network.to_csv(path_atac_layer, index=False)
