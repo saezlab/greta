@@ -135,7 +135,7 @@ def wrapper_scdori_grns(trainConfig):
     # Aggregate GRN activator and repressor matrices
     grn_long = aggregate_grn_max_val(grn_act, grn_rep, rna_metacell)
     grn_long.to_csv(
-        Path(trainConfig.data_dir, trainConfig.output_subdir, "scdori.scdori.scdori.scdori.mdl.csv"), index=False
+        trainConfig.grn_file_out, index=False
     )
 
     logger.info("=== GRN pipeline completed successfully ===")

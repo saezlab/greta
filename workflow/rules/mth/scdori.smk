@@ -24,5 +24,6 @@ rule mdl_o_scdori:
         base_dir=$path_out \
         data_dir=$path_out/data \
         weight_dir=$path_out/weights \
-        mudata_file_name={input.mdata}
+        mudata_file_name={input.mdata} \
+        grn_file_out={output.out}
         """

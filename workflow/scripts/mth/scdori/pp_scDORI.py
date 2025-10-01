@@ -37,7 +37,7 @@ def wrapper_scdori_preprocessing(ppConfig):
     data_dir = Path(ppConfig.data_dir)
     genome_dir = Path(ppConfig.genome_dir)
     motif_dir = Path(ppConfig.motif_directory)
-    out_dir = Path(ppConfig.output_subdir_name)
+    out_dir = data_dir / Path(ppConfig.output_subdir_name)
 
     create_dir_if_not_exists(genome_dir)
     create_dir_if_not_exists(motif_dir)

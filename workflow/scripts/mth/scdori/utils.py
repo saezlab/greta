@@ -64,7 +64,7 @@ def load_config_from_yaml_or_cmdline(yaml_path: str, cmdline_args: dict = None):
     data_dir = Path(shared_cfg.get("data_dir", "."))
 
     # Resolve paths
-    for key in ["genome_dir", "motif_directory", "model_dir", "output_subdir_name"]:
+    for key in ["genome_dir", "motif_directory", "model_dir"]:
         if key in shared_cfg:
             shared_cfg[key] = Path(data_dir, shared_cfg[key])
 
@@ -78,7 +78,7 @@ def load_config_from_yaml_or_cmdline(yaml_path: str, cmdline_args: dict = None):
             shared_cfg[k] = Path(shared_cfg["model_dir"], shared_cfg[k])
     # Take care of naming mismatches -,-
     shared_cfg['batch_col'] = shared_cfg.get('batch_key') # Different naming in preprocessing and training config
-    shared_cfg['output_subdir'] = shared_cfg.get('output_subdir_name')
+    shared_cfg['output_subdir'] = Path(shared_cfg.get('output_subdir_name'))
 
     # Override any default values in ppConfig and trainConfig with shared_cfg
     for key, val in shared_cfg.items():

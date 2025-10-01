@@ -41,6 +41,8 @@ scDoRIConfig:
   rna_metacell_file: "rna_processed.h5ad"
   atac_metacell_file: "atac_processed.h5ad"
 
+  grn_file_out: "o_scdori.o_scdori.o_scdori.o_scdori.mdl.csv"
+
   ## Distance matrix input
   gene_peak_distance_file: "gene_peak_distance_exp.npy"
   insilico_chipseq_act_file: "insilico_chipseq_act.npy"
