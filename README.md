@@ -21,12 +21,15 @@ cd greta
 
 Then create a new enviroment specific for `Snakemake`:
 ```
-mamba create -c conda-forge -c bioconda -n snakemake snakemake
+mamba create -c conda-forge -c bioconda -n snakemake snakemake=7.32.4
 mamba activate snakemake
 ```
 
 ## Overview
-Due to the magnitude of datasets and analyses, the repository is organized as a reproducible [Snakemake](https://snakemake.readthedocs.io/en/stable/) pipeline and uses [singularity](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html) images to handle dependencies:
+Due to the magnitude of datasets and analyses, the repository is organized as a reproducible 
+[Snakemake](https://snakemake.readthedocs.io/en/stable/) pipeline and uses 
+[singularity](https://docs.sylabs.io/guides/3.5/user-guide/introduction.html) images to handle dependencies and 
+[SLURM](https://slurm.schedmd.com/documentation.html) to sumbit jobs:
 ```
 greta/
 ├── config/
@@ -86,4 +89,4 @@ snakemake --profile config/slurm/ anl/metrics/pbmc10k.all.csv
 - [add databases](docs/dbs.md)
 
 ## Citation
-Badia-i-Mompel et al. Comparison and evaluation of methods to infer gene regulatory networks from multimodal single-cell data. *bioRxiv* (2024) [doi:10.1101/2024.12.20.629764](https://doi.org/10.1101/2024.12.20.629764)
+> Badia-i-Mompel et al. Comparison and evaluation of methods to infer gene regulatory networks from multimodal single-cell data. *bioRxiv* (2024) [doi:10.1101/2024.12.20.629764](https://doi.org/10.1101/2024.12.20.629764)

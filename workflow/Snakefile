@@ -1,5 +1,9 @@
-from snakemake.utils import min_version
-min_version('7.29.0')
+import snakemake
+
+snakemake_version = snakemake.__version__
+needed_version = '7.32.4'
+assert snakemake_version == needed_version, f'snakemake version must be {needed_version}, current version is {snakemake_version}, please install snakemake={needed_version}'
+
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(os.path.curdir), 'workflow', 'scripts', 'anl')))
