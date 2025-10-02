@@ -7,8 +7,10 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.sparse.csgraph import minimum_spanning_tree
 import mudata as md
 import os
+import re
 import argparse
 import subprocess
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 import shutil
 
@@ -48,7 +50,6 @@ unmapped_file = os.path.join(path_output, "unmapped.bed")
 
 # narrow peak Paths
 narrowPeak_paths = "peaks_by_cluster"
-
 
 
 n_jobs = threads
@@ -533,27 +534,29 @@ move_ranked_networks(cell_types=celltypes,
                      outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"),
                      outdir = path_output)
 
-#-------------------------------------------------------------------------------------
-# Run scMTNI
 
-print("Running scMTNI...")
+#---------------------------------------------------------------------------------
+# -------- Helper to get AllGenes split files --------
+def get_allgenes_files(ogids_dir):
+    ogids_dir = Path(ogids_dir)
+    pattern = re.compile(r"AllGenes(\d+)\.txt")
+    files = []
+    for f in ogids_dir.glob("AllGenes*.txt"):
+        if pattern.match(f.name):
+            files.append(f)
+    # sort by index
+    files.sort(key=lambda x: int(pattern.match(x.name).group(1)))
+    return files
 
-def run_scmtni(datadir):
-    """
-    Run the scMTNI command inside the container
-    
-    Parameters
-    ----------
-    datadir : str or Path
-    """
+# -------- Function to run scMTNI for a single batch --------
+def run_scmtni_for_batch(datadir, gene_file):
     data = Path(datadir)
-
     cmd = [
         "/opt/scMTNI/Code/scMTNI",
         "-f", str(data / "testdata_config.txt"),
         "-x50",
         "-l", str(data / "TFs_OGs.txt"),
-        "-n", str(data / "AllGenes.txt"),
+        "-n", str(gene_file),
         "-d", str(data / "lineage_tree.txt"),
         "-m", str(data / "testdata_ogids.txt"),
         "-s", str(data / "celltype_order.txt"),
@@ -562,13 +565,32 @@ def run_scmtni(datadir):
         "-b", "-0.9",
         "-q", "2"
     ]
-
-    print("Running command:\n", " ".join(cmd))
+    print("Running:", " ".join(cmd))
     subprocess.run(cmd, check=True)
+    return gene_file
 
+# -------- Main parallel runner --------
+def parallel_scmtni(datadir, max_workers=n_jobs):
+    ogids_dir = Path(datadir) / "ogids"
+    gene_files = get_allgenes_files(ogids_dir)
+    
+    print(f"Found {len(gene_files)} split files. Launching parallel execution...")
 
-run_scmtni(
-    datadir = path_output)
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(run_scmtni_for_batch, datadir, gf): gf for gf in gene_files}
+        for future in as_completed(futures):
+            gf = futures[future]
+            try:
+                future.result()
+                print(f"✅ Finished {gf}")
+            except Exception as e:
+                print(f"❌ Error in {gf}: {e}")
+
+# Run parallel scMTNI
+parallel_scmtni(
+    datadir=path_output,
+    max_workers=n_jobs
+)
 
 
 #-------------------------------------------------------------------------------------
