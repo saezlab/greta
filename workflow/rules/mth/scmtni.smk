@@ -1,5 +1,5 @@
 rule mdl_o_scmtni:
-    threads: 32
+    threads: 64
     singularity: 'workflow/envs/scmtni.sif'
     input:
         mdata=rules.extract_case.output.mdata,
