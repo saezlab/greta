@@ -38,7 +38,8 @@ path_chainFiles = args['path_chainFiles']
 motif_dir = args['motif_dir']
 motif_file = os.path.join(motif_dir, "human_all_motifs_sorted_clean.txt")
 promoter_dir = args['promoter_dir']
-promoter_file = os.path.join(promoter_dir, "Homo_sapiens.GRCh37.74.TSS.5000.bed")
+promoter_scmtni = os.path.join(promoter_dir, "Homo_sapiens.GRCh37.74.TSS.5000.bed")
+promoter_file = os.path.join(promoter_dir, "Homo_sapiens.GRCh37.74.TSS.customWindow.bed")
 window_size = int(args['window_size'])
 threads = int(args['threads'])
 
@@ -335,6 +336,32 @@ print(f"PreparescMTNIinputfiles.py finished, results in {outdir}")
 #-------------------------------------------------------------------------------------
 # Generate prior network
 print("Generating prior network...")
+#-----------------------------------------------------------------------------
+
+
+#Extend promoter regions
+#-------------------------------------------------------------------------------------
+
+# Correct window: subtract 10 kb (because ±5 kb already included)
+corrected_window = max(window_size - 10000, 0)
+half_extension = corrected_window // 2
+
+cmd = f"""
+awk -v OFS='\\t' -v ext={half_extension} '
+BEGIN {{ FS=OFS="\t" }}
+{{ 
+    start = $2 - ext; 
+    end = $3 + ext;
+    if (start < 0) start = 0;
+    print $1, start, end, $4, $5, $6, $7;
+}}' "{promoter_scmtni}" > "{promoter_file}"
+"""
+
+print(f"Running:\n{cmd}")
+subprocess.run(cmd, shell=True, check=True)
+print(f"Extended promoter regions saved to {promoter_file}")
+
+#-------------------------------------------------------------------------------------
 
 #------------------------
 # 1. Sort BED files
