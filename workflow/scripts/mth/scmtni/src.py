@@ -664,3 +664,12 @@ def merge_networks(outdir, output_file):
 
 # Example usage:
 consensus = merge_networks(outdir=path_output, output_file=path_outfile)
+
+
+# After merge_networks completes successfully:
+print("✅ Consensus network created:", path_outfile)
+
+# Safe cleanup
+shutil.rmtree(path_output, ignore_errors=True)
+print(f"🧹 Cleaned up temporary directory {path_output}")
+
