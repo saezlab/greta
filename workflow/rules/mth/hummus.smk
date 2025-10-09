@@ -31,6 +31,15 @@ rule mdl_o_hummus:
         $path_tmp/atac_layer.tsv \
         $path_tmp \
         1 \
-        {output.out}
+        $path_tmp/intermediar_grn.csv \
+        $path_tmp/binding_regions.csv
+
+        python workflow/scripts/mth/hummus/add_enhancers.py \
+        -b $path_tmp/binding_regions.csv \
+        -t $path_tmp/multilayer/bipartite/atac_rna.tsv \
+        -r $path_tmp/rna_layer.tsv \
+        -a $path_tmp/atac_layer.tsv \
+        -g $path_tmp/intermediar_grn.csv \
+        -o {output.out}
         rm -rf $path_tmp
         """

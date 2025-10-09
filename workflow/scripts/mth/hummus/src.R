@@ -17,6 +17,7 @@ atac_network_path <- args[8]
 tmp_dir <- args[9]
 n_cores <- as.numeric(args[10])
 output_file <- args[11]
+binding_regions_file <- args[12]
 
 print("Open CIRCE layer")
 atac_network <- read.csv(atac_network_path, sep = ",")
@@ -148,13 +149,27 @@ grn = define_target_genes(
 print(grn[1:5,])
 #get only gene, peaks and score columns
 grn <- grn[, c("gene", "tf", "score")]
-colnames(grn) <- c("source", "target",  "score")
+colnames(grn) <- c("target", "source",  "score")
 
 # Write
 print(paste0('Saving the HuMMuS object to ', output_file))
-
 write.csv(
   x = grn,
   file = output_file,
+  row.names = FALSE,
+  quote = FALSE)
+
+print('Add enhancers to the GRN...')
+# Add enhancers to the GRN
+enhancers = define_binding_regions(
+  hummus,
+  multilayer_f = multilayer_f,
+  njobs = n_cores
+)[, c("tf", "peak", "score")]
+
+print(paste0('Saving the binding regions to ', binding_regions_file))
+write.csv(
+  x = enhancers,
+  file = binding_regions_file,
   row.names = FALSE,
   quote = FALSE)
