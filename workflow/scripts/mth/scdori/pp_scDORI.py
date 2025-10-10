@@ -42,6 +42,7 @@ def wrapper_scdori_preprocessing(ppConfig):
     create_dir_if_not_exists(genome_dir)
     create_dir_if_not_exists(motif_dir)
     create_dir_if_not_exists(out_dir)
+    create_dir_if_not_exists(ppConfig.weight_dir)
 
     download_genome_references(
         genome_dir=genome_dir,
