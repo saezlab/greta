@@ -76,7 +76,7 @@ def load_config_from_yaml_or_cmdline(yaml_path: str, cmdline_args: dict = None):
     if "model_dir" in shared_cfg:
         for k in ["best_scdori_model_path", "best_grn_model_path"]:
             shared_cfg[k] = Path(shared_cfg["model_dir"], shared_cfg[k])
-    # Take care of naming mismatches -,-
+    # Take care of naming mismatches
     shared_cfg['batch_col'] = shared_cfg.get('batch_key') # Different naming in preprocessing and training config
     shared_cfg['output_subdir'] = Path(shared_cfg.get('output_subdir_name'))
 

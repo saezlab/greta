@@ -18,7 +18,7 @@ rule mdl_o_scdori:
         path_out=$(dirname {output.out})
         path_out=$path_out/tmp_o_scdori
         mkdir -p $path_out
-        python  workflow/scripts/mth/scdori/src.py \
+        python workflow/scripts/mth/scdori/src.py \
         --config workflow/scripts/mth/scdori/config.yaml \
         window_size={params.ext} \
         base_dir=$path_out \
