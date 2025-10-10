@@ -70,6 +70,7 @@ def load_config_from_yaml_or_cmdline(yaml_path: str, cmdline_args: dict = None):
 
 
     if "weight_dir" in shared_cfg:
+        shared_cfg["weight_dir"] = Path(shared_cfg["weight_dir"])
         for k in ["weights_folder_scdori", "weights_folder_grn"]:
             shared_cfg[k] = Path(shared_cfg["weight_dir"], shared_cfg[k])
 
