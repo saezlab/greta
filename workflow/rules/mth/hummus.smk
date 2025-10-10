@@ -39,7 +39,8 @@ rule mdl_o_hummus:
         -t $path_tmp/multilayer/bipartite/atac_rna.tsv \
         -r $path_tmp/rna_layer.tsv \
         -a $path_tmp/atac_layer.tsv \
-        -g $path_tmp/intermediar_grn.csv \
-        -o {output.out}
+        -i $path_tmp/intermediar_grn.csv \
+        -o {output.out} \
+        -g $path_tmp/genome_annotations.csv
         rm -rf $path_tmp
         """

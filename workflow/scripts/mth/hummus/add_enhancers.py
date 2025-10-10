@@ -48,8 +48,18 @@ def connect_genes_to_peaks_pandas_3(gene_peak_df: pd.DataFrame,
     step2_df = pd.concat([step2_a, step2_b], ignore_index=True).drop_duplicates()
     step2_df['distance'] = 1/100
 
+    # 3-step: take step2 peaks and go one more hop
+    step3_a = step2_df.merge(peak_peak_df, left_on='peak',
+                            right_on=peak_u)[['gene', peak_v]]
+    step3_a = step3_a.rename(columns={peak_v: 'peak'})
+    step3_b = step2_df.merge(peak_peak_df, left_on='peak',
+                            right_on=peak_v)[['gene', peak_u]]
+    step3_b = step3_b.rename(columns={peak_u: 'peak'})
+    step3_df = pd.concat([step3_a, step3_b], ignore_index=True).drop_duplicates()
+    step3_df['distance'] = 1/1000
+
     # Combine all, keep shortest distance for duplicates
-    all_steps = pd.concat([direct_df, step1_df, step2_df], ignore_index=True)
+    all_steps = pd.concat([direct_df, step1_df, step2_df, step3_df], ignore_index=True)
 
     # Combine all, keep shortest distance for duplicates
     result = (all_steps.sort_values(['gene','peak','distance'])
@@ -113,7 +123,7 @@ def connect_genes_to_peaks_via_genes_4(gene_peak_df: pd.DataFrame,
     step1_genes_b = sources.merge(gg, left_on='gene', right_on=g_v)[['gene', g_u]].rename(columns={g_u:'reached_gene'})
     step1_genes = pd.concat([step1_genes_a, step1_genes_b], ignore_index=True).drop_duplicates()
     step1_df = attach_peaks(step1_genes)
-    step1_df['distance'] = 1/10
+    step1_df['distance'] = 1/100
 
     # Combine all, keep shortest distance per (gene, peak)
     all_steps = pd.concat([direct_df, step1_df], ignore_index=True)
@@ -201,8 +211,9 @@ parser.add_argument('-b', '--binding_regions', required=True)
 parser.add_argument('-t', '--atac_rna', required=True)
 parser.add_argument('-r', '--rna_layer', required=True)
 parser.add_argument('-a', '--atac_layer', required=True)
-parser.add_argument('-g', '--intermediar_grn', required=True)
+parser.add_argument('-i', '--intermediar_grn', required=True)
 parser.add_argument('-o', '--final_grn', required=True)
+parser.add_argument('-g', '--genome_annotations', required=True)
 args = vars(parser.parse_args())
 
 # Parameters
@@ -215,6 +226,7 @@ rna_layer_path = args['rna_layer']
 atac_layer_path = args['atac_layer']
 intermediar_grn_path = args['intermediar_grn']
 final_grn_path = args['final_grn']
+genome_annotations_path = args['genome_annotations']
 
 
 # Binding regions
@@ -252,6 +264,17 @@ gene_peak_df.peak = gene_peak_df.peak.astype('category')
 gene_peak_df = connect_genes_to_peaks_pandas_3(
     gene_peak_df, atac_layer, peak_cols=["Peak1", "Peak2"])
 gene_peak_df.columns = ['gene', 'peak', 'score']
+
+# filter to keep peaks only on the gene chromosome
+gene_mapping = pd.read_csv(
+    os.path.join(genome_annotations_path)
+)
+gene_mapping = gene_mapping[['gene_name', 'seqnames']].drop_duplicates()
+gene_mapping.set_index('gene_name', inplace=True)
+print(f"Number of genes with chromosome info: {gene_mapping.head()}")
+
+gene_mapping = gene_mapping['seqnames'].to_dict()
+gene_peak_df = gene_peak_df[gene_peak_df.peak.str.split('-').str[0] == gene_peak_df.gene.map(gene_mapping)]
 
 del atac_layer, atac_layer_from_rna, rna_layer, atac_rna
 

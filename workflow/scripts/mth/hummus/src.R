@@ -65,6 +65,12 @@ rm(seurat_object)
 
 # Add genome annotations
 Signac::Annotation(hummus@assays$peaks) <- genome_annot
+write.csv(
+  as.data.frame(Signac::Annotation(hummus@assays$peaks)),
+  file = file.path(tmp_dir, "genome_annotations.csv"),
+  row.names = FALSE,
+  quote = FALSE)
+
 rm(genome_annot)
 
 # Add TF motifs
