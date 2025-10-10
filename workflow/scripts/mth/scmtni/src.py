@@ -565,6 +565,12 @@ move_ranked_networks(cell_types=celltypes,
 
 #---------------------------------------------------------------------------------
 # -------- Helper to get AllGenes split files --------
+
+#
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+
+
 def get_allgenes_files(ogids_dir):
     ogids_dir = Path(ogids_dir)
     pattern = re.compile(r"AllGenes(\d+)\.txt")
