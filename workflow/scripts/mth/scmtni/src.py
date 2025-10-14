@@ -616,9 +616,9 @@ def parallel_scmtni(datadir, max_workers=n_jobs):
             gf = futures[future]
             try:
                 future.result()
-                print(f"✅ Finished {gf}")
+                print(f"Finished {gf}")
             except Exception as e:
-                print(f"❌ Error in {gf}: {e}")
+                print(f"Error in {gf}: {e}")
 
 # Run parallel scMTNI
 parallel_scmtni(
@@ -672,10 +672,6 @@ def merge_networks(outdir, output_file):
 consensus = merge_networks(outdir=path_output, output_file=path_outfile)
 
 
-# After merge_networks completes successfully:
-print("✅ Consensus network created:", path_outfile)
-
 # Safe cleanup
 shutil.rmtree(path_output, ignore_errors=True)
-print(f"🧹 Cleaned up temporary directory {path_output}")
-
+print(f"Cleaned up temporary directory {path_output}")

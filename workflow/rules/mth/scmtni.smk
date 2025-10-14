@@ -16,7 +16,7 @@ rule mdl_o_scmtni:
     shell:
         """
         path_out=$(dirname {output.out})
-        path_out=$path_out/tmp_o_scmtni
+        path_out=$path_out/tmp_o_scmtni/
         mkdir -p $path_out
         python workflow/scripts/mth/scmtni/src.py \
         -a {input.mdata} \
@@ -27,5 +27,4 @@ rule mdl_o_scmtni:
         -f {input.promoters} \
         -g {params.ext} \
         -i {threads}
-        rm -rf $path_out
         """
