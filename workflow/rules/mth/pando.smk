@@ -6,8 +6,6 @@ rule pre_pando:
         mdata=rules.extract_case.output.mdata,
         ann=rules.gen_ann_pando.output,
     output:
-        p=temp(local('dts/{dat}/cases/{case}/runs/pando.peaks.csv')),
-        m=temp(local('dts/{dat}/cases/{case}/runs/pando.matches.csv')),
         out='dts/{dat}/cases/{case}/runs/pando.pre.h5mu'
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
@@ -17,17 +15,22 @@ rule pre_pando:
         runtime=config['max_mins_per_step'],
     shell:
         """
+        path_tmp=$(dirname {output.out})/tmp_pando_pre-pando
+        path_peaks=$path_tmp/peaks.csv
+        path_match=$path_tmp/matches.csv
+        mkdir -p $path_tmp
         Rscript workflow/scripts/mth/pando/pre.R \
         {input.mdata} \
         {input.ann} \
         {params.exclude_exons} \
-        {output.p} \
-        {output.m} && \
+        $path_peaks \
+        $path_match && \
         python workflow/scripts/mth/pando/pre.py \
         -i {input.mdata} \
-        -p {output.p} \
-        -m {output.m} \
+        -p $path_peaks \
+        -m $path_match \
         -o {output.out}
+        rm -rf $path_tmp
         """
 
 

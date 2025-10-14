@@ -23,7 +23,7 @@
             "knocktf": ["Dermal_fibroblasts", "Fibroblasts", "Lung_fibroblast"]
         }
     },
-    "heartatlas": {
+    "heart": {
         "all": {
             "tfmdb": ["Endothelial cell", "Fibroblast cell", "Muscle cell"],
             "hpa": ["cardiomyocytes", "endothelial cells", "fibroblasts", "smooth muscle cells"],

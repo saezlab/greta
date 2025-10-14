@@ -2,11 +2,10 @@ localrules: run_stab, stab_ovsd, stab_cor, stab_unsmthds
 
 n_seeds = 10
 
-def get_stab_paths(config, mthds, baselines, datasets):
+def get_stab_paths(config, mthds, datasets):
     ns = [1024, 2048, 4096, 8192, 16384]
     seeds = [i for i in range(n_seeds)]
     mthds = ['o_' + m for m in mthds]
-    mthds.extend(baselines)
     d_lst = []
     c_lst = []
     m_lst = []
@@ -44,7 +43,7 @@ def get_stab_paths(config, mthds, baselines, datasets):
         return d_lst, c_lst, m_lst
 
 
-d_lst, c_lst, m_lst = get_stab_paths(config, mthds, baselines, stab_datasets)
+d_lst, c_lst, m_lst = get_stab_paths(config, mthds, stab_datasets)
 
 rule run_stab:
     threads: 1

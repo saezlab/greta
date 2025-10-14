@@ -15,7 +15,7 @@ rule grn_run:
         """
 
 
-rule mdl_collectri:
+rule mdl_o_collectri:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
@@ -23,7 +23,7 @@ rule mdl_collectri:
         grn=rules.gst_collectri.output,
         proms=rules.cre_promoters.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/collectri.collectri.collectri.collectri.mdl.csv'
+        out='dts/{dat}/cases/{case}/runs/o_collectri.o_collectri.o_collectri.o_collectri.mdl.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -37,7 +37,7 @@ rule mdl_collectri:
         """
 
 
-rule mdl_dorothea:
+rule mdl_o_dorothea:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
@@ -45,7 +45,7 @@ rule mdl_dorothea:
         grn=rules.gst_dorothea.output,
         proms=rules.cre_promoters.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/dorothea.dorothea.dorothea.dorothea.mdl.csv'
+        out='dts/{dat}/cases/{case}/runs/o_dorothea.o_dorothea.o_dorothea.o_dorothea.mdl.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],

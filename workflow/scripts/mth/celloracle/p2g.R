@@ -12,7 +12,7 @@ path_connections <- args[10]
 
 # Read genome
 org <- sub('^dbs/([^/]+)/.*$', '\\1', path_genome)
-path_chr_sizes <- file.path(path_genome, org, sprintf('%s.fa.sizes', org))
+path_chr_sizes <- file.path(path_genome, sprintf('%s.fa.sizes', org))
 genome <- read.table(path_chr_sizes)
 
 # Process mudata

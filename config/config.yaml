@@ -3,6 +3,7 @@ max_mins_per_step: 560
 # Methods
 methods:
     celloracle:
+        modular: True
         k: 20
         thr_coaccess: 0.2
         ext: 500000
@@ -12,19 +13,27 @@ methods:
         a: 10
         p: 0.001
         n: 2000
+    collectri:
+        modular: False
     crema:
+        modular: False
         ext: 500000
         site_extension: 200
         thr_fdr: 0.05
     dictys:
+        modular: True
         ext: 500000
         device: 'cuda:0'
         n_p2g_links: 20
         use_p2g: False
         thr_score: 0.25
     directnet:
+        modular: False
         ext: 500000
+    dorothea:
+        modular: False
     figr:
+        modular: True
         ext: 500000
         thr_p2g_pval: 0.1
         ncres: 2
@@ -32,13 +41,19 @@ methods:
         dorcK: 10
         thr_score: 2
     granie:
+        modular: True
         ext: 500000
         thr_fdr: 0.2
+    grnboost:
+        modular: False
     hummus:
+        modular: False
         ext: 500000
     inferelator:
+        modular: False
         ext: 500000
     pando:
+        modular: False
         exclude_exons: 'TRUE'
         ext: 500000
         thr_corr: 0.05
@@ -46,21 +61,39 @@ methods:
         rsq_thresh: 0.05
         nvar_thresh: 2
         min_genes_per_module: 3
+    pearson:
+        modular: False
+        mode: 'pearson'
+        thr_r2: 0.1
+    random:
+        modular: False
+        g_perc: 0.25
+        scale: 1
+        tf_g_ratio: 0.10
+        w_size: 500000
+        seed: 42
     scdori:
+        modular: False
         ext: 500000
+    scenic:
+        modular: False
     scenicplus:
+        modular: True
         ntopics: 50
         ext: 500000
     scgpt:
+        modular: False
         batch_size: 16
         device: 'cuda:0'
         n_hvg: 16384
         min_score: 0.9
     scmtni:
+        modular: False
         ext: 500000
-
-
-baselines: ['collectri', 'dorothea', 'grnboost', 'pearson', 'random', 'scenic', 'scgpt', 'spearman']
+    spearman:
+        modular: False
+        mode: 'spearman'
+        thr_r2: 0.1
 
 colors:
     nets:
@@ -191,6 +224,10 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+            test:
+                celltypes: "Naive B;Intermediate B;Memory B"
+                n_hvg: 2048
+                n_hvr: 8192
     pitunpair:
         organism: 'hg38'
         url:
@@ -248,6 +285,7 @@ dts:
 
 
 stab_datasets: ['pitupair']
+modular_datasets: ['pbmc10k']
 nocombs_datasets: ['pitupair', 'pitunpair', 'fakepitupair']
 big_datasets: ['brain', 'heartatlas']
 

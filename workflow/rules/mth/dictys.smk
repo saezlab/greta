@@ -1,25 +1,21 @@
-localrules: install_dictys
-
-
 rule pre_dictys:
     threads: 1
     conda: '../../envs/dictys.yaml'
     input:
-        img=rules.install_dictys.output,
         mdata=rules.extract_case.output.mdata,
-        dictys=rules.install_dictys.output,
     output:
-        tmp='dts/{dat}/cases/{case}/runs/dictys_pre_expr.tsv.gz',
         out='dts/{dat}/cases/{case}/runs/dictys.pre.h5mu',
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
     shell:
         """
+        path_expr=$(dirname {output.out})/dictys_pre_expr.tsv.gz
         python workflow/scripts/mth/dictys/pre.py \
         -m {input.mdata} \
-        -t {output.tmp} \
+        -t $path_expr \
         -o {output.out}
+        rm -f $path_expr
         """
 
 
@@ -29,9 +25,7 @@ rule p2g_dictys:
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         ann=rules.gen_ann_dictys.output,
-        dictys=rules.install_dictys.output,
     output:
-        d=temp(directory(local('dts/{dat}/cases/{case}/runs/{pre}_dictys_tmp/'))),
         out='dts/{dat}/cases/{case}/runs/{pre}.dictys.p2g.csv',
     params:
         ext=config['methods']['dictys']['ext'] // 2,
@@ -40,17 +34,20 @@ rule p2g_dictys:
         runtime=config['max_mins_per_step'],
     shell:
         """
-        mkdir -p {output.d}
+        path_tmp=$(dirname {output.out})/tmp_dictys_pre-{wildcards.pre}
+        mkdir -p $path_tmp
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
-        'python workflow/scripts/mth/dictys/p2g.py \
+        "python workflow/scripts/mth/dictys/p2g.py \
         -d {input.pre} \
-        -t {output.d} \
+        -t $path_tmp \
         -p {output.out} \
         -e {params.ext} \
-        -g {input.ann}'
+        -g {input.ann}"
+        rm -rf $path_tmp
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score" }}' > {output.out}
+            rm -rf $path_tmp
         fi
         """
 
@@ -65,9 +62,7 @@ rule tfb_dictys:
         frags=list_frags_files,
         motif=rules.gen_motif_dictys.output,
         genome=rules.gen_genome_dictys.output,
-        dictys=rules.install_dictys.output,
     output:
-        d=temp(directory('dts/{dat}/cases/{case}/runs/{pre}.{p2g}.dictys_tmp')),
         out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.dictys.tfb.csv'
     resources:
         mem_mb=restart_mem,
@@ -77,6 +72,8 @@ rule tfb_dictys:
     shell:
         """
         set +e
+        path_tmp=$(dirname {output.out})/tmp_dictys_pre-{wildcards.pre}_p2g-{wildcards.p2g}
+        mkdir -p $path_tmp
         timeout $(({resources.runtime}-20))m \
         bash workflow/scripts/mth/dictys/tfb.sh \
         --input_pre {input.pre} \
@@ -84,12 +81,14 @@ rule tfb_dictys:
         --input_frags {input.frags} \
         --input_motif {input.motif} \
         --input_genome {input.genome} \
-        --output_d {output.d} \
+        --output_d $path_tmp \
         --output_out {output.out} \
         --threads {threads} \
-        --use_p2g {params.use_p2g} 
+        --use_p2g {params.use_p2g}
+        rm -rf $path_tmp
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,tf,score" }}' > {output.out}
+            rm -rf $path_tmp
         fi
         """
 
@@ -103,9 +102,7 @@ rule mdl_dictys:
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
         ann=rules.gen_ann_dictys.output,
-        dictys=rules.install_dictys.output,
     output:
-        d=temp(directory('dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys_tmp')),
         out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys.mdl.csv'
     params:
         ext=config['methods']['dictys']['ext'] // 2,
@@ -121,9 +118,11 @@ rule mdl_dictys:
     shell:
         """
         set +e
+        path_tmp=$(dirname {output.out})/tmp_dictys_pre-{wildcards.pre}_p2g-{wildcards.p2g}_tfb-{wildcards.tfb}
+        mkdir -p $path_tmp
         timeout $(({resources.runtime}-20))m \
         bash workflow/scripts/mth/dictys/mdl.sh \
-        --output_d {output.d} \
+        --output_d $path_tmp \
         --pre_path {input.pre} \
         --p2g_path {input.p2g} \
         --tfb_path {input.tfb} \
@@ -135,8 +134,10 @@ rule mdl_dictys:
         --thr_score {params.thr_score} \
         --use_p2g {params.use_p2g} \
         --out_path {output.out}
+        rm -rf $path_tmp
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+            rm -rf $path_tmp
         fi
         """
 
@@ -151,7 +152,6 @@ rule mdl_o_dictys:
         frags=list_frags_files,
         motif=rules.gen_motif_dictys.output,
         genome=rules.gen_genome_dictys.output,
-        dictys=rules.install_dictys.output,
     output:
         tmp='dts/{dat}/cases/{case}/runs/o_dictys_pre_expr.tsv.gz',
         d=temp(directory(local('dts/{dat}/cases/{case}/runs/o_dictys_dictys_tmp/'))),
@@ -172,34 +172,39 @@ rule mdl_o_dictys:
         slurm="gres=gpu:1",
     shell:
         """
+        path_tmp=$(dirname {output.out})/tmp_o_dictys
+        path_expr=$path_tmp/expr.tsv.gz
+        path_pre=$path_tmp/pre.h5mu
+        path_p2g=$path_tmp/p2g.csv
+        path_tfb=$path_tmp/tfb.csv
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
-        'mkdir -p {output.d} && \
+        "mkdir -p $path_tmp && \
         python workflow/scripts/mth/dictys/pre.py \
         -m {input.mdata} \
-        -t {output.tmp} \
-        -o {output.pre} && \
+        -t $path_expr \
+        -o $path_pre && \
         python workflow/scripts/mth/dictys/p2g.py \
-        -d {output.pre} \
-        -t {output.d} \
-        -p {output.p2g} \
+        -d $path_pre \
+        -t $path_tmp \
+        -p $path_p2g \
         -e {params.ext} \
         -g {input.ann} && \
         bash workflow/scripts/mth/dictys/tfb.sh \
-        --input_pre {output.pre} \
-        --input_p2g {output.p2g} \
+        --input_pre $path_pre \
+        --input_p2g $path_p2g \
         --input_frags {input.frags} \
         --input_motif {input.motif} \
         --input_genome {input.genome} \
-        --output_d {output.d} \
-        --output_out {output.tfb} \
+        --output_d $path_tmp \
+        --output_out $path_tfb \
         --use_p2g {params.use_p2g} \
         --threads {threads} && \
         bash workflow/scripts/mth/dictys/mdl.sh \
-        --output_d {output.d} \
-        --pre_path {output.pre} \
-        --p2g_path {output.p2g} \
-        --tfb_path {output.tfb} \
+        --output_d $path_tmp \
+        --pre_path $path_pre \
+        --p2g_path $path_p2g \
+        --tfb_path $path_tfb \
         --annot {input.ann} \
         --distance {params.ext} \
         --n_p2g_links {params.n_p2g_links} \
@@ -207,8 +212,10 @@ rule mdl_o_dictys:
         --device {params.device} \
         --thr_score {params.thr_score} \
         --use_p2g {params.use_p2g} \
-        --out_path {output.out}'
+        --out_path {output.out}"
+        rm -rf $path_tmp
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+            rm -rf $path_tmp
         fi
         """

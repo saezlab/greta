@@ -297,7 +297,6 @@ grn = grn[grn.TF.isin(topk_peaks_per_tf_df.TF.unique()) & grn.gene.isin(topk_pea
 # Merge with GRN to keep only high-confidence TF-gene pairs
 final = topk_peaks_per_tf_df.merge(grn, on=["TF", "gene"], how="inner")
 final = final[["TF", "CRE", "gene", "score"]]
+final = final.rename(columns={'tf': 'source', 'CRE': 'cre', 'gene': 'target'})
 
-final.to_csv(
-    final_grn_path,
-    sep="\t", index=False, header=True)
+final.to_csv(final_grn_path, index=False, header=True)

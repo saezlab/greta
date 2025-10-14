@@ -8,7 +8,6 @@ rule mdl_o_inferelator:
         gtf=rules.gen_genome_inferelator.output.gtf,
         meme=rules.gen_motif_inferelator.output.meme,
     output:
-        tmp=temp(local(directory('dts/{dat}/cases/{case}/runs/tmp_o_inferelator/'))),
         out='dts/{dat}/cases/{case}/runs/o_inferelator.o_inferelator.o_inferelator.o_inferelator.mdl.csv'
     params:
         ext=config['methods']['inferelator']['ext'] // 2,
@@ -17,17 +16,19 @@ rule mdl_o_inferelator:
         runtime=config['max_mins_per_step'] * 2,
     shell:
         """
-        export TMPDIR={output.tmp}
+        path_tmp=$(dirname {output.out})/tmp_o_inferelator
+        mkdir -p $path_tmp
+        export TMPDIR=$path_tmp
         python workflow/scripts/mth/inferelator/prior.py \
         {input.mdata} \
         {input.fa} \
         {input.gtf} \
         {input.meme} \
         {params.ext} \
-        {output.tmp}
-
+        $path_tmp
         python workflow/scripts/mth/inferelator/run.py \
-        {output.tmp} \
+        $path_tmp \
         {threads} \
         {output.out}
+        rm -rf $path_tmp
         """

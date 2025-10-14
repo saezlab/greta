@@ -27,4 +27,5 @@ rule mdl_o_scmtni:
         -f {input.promoters} \
         -g {params.ext} \
         -i {threads}
+        rm -rf $path_out
         """

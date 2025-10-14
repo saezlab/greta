@@ -20,7 +20,7 @@ rule tss_gocoef:
         """
 
 
-tss_paths = [f'anl/tss/ocoef/{mth_a}.{mth_b}.csv' for mth_a, mth_b in combinations([x for x in mthds + baselines], 2)]
+tss_paths = [f'anl/tss/ocoef/{mth_a}.{mth_b}.csv' for mth_a, mth_b in combinations([x for x in mthds], 2)]
 rule tss_aggr:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -45,12 +45,9 @@ rule tss_dist:
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
-    params:
-        b=baselines,
     shell:
         """
         python workflow/scripts/anl/tss/dist.py \
         -g {input.g} \
-        -b {params.b} \
         -o {output}
         """

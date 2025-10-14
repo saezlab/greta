@@ -80,7 +80,7 @@ snakemake --profile config/slurm/ anl/dbs/stats.csv
 snakemake --profile config/slurm/ anl/metrics/mech/prt/knocktf/pbmc10k.all.scores.csv
 
 # Runs the benchmark for all databases and metrics
-snakemake --profile config/slurm/ anl/metrics/pbmc10k.all.csv
+snakemake --profile config/slurm/ anl/metrics/summary/pbmc10k.all.csv
 ```
 
 ## How to

@@ -6,16 +6,6 @@ localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_
 localrules: gen_motif_scenicplus, gen_genome_crema, gen_motif_crema, gen_genome_inferelator, download_liftover_chains
 
 
-rule install_dictys:
-    conda: '../../envs/dictys.yaml'
-    output: 'workflow/envs/dictys.txt'
-    shell:
-        """
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
-        touch {output}
-        """
-
-
 rule gen_tfs_lambert:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -61,6 +51,7 @@ rule gen_genome_celloracle:
         """
         python workflow/scripts/dbs/gen/genome/celloracle.py -o {output} &&
         mv {output}/hg38/* {output} && rm -r {output}/hg38/
+        ln -s . {output}/hg38
         """
 
 
@@ -78,7 +69,6 @@ rule gen_genome_crema:
 rule gen_genome_dictys:
     threads: 4
     conda: '../../envs/dictys.yaml'
-    input: rules.install_dictys.output
     output: directory('dbs/hg38/gen/genome/dictys/')
     shell:
         """

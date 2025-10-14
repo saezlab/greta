@@ -9,11 +9,9 @@ import argparse
 # Parse args
 parser = argparse.ArgumentParser()
 parser.add_argument('-g', '--path_cmp', required=True)
-parser.add_argument('-b', '--baselines', required=True, nargs='+')
 parser.add_argument('-o', '--path_out', required=True)
 args = parser.parse_args()
 path_cmp = args.path_cmp
-baselines = args.baselines
 path_out = args.path_out
 
 # Set variables
@@ -47,7 +45,7 @@ def compute_dist_tss(path, mth):
 
 # Compute dists
 dists = []
-path_grns = [p for p in path_grns if (os.path.basename(p).startswith('o_')) or (os.path.basename(p).split('.')[0] in baselines)]
+path_grns = [p for p in path_grns if os.path.basename(p).startswith('o_')]
 print(path_grns)
 for path_grn in tqdm(path_grns):
     mth = os.path.basename(path_grn).split('.')[0]  # Assume all stp equal

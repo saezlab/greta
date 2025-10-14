@@ -4,7 +4,7 @@ localrules: aggr_metric, metric_summ
 rule aggr_metric:
     threads: 1
     input:
-        lambda w: make_combs_rules(w=w, mthds=mthds, baselines=baselines, rule_name='{typ}_{tsk}'.format(typ=w.type, tsk=w.task))
+        lambda w: make_combs_rules(w=w, rule_name='{typ}_{tsk}'.format(typ=w.type, tsk=w.task))
     output:
         'anl/metrics/{type}/{task}/{db}/{dat}.{case}.scores.csv'
     shell:

@@ -27,8 +27,6 @@ rule p2g_celloracle:
         pre=lambda w: map_rules('pre', w.pre),
         csz=rules.gen_genome_celloracle.output
     output:
-        pp=temp(local('dts/{dat}/cases/{case}/runs/{pre}.celloracle.peaks.csv')),
-        pc=temp(local('dts/{dat}/cases/{case}/runs/{pre}.celloracle.conns.csv')),
         out='dts/{dat}/cases/{case}/runs/{pre}.celloracle.p2g.csv',
     params:
         thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
@@ -38,25 +36,29 @@ rule p2g_celloracle:
         runtime=config['max_mins_per_step'],
     shell:
         """
+        path_tmp=$(dirname {output.out})/tmp_celloracle_pre-{wildcards.pre}
+        path_pp=$path_tmp/peaks.csv
+        path_pc=$path_tmp/conns.csv
+        mkdir -p $path_tmp
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
-        'Rscript workflow/scripts/mth/celloracle/p2g.R \
+        "Rscript workflow/scripts/mth/celloracle/p2g.R \
         {input.pre} \
         {input.csz} \
         {params.ext} \
-        {output.pp} \
-        {output.pc} && \
+        $path_pp \
+        $path_pc && \
         python workflow/scripts/mth/celloracle/p2g.py \
         -d {input.pre} \
-        -a {output.pp} \
-        -c {output.pc} \
+        -a $path_pp \
+        -c $path_pc \
         -o {input.csz} \
         -t {params.thr_coaccess} \
-        -p {output.out}'
+        -p {output.out}"
+        rm -rf $path_tmp
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score,pval" }}' > {output.out}
-            touch {output.pp}
-            touch {output.pc}
+            rm -rf $path_tmp
         fi
         """
 
@@ -138,8 +140,6 @@ rule mdl_o_celloracle:
         mdata=rules.extract_case.output.mdata,
         csz=rules.gen_genome_celloracle.output,
     output:
-        pp=temp(local('dts/{dat}/cases/{case}/runs/celloracle.src.peaks.csv')),
-        pc=temp(local('dts/{dat}/cases/{case}/runs/celloracle.src.conns.csv')),
         out='dts/{dat}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.mdl.csv',
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
@@ -157,21 +157,25 @@ rule mdl_o_celloracle:
         runtime=config['max_mins_per_step'] * 2,
     shell:
         """
+        path_tmp=$(dirname {output.out})/tmp_o_celloracle
+        path_pp=$path_tmp/peaks.csv
+        path_pc=$path_tmp/conns.csv
+        mkdir -p $path_tmp
         export MKL_NUM_THREADS=1
         export OPENBLAS_NUM_THREADS=1
         export NUMEXPR_NUM_THREADS=1
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
-        'Rscript workflow/scripts/mth/celloracle/src.R \
+        "Rscript workflow/scripts/mth/celloracle/src.R \
         {input.mdata} \
         {input.csz} \
         {params.ext} \
-        {output.pp} \
-        {output.pc} && \
+        $path_pp \
+        $path_pc && \
         python workflow/scripts/mth/celloracle/src.py \
         -a {input.mdata} \
-        -b {output.pp} \
-        -c {output.pc} \
+        -b $path_pp \
+        -c $path_pc \
         -d {params.organism} \
         -e {params.thr_coaccess} \
         -f {params.fpr} \
@@ -181,10 +185,10 @@ rule mdl_o_celloracle:
         -k {params.p} \
         -l {params.n} \
         -m {params.k} \
-        -n {output.out}'
+        -n {output.out}"
+        rm -rf $path_tmp
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
-            touch {output.pp}
-            touch {output.pc}
+            rm -rf $path_tmp
         fi
         """
