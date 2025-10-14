@@ -233,7 +233,7 @@ rule gen_motif_scmtni:
         mkdir -p $base_dir
         wget --no-verbose {params.url} -O $tarfile
 
-        tar -xvf $tarfile -C $base_dir
+        tar -xf $tarfile -C $base_dir
 
         mkdir -p {output.motifs_dir} {output.promoters_dir}
         mv $base_dir/RawMotifFiles/human_all_motifs_sorted_clean.txt {output.motifs_dir}/
