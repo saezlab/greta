@@ -282,6 +282,52 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+    lateanagen:
+        organism: 'mm10'
+        url:
+            atac_peaks: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156597&format=file&file=GSM4156597%5Fskin%2Elate%2Eanagen%2Epeaks%2Ebed%2Egz'
+            atac_frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156597&format=file&file=GSM4156597%5Fskin%2Elate%2Eanagen%2Eatac%2Efragments%2Ebed%2Egz'
+            atac_counts: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156597&format=file&file=GSM4156597%5Fskin%2Elate%2Eanagen%2Ecounts%2Etxt%2Egz'
+            barcodes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156597&format=file&file=GSM4156597%5Fskin%2Elate%2Eanagen%2Ebarcodes%2Etxt%2Egz'
+            celltypes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156597&format=file&file=GSM4156597%5Fskin%5Fcelltype%2Etxt%2Egz'
+            rna_counts: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156608&format=file&file=GSM4156608%5Fskin%2Elate%2Eanagen%2Erna%2Ecounts%2Etxt%2Egz'
+        samples:
+            ['GSM4156597']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
+    mbrain:
+        organism: 'mm10'
+        url:
+            atac_peaks: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156599&format=file&file=GSM4156599%5Fbrain%2Epeaks%2Ebed%2Egz'
+            atac_frags: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156599&format=file&file=GSM4156599%5Fbrain%2Eatac%2Efragments%2Ebed%2Egz'
+            atac_counts: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156599&format=file&file=GSM4156599%5Fbrain%2Ecounts%2Etxt%2Egz'
+            barcodes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156599&format=file&file=GSM4156599%5Fbrain%2Ebarcodes%2Etxt%2Egz'
+            celltypes: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156599&format=file&file=GSM4156599%5Fbrain%5Fcelltype%2Etxt%2Egz'
+            rna_counts: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM4156610&format=file&file=GSM4156610%5Fbrain%2Erna%2Ecounts%2Etxt%2Egz'
+        samples:
+            ['GSM4156610']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
+    retina:
+        organism: 'mm10'
+        url:
+            full_dataset: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE201402&format=file'
+            atac_rds: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM6062731&format=file&file=GSM6062731%5Fretina%5F10x%2Eatac%2ERDS%2Egz'
+            geneexpr_peaks: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM6062732&format=file&file=GSM6062732%5Fmultiomics%5Fmouse%5Fwt%5FGeneExpression%5FPeaks%5Flists%2ERDS%2Egz'
+            rna_rds: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM6062732&format=file&file=GSM6062732%5Fretina%5F10x%2Erna%2ERDS%2Egz'
+        samples:
+            ['GSM6062731']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
 
 
 stab_datasets: ['pitupair']
