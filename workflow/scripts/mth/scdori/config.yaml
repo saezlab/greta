@@ -80,7 +80,7 @@ scDoRIConfig:
 
   # Model and training settings
   ## Model architecture
-  batch_size_cell: 128
+  batch_size_cell: 64
   dim_encoder1: 500
   dim_encoder2: 200
   num_topics: 30
