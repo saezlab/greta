@@ -102,11 +102,11 @@ def wrapper_scdori_grns(trainConfig):
     rna_metacell.obsm["X_scdori"] = scdori_latent
 
     grn_act_atac = compute_atac_grn_activator_with_significance(
-        model, device, cutoff_val=0.05, outdir="grn", num_permutations=trainConfig.num_permutations
+        model, device, cutoff_val=0.05, outdir=Path(trainConfig.data_dir, "grn"), num_permutations=trainConfig.num_permutations
     )
     # ATAC based GRN for repressors
     grn_rep_atac = compute_atac_grn_repressor_with_significance(
-        model, device, cutoff_val=0.05, outdir="grn", num_permutations=trainConfig.num_permutations
+        model, device, cutoff_val=0.05, outdir=Path(trainConfig.data_dir, "grn"), num_permutations=trainConfig.num_permutations
     )
     # calculating TF-expression per topic
     # either from scdori model weights or from true data
