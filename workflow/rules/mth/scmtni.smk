@@ -11,7 +11,7 @@ rule mdl_o_scmtni:
     params:
         ext=config['methods']['scmtni']['ext'],
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'] * 2,
     shell:
         """
