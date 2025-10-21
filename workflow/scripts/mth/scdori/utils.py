@@ -87,6 +87,8 @@ def load_config_from_yaml_or_cmdline(yaml_path: str, cmdline_args: dict = None):
             setattr(ppConfig, key, val)
         if hasattr(trainConfig, key):
             setattr(trainConfig, key, val)
+        elif key == 'grn_file_out':
+            setattr(trainConfig, key, val)
         else:
             # Adding custom preprocessing parameters to ppConfig
             if not hasattr(ppConfig, key):
