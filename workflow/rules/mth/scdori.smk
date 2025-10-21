@@ -12,7 +12,7 @@ rule mdl_o_scdori:
         partition='gpu-single',
         mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'] * 2,
-        slurm="gres=gpu:1",
+        slurm="gres=gpu:1,gpumem_per_gpu:60GB"
     shell:
         """
         path_out=$(dirname {output.out})
