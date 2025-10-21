@@ -57,6 +57,23 @@ rule gst_pthw:
         rm {output}.tmp
         """
 
+rule gst_pthw_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output:
+        'dbs/mm10/gst/{db}.csv'
+    params:
+        url=lambda w: config['dbs']['mm10']['gst'][w.db]
+    shell:
+        """
+        wget --no-verbose '{params.url}' -O {output}.tmp && \
+        python -c "import decoupler as dc; \
+        gst = dc.read_gmt('{output}.tmp'); \
+        gst['source'] = ['_'.join(s.split('_')[1:]) for s in gst['source']]; \
+        gst.to_csv('{output}', index=False)" && \
+        rm {output}.tmp
+        """
 
 rule gst_prog:
     threads: 1

@@ -13,6 +13,19 @@ rule cre_blacklist:
         wget --no-verbose -O - "{params.url}" | zcat > {output}
         """
 
+rule cre_blacklist_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output:
+        'dbs/mm10/cre/blacklist/blacklist.bed'
+    params:
+        url=config['dbs']['mm10']['cre']['blacklist']
+    shell:
+        """
+        mkdir -p $(dirname {output})
+        wget --no-verbose {params.url} -O - | zcat > {output}
+        """
 
 rule cre_encode:
     threads: 1
@@ -75,6 +88,20 @@ rule cre_promoters:
     shell:
         """
         Rscript workflow/scripts/dbs/cre/promoters.R \
+        {params.wsize} \
+        {output}
+        """
+
+rule cre_promoters_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/cre/promoters/promoters.bed'
+    params:
+        wsize=config['cre_prom_size']
+    shell:
+        """
+        Rscript workflow/scripts/dbs/cre/promoters_mm10.R \
         {params.wsize} \
         {output}
         """

@@ -25,6 +25,16 @@ rule gen_tfs_scenic:
     shell:
         "wget --no-verbose '{params.url}' -O {output}"
 
+rule gen_tfs_scenic_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gen/tfs/scenic.csv'
+    params:
+        url=config['dbs']['mm10']['gen']['scenic']
+    shell:
+        "wget --no-verbose '{params.url}' -O {output}"
+
 
 rule gen_gid_ensmbl:
     threads: 1
@@ -54,6 +64,16 @@ rule gen_genome_celloracle:
         ln -s . {output}/hg38
         """
 
+rule gen_genome_celloracle_mm10:
+    threads: 4
+    singularity: 'workflow/envs/celloracle.sif'
+    input: 'workflow/envs/celloracle.sif'
+    output: directory('dbs/mm10/gen/genome/celloracle/')
+    shell:
+        """
+        python workflow/scripts/dbs/gen/genome/celloracle_mm10.py -o {output} &&
+        mv {output}/mm10/* {output} && rm -r {output}/mm10/
+        """
 
 rule gen_genome_crema:
     threads: 1
@@ -96,6 +116,47 @@ rule gen_genome_scenicplus:
         --to-chrom-source ucsc \
         --ucsc hg38 \
         --no-cache
+        """
+
+rule gen_genome_scenicplus_mm10:
+    threads: 4
+    singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
+    output:
+        ann='dbs/mm10/gen/genome/scenicplus/annotation.tsv',
+        csz='dbs/mm10/gen/genome/scenicplus/chromsizes.tsv',
+        tss='dbs/mm10/gen/genome/scenicplus/tss.tsv',
+    shell:
+        """
+        # Ensure output directory
+        mkdir -p $(dirname {output.csz})
+
+        # Download chromosome sizes file
+        wget --no-verbose -O {output.csz}.tmp \
+            http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes
+
+        # Reformat to three columns: Chromosome, Start, End
+        awk 'BEGIN {{{{OFS="\t"; print "Chromosome", "Start", "End"}}}} {{{{print $1, 0, $2}}}}' {output.csz}.tmp > {output.csz}
+        rm {output.csz}.tmp
+
+
+        # Generate annotations and sizes with SCENIC+
+        scenicplus prepare_data download_genome_annotations \
+            --species mmusculus \
+            --genome_annotation_out_fname {output.ann}.tmp \
+            --chromsizes_out_fname {output.csz}
+
+        # Convert chromosome names in annotation file to UCSC-style
+        awk 'BEGIN {{{{OFS="\t"}}}} NR==1 {{{{print $0}}}} NR>1 {{{{chr=$1; gsub("^MT$","chrM",chr); gsub("^Y$","chrY",chr); gsub("^X$","chrX",chr); if(chr ~ /^[0-9]+$/) chr="chr" chr; else if(chr !~ /^chr/) chr="chr" chr; $1=chr; print $0}}}}' {output.ann}.tmp > {output.ann}
+        rm {output.ann}.tmp
+
+        # Extract TSS using pycistopic
+        pycistopic tss get_tss \
+            --output {output.tss} \
+            --name "mmusculus_gene_ensembl" \
+            --to-chrom-source ucsc \
+            --ucsc mm10 \
+            --no-cache
         """
 
 rule gen_genome_inferelator:
@@ -173,6 +234,21 @@ rule gen_motif_scenic_rnk:
         wget --no-verbose {params.big} -O {output.big}
         """
 
+rule gen_motif_scenic_rnk_mm10:
+    threads: 1
+    singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
+    output:
+        sml='dbs/mm10/gen/motif/scenic/mm10_500bp_up_100bp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather',
+        big='dbs/mm10/gen/motif/scenic/mm10_10kbp_up_10kbp_down_full_tx_v10_clust.genes_vs_motifs.rankings.feather'
+    params:
+        sml='https://resources.aertslab.org/cistarget/databases/mus_musculus/mm10/refseq_r80/mc9nr/gene_based/mm10__refseq-r80__500bp_up_and_100bp_down_tss.mc9nr.genes_vs_motifs.rankings.feather',
+        big='https://resources.aertslab.org/cistarget/databases/mus_musculus/mm10/refseq_r80/mc9nr/gene_based/mm10__refseq-r80__10kb_up_and_down_tss.mc9nr.genes_vs_motifs.rankings.feather'
+    shell:
+        """
+        wget --no-verbose {params.sml} -O {output.sml}
+        wget --no-verbose {params.big} -O {output.big}
+        """
 
 rule gen_motif_scenic:
     threads: 1
@@ -186,6 +262,18 @@ rule gen_motif_scenic:
         wget --no-verbose {params.url} -O {output}
         """
 
+rule gen_motif_scenic_mm10:
+    threads: 1
+    singularity: 'workflow/envs/scenicplus.sif'
+    input: 'workflow/envs/scenicplus.sif'
+    params:
+        url="https://resources.aertslab.org/cistarget/motif2tf/motifs-v10nr_clust-nr.mgi-m0.001-o0.0.tbl"
+    output:
+        "dbs/mm10/gen/motif/scenic/nr.mgi-m0.001-o0.0.tbl"
+    shell:
+        """
+        wget --no-verbose {params.url} -O {output}
+        """
 
 rule gen_motif_scenicplus:
     threads: 1
