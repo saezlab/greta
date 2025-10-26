@@ -53,6 +53,57 @@ rule tfb_chipatlas:
         python workflow/scripts/dbs/tfb/aggregate.py > {output}
         """
 
+checkpoint tfb_m_chipatlas_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.gen_tfs_lambert_mm10.output
+    output: 'dbs/mm10/tfb/chipatlas/meta.tsv'
+    params:
+        mta=config['dbs']['mm10']['tfb']['chipatlas']['meta'],
+    shell:
+        """
+        wget --no-verbose '{params.mta}' -O {output} && \
+        python workflow/scripts/dbs/tfb/chipatlas_meta.py {output} {input}
+        """
+
+
+rule tfb_t_chipatlas_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.tfb_m_chipatlas_mm10.output
+    output: 'dbs/mm10/tfb/chipatlas/raw/{chipatlas_tf}.bed'
+    params:
+        url=config['dbs']['mm10']['tfb']['chipatlas']['url'],
+        max_psize=config['tfb_max_psize']
+    shell:
+        """
+        if wget --spider '{params.url}' 2>/dev/null; then
+            wget --no-verbose --tries=2 '{params.url}' -O - | \
+            python workflow/scripts/dbs/tfb/chipatlas_tf.py {output} {input} {params.max_psize} | \
+            bedtools merge -c 4,5 -o distinct,distinct > {output}
+        else
+            touch {output}
+        fi
+        """
+
+
+def chipatlas_aggr_mm10(wildcards):
+    import pandas as pd
+    meta_file = checkpoints.tfb_m_chipatlas_mm10.get().output[0]
+    tfs = sorted(pd.read_csv(meta_file, sep='\t', header=None)[1].unique())
+    return expand("dbs/mm10/tfb/chipatlas/raw/{chipatlas_tf}.bed", chipatlas_tf=tfs)
+
+
+rule tfb_chipatlas_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: chipatlas_aggr_mm10
+    output: 'dbs/mm10/tfb/chipatlas/chipatlas.bed'
+    shell:
+        """
+        cat dbs/mm10/tfb/chipatlas/raw/*.bed |
+        python workflow/scripts/dbs/tfb/aggregate.py > {output}
+        """
 
 rule tfb_m_remap2022:
     threads: 1
