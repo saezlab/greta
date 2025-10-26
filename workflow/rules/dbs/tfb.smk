@@ -163,6 +163,63 @@ rule tfb_remap2022:
         rm dbs/hg38/tfb/remap2022/raw/*.bed.tmp
         """
 
+rule tfb_m_remap2022_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.ont_bto.output[0]
+    output: 'dbs/mm10/tfb/remap2022/meta.tsv'
+    params:
+        mta=config['dbs']['mm10']['tfb']['remap2022']['meta'],
+    shell:
+        """
+        wget --no-verbose '{params.mta}' -O - | \
+        python workflow/scripts/dbs/tfb/remap2022_meta_mm10.py {input} {output}
+        """
+
+
+checkpoint tfb_r_remap2022_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        tfs=rules.gen_tfs_lambert_mm10.output,
+        mta=rules.tfb_m_remap2022_mm10.output
+    output: directory('dbs/mm10/tfb/remap2022/raw/')
+    params:
+        url=config['dbs']['mm10']['tfb']['remap2022']['url'],
+        max_psize=config['tfb_max_psize']
+    shell:
+        """
+        mkdir -p {output} && \
+        wget --no-verbose '{params.url}' -O {output}.tmp && \
+        zcat {output}.tmp | \
+        python workflow/scripts/dbs/tfb/remap2022_raw_mm10.py \
+        {input.tfs} \
+        {input.mta} \
+        {params.max_psize} \
+        {output} && \
+        rm {output}.tmp
+        """
+
+
+def remap2022_aggr_mm10(wildcards):
+    remap2022_dir = checkpoints.tfb_r_remap2022_mm10.get().output[0]
+    tfs = glob_wildcards(remap2022_dir + "/{tf}.bed").tf
+    return expand(remap2022_dir + '/{tf}.bed', tf=tfs)
+
+
+rule tfb_remap2022_mm10:
+    threads: 32
+    singularity: 'workflow/envs/gretabench.sif'
+    input: remap2022_aggr_mm10
+    output: 'dbs/mm10/tfb/remap2022/remap2022.bed'
+    shell:
+        """
+        ls dbs/mm10/tfb/remap2022/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c '
+        bedtools merge -i "{{}}" -c 4,5 -o distinct,distinct > "{{}}.tmp"' && \
+        cat dbs/mm10/tfb/remap2022/raw/*.bed.tmp |
+        python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
+        rm dbs/mm10/tfb/remap2022/raw/*.bed.tmp
+        """
 
 checkpoint tfb_r_unibind:
     threads: 1

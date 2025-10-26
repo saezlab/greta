@@ -396,6 +396,9 @@ dbs:
             chipatlas:
                 meta: "https://chip-atlas.dbcls.jp/data/metadata/experimentList.tab"
                 url: "https://chip-atlas.dbcls.jp/data/mm10/assembled/Oth.ALL.50.{chipatlas_tf}.AllCell.bed"
+            remap2022:
+                meta: 'https://remap.univ-amu.fr/storage/remap2022/biotypes/remap2022_mmus_biotypes.xlsx'
+                url:  'https://remap.univ-amu.fr/storage/remap2022/mm10/MACS2/remap2022_nr_macs2_mm10_v1_0.bed.gz'
 tfb_max_psize: 750
 cre_prom_size: 1000
 topo_min_prop: 0.5
