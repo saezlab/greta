@@ -14,6 +14,27 @@ rule gen_tfs_lambert:
     params: url=config['dbs']['hg38']['gen']['lambert']
     shell: "wget --no-check-certificate --no-verbose '{params.url}' -O {output}"
 
+rule gen_tfs_lambert_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        'workflow/envs/gretabench.sif',
+        'dbs/mm10/gen/gid/ensembl.csv'
+    output:
+        'dbs/mm10/gen/tfs/lambert.csv'
+    params:
+        url=config['dbs']['mm10']['gen']['lambert']
+    shell:
+        r"""
+        set -euo pipefail
+
+        tmp_ids="$(mktemp)"
+        wget --no-check-certificate --no-verbose '{params.url}' -O "$tmp_ids"
+
+        python workflow/scripts/dbs/gen/tfs/lambert_from_ensembl.py "{input[1]}" "$tmp_ids" "{output}"
+
+        rm -f "$tmp_ids"
+        """
 
 rule gen_tfs_scenic:
     threads: 1

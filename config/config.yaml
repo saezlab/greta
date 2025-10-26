@@ -385,6 +385,7 @@ dbs:
     mm10:
         gen:
             scenic: 'https://resources.aertslab.org/cistarget/tf_lists/allTFs_mm.txt'
+            lambert: 'https://raw.githubusercontent.com/gifford-lab/ReprogrammingRecovery/main/data/mouse_ensemble_tfs_from_lambertetal_isyes.unique.txt'
         cre:
             blacklist: 'https://github.com/Boyle-Lab/Blacklist/raw/master/lists/mm10-blacklist.v2.bed.gz'
         gst:
