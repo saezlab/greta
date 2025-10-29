@@ -402,6 +402,8 @@ dbs:
                 url:  'https://remap.univ-amu.fr/storage/remap2022/mm10/MACS2/remap2022_nr_macs2_mm10_v1_0.bed.gz'
             unibind:
                 url: 'https://unibind.uio.no/static/data/20220914/bulk_Robust/Mus_musculus/mm10_compressed_TFBSs.bed.gz'
+        pkn:
+            dorothea: 'https://github.com/saezlab/dorothea/raw/master/data/dorothea_mm.rda'
 tfb_max_psize: 750
 cre_prom_size: 1000
 topo_min_prop: 0.5

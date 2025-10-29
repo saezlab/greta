@@ -1,4 +1,4 @@
-localrules: cre_blacklist, cre_encode, cre_gwascatalogue, cre_phastcons, cre_promoters, cre_zhang21
+localrules: cre_blacklist, cre_blacklist_mm10, cre_encode, cre_gwascatalogue, cre_phastcons, cre_promoters,cre_promoters_mm10, cre_zhang21
 
 
 rule cre_blacklist:

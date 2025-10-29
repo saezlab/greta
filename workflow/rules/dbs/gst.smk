@@ -1,4 +1,4 @@
-localrules: gst_collectri, gst_dorothea, gst_pthw, gst_prog
+localrules: gst_collectri, gst_dorothea, gst_dorothea_mm10, gst_pthw, gst_prog, gst_prog_mm10
 
 
 rule gst_collectri:
@@ -40,6 +40,29 @@ rule gst_dorothea:
         write.csv(x=df, file="{output}", quote=FALSE, row.names=FALSE);'
         """
 
+rule gst_dorothea_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.gen_tfs_lambert_mm10.output
+    output: 'dbs/mm10/gst/dorothea.csv'
+    params: url=config['dbs']['mm10']['pkn']['dorothea']
+    shell:
+        """
+        Rscript -e '
+        url <- "{params.url}"; \
+        temp_file <- tempfile(); \
+        download.file(url, destfile = temp_file, mode = "wb"); \
+        load(temp_file); \
+        unlink(temp_file); \
+        df <- dorothea_mm; \
+        df <- df[df$confidence %in% c("A", "B", "C"), ]; \
+        df <- df[order(df$tf, df$target), ]; \
+        colnames(df) <- c("source", "confidence", "target", "weight"); \
+        df <- df[, c("source", "target", "weight")]; \
+        tfs <- readLines("{input}"); \
+        df <- df[df$source %in% tfs, ]; \
+        write.csv(x=df, file="{output}", quote=FALSE, row.names=FALSE);'
+        """
 
 rule gst_pthw:
     threads: 1

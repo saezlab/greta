@@ -1,4 +1,5 @@
 localrules: tfb_m_chipatlas, tfb_t_chipatlas, tfb_chipatlas, tfb_m_remap2022, tfb_remap2022, tfb_unibind
+localrules: tfb_m_chipatlas_mm10, tfb_t_chipatlas_mm10, tfb_chipatlas_mm10, tfb_m_remap2022_mm10, tfb_remap2022_mm10, tfb_unibind_mm10
 
 
 checkpoint tfb_m_chipatlas:

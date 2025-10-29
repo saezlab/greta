@@ -1,8 +1,8 @@
-localrules: gen_tfs_lambert, gen_tfs_scenic
-localrules: gen_gid_ensmbl, gen_pid_uniprot, gen_genome_celloracle, gen_genome_dictys
-localrules: gen_genome_scenicplus
+localrules: gen_tfs_lambert, gen_tfs_lambert_mm10, gen_tfs_scenic, gen_tfs_scenic_mm10
+localrules: gen_gid_ensmbl, gen_pid_uniprot, gen_genome_celloracle, gen_genome_celloracle_mm10, gen_genome_dictys
+localrules: gen_genome_scenicplus, gen_genome_scenicplus_mm10
 localrules: gen_ann_dictys, gen_ann_pando
-localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_scenic, gen_motif_scmtni
+localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_scenic_rnk_mm10, gen_motif_scenic, gen_motif_scenic_mm10, gen_motif_scmtni
 localrules: gen_motif_scenicplus, gen_genome_crema, gen_motif_crema, gen_genome_inferelator, download_liftover_chains
 
 
