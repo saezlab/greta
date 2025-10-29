@@ -98,3 +98,26 @@ rule gst_prog:
         prg.to_csv('{output}', index=False)" && \
         rm {output}.rda
         """
+rule gst_prog_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/prog.csv',
+    params: url=lambda w: config['dbs']['mm10']['gst']['prog']
+    shell:
+        """
+        Rscript -e ' \
+        download.file("{params.url}", destfile = "{output}.rda"); \
+        load("{output}.rda"); \
+        write.csv(model_mouse_full, "{output}.rda", row.names = FALSE, quote = FALSE);' && \
+        python -c "import pandas as pd; \
+        prg = pd.read_csv('{output}.rda'); \
+        prg = prg.rename(columns={{'gene': 'target', 'pathway': 'source', 'p.value': 'pval'}}); \
+        prg = prg[['source', 'target', 'weight', 'pval']]; \
+        prg = prg[prg['pval'] < 1e-5]; \
+        n = prg.groupby('source').size(); \
+        prg = prg[prg['source'].isin(n[n > 5].index)]; \
+        prg = prg.sort_values(['source', 'target', 'weight']); \
+        prg.to_csv('{output}', index=False)" && \
+        rm {output}.rda
+        """
