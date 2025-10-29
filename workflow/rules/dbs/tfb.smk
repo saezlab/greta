@@ -262,3 +262,45 @@ rule tfb_unibind:
         python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
         rm dbs/hg38/tfb/unibind/raw/*.bed.tmp
         """
+
+checkpoint tfb_r_unibind_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.gen_tfs_lambert_mm10.output,
+    output: directory('dbs/mm10/tfb/unibind/raw/')
+    params:
+        url=config['dbs']['mm10']['tfb']['unibind']['url'],
+        max_psize=config['tfb_max_psize']
+    shell:
+        """
+        mkdir -p {output} && \
+        wget --no-verbose '{params.url}' -O {output}.tmp && \
+        zcat {output}.tmp | \
+        python workflow/scripts/dbs/tfb/unibind_raw.py \
+        {input} \
+        {params.max_psize} \
+        {output} && \
+        rm {output}.tmp
+        """
+
+
+def unibind_aggr_mm10(w):
+    checkpoints.tfb_r_unibind_mm10.get()
+    unibind_dir = checkpoints.tfb_r_unibind_mm10.get().output[0]
+    tfs = glob_wildcards(unibind_dir + "/{tf}.bed")
+    return expand("dbs/mm10/tfb/unibind/raw/{tf}.bed", tf=tfs.tf)
+
+
+rule tfb_unibind_mm10:
+    threads: 32
+    singularity: 'workflow/envs/gretabench.sif'
+    input: unibind_aggr_mm10
+    output: 'dbs/mm10/tfb/unibind/unibind.bed'
+    shell:
+        """
+        ls dbs/mm10/tfb/unibind/raw/*.bed | xargs -n 1 -P {threads} -I {{}} sh -c '
+        bedtools merge -i "{{}}" -c 4,5 -o distinct,distinct > "{{}}.tmp"' && \
+        cat dbs/mm10/tfb/unibind/raw/*.bed.tmp |
+        python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
+        rm dbs/mm10/tfb/unibind/raw/*.bed.tmp
+        """
