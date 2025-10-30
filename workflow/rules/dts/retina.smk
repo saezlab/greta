@@ -7,13 +7,13 @@ rule extract_retina_rds:
     input:
         img='workflow/envs/figr.sif',
     output:
-        annot=temp(local('dts/retina/annot.csv')),
-        rna_mtx=temp(local('dts/retina/rna_counts.mtx')),
-        rna_genes=temp(local('dts/retina/rna_genes.txt')),
-        rna_barcodes=temp(local('dts/retina/rna_barcodes.txt')),
-        peaks_mtx=temp(local('dts/retina/peaks_counts.mtx')),
-        peak_names=temp(local('dts/retina/peak_names.txt')),
-        peak_barcodes=temp(local('dts/retina/peak_barcodes.txt')),
+        annot=temp(local('dts/mm10/retina/annot.csv')),
+        rna_mtx=temp(local('dts/mm10/retina/rna_counts.mtx')),
+        rna_genes=temp(local('dts/mm10/retina/rna_genes.txt')),
+        rna_barcodes=temp(local('dts/mm10/retina/rna_barcodes.txt')),
+        peaks_mtx=temp(local('dts/mm10/retina/peaks_counts.mtx')),
+        peak_names=temp(local('dts/mm10/retina/peak_names.txt')),
+        peak_barcodes=temp(local('dts/mm10/retina/peak_barcodes.txt')),
     params:
         url_atac=config['dts']['retina']['url']['atac_rds'],
         url_rna=config['dts']['retina']['url']['rna_rds'],
@@ -23,7 +23,7 @@ rule extract_retina_rds:
         """
         set -euo pipefail
         
-        path_retina="dts/retina"
+        path_retina="dts/mm10/retina"
         mkdir -p "$path_retina"
         
         echo "[INFO] Downloading ATAC RDS file..."
@@ -67,13 +67,13 @@ rule download_retina:
         peak_names=rules.extract_retina_rds.output.peak_names,
         peak_barcodes=rules.extract_retina_rds.output.peak_barcodes,
     output:
-        rna=temp(local('dts/retina/rna.h5ad')),
-        peaks=temp(local('dts/retina/peaks.h5ad')),
+        rna=temp(local('dts/mm10/retina/rna.h5ad')),
+        peaks=temp(local('dts/mm10/retina/peaks.h5ad')),
     shell:
         """
         set -euo pipefail
         
-        path_retina="dts/retina"
+        path_retina="dts/mm10/retina"
         
         echo "[INFO] Processing RNA counts to h5ad..."
         python workflow/scripts/dts/retina/process_rna.py \
@@ -111,7 +111,7 @@ rule annotate_retina:
         rna=rules.download_retina.output.rna,
         peaks=rules.download_retina.output.peaks,
         annot=rules.extract_retina_rds.output.annot,
-    output: out='dts/retina/annotated.h5mu'
+    output: out='dts/mm10/retina/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/retina/retina.py \

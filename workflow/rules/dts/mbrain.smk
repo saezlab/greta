@@ -5,13 +5,13 @@ rule get_mbrain_frags:
     input:
         img='workflow/envs/gretabench.sif',
     output:
-        frag=temp(local(expand('dts/mbrain/{sample}.frags.tsv.gz', sample=config['dts']['mbrain']['samples']))),
+        frag=temp(local(expand('dts/mm10/mbrain/{sample}.frags.tsv.gz', sample=config['dts']['mbrain']['samples']))),
     params:
         url_frags   = config['dts']['mbrain']['url']['atac_frags'],
         samples     = config['dts']['mbrain']['samples'],
     shell:
         """
-        path_late="dts/mbrain"
+        path_late="dts/mm10/mbrain"
         samples=$(echo {params.samples} | tr -d "[],'")
         for s in $samples; do
             echo "[INFO] Downloading fragment file for $s ..."
@@ -37,9 +37,9 @@ rule download_mbrain:
         gid=rules.gen_gid_ensmbl.output,
         frag=rules.get_mbrain_frags.output.frag,
     output:
-        ann=temp(local('dts/mbrain/annot.csv')),
-        gene_map=temp(local('dts/mbrain/mm10_gene_map.tsv')),
-        rna=temp(local('dts/mbrain/rna.h5ad')),
+        ann=temp(local('dts/mm10/mbrain/annot.csv')),
+        gene_map=temp(local('dts/mm10/mbrain/mm10_gene_map.tsv')),
+        rna=temp(local('dts/mm10/mbrain/rna.h5ad')),
     params:
         url_peaks   = config['dts']['mbrain']['url']['atac_peaks'],
         url_frags   = config['dts']['mbrain']['url']['atac_frags'],
@@ -52,7 +52,7 @@ rule download_mbrain:
         """
         set -euo pipefail
 
-        path_late="dts/mbrain"
+        path_late="dts/mm10/mbrain"
         mkdir -p "$path_late"
 
         echo "[INFO] Downloading barcodes, celltypes, and RNA counts..."
@@ -72,21 +72,21 @@ rule download_mbrain:
         sample_name=$(echo {params.samples} | tr -d "[],'" | xargs | cut -d' ' -f1)
 
         python workflow/scripts/dts/mbrain/annot.py \
-          dts/mbrain/mbrain.barcodes.txt \
-          dts/mbrain/mbrain.celltype.txt \
+          dts/mm10/mbrain/mbrain.barcodes.txt \
+          dts/mm10/mbrain/mbrain.celltype.txt \
           "$sample_name"
 
         echo "[INFO] Building mm10 gene map (BiomaRt export)..."
         Rscript workflow/scripts/dts/mbrain/mouse_gene_map.R \
-          dts/mbrain/mm10_gene_map.tsv
+          dts/mm10/mbrain/mm10_gene_map.tsv
 
         echo "[INFO] Converting RNA counts to h5ad..."
         python workflow/scripts/dts/mbrain/rna_to_h5ad.py \
-          dts/mbrain/rna.counts.txt.gz \
-          dts/mbrain/annot.csv \
-          dts/mbrain/mm10_gene_map.tsv \
-          dts/mbrain/mbrain.celltype.txt \
-          dts/mbrain/rna.h5ad
+          dts/mm10/mbrain/rna.counts.txt.gz \
+          dts/mm10/mbrain/annot.csv \
+          dts/mm10/mbrain/mm10_gene_map.tsv \
+          dts/mm10/mbrain/mbrain.celltype.txt \
+          dts/mm10/mbrain/rna.h5ad
 
         echo "[CLEANUP] Removing intermediate downloads no longer needed..."
         rm -f "$path_late/mbrain.barcodes.txt.gz" \
@@ -104,7 +104,7 @@ rule callpeaks_mbrain:
     input:
         frags=rules.get_mbrain_frags.output.frag,
         annot=rules.download_mbrain.output.ann,
-    output: peaks=temp(local('dts/mbrain/peaks.h5ad'))
+    output: peaks=temp(local('dts/mm10/mbrain/peaks.h5ad'))
     resources:
         mem_mb=64000,
         runtime=360,
@@ -126,7 +126,7 @@ rule annotate_mbrain:
         rna=rules.download_mbrain.output.rna,
         peaks=rules.callpeaks_mbrain.output.peaks,
         annot=rules.download_mbrain.output.ann,
-    output: out='dts/mbrain/annotated.h5mu'
+    output: out='dts/mm10/mbrain/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/mbrain/mbrain.py \

@@ -5,13 +5,13 @@ rule get_lateanagen_frags:
     input:
         img='workflow/envs/gretabench.sif',
     output:
-        frag=temp(local(expand('dts/lateanagen/{sample}.frags.tsv.gz', sample=config['dts']['lateanagen']['samples']))),
+        frag=temp(local(expand('dts/mm10/lateanagen/{sample}.frags.tsv.gz', sample=config['dts']['lateanagen']['samples']))),
     params:
         url_frags   = config['dts']['lateanagen']['url']['atac_frags'],
         samples     = config['dts']['lateanagen']['samples'],
     shell:
         """
-        path_late="dts/lateanagen"
+        path_late="dts/mm10/lateanagen"
         samples=$(echo {params.samples} | tr -d "[],'")
         for s in $samples; do
             echo "[INFO] Downloading fragment file for $s ..."
@@ -37,9 +37,9 @@ rule download_lateanagen:
         gid=rules.gen_gid_ensmbl.output,
         frag=rules.get_lateanagen_frags.output.frag,
     output:
-        ann=temp(local('dts/lateanagen/annot.csv')),
-        gene_map=temp(local('dts/lateanagen/mm10_gene_map.tsv')),
-        rna=temp(local('dts/lateanagen/rna.h5ad')),
+        ann=temp(local('dts/mm10/lateanagen/annot.csv')),
+        gene_map=temp(local('dts/mm10/lateanagen/mm10_gene_map.tsv')),
+        rna=temp(local('dts/mm10/lateanagen/rna.h5ad')),
     params:
         url_peaks   = config['dts']['lateanagen']['url']['atac_peaks'],
         url_frags   = config['dts']['lateanagen']['url']['atac_frags'],
@@ -52,7 +52,7 @@ rule download_lateanagen:
         """
         set -euo pipefail
 
-        path_late="dts/lateanagen"
+        path_late="dts/mm10/lateanagen"
         mkdir -p "$path_late"
 
         echo "[INFO] Downloading barcodes, celltypes, and RNA counts..."
@@ -72,21 +72,21 @@ rule download_lateanagen:
         sample_name=$(echo {params.samples} | tr -d "[],'" | xargs | cut -d' ' -f1)
 
         python workflow/scripts/dts/lateanagen/annot.py \
-          dts/lateanagen/lateanagen.barcodes.txt \
-          dts/lateanagen/lateanagen.celltype.txt \
+          dts/mm10/lateanagen/lateanagen.barcodes.txt \
+          dts/mm10/lateanagen/lateanagen.celltype.txt \
           "$sample_name"
 
         echo "[INFO] Building mm10 gene map (BiomaRt export)..."
         Rscript workflow/scripts/dts/lateanagen/mouse_gene_map.R \
-          dts/lateanagen/mm10_gene_map.tsv
+          dts/mm10/lateanagen/mm10_gene_map.tsv
 
         echo "[INFO] Converting RNA counts to h5ad..."
         python workflow/scripts/dts/lateanagen/rna_to_h5ad.py \
-          dts/lateanagen/rna.counts.txt.gz \
-          dts/lateanagen/annot.csv \
-          dts/lateanagen/mm10_gene_map.tsv \
-          dts/lateanagen/lateanagen.celltype.txt \
-          dts/lateanagen/rna.h5ad
+          dts/mm10/lateanagen/rna.counts.txt.gz \
+          dts/mm10/lateanagen/annot.csv \
+          dts/mm10/lateanagen/mm10_gene_map.tsv \
+          dts/mm10/lateanagen/lateanagen.celltype.txt \
+          dts/mm10/lateanagen/rna.h5ad
 
         echo "[CLEANUP] Removing intermediate downloads no longer needed..."
         rm -f "$path_late/lateanagen.barcodes.txt.gz" \
@@ -104,7 +104,7 @@ rule callpeaks_lateanagen:
     input:
         frags=rules.get_lateanagen_frags.output.frag,
         annot=rules.download_lateanagen.output.ann,
-    output: peaks=temp(local('dts/lateanagen/peaks.h5ad'))
+    output: peaks=temp(local('dts/mm10/lateanagen/peaks.h5ad'))
     resources:
         mem_mb=64000,
         runtime=360,
@@ -126,7 +126,7 @@ rule annotate_lateanagen:
         rna=rules.download_lateanagen.output.rna,
         peaks=rules.callpeaks_lateanagen.output.peaks,
         annot=rules.download_lateanagen.output.ann,
-    output: out='dts/lateanagen/annotated.h5mu'
+    output: out='dts/mm10/lateanagen/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/lateanagen/lateanagen.py \
