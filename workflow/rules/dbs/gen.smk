@@ -94,6 +94,7 @@ rule gen_genome_celloracle_mm10:
         """
         python workflow/scripts/dbs/gen/genome/celloracle_mm10.py -o {output} &&
         mv {output}/mm10/* {output} && rm -r {output}/mm10/
+        ln -s . {output}/mm10
         """
 
 rule gen_genome_crema:
