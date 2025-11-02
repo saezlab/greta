@@ -19,9 +19,10 @@ rule get_lateanagen_frags:
                 -o "$path_late/${{s}}.frags.bed.gz"
             
             echo "[INFO] Converting BED format fragments to TSV format and sorting..."
-            # The fragment file is in BED format with columns: chr, start, end, barcode, count
-            # Need to sort by barcode and position for snapatac2
+            # Original file has 4 columns: chr, start, end, barcode (comma-separated)
+            # 1) convert commas to dots. 2) add sample prefix. 3) add count column. 4) sort
             gunzip -c "$path_late/${{s}}.frags.bed.gz" | \
+                awk -v sample="$s" 'BEGIN {{OFS="\t"}} {{gsub(/,/, ".", $4); print $1, $2, $3, sample"_"$4, 1}}' | \
                 sort -k4,4 -k1,1 -k2,2n | \
                 gzip > "$path_late/${{s}}.frags.tsv.gz"
             
