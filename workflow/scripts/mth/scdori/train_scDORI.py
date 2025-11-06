@@ -55,6 +55,8 @@ def wrapper_scdori_training(trainConfig):
 
     # 2) Make small train/test sets
     n_cells = rna_metacell.n_obs
+    # Setting epochs dynamically based on dataset and batch size
+     
     indices = np.arange(n_cells)
     train_idx, eval_idx = train_test_split(indices, test_size=0.2, random_state=42)
     train_dataset = TensorDataset(torch.from_numpy(train_idx))
@@ -83,6 +85,14 @@ def wrapper_scdori_training(trainConfig):
         dim_encoder2=trainConfig.dim_encoder2,
     ).to(device)
 
+    initialize_scdori_parameters(
+        model,
+        gene_peak_dist.to(device),
+        gene_peak_fixed.to(device),
+        insilico_act=insilico_act.to(device),
+        insilico_rep=insilico_rep.to(device),
+        phase="warmup",
+    )
     model = train_scdori_phases(
         model,
         device,
