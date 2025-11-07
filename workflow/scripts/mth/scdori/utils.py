@@ -121,23 +121,29 @@ def parse_cmdline_args():
         cmdline_args[key] = val
     return yaml_file, cmdline_args
 
-def extract_cres(rna_metacell, atac_metacell, grn_long, insilico_act, insilico_rep, gene_peak):
+def extract_cres(rna_metacell, atac_metacell, grn_long, insilico_act, insilico_rep, gene_peak, topn=10):
     insilico_act = insilico_act.numpy()
     insilico_rep = insilico_rep.numpy()
     gene_to_ind = {g: i for i, g in enumerate(rna_metacell.var_names)}
     tf_names = rna_metacell.var.loc[rna_metacell.var.gene_type == "TF"].index.values
     tf_to_ind = {t: i for i, t in enumerate(tf_names)}
     atac_names = np.asarray(atac_metacell.var_names)
-    cres = []
-
+    
+    rows = []
     for row in grn_long.itertuples(index=False):
         gene_ind = gene_to_ind.get(row.target)
         tf_ind = tf_to_ind.get(row.source)
-        if row.score == 0:
-            cres.append(np.nan)
+        cre_scores = (insilico_act if row.score > 0 else insilico_rep)[:, tf_ind] * gene_peak[gene_ind]
+        idx = np.flatnonzero(cre_scores)
+        k = min(topn, len(idx))
+        
+        if k == 0:
             continue
-        cre_scores = insilico_act[:,tf_ind] * gene_peak[gene_ind] if row.score > 0 else insilico_rep[:,tf_ind] * gene_peak[gene_ind]
-        cre_ind = np.argmax(np.abs(cre_scores))
-        cres.append(atac_names[cre_ind])
-    grn_long['cre'] = cres
-    return grn_long
+        part = np.argpartition(cre_scores[idx], -k)[-k:]
+        top_idx = idx[part[np.argsort(cre_scores[idx][part])[::-1]]]
+        for i in top_idx:
+            rows.append((row.source, row.target, row.score, atac_names[i], cre_scores[i]))
+    
+    cres_df = pd.DataFrame(rows, columns=["source", "target", "score", "cre", "cre_score"])
+
+    return cres_df

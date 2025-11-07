@@ -140,15 +140,19 @@ def wrapper_scdori_grns(trainConfig):
         model.gene_peak_factor_fixed.detach().cpu().numpy()
     )
     # Filter interactions based on reported scores
-    grn_long = grn_long[grn_long.score != 0].reset_index(drop=True)
+    grn_nz = grn_long[grn_long.score != 0]
+    ci95 = grn_nz['score'].std() * 1.96
+    grn_sig = grn_nz[np.abs(grn_nz['score']) > ci95].reset_index(drop=True)
+
     # Extract CREs
     grn_cre = extract_cres(
         rna_metacell,
         atac_metacell,
-        grn_long,
+        grn_sig,
         insilico_act,
         insilico_rep,
-        gene_peak
+        gene_peak,
+        topn=10,
     )
 
     grn_long.to_csv(
