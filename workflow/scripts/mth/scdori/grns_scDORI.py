@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import DataLoader, TensorDataset # type: ignore
 from pathlib import Path
 from sklearn.preprocessing import OneHotEncoder
-from utils import aggregate_grn_max_val
+from utils import aggregate_grn_max_val, extract_cres
 
 
 from scdori import ( # type: ignore
@@ -134,9 +134,25 @@ def wrapper_scdori_grns(trainConfig):
     )
     # Aggregate GRN activator and repressor matrices
     grn_long = aggregate_grn_max_val(grn_act, grn_rep, rna_metacell)
+    
+    # Optaining masked gene-peak scores
+    gene_peak = (model.gene_peak_factor_learnt.detach().cpu().numpy()) * (
+        model.gene_peak_factor_fixed.detach().cpu().numpy()
+    )
+    # Filter interactions based on reported scores
+    grn_long = grn_long[grn_long.score != 0].reset_index(drop=True)
+    # Extract CREs
+    grn_cre = extract_cres(
+        rna_metacell,
+        atac_metacell,
+        grn_long,
+        insilico_act,
+        insilico_rep,
+        gene_peak
+    )
+
     grn_long.to_csv(
         trainConfig.grn_file_out, index=False
     )
-
     logger.info("=== GRN pipeline completed successfully ===")
     return

@@ -120,3 +120,24 @@ def parse_cmdline_args():
             pass
         cmdline_args[key] = val
     return yaml_file, cmdline_args
+
+def extract_cres(rna_metacell, atac_metacell, grn_long, insilico_act, insilico_rep, gene_peak):
+    insilico_act = insilico_act.numpy()
+    insilico_rep = insilico_rep.numpy()
+    gene_to_ind = {g: i for i, g in enumerate(rna_metacell.var_names)}
+    tf_names = rna_metacell.var.loc[rna_metacell.var.gene_type == "TF"].index.values
+    tf_to_ind = {t: i for i, t in enumerate(tf_names)}
+    atac_names = np.asarray(atac_metacell.var_names)
+    cres = []
+
+    for row in grn_long.itertuples(index=False):
+        gene_ind = gene_to_ind.get(row.target)
+        tf_ind = tf_to_ind.get(row.source)
+        if row.score == 0:
+            cres.append(np.nan)
+            continue
+        cre_scores = insilico_act[:,tf_ind] * gene_peak[gene_ind] if row.score > 0 else insilico_rep[:,tf_ind] * gene_peak[gene_ind]
+        cre_ind = np.argmax(np.abs(cre_scores))
+        cres.append(atac_names[cre_ind])
+    grn_long['cre'] = cres
+    return grn_long
