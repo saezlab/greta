@@ -146,4 +146,4 @@ def extract_cres(rna_metacell, atac_metacell, grn_long, insilico_act, insilico_r
     
     cres_df = pd.DataFrame(rows, columns=["source", "target", "score", "cre", "cre_score"])
 
-    return cres_df
+    return cres_df[['source', 'cre', 'target', 'score']]

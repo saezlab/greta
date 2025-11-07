@@ -155,7 +155,7 @@ def wrapper_scdori_grns(trainConfig):
         topn=10,
     )
 
-    grn_long.to_csv(
+    grn_cre.to_csv(
         trainConfig.grn_file_out, index=False
     )
     logger.info("=== GRN pipeline completed successfully ===")
