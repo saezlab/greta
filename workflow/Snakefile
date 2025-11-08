@@ -106,6 +106,7 @@ include: 'rules/dts/lung.smk'
 include: 'rules/dts/eye.smk'
 include: 'rules/dts/skin.smk'
 include: 'rules/dts/embryo.smk'
+include: 'rules/dts/simulations.smk'
 
 # Methods
 include: 'rules/mth/celloracle.smk'

@@ -339,3 +339,6 @@ dbs:
 tfb_max_psize: 750
 cre_prom_size: 1000
 topo_min_prop: 0.5
+
+# Simulated data
+url_sim: 'https://heibox.uni-heidelberg.de/f/b08f4f261d44471c9696/?dl=1'
