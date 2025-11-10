@@ -24,12 +24,19 @@ colnames(rna_X) <- as.character(indata$obs$`_index`)
 rownames(rna_X) <- as.character(indata$mod$rna$var$`_index`)
 
 # ATAC (read only raw counts)
-ATAC.se <- Matrix::sparseMatrix(
-    i=indata$mod$atac$layers$counts$indices,
-    p=indata$mod$atac$layers$counts$indptr,
-    x=as.numeric(indata$mod$atac$layers$counts$data),
-    index1 = FALSE
-)
+## Checking format, enabling both sparse and dense input
+if (is.list(indata$mod$atac$layers$counts)) {
+    # Python-style CSC
+    ATAC.se <- Matrix::sparseMatrix(
+        i = indata$mod$atac$layers$counts$indices,
+        p = indata$mod$atac$layers$counts$indptr,
+        x = as.numeric(indata$mod$atac$layers$counts$data),
+        index1 = FALSE
+    )
+} else if (is.matrix(indata$mod$atac$layers$counts)) {
+    # Dense, convert to sparse
+    ATAC.se <- as(indata$mod$atac$layers$counts, "dgCMatrix")
+}
 colnames(ATAC.se) <- as.character(indata$obs$`_index`)
 rownames(ATAC.se) <- as.character(indata$mod$atac$var$`_index`)
 
@@ -95,7 +102,7 @@ time_elapsed <- Sys.time()
 cl <- parallel::makeCluster(nCores)
 parallel::clusterEvalQ(cl, .libPaths())
 doSNOW::registerDoSNOW(cl)
-
+cat("Test5\n")
 get_pval <- function(x, corr){
     # Number of observations
     n <- length(x)
