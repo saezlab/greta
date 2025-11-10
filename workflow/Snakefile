@@ -90,6 +90,7 @@ include: 'rules/dbs/tss.smk'
 include: 'rules/dbs/gst.smk'
 include: 'rules/dbs/c2g.smk'
 include: 'rules/dbs/prt.smk'
+include: 'rules/dbs/simulations.smk'
 
 # Datasets
 include: 'rules/dts/pbmc10k.smk'
@@ -106,7 +107,6 @@ include: 'rules/dts/lung.smk'
 include: 'rules/dts/eye.smk'
 include: 'rules/dts/skin.smk'
 include: 'rules/dts/embryo.smk'
-include: 'rules/dts/simulations.smk'
 
 # Methods
 include: 'rules/mth/celloracle.smk'

@@ -8,8 +8,8 @@ import argparse
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-g','--grn_path', required=True)
-parser.add_argument('-p','--proms_path', required=True)
-parser.add_argument('-r','--reg_path', default=None)
+parser.add_argument('-p','--proms_path')
+parser.add_argument('-r','--reg_path')
 parser.add_argument('-o','--out_path', required=True)
 args = vars(parser.parse_args())
 
@@ -20,13 +20,19 @@ reg_path = args['reg_path']
 
 # Read
 grn = pd.read_csv(grn_path, index_col=False, sep='\t').rename(columns={'TF': 'source', 'importance': 'score'})
-grn = grn[grn["score"] > 0.001]
-proms = pr.read_bed(proms_path).df
-proms['cre'] = proms['Chromosome'].astype(str) + '-' + proms['Start'].astype(str) + '-' + proms['End'].astype(str)
-proms = proms[['cre', 'Name']].rename(columns={'Name': 'target'})
+#grn = grn[grn["score"] > 0.001]
+top_n = int(np.ceil(grn.shape[0] * 0.1))
+grn = grn.sort_values('score', ascending=False).head(top_n)
 
-# Merge
-grn = pd.merge(grn, proms, on='target', how='inner')
+if proms_path:
+    # Merge
+    proms = pr.read_bed(proms_path).df
+    proms['cre'] = proms['Chromosome'].astype(str) + '-' + proms['Start'].astype(str) + '-' + proms['End'].astype(str)
+    proms = proms[['cre', 'Name']].rename(columns={'Name': 'target'})
+    grn = pd.merge(grn, proms, on='target', how='inner')
+    cols = ['source', 'cre', 'target', 'score']
+else:
+    cols = ['source', 'target', 'score']
 
 # Filter by enriched TFs
 if reg_path:
@@ -39,8 +45,8 @@ if reg_path:
     grn = pd.merge(grn, reg_exp, on=['source', 'target'], how='inner')
 
 # Format
-grn = grn[['source', 'cre', 'target', 'score']]
-grn = grn.sort_values(['source', 'target', 'cre'])
+grn = grn[cols]
+grn = grn.sort_values(['source', 'target'])
 
 # Write
 grn.to_csv(out_path, index=False)

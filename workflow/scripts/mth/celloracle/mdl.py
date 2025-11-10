@@ -80,6 +80,11 @@ grn = links.filtered_links['cluster'].dropna()[['source', 'target', 'coef_mean',
 grn = grn.rename(columns={'coef_mean': 'score', 'p': 'pval'})
 grn = grn.sort_values(['source', 'target', 'pval'])
 
+# Filter regulons with less than 5 targets
+n_targets = grn.groupby(['source']).size().reset_index(name='counts')
+n_targets = n_targets[n_targets['counts'] > 5]
+grn = grn[grn['source'].isin(n_targets['source'])]
+
 # Write
 grn.to_csv(path_out, index=False)
 

@@ -27,8 +27,8 @@ def transform_cre(r):
 
 atac.var_names = [transform_cre(r) for r in atac.var_names]
 
-rna.X = sps.csr_matrix(rna.X)
-atac.X = sps.csr_matrix(atac.X)
+#rna.X = sps.csr_matrix(rna.X)
+#atac.X = sps.csr_matrix(atac.X)
 
 sc.pp.filter_cells(rna, min_genes=200)
 sc.pp.filter_genes(rna, min_cells=3)
@@ -37,6 +37,9 @@ sc.pp.filter_genes(atac, min_cells=3)
 inter = rna.obs_names.intersection(atac.obs_names)
 rna = rna[inter, :].copy()
 atac = atac[inter, :].copy()
+
+rna.layers['counts'] = rna.X.copy()
+atac.layers['counts'] = atac.X.copy()
 
 sc.pp.normalize_total(rna, target_sum=1e4)
 sc.pp.log1p(rna)
@@ -71,8 +74,15 @@ tfb = tfb[tfb['score'] != 0]
 tfb['region'] = [transform_cre(r) for r in tfb['region']]
 tfb = tfb.rename(columns={'region': 'cre'}).assign(pval=0.01).reset_index(drop=True)
 
+# Find tfs
+gt = pd.read_csv(os.path.join(path_dataset, '..', 'GT_GRN.csv'), index_col=0).rename(columns={'regulator': 'source'})[['source', 'target', 'effect']]
+tfs = np.sort(gt['source'].unique())
+with open(os.path.join(path_dataset, 'tfs.txt'), 'w') as f:
+    for tf in tfs:
+        f.write(f'{tf}\n')
+
 # Delete tmp files:
-for path_f  in glob.glob(os.path.join(path_dataset, '*.csv')):
+for path_f in glob.glob(os.path.join(path_dataset, '*.csv')):
     os.remove(path_f)
 
 # Create outputs

@@ -10,7 +10,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--inp_path', required=True)
 parser.add_argument('-t','--tf_path', required=True)
-parser.add_argument('-c','--cg_path', required=True)
+parser.add_argument('-c','--cg_path')
 parser.add_argument('-g','--g_perc', required=True)
 parser.add_argument('-n','--scale', required=True)
 parser.add_argument('-r','--tf_g_ratio', required=True)
@@ -160,11 +160,31 @@ def run_mdl(p2g, tfb, tf_g_ratio, seed):
 # Run random
 mdata = mu.read(inp_path)
 mdata = run_pre(mdata, seed)
-gannot = pr.read_bed(cg_path)
-p2g = run_p2g(mdata, gannot, g_perc, scale, w_size, seed)
 tfs = pd.read_csv(tf_path, header=None).loc[:, 0].values.astype('U')
-tfb = run_tfb(mdata, p2g, tfs, scale, seed)
-grn = run_mdl(p2g, tfb, tf_g_ratio, seed)
+if cg_path:
+    gannot = pr.read_bed(cg_path)
+    p2g = run_p2g(mdata, gannot, g_perc, scale, w_size, seed)
+    tfb = run_tfb(mdata, p2g, tfs, scale, seed)
+    grn = run_mdl(p2g, tfb, tf_g_ratio, seed)
+else:
+    genes = mdata.mod['rna'].var_names
+    rng = np.random.default_rng(seed=seed)
+    n_genes_per_tf = rng.exponential(scale=scale / 10, size=genes.size)
+    n_genes_per_tf[n_genes_per_tf < 0.05] = 0.
+    n_genes_per_tf = np.ceil(n_genes_per_tf)
+    grn = []
+    for i in range(genes.size):
+        n = int(n_genes_per_tf[i])
+        gene = genes[i]
+        r_tfs = rng.choice(tfs, n)
+        for tf in r_tfs:
+            grn.append([tf, gene, 1])
+    grn = pd.DataFrame(grn, columns=['source', 'target', 'score']).sort_values(['source', 'target']).drop_duplicates(['source', 'target'])
+
+# Filter regulons with less than 5 targets
+n_targets = grn.groupby(['source']).size().reset_index(name='counts')
+n_targets = n_targets[n_targets['counts'] > 5]
+grn = grn[grn['source'].isin(n_targets['source'])]
 
 # Write
 grn.to_csv(out_path, index=False)
