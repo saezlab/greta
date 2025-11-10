@@ -151,7 +151,7 @@ rule simulations_pando:
     threads: 1
     singularity: 'workflow/envs/pando.sif'
     input:
-        #img='workflow/envs/pando.sif',
+        img='workflow/envs/pando.sif',
         inp=rules.download_simulations.output,
     output:
         out='dts/simulations/seed_{sim_num}/pando.csv'
@@ -187,7 +187,7 @@ rule simulations_figr:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
     input:
-        #img='workflow/envs/figr.sif',
+        img='workflow/envs/figr.sif',
         inp=rules.download_simulations.output,
     output:
         out='dts/simulations/seed_{sim_num}/figr.csv'
