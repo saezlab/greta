@@ -145,3 +145,70 @@ rule simulations_celloracle:
         -n {params.n} \
         -o {output}
         """
+
+
+rule simulations_pando:
+    threads: 1
+    singularity: 'workflow/envs/pando.sif'
+    input:
+        #img='workflow/envs/pando.sif',
+        inp=rules.download_simulations.output,
+    output:
+        out='dts/simulations/seed_{sim_num}/pando.csv'
+    params:
+        thr_corr=config['methods']['pando']['thr_corr'],
+        p_thresh=config['methods']['pando']['p_thresh'],
+        rsq_thresh=config['methods']['pando']['rsq_thresh'],
+        nvar_thresh=config['methods']['pando']['nvar_thresh'],
+        min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
+    resources:
+        runtime=config['max_mins_per_step'],
+    shell:
+        """
+        set +e
+        timeout $(({resources.runtime}-20))m \
+        Rscript workflow/scripts/mth/pando/mdl.R \
+        {input.inp}/seed_{wildcards.sim_num}/mdata.h5mu \
+        {input.inp}/seed_{wildcards.sim_num}/p2g.csv \
+        {input.inp}/seed_{wildcards.sim_num}/tfb.csv \
+        {params.thr_corr} \
+        {params.p_thresh} \
+        {params.rsq_thresh} \
+        {params.nvar_thresh} \
+        {params.min_genes_per_module} \
+        {threads} \
+        {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+        fi
+        """
+
+rule simulations_figr:
+    threads: 1
+    singularity: 'workflow/envs/figr.sif'
+    input:
+        #img='workflow/envs/figr.sif',
+        inp=rules.download_simulations.output,
+    output:
+        out='dts/simulations/seed_{sim_num}/figr.csv'
+    params:
+        cellK=config['methods']['figr']['cellK'],
+        thr_score=config['methods']['figr']['thr_score'],
+    resources:
+        runtime=config['max_mins_per_step'],
+    shell:
+        """
+        set +e
+        timeout $(({resources.runtime}-20))m \
+        Rscript workflow/scripts/mth/figr/mdl.R \
+        {input.inp}/seed_{wildcards.sim_num}/mdata.h5mu \
+        {input.inp}/seed_{wildcards.sim_num}/p2g.csv \
+        {input.inp}/seed_{wildcards.sim_num}/tfb.csv \
+        {params.cellK} \
+        {params.thr_score} \
+        {threads} \
+        {output.out}
+        if [ $? -eq 124 ]; then
+            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+        fi
+        """
