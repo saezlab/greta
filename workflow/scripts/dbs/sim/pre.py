@@ -38,8 +38,8 @@ inter = rna.obs_names.intersection(atac.obs_names)
 rna = rna[inter, :].copy()
 atac = atac[inter, :].copy()
 
-rna.layers['counts'] = rna.X.copy()
-atac.layers['counts'] = atac.X.copy()
+rna.layers['counts'] = sps.csr_matrix(rna.X)
+atac.layers['counts'] = sps.csr_matrix(atac.X)
 
 sc.pp.normalize_total(rna, target_sum=1e4)
 sc.pp.log1p(rna)
@@ -66,13 +66,17 @@ p2g = pd.read_csv(path_p2g)
 p2g = pd.melt(p2g, id_vars=['region'], var_name='gene', value_name='score')
 p2g = p2g[p2g['score'] != 0]
 p2g['region'] = [transform_cre(r) for r in p2g['region']]
-p2g = p2g.rename(columns={'region': 'cre'}).assign(pval=0.01).reset_index(drop=True)
+p2g = p2g.rename(columns={'region': 'cre'}).reset_index(drop=True)
+msk = p2g['cre'].isin(atac.var_names) & p2g['gene'].isin(rna.var_names)
+p2g = p2g[msk].copy()
 
 tfb = pd.read_csv(path_tfb)
 tfb = pd.melt(tfb, id_vars=['region'], var_name='tf', value_name='score')
 tfb = tfb[tfb['score'] != 0]
 tfb['region'] = [transform_cre(r) for r in tfb['region']]
-tfb = tfb.rename(columns={'region': 'cre'}).assign(pval=0.01).reset_index(drop=True)
+tfb = tfb.rename(columns={'region': 'cre'}).assign(score=6).reset_index(drop=True)
+msk = tfb['cre'].isin(atac.var_names) & tfb['tf'].isin(rna.var_names)
+tfb = tfb[msk].copy()
 
 # Find tfs
 gt = pd.read_csv(os.path.join(path_dataset, '..', 'GT_GRN.csv'), index_col=0).rename(columns={'regulator': 'source'})[['source', 'target', 'effect']]

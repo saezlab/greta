@@ -90,7 +90,7 @@ include: 'rules/dbs/tss.smk'
 include: 'rules/dbs/gst.smk'
 include: 'rules/dbs/c2g.smk'
 include: 'rules/dbs/prt.smk'
-include: 'rules/dbs/simulations.smk'
+include: 'rules/dbs/sim.smk'
 
 # Datasets
 include: 'rules/dts/pbmc10k.smk'

@@ -1,11 +1,11 @@
-localrules: download_simulations
+localrules: download_sim
 
-rule download_simulations:
+rule download_sim:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
         img='workflow/envs/gretabench.sif',
-    output: directory('dbs/simulations')
+    output: directory('dbs/sim')
     params:
         url=config['url_sim'],
     shell:
@@ -14,21 +14,21 @@ rule download_simulations:
         path_tmp=$path_sim/tmp.zip
         wget --no-verbose "{params.url}" -O $path_tmp
         python -c "import zipfile, os; os.makedirs('$path_sim', exist_ok=True); [zipfile.ZipFile('$path_tmp').extract(m, '$path_sim') for m in zipfile.ZipFile('$path_tmp').namelist()]"
-        #unzip -o $path_tmp -d $path_sim
+        mv $path_sim/simulations {output}
         rm -rf $path_tmp
         for f in {output}/seed_*; do
             base=$(basename "$f")
             path_dataset={output}/$base
-            python workflow/scripts/dbs/simulations/pre.py $path_dataset
+            python workflow/scripts/dbs/sim/pre.py $path_dataset
         done
         """
 
 
-rule simulations_pearson:
+rule sim_pearson:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.download_simulations.output
-    output: 'dts/simulations/seed_{sim_num}/pearson.csv'
+    input: rules.download_sim.output
+    output: 'dts/sim/seed_{sim_num}/pearson.csv'
     params:
         mode=config['methods']['pearson']['mode'],
         thr_r2=config['methods']['pearson']['thr_r2'],
@@ -43,11 +43,11 @@ rule simulations_pearson:
         """
 
 
-rule simulations_spearman:
+rule sim_spearman:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.download_simulations.output
-    output: 'dts/simulations/seed_{sim_num}/spearman.csv'
+    input: rules.download_sim.output
+    output: 'dts/sim/seed_{sim_num}/spearman.csv'
     params:
         mode=config['methods']['spearman']['mode'],
         thr_r2=config['methods']['spearman']['thr_r2'],
@@ -62,11 +62,11 @@ rule simulations_spearman:
         """
 
 
-rule simulations_random:
+rule sim_random:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.download_simulations.output
-    output: 'dts/simulations/seed_{sim_num}/random.csv'
+    input: rules.download_sim.output
+    output: 'dts/sim/seed_{sim_num}/random.csv'
     params:
         g_perc=config['methods']['random']['g_perc'],
         scale=config['methods']['random']['scale'],
@@ -87,14 +87,14 @@ rule simulations_random:
         """
 
 
-rule simulations_grnboost:
+rule sim_grnboost:
     threads: 1
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         img='workflow/envs/scenicplus.sif',
-        inp=rules.download_simulations.output
+        inp=rules.download_sim.output
     output:
-        out='dts/simulations/seed_{sim_num}/grnboost.csv'
+        out='dts/sim/seed_{sim_num}/grnboost.csv'
     shell:
         """
         # Create Loom file
@@ -119,14 +119,14 @@ rule simulations_grnboost:
         """
 
 
-rule simulations_celloracle:
+rule sim_celloracle:
     threads: 1
     singularity: 'workflow/envs/celloracle.sif'
     input:
         img='workflow/envs/celloracle.sif',
-        inp=rules.download_simulations.output
+        inp=rules.download_sim.output
     output:
-        out='dts/simulations/seed_{sim_num}/celloracle.csv'
+        out='dts/sim/seed_{sim_num}/celloracle.csv'
     params:
         a=config['methods']['celloracle']['a'],
         p=config['methods']['celloracle']['p'],
@@ -147,26 +147,22 @@ rule simulations_celloracle:
         """
 
 
-rule simulations_pando:
+rule sim_pando:
     threads: 1
     singularity: 'workflow/envs/pando.sif'
     input:
         img='workflow/envs/pando.sif',
-        inp=rules.download_simulations.output,
+        inp=rules.download_sim.output,
     output:
-        out='dts/simulations/seed_{sim_num}/pando.csv'
+        out='dts/sim/seed_{sim_num}/pando.csv'
     params:
-        thr_corr=config['methods']['pando']['thr_corr'],
-        p_thresh=config['methods']['pando']['p_thresh'],
-        rsq_thresh=config['methods']['pando']['rsq_thresh'],
-        nvar_thresh=config['methods']['pando']['nvar_thresh'],
+        thr_corr=0,
+        p_thresh=0.1,
+        rsq_thresh=0,
+        nvar_thresh=0,
         min_genes_per_module=config['methods']['pando']['min_genes_per_module'],
-    resources:
-        runtime=config['max_mins_per_step'],
     shell:
         """
-        set +e
-        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/mth/pando/mdl.R \
         {input.inp}/seed_{wildcards.sim_num}/mdata.h5mu \
         {input.inp}/seed_{wildcards.sim_num}/p2g.csv \
@@ -178,28 +174,21 @@ rule simulations_pando:
         {params.min_genes_per_module} \
         {threads} \
         {output.out}
-        if [ $? -eq 124 ]; then
-            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
-        fi
         """
 
-rule simulations_figr:
+rule sim_figr:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
     input:
         img='workflow/envs/figr.sif',
-        inp=rules.download_simulations.output,
+        inp=rules.download_sim.output,
     output:
-        out='dts/simulations/seed_{sim_num}/figr.csv'
+        out='dts/sim/seed_{sim_num}/figr.csv'
     params:
         cellK=config['methods']['figr']['cellK'],
-        thr_score=config['methods']['figr']['thr_score'],
-    resources:
-        runtime=config['max_mins_per_step'],
+        thr_score=0.5,
     shell:
         """
-        set +e
-        timeout $(({resources.runtime}-20))m \
         Rscript workflow/scripts/mth/figr/mdl.R \
         {input.inp}/seed_{wildcards.sim_num}/mdata.h5mu \
         {input.inp}/seed_{wildcards.sim_num}/p2g.csv \
@@ -208,7 +197,4 @@ rule simulations_figr:
         {params.thr_score} \
         {threads} \
         {output.out}
-        if [ $? -eq 124 ]; then
-            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
-        fi
         """

@@ -49,8 +49,6 @@ tfb$cre = stringr::str_replace_all(tfb$cre, '-', '_')
 
 # Run per feature
 features <- unique(p2g$gene)
-# Only keep genes present in expression matrix
-features <- features[features %in% rownames(rna_X)]
 cat("Number of target genes to fit: ", length(features), '\n')
 
 if (nCores > 1){
