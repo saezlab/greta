@@ -49,6 +49,8 @@ tfb$cre = stringr::str_replace_all(tfb$cre, '-', '_')
 
 # Run per feature
 features <- unique(p2g$gene)
+# Only keep genes present in expression matrix
+features <- features[features %in% rownames(rna_X)]
 cat("Number of target genes to fit: ", length(features), '\n')
 
 if (nCores > 1){
@@ -114,7 +116,7 @@ model_fits <- Pando::map_par(features, function(g){
     )
     result$gof$nvariables <- nrow(g_scaff_grn)
     return(result)
-}, parallel=TRUE)
+}, parallel=parallel)
 
 # Filter features by failed models
 msk <- unlist(map(model_fits, function(x){!is.null(x)}))
