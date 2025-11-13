@@ -4,18 +4,19 @@ rule mdl_o_scenicplus:
     input:
         img='workflow/envs/scenicplus.sif',
         mdata=rules.extract_case.output.mdata,
-        blist=rules.cre_blacklist.output,
-        rnk=rules.gen_motif_scenicplus.output.human_rankings,
-        man=rules.gen_motif_scenicplus.output.human_annot,
-        scr=rules.gen_motif_scenicplus.output.human_scores,
-        ann=rules.gen_genome_scenicplus.output.ann,
-        csz=rules.gen_genome_scenicplus.output.csz,
+        blist=lambda w: rules.cre_blacklist_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_blacklist.output,
+        rnk=lambda w: rules.gen_motif_scenicplus.output.mouse_rankings if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_scenicplus.output.human_rankings,
+        man=lambda w: rules.gen_motif_scenicplus.output.mouse_annot if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_scenicplus.output.human_annot,
+        scr=lambda w: rules.gen_motif_scenicplus.output.mouse_scores if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_scenicplus.output.human_scores,
+        ann=lambda w: rules.gen_genome_scenicplus_mm10.output.ann if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_scenicplus.output.ann,
+        csz=lambda w: rules.gen_genome_scenicplus_mm10.output.csz if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_scenicplus.output.csz,
     output:
-        dir=directory('dts/{dat}/cases/{case}/runs/scenicplus/'),
-        out='dts/{dat}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv'
+        dir=directory('dts/{org}/{dat}/cases/{case}/runs/scenicplus/'),
+        out='dts/{org}/{dat}/cases/{case}/runs/o_scenicplus.o_scenicplus.o_scenicplus.o_scenicplus.mdl.csv'
     params:
         ntopics=config['methods']['scenicplus']['ntopics'],
         ext=config['methods']['scenicplus']['ext'] // 2,
+        script=lambda w: 'workflow/scripts/mth/scenicplus/o_mdl_mm10.sh' if config['dts'][w.dat]['organism'] == 'mm10' else 'workflow/scripts/mth/scenicplus/o_mdl.sh'
     resources:
         mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 4,
         runtime=config['max_mins_per_step'],
@@ -24,7 +25,7 @@ rule mdl_o_scenicplus:
         mkdir -p {output.dir}
         set +e
         timeout $(({resources.runtime}-20))m \
-        bash workflow/scripts/mth/scenicplus/o_mdl.sh \
+        bash {params.script} \
         --new_dir {output.dir} \
         --path_mdata {input.mdata} \
         --path_blist {input.blist} \

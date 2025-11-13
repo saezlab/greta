@@ -138,9 +138,9 @@ rule mdl_o_celloracle:
     singularity: 'workflow/envs/celloracle.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        csz=rules.gen_genome_celloracle.output,
+        csz=lambda w: rules.gen_genome_celloracle_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_celloracle.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.mdl.csv',
+        out='dts/{org}/{dat}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.mdl.csv',
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         k=config['methods']['celloracle']['k'],
