@@ -1,4 +1,4 @@
-localrules: cre_blacklist, cre_blacklist_mm10, cre_encode, cre_gwascatalogue, cre_phastcons, cre_promoters,cre_promoters_mm10, cre_zhang21
+localrules: cre_blacklist, cre_blacklist_mm10, cre_encode, cre_encode_mm10, cre_gwascatalogue, cre_phastcons, cre_promoters,cre_promoters_mm10, cre_zhang21
 
 
 rule cre_blacklist:
@@ -41,6 +41,19 @@ rule cre_encode:
         rm {output}.tmp
         """
 
+rule cre_encode_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/cre/encode/encode.bed'
+    params:
+        url=config['dbs']['mm10']['cre']['encode']
+    shell:
+        """
+        wget --no-verbose '{params.url}' -O {output}.tmp && \
+        cat {output}.tmp | sort -k 1,1 -k2,2n | bedtools merge -c 6 -o distinct > {output} && \
+        rm {output}.tmp
+        """
 
 rule cre_gwascatalogue:
     threads: 1
