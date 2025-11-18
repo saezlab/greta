@@ -368,14 +368,9 @@ subprocess.run(cmd, check=True)
 print(f"PreparescMTNIinputfiles.py finished, results in {outdir}")
 
 
-#-------------------------------------------------------------------------------------
-# Generate prior network
-print("Generating prior network...")
-#-----------------------------------------------------------------------------
-
-
+#------------------------------------------------
 #Extend promoter regions
-#-------------------------------------------------------------------------------------
+#------------------------------------------------
 
 # Correct window: subtract 10 kb (because ±5 kb already included)
 corrected_window = max(window_size - 10000, 0)
@@ -396,9 +391,10 @@ print(f"Running:\n{cmd}")
 subprocess.run(cmd, shell=True, check=True)
 print(f"Extended promoter regions saved to {promoter_file}")
 
-#-------------------------------------------------------------------------------------
 
-#------------------------
+#----------------------------------------------
+# Define preprocessing functions
+#----------------------------------------------
 # 1. Sort BED files
 #------------------------
 def sort_bed(in_file, out_file):
@@ -532,6 +528,10 @@ def run_percentile_ranking(cell_types, outdir_top02, outdir_ranked):
         ], check=True)
         print(f"Percentile ranked network for {sample}")
         
+        
+#========================================================
+# Run preprocessing
+#========================================================
 
 # Define celltypes
 celltypes = list(mdata.obs["celltype"].unique())
@@ -549,31 +549,31 @@ for ct in celltypes:
 
 
 print("Running bedtools intersects...")
-#run_bedtools_intersects(cell_types=celltypes, 
-#                        outdir = path_output,
-#                        motif_file = motif_file,
-#                        promoter_file = promoter_file)
+run_bedtools_intersects(cell_types=celltypes, 
+                        outdir = path_output,
+                        motif_file = motif_file,
+                        promoter_file = promoter_file)
 
 
 print("Mapping motifs to genes...")
-#run_map_motifs_to_genes(cell_types=celltypes,
-#                        outdir = path_output,
-#                        motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
+run_map_motifs_to_genes(cell_types=celltypes,
+                        outdir = path_output,
+                        motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
 
 print("Filtering prior network...")
 #run_filter_prior_network(cell_types=celltypes, 
-#                        outdir= path_output, 
-#                        outdir_prior= os.path.join(path_output, "prior_networks/"))
+                        outdir= path_output, 
+                        outdir_prior= os.path.join(path_output, "prior_networks/"))
 
 print("Filtering top 20% edges...")
-#run_filter_top_edges(outdir = path_output, 
-#                    outdir_prior = os.path.join(path_output, "prior_networks/"))
+run_filter_top_edges(outdir = path_output, 
+                    outdir_prior = os.path.join(path_output, "prior_networks/"))
 
 
 print("Running percentile ranking...")
-#run_percentile_ranking(cell_types=celltypes, 
-#                    outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"), 
-#                    outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"))
+run_percentile_ranking(cell_types=celltypes, 
+                    outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"), 
+                    outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"))
 
 #---------------------------------------------------------------------------------
 # Move filtered and ranked prior networks to main output dir
@@ -597,15 +597,15 @@ def move_ranked_networks(cell_types, outdir_ranked, outdir):
         print(f"Moved {ranked_file} -> {dest_file} (overwriting if existed)")
 
 
-#move_ranked_networks(cell_types=celltypes, 
-#                     outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"),
-#                     outdir = path_output)
+move_ranked_networks(cell_types=celltypes, 
+                     outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"),
+                     outdir = path_output)
 
 
 #---------------------------------------------------------------------------------
 # -------- Helper to get AllGenes split files --------
 
-#
+
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
@@ -643,7 +643,7 @@ def run_scmtni_for_batch(datadir, gene_file):
     return gene_file
 
 # -------- Main parallel runner --------
-batch_size = 64  # number of parallel scMTNI runs at a time
+batch_size = 32  # number of parallel scMTNI runs at a time
 
 def parallel_scmtni(datadir, max_workers=batch_size):
     ogids_dir = Path(datadir) / "ogids"
@@ -666,10 +666,10 @@ def parallel_scmtni(datadir, max_workers=batch_size):
 
 
 # Run parallel scMTNI
-#parallel_scmtni(
-#    datadir=path_output,
-#    max_workers=batch_size
-#)
+parallel_scmtni(
+    datadir=path_output,
+    max_workers=batch_size
+)
 
 #----------------------------------
 # Remap TF-gene edge back to CRE
@@ -775,9 +775,8 @@ def replace_peak_names_with_coords(df, peak2gene_file, cre_net):
 
 
 
-
 #------------------------
-# Run for all cell types
+# Map all cell types
 #------------------------
 def remap_all_celltypes(results_dir, outdir, cell_types, mot2tf_file):
     results_dir = Path(results_dir)
@@ -827,7 +826,7 @@ def remap_all_celltypes(results_dir, outdir, cell_types, mot2tf_file):
 
 
 #------------------------
-#  Usage
+#  Run remapping
 #------------------------
 
 print(celltypes)
@@ -837,11 +836,8 @@ remap_all_celltypes(results_dir=path_output + "Results/",
                     mot2tf_file="/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
 
 
-
-
 #-------------------------------------------------------------------------------------
 # Merge networks across cell types
-
 
 def merge_networks(outdir, output_file):
     edges = {}
@@ -888,5 +884,5 @@ consensus = merge_networks(outdir=path_output, output_file=path_outfile)
 
 
 # Safe cleanup
-#shutil.rmtree(path_output, ignore_errors=True)
-#print(f"Cleaned up temporary directory {path_output}")
+shutil.rmtree(path_output, ignore_errors=True)
+print(f"Cleaned up temporary directory {path_output}")
