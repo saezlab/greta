@@ -1,5 +1,6 @@
 rule mdl_o_scmtni:
-    threads: 16
+    threads: 32
+
     singularity: 'workflow/envs/scmtni.sif'
     input:
         mdata=rules.extract_case.output.mdata,
@@ -27,5 +28,4 @@ rule mdl_o_scmtni:
         -f {input.promoters} \
         -g {params.ext} \
         -i {threads}
-        rm -rf $path_out
         """

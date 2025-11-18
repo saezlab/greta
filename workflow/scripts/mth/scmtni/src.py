@@ -10,11 +10,11 @@ import os
 import re
 import argparse
 import subprocess
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 import shutil
 import glob
-
+import itertools
 
 
 # Init args
@@ -65,216 +65,251 @@ mdata.obs['celltype'] = mdata.obs['celltype'].str.replace(" ", "_")
 
 #--------------------------------------------------------------------------------------
 # Compute cell lineage tree
-print("Computing cell lineage tree...")
-## Get clusters
-clusters = mdata.obs['celltype']
-cluster_names = sorted(clusters.unique())
 
-rna = mdata.mod['rna']
-expr_df = pd.DataFrame(
-    rna.X.toarray() if not isinstance(rna.X, np.ndarray) else rna.X,
-    index=rna.obs_names,
-    columns=rna.var_names
-)
+lineage_tree_file = os.path.join(path_output, 'lineage_tree.txt')
+if not os.path.exists(lineage_tree_file):
 
-## Save all genes to file
-# Extract gene names and save to a text file
-pd.Series(expr_df.columns).to_csv(os.path.join(path_output, "allGenes.txt"), index=False, header=False)
+    print("Computing cell lineage tree...")
+    ## Get clusters
+    clusters = mdata.obs['celltype']
+    cluster_names = sorted(clusters.unique())
 
-## Extract expression data and get cluster mean
-expr_df['cluster'] = clusters.loc[expr_df.index].values
-cluster_means = expr_df.groupby('cluster').mean()
+    rna = mdata.mod['rna']
+    expr_df = pd.DataFrame(
+        rna.X.toarray() if not isinstance(rna.X, np.ndarray) else rna.X,
+        index=rna.obs_names,
+        columns=rna.var_names
+    )
 
-## Compute pairwise distances between cluster means
-dist_matrix = squareform(pdist(cluster_means.values, metric="euclidean"))
+    ## Save all genes to file
+    # Extract gene names and save to a text file
+    pd.Series(expr_df.columns).to_csv(os.path.join(path_output, "allGenes.txt"), index=False, header=False)
 
-## Compute minimum spanning tree
-mst_sparse = minimum_spanning_tree(dist_matrix)
-mst_arr = mst_sparse.toarray()
+    ## Extract expression data and get cluster mean
+    expr_df['cluster'] = clusters.loc[expr_df.index].values
+    cluster_means = expr_df.groupby('cluster').mean()
 
-## Create graph from MST
-G = nx.Graph()
-for i, a in enumerate(cluster_names):
-    for j, b in enumerate(cluster_names):
-        w = mst_arr[i, j]
-        if w != 0 and not np.isnan(w):
-            G.add_edge(a, b, weight=float(w))
+    ## Compute pairwise distances between cluster means
+    dist_matrix = squareform(pdist(cluster_means.values, metric="euclidean"))
 
-## Determine root cluster: Find node with the highest degree in MST
-degrees = dict(G.degree())
-root_cluster = max(degrees, key=degrees.get)
-print(f"Automatically selected root cluster: {root_cluster}")
+    ## Compute minimum spanning tree
+    mst_sparse = minimum_spanning_tree(dist_matrix)
+    mst_arr = mst_sparse.toarray()
 
-## Generate lineage tree and celltype order
-## DFS traversal from root cluster
-visited = set()
-edges = []
-def dfs(node):
-    visited.add(node)
-    for neighbor in sorted(G.neighbors(node)):
-        if neighbor not in visited:
-            dist = 0.2  # fixed time, or use: G[node][neighbor]["weight"]
-            edges.append((node, neighbor, dist, dist))
-            dfs(neighbor)
+    ## Create graph from MST
+    G = nx.Graph()
+    for i, a in enumerate(cluster_names):
+        for j, b in enumerate(cluster_names):
+            w = mst_arr[i, j]
+            if w != 0 and not np.isnan(w):
+                G.add_edge(a, b, weight=float(w))
 
-dfs(root_cluster)
+    ## Determine root cluster: Find node with the highest degree in MST
+    degrees = dict(G.degree())
+    root_cluster = max(degrees, key=degrees.get)
+    print(f"Automatically selected root cluster: {root_cluster}")
 
-edges_df = pd.DataFrame(edges, columns=["parent", "child", "time1", "time2"])
-edges_df = edges_df[["child", "parent", "time1", "time2"]]
+    ## Generate lineage tree and celltype order
+    ## DFS traversal from root cluster
+    visited = set()
+    edges = []
+    def dfs(node):
+        visited.add(node)
+        for neighbor in sorted(G.neighbors(node)):
+            if neighbor not in visited:
+                dist = 0.2  # fixed time
+                edges.append((node, neighbor, dist, dist))
+                dfs(neighbor)
 
-order = list(nx.dfs_tree(G, root_cluster).nodes())
-order_df = pd.DataFrame(order, columns=["celltype"])
+    dfs(root_cluster)
 
-## Save lineage tree and order
-edges_df.to_csv(os.path.join(path_output, "lineage_tree.txt"), sep="\t", index=False, header=False)
-order_df.to_csv(os.path.join(path_output, "celltype_order.txt"), sep="\t", index=False, header=False)
+    edges_df = pd.DataFrame(edges, columns=["parent", "child", "time1", "time2"])
+    edges_df = edges_df[["child", "parent", "time1", "time2"]]
 
-print(f"Saved cell lineage tree to {os.path.join(path_output, 'lineage_tree.txt')}")
-print(f"Saved celltype order to {os.path.join(path_output, 'celltype_order.txt')}")
+    order = list(nx.dfs_tree(G, root_cluster).nodes())
+    order_df = pd.DataFrame(order, columns=["celltype"])
 
+    ## Save lineage tree and order
+    edges_df.to_csv(os.path.join(path_output, "lineage_tree.txt"), sep="\t", index=False, header=False)
+    order_df.to_csv(os.path.join(path_output, "celltype_order.txt"), sep="\t", index=False, header=False)
+
+    print(f"Saved cell lineage tree to {os.path.join(path_output, 'lineage_tree.txt')}")
+    print(f"Saved celltype order to {os.path.join(path_output, 'celltype_order.txt')}")
+
+else:
+    print(f"Skipping computing lineage tree, file already exists.")
 
 #-------------------------------------------------------------------------------------
 # LiftOver Peak Matrix to hg19 
-print("Running liftOver to hg19...")
-## Extract peak matrix
-peaks = pd.Series(mdata.mod['atac'].var_names)
 
-## Convert peaks to a DataFrame in BED format
-bed_df = peaks.str.split('[:-]', expand=True)
-bed_df.columns = ["chrom", "start", "end"]
-bed_df["start"] = bed_df["start"].astype(int)
-bed_df["end"] = bed_df["end"].astype(int)
+if not os.path.exists(output_bed):
 
-bed_df.to_csv(input_bed, sep="\t", header=False, index=False)
+    print("Running liftOver to hg19...")
+    ## Extract peak matrix
+    peaks = pd.Series(mdata.mod['atac'].var_names)
 
-## Run liftOver from Python
-subprocess.run([
-    liftover_path,
-    input_bed,
-    path_chainFiles,
-    output_bed,
-    unmapped_file
-], check=True)
+    ## Convert peaks to a DataFrame in BED format
+    bed_df = peaks.str.split('[:-]', expand=True)
+    bed_df.columns = ["chrom", "start", "end"]
+    bed_df["start"] = bed_df["start"].astype(int)
+    bed_df["end"] = bed_df["end"].astype(int)
+
+    bed_df.to_csv(input_bed, sep="\t", header=False, index=False)
+
+    ## Run liftOver from Python
+    subprocess.run([
+        liftover_path,
+        input_bed,
+        path_chainFiles,
+        output_bed,
+        unmapped_file
+    ], check=True)
+
+else:
+    print(f"Skipping liftOver, {output_bed} already exists.")
 
 
-## Load lifted peaks
-lifted_df = pd.read_csv(output_bed, sep="\t", header=None, names=["chrom", "start", "end"])
-lifted_peaks = lifted_df["chrom"] + "-" + lifted_df["start"].astype(str) + "-" + lifted_df["end"].astype(str)
+#---------------------------------------------------------------------
+# Annotate mudata
 
-## Load unmapped peaks for filtering
-unmapped = pd.read_csv(unmapped_file, sep="\t", header=None, names=["chrom", "start", "end"])
+annotated_file = os.path.join(path_output, "annotated_hg19.h5mu")
+if not os.path.exists(annotated_file):
 
-## Filter out unmapped peaks
-## Drop rows where 'chrom' starts with '#' or nan
-unmapped_clean = unmapped[~unmapped["chrom"].astype(str).str.startswith("#")]
-unmapped_clean = unmapped_clean.dropna(subset=["start", "end"])
-unmapped_clean['start'] = unmapped['start'].astype(str)
-unmapped_clean['end'] = unmapped['end'].astype(str)
-unmapped_clean = unmapped_clean["chrom"] + "-" + unmapped_clean["start"].astype(str) + "-" + unmapped_clean["end"].astype(str)
+    ## Load lifted peaks
+    lifted_df = pd.read_csv(output_bed, sep="\t", header=None, names=["chrom", "start", "end"])
+    lifted_peaks = lifted_df["chrom"] + "-" + lifted_df["start"].astype(str) + "-" + lifted_df["end"].astype(str)
 
-# Split each string by '-', convert start and end to int, then rebuild string without .0
-def clean_peak_name(peak_str):
-    chrom, start, end = peak_str.split('-')
-    start = int(float(start))
-    end = int(float(end))
-    return f"{chrom}-{start}-{end}"
+    ## Load unmapped peaks for filtering
+    unmapped = pd.read_csv(unmapped_file, sep="\t", header=None, names=["chrom", "start", "end"])
 
-cleaned = unmapped_clean.apply(clean_peak_name)
+    ## Filter out unmapped peaks
+    ## Drop rows where 'chrom' starts with '#' or nan
+    unmapped_clean = unmapped[~unmapped["chrom"].astype(str).str.startswith("#")]
+    unmapped_clean = unmapped_clean.dropna(subset=["start", "end"])
+    unmapped_clean['start'] = unmapped['start'].astype(str)
+    unmapped_clean['end'] = unmapped['end'].astype(str)
+    unmapped_clean = unmapped_clean["chrom"] + "-" + unmapped_clean["start"].astype(str) + "-" + unmapped_clean["end"].astype(str)
 
-## Do filtering
-print("Filtering peaks...")
-peaks_to_remove = set(cleaned)
-current_peaks = mdata.mod['atac'].var_names
-peaks_to_keep = [peak for peak in current_peaks if peak not in peaks_to_remove]
-mdata.mod['atac'] = mdata.mod['atac'][:, peaks_to_keep]
+    # Split each string by '-', convert start and end to int, then rebuild string without .0
+    def clean_peak_name(peak_str):
+        chrom, start, end = peak_str.split('-')
+        start = int(float(start))
+        end = int(float(end))
+        return f"{chrom}-{start}-{end}"
 
-print(f"Peaks before: {len(current_peaks)}")
-print(f"Peaks after: {mdata.mod['atac'].n_vars}")
+    cleaned = unmapped_clean.apply(clean_peak_name)
 
-## Replace var_names with lifted peaks
-mdata.mod['atac'].var_names = lifted_peaks.values
+    ## Do filtering
+    print("Filtering peaks...")
+    peaks_to_remove = set(cleaned)
+    current_peaks = mdata.mod['atac'].var_names
+    peaks_to_keep = [peak for peak in current_peaks if peak not in peaks_to_remove]
+    mdata.mod['atac'] = mdata.mod['atac'][:, peaks_to_keep]
 
-# Re-create MuData object from filtered modalities and save
-mdata_filtered = md.MuData(mdata.mod)
-mdata_filtered.obs = mdata.obs.copy()
-mdata_filtered.write_h5mu(os.path.join(path_output, "annotated_hg19.h5mu"))
-print("Saved filtered MuData object to annotated_hg19.h5mu")
+    print(f"Peaks before: {len(current_peaks)}")
+    print(f"Peaks after: {mdata.mod['atac'].n_vars}")
+
+    ## Replace var_names with lifted peaks
+    mdata.mod['atac'].var_names = lifted_peaks.values
+
+    # Re-create MuData object from filtered modalities and save
+    mdata_filtered = md.MuData(mdata.mod)
+    mdata_filtered.obs = mdata.obs.copy()
+    mdata_filtered.write_h5mu(os.path.join(path_output, "annotated_hg19.h5mu"))
+    print("Saved filtered MuData object to annotated_hg19.h5mu")
+
+else:
+    print(f"Skipping annotated_hg19.h5mu, file already exists.")
 
 #-------------------------------------------------------------------------------------
 # Split peak matrix by cell type and save as narrowPeak files
-print("Saving peaks by cell type as narrowPeak files...")
 
-# Get ATAC modality
-mdata = md.read_h5mu(os.path.join(path_output, "annotated_hg19.h5mu"))
-atac = mdata.mod['atac']
-
-## narrowPeak columns: chrom, start, end, name, score, strand, signalValue, pValue, qValue, peak
-template_cols = ["chrom", "start", "end", "name", "score", "strand", "signalValue", "pValue", "qValue", "peak"]
-
-# Iterate over clusters
-for celltype, cells in mdata.obs.groupby("celltype").groups.items():
-    # Subset ATAC matrix to cluster cells
-    submatrix = atac[cells, :].X
-
-    # Convert sparse to dense if needed
-    if not isinstance(submatrix, np.ndarray):
-        submatrix = submatrix.toarray()
-
-    # Find peaks present in this cluster
-    present_peaks = (submatrix > 0).sum(axis=0) > 0
-
-    # Mean accessibility across cells in cluster
-    mean_signal = submatrix.mean(axis=0)
-
-    # Build DataFrame for narrowPeak
-    df = lifted_df.loc[present_peaks].copy()
-    df["name"] = [f"peak{i+1}_{celltype}" for i in range(len(df))]
-    df["score"] = 0
-    df["strand"] = "."
-    df["signalValue"] = mean_signal[present_peaks]
-    df["pValue"] = -1
-    df["qValue"] = -1
-    df["peak"] = -1
-
-    # Save in narrowPeak format
-    df = df[template_cols]
+for celltype in mdata.obs['celltype'].unique():
     out_path = os.path.join(path_output, f"{celltype}.narrowPeak")
-    df.to_csv(out_path, sep="\t", header=False, index=False)
+    if os.path.exists(out_path):
+        print(f"Skipping {out_path}, already exists.")
+        continue
+
+    print("Saving peaks by cell type as narrowPeak files...")
+
+    # Get ATAC modality
+    mdata = md.read_h5mu(os.path.join(path_output, "annotated_hg19.h5mu"))
+    atac = mdata.mod['atac']
+
+    ## narrowPeak columns: chrom, start, end, name, score, strand, signalValue, pValue, qValue, peak
+    template_cols = ["chrom", "start", "end", "name", "score", "strand", "signalValue", "pValue", "qValue", "peak"]
+
+    # Iterate over clusters
+    for celltype, cells in mdata.obs.groupby("celltype").groups.items():
+        # Subset ATAC matrix to cluster cells
+        submatrix = atac[cells, :].X
+
+        # Convert sparse to dense if needed
+        if not isinstance(submatrix, np.ndarray):
+            submatrix = submatrix.toarray()
+
+        # Find peaks present in this cluster
+        present_peaks = (submatrix > 0).sum(axis=0) > 0
+
+        # Mean accessibility across cells in cluster
+        mean_signal = submatrix.mean(axis=0)
+
+        # Build DataFrame for narrowPeak
+        df = lifted_df.loc[present_peaks].copy()
+        df["name"] = [f"peak{i+1}_{celltype}" for i in range(len(df))]
+        df["score"] = 0
+        df["strand"] = "."
+        df["signalValue"] = mean_signal[present_peaks]
+        df["pValue"] = -1
+        df["qValue"] = -1
+        df["peak"] = -1
+
+        # Save in narrowPeak format
+        df = df[template_cols]
+        out_path = os.path.join(path_output, f"{celltype}.narrowPeak")
+        df.to_csv(out_path, sep="\t", header=False, index=False)
 
 
-print(f"Saved peaks for {len(mdata.obs['celltype'].unique())} clusters to {path_output}/")
+    print(f"Saved peaks for {len(mdata.obs['celltype'].unique())} clusters to {path_output}/")
 
 
 
 #-------------------------------------------------------------------------------------
 # Split expression matrix by cell type and save as txt files
-print("Saving expression matrices by cell type...")
 
-# Get expression matrix and celltype annotations
-mdata = md.read_h5mu(os.path.join(path_output, "annotated_hg19.h5mu"))
-adata = mdata.mod["rna"]
-sc.pp.normalize_total(adata, target_sum=1e4)
-sc.pp.log1p(adata)
-expr = adata.to_df()   # cells x genes
-celltypes = mdata.obs["celltype"]
+for celltype in mdata.obs['celltype'].unique():
+    out_path = os.path.join(path_output, f"{celltype}.table")
+    if os.path.exists(out_path):
+        print(f"Skipping {out_path}, already exists.")
+        continue
+
+    print("Saving expression matrices by cell type...")
+
+    # Get expression matrix and celltype annotations
+    mdata = md.read_h5mu(os.path.join(path_output, "annotated_hg19.h5mu"))
+    adata = mdata.mod["rna"]
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    expr = adata.to_df()   # cells x genes
+    celltypes = mdata.obs["celltype"]
 
 
-# Loop over celltypes and save one table per cluster
-for cluster in celltypes.unique():
-    cells_in_cluster = celltypes[celltypes == cluster].index
-    expr_cluster = expr.loc[cells_in_cluster]  # subset matrix
+    # Loop over celltypes and save one table per cluster
+    for cluster in celltypes.unique():
+        cells_in_cluster = celltypes[celltypes == cluster].index
+        expr_cluster = expr.loc[cells_in_cluster]  # subset matrix
 
-    # transpose → rows = genes, cols = cells
-    expr_cluster = expr_cluster.T
+        # transpose → rows = genes, cols = cells
+        expr_cluster = expr_cluster.T
 
-    # rename genes to include cluster suffix
-    expr_cluster.index = [f"{g}_{cluster}" for g in expr_cluster.index]
+        # rename genes to include cluster suffix
+        expr_cluster.index = [f"{g}_{cluster}" for g in expr_cluster.index]
 
-    # save to file
-    outfile = os.path.join(path_output, f"{cluster}.table")
-    expr_cluster.to_csv(outfile, sep="\t")
+        # save to file
+        outfile = os.path.join(path_output, f"{cluster}.table")
+        expr_cluster.to_csv(outfile, sep="\t")
 
-    print(f"Saved: {outfile}")
+        print(f"Saved: {outfile}")
 
 #--------------------------------------------------------------------------------------
 # Create filelist
@@ -323,7 +358,7 @@ cmd = [
     "--regfile", str(regfile),
     "--indir", str(indir),
     "--outdir", str(outdir),
-    "--splitgene", "50",
+    "--splitgene", "25",
     "--motifs", "1"
 ]
 
@@ -412,6 +447,7 @@ def run_bedtools_intersects(cell_types, outdir, motif_file, promoter_file, bedto
 #------------------------
 # 3. Map motifs to genes
 #------------------------
+
 def run_map_motifs_to_genes(cell_types, outdir, motif2tf_file):
     Path(outdir).mkdir(parents=True, exist_ok=True)
     for cluster in cell_types:
@@ -495,12 +531,15 @@ def run_percentile_ranking(cell_types, outdir_top02, outdir_ranked):
             "incr"
         ], check=True)
         print(f"Percentile ranked network for {sample}")
+        
 
-
+# Define celltypes
+celltypes = list(mdata.obs["celltype"].unique())
 
 
 # Sorted peak files 
 print("Sorting peak files...")
+
 
 for ct in celltypes:
     inpath = Path(path_output) / f"{ct}.narrowPeak"
@@ -510,31 +549,31 @@ for ct in celltypes:
 
 
 print("Running bedtools intersects...")
-run_bedtools_intersects(cell_types=celltypes, 
-                        outdir = path_output,
-                        motif_file = motif_file,
-                        promoter_file = promoter_file)
+#run_bedtools_intersects(cell_types=celltypes, 
+#                        outdir = path_output,
+#                        motif_file = motif_file,
+#                        promoter_file = promoter_file)
 
 
 print("Mapping motifs to genes...")
-run_map_motifs_to_genes(cell_types=celltypes,
-                        outdir = path_output,
-                        motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
+#run_map_motifs_to_genes(cell_types=celltypes,
+#                        outdir = path_output,
+#                        motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
 
 print("Filtering prior network...")
-run_filter_prior_network(cell_types=celltypes, 
-                        outdir= path_output, 
-                        outdir_prior= os.path.join(path_output, "prior_networks/"))
+#run_filter_prior_network(cell_types=celltypes, 
+#                        outdir= path_output, 
+#                        outdir_prior= os.path.join(path_output, "prior_networks/"))
 
 print("Filtering top 20% edges...")
-run_filter_top_edges(outdir = path_output, 
-                    outdir_prior = os.path.join(path_output, "prior_networks/"))
+#run_filter_top_edges(outdir = path_output, 
+#                    outdir_prior = os.path.join(path_output, "prior_networks/"))
 
 
 print("Running percentile ranking...")
-run_percentile_ranking(cell_types=celltypes, 
-                    outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"), 
-                    outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"))
+#run_percentile_ranking(cell_types=celltypes, 
+#                    outdir_top02 = os.path.join(path_output, "prior_networks_top0.2/"), 
+#                    outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"))
 
 #---------------------------------------------------------------------------------
 # Move filtered and ranked prior networks to main output dir
@@ -558,9 +597,9 @@ def move_ranked_networks(cell_types, outdir_ranked, outdir):
         print(f"Moved {ranked_file} -> {dest_file} (overwriting if existed)")
 
 
-move_ranked_networks(cell_types=celltypes, 
-                     outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"),
-                     outdir = path_output)
+#move_ranked_networks(cell_types=celltypes, 
+#                     outdir_ranked = os.path.join(path_output, "prior_networks_ranked/"),
+#                     outdir = path_output)
 
 
 #---------------------------------------------------------------------------------
@@ -588,7 +627,7 @@ def run_scmtni_for_batch(datadir, gene_file):
     cmd = [
         "/opt/scMTNI/Code/scMTNI",
         "-f", str(data / "testdata_config.txt"),
-        "-x50",
+        "-x5",
         "-l", str(data / "TFs_OGs.txt"),
         "-n", str(gene_file),
         "-d", str(data / "lineage_tree.txt"),
@@ -604,27 +643,200 @@ def run_scmtni_for_batch(datadir, gene_file):
     return gene_file
 
 # -------- Main parallel runner --------
-def parallel_scmtni(datadir, max_workers=n_jobs):
+batch_size = 64  # number of parallel scMTNI runs at a time
+
+def parallel_scmtni(datadir, max_workers=batch_size):
     ogids_dir = Path(datadir) / "ogids"
     gene_files = get_allgenes_files(ogids_dir)
+
     
     print(f"Found {len(gene_files)} split files. Launching parallel execution...")
 
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(run_scmtni_for_batch, datadir, gf): gf for gf in gene_files}
-        for future in as_completed(futures):
-            gf = futures[future]
-            try:
-                future.result()
-                print(f"Finished {gf}")
-            except Exception as e:
-                print(f"Error in {gf}: {e}")
+
+    for batch in [gene_files[i:i+batch_size] for i in range(0, len(gene_files), batch_size)]:
+        with ThreadPoolExecutor(max_workers=batch_size) as executor:
+            futures = {executor.submit(run_scmtni_for_batch, path_output, gf): gf for gf in batch}
+            for future in as_completed(futures):
+                gf = futures[future]
+                try:
+                    future.result()
+                    print(f"Finished {gf}")
+                except Exception as e:
+                    print(f"Error in {gf}: {e}")
+
 
 # Run parallel scMTNI
-parallel_scmtni(
-    datadir=path_output,
-    max_workers=n_jobs
-)
+#parallel_scmtni(
+#    datadir=path_output,
+#    max_workers=batch_size
+#)
+
+#----------------------------------
+# Remap TF-gene edge back to CRE
+#----------------------------------
+# Helper functions
+#------------------------
+
+def extract_cres_by_peakname(network_file, mot2tf_file, mot2peak_file, peak2gene_file, topn=None):
+    # --- Load motif2TF ---
+    mot2tf = {}
+    with open(mot2tf_file) as f:
+        for l in f:
+            parts = l.strip().split('\t')
+            if len(parts) < 2:
+                continue
+            mot2tf[parts[0]] = parts[1].split('::')
+
+    # --- Load motif2peak (peak names only) ---
+    mot2peak = {}
+    with open(mot2peak_file) as f:
+        for l in f:
+            parts = l.strip().split('\t')
+            if len(parts) < 15:
+                continue
+            peak_name = parts[3]
+            motif = parts[-3]
+            mot2peak.setdefault(motif, set()).add(peak_name)
+
+    # --- Load peak2gene (peak name to genes, base names only) ---
+    peak2gene = {}
+    with open(peak2gene_file) as f:
+        for l in f:
+            parts = l.strip().split('\t')
+            if len(parts) < 17:
+                continue
+            peak_name = parts[3]
+            gene = parts[-1]
+            # remove potential cluster suffix from gene
+            gene_base = gene.split("_")[0]
+            peak2gene.setdefault(peak_name, set()).add(gene_base)
+
+    # --- Load TF–gene network ---
+    net_df = pd.read_csv(network_file, sep="\t", header=None, names=["tf", "gene", "score"])
+    rows = []
+
+    # --- Map TF -> motif -> peak name -> gene ---
+    for _, row in net_df.iterrows():
+        tf_full, gene_full, score = row["tf"], row["gene"], row["score"]
+        tf_name = tf_full.split("_")[0]      # removing celltype suffix
+        gene_base = gene_full.split("_")[0]  # removing celltype suffix
+
+        motifs = [mot for mot, tfs in mot2tf.items() if tf_name in tfs]
+        if not motifs:
+            continue
+
+        for mot in motifs:
+            if mot not in mot2peak:
+                continue
+            for peak_name in mot2peak[mot]:
+                if peak_name not in peak2gene:
+                    continue
+                if gene_base not in peak2gene[peak_name]:
+                    continue
+                rows.append((tf_full, peak_name, gene_full, score))
+
+    # --- Create DataFrame ---
+    df = pd.DataFrame(rows, columns=["source", "CRE", "target", "score"])
+
+    # --- Collapse duplicates by max score ---
+    if not df.empty:
+        df = df.groupby(["source", "CRE", "target"], as_index=False).score.max()
+
+        # --- Optional: keep top-n CREs per TF–gene pair ---
+        if topn is not None:
+            df = df.sort_values("score", ascending=False)
+            df = df.groupby(["source", "target"]).head(topn)
+
+    return df
+
+
+
+def replace_peak_names_with_coords(df, peak2gene_file, cre_net):
+
+    # --- Build peak name -> coordinate mapping ---
+    peak2coord = {}
+    with open(peak2gene_file) as f:
+        for line in f:
+            if not line.strip():
+                continue
+            parts = line.strip().split('\t')
+            if len(parts) < 17:
+                continue
+            chrom, start, end = parts[0], parts[1], parts[2]
+            peak_name = parts[3]
+            coord = f"{chrom}-{start}-{end}"
+            peak2coord[peak_name] = coord
+
+    # --- Replace peak names in dataframe ---
+    df["CRE"] = df["CRE"].map(lambda x: peak2coord.get(x, x)) 
+
+    df.to_csv(cre_net, index=None)
+    return df
+
+
+
+
+#------------------------
+# Run for all cell types
+#------------------------
+def remap_all_celltypes(results_dir, outdir, cell_types, mot2tf_file):
+    results_dir = Path(results_dir)
+    outdir = Path(outdir)
+
+    for sample in cell_types:
+
+        fold0_dir = results_dir / f"{sample}/fold0/"
+        if not fold0_dir.exists():
+            print(f"No fold0 directory found for {sample}, skipping")
+            continue
+
+        # assume existing network is named "network.txt"
+        network_file = fold0_dir / "var_mb_pw_k5.txt"
+        if not network_file.exists():
+            print(f"No var_mb_pw_k5.txt found in {fold0_dir}, skipping")
+            continue
+        
+        cre_net = fold0_dir / "cre_net.txt"
+
+        # peak2gene and motif2peak files for this cell type
+        peak2gene_file = outdir / f"TSS_in_{sample}"
+        mot2peak_file  = outdir / f"motifs_in_{sample}"
+
+        if not peak2gene_file.exists() or not mot2peak_file.exists():
+            print(f"Missing peak2gene or motif2peak for {sample}, skipping")
+            continue
+
+
+        print(f"Processing cell type {sample}...")
+
+        final_net = extract_cres_by_peakname(
+        network_file= network_file,                        
+        mot2tf_file=mot2tf_file,                            
+        mot2peak_file=mot2peak_file,                        
+        peak2gene_file=peak2gene_file                       
+        )
+        
+        
+        final_net_coords = replace_peak_names_with_coords(
+        final_net, 
+        peak2gene_file=peak2gene_file,                      
+        cre_net=cre_net
+        )    
+
+        print(f"Done {sample}\n")
+
+
+#------------------------
+#  Usage
+#------------------------
+
+print(celltypes)
+remap_all_celltypes(results_dir=path_output + "Results/", 
+                    outdir=path_output, 
+                    cell_types=celltypes,
+                    mot2tf_file="/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
+
+
 
 
 #-------------------------------------------------------------------------------------
@@ -633,21 +845,23 @@ parallel_scmtni(
 
 def merge_networks(outdir, output_file):
     edges = {}
-    files = glob.glob(outdir + "Results/*/fold0/var_mb_pw_k50.txt")
-
+    files = glob.glob(outdir + "Results/*/fold0/cre_net.txt")
+    
     for file in files:
-        df = pd.read_csv(file, sep="\t", header=None, names=["source", "target", "weight"])
+        df = pd.read_csv(file, sep=",", header=None, names=["source", "CRE", "target", "weight"])
 
-        # strip cluster suffix to merge across cell types
-        df["source"] = df["source"].str.replace(r"_cluster\d+", "", regex=True)
-        df["target"] = df["target"].str.replace(r"_cluster\d+", "", regex=True)
+        # strip cluster suffix to merge across cell typess
+        df["source"] = df["source"].str.replace("_.*", "", regex=True)
+        df["target"] = df["target"].str.replace("_.*", "", regex=True)
+        
+        df["weight"] = pd.to_numeric(df["weight"], errors="coerce")
 
         for _, row in df.iterrows():
-            pair = (row["source"], row["target"])
+            pair = (row["source"], row["CRE"], row["target"])
             edges.setdefault(pair, []).append(row["weight"])
 
     consensus = []
-    for (tf, target), weights in edges.items():
+    for (tf, cre, target), weights in edges.items():
         arr = np.array(weights)
 
         # maximum absolute value
@@ -661,9 +875,10 @@ def merge_networks(outdir, output_file):
             sign = np.prod(signs)
 
         consensus_val = max_abs * sign
-        consensus.append((tf, target, consensus_val))
+        consensus.append((tf, cre, target, consensus_val))
 
-    consensus_df = pd.DataFrame(consensus, columns=["source", "target", "weight"])
+    consensus_df = pd.DataFrame(consensus, columns=["source", "CRE", "target", "weight"])
+    consensus_df.drop(consensus_df.index[0], inplace=True)
     consensus_df.to_csv(output_file, index=False)
 
     return consensus_df
@@ -673,5 +888,5 @@ consensus = merge_networks(outdir=path_output, output_file=path_outfile)
 
 
 # Safe cleanup
-shutil.rmtree(path_output, ignore_errors=True)
-print(f"Cleaned up temporary directory {path_output}")
+#shutil.rmtree(path_output, ignore_errors=True)
+#print(f"Cleaned up temporary directory {path_output}")
