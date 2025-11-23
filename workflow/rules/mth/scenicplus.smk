@@ -51,7 +51,7 @@ rule pre_scenicplus:
         mdata=rules.extract_case.output.mdata,
         dir=rules.mdl_o_scenicplus.output.dir,
     output:
-        out='dts/{dat}/cases/{case}/runs/scenicplus.pre.h5mu'
+        out='dts/{org}/{dat}/cases/{case}/runs/scenicplus.pre.h5mu'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -67,10 +67,10 @@ rule p2g_scenicplus:
     input:
         dir=rules.mdl_o_scenicplus.output.dir,
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
-        ann=rules.gen_genome_scenicplus.output.ann,
-        csz=rules.gen_genome_scenicplus.output.csz,
+        ann=lambda w: rules.gen_genome_scenicplus_mm10.output.ann if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_scenicplus.output.ann,
+        csz=lambda w: rules.gen_genome_scenicplus_mm10.output.csz if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_scenicplus.output.csz,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.scenicplus.p2g.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.scenicplus.p2g.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -105,7 +105,7 @@ rule tfb_scenicplus:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.scenicplus.tfb.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -128,9 +128,11 @@ rule mdl_scenicplus:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
-        rnk=rules.gen_motif_scenicplus.output.human_rankings,
+        rnk=lambda w: rules.gen_motif_scenicplus.output.mouse_rankings if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_scenicplus.output.human_rankings,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.scenicplus.mdl.csv'
+    params:
+        script=lambda w: 'workflow/scripts/mth/scenicplus/mdl_mm10.sh' if config['dts'][w.dat]['organism'] == 'mm10' else 'workflow/scripts/mth/scenicplus/mdl.sh'
     resources:
         mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'],
@@ -140,7 +142,7 @@ rule mdl_scenicplus:
         mkdir -p $new_dir
         set +e
         timeout $(({resources.runtime}-20))m \
-        bash workflow/scripts/mth/scenicplus/mdl.sh \
+        bash {params.script} \
         --new_dir $new_dir \
         --path_pre {input.pre} \
         --path_p2g {input.p2g} \
