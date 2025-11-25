@@ -561,7 +561,7 @@ run_map_motifs_to_genes(cell_types=celltypes,
                         motif2tf_file= "/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
 
 print("Filtering prior network...")
-#run_filter_prior_network(cell_types=celltypes, 
+run_filter_prior_network(cell_types=celltypes, 
                         outdir= path_output, 
                         outdir_prior= os.path.join(path_output, "prior_networks/"))
 
