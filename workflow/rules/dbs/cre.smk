@@ -1,4 +1,4 @@
-localrules: cre_blacklist, cre_blacklist_mm10, cre_encode, cre_encode_mm10, cre_gwascatalogue, cre_phastcons, cre_promoters,cre_promoters_mm10, cre_zhang21
+localrules: cre_blacklist, cre_blacklist_mm10, cre_encode, cre_encode_mm10, cre_gwascatalogue, cre_phastcons, cre_phastcons_mm10, cre_promoters,cre_promoters_mm10, cre_zhang21
 
 
 rule cre_blacklist:
@@ -90,6 +90,30 @@ rule cre_phastcons:
         rm {output}.tmp
         """
 
+rule cre_phastcons_mm10:
+    threads: 1
+    singularity: "workflow/envs/pando.sif"
+    input:
+        "workflow/envs/gretabench.sif"
+    output:
+        "dbs/mm10/cre/phastcons/phastcons.bed"
+    params:
+        url = config["dbs"]["mm10"]["cre"]["phastcons"]
+    shell:
+        """
+        # UCSC phastCons elements table for mm10
+        wget --no-verbose '{params.url}' -O {output}.txt.gz && \
+
+        # Convert to BED:
+        # take columns 2-4 (chrom, start, end)
+        zcat {output}.txt.gz \
+          | awk 'BEGIN{{OFS="\t"}}{{print $2, $3, $4}}' > {output}.tmp && \
+
+        sort -k1,1 -k2,2n {output}.tmp \
+          | bedtools merge -i - > {output} && \
+
+        rm {output}.tmp {output}.txt.gz
+        """
 
 rule cre_promoters:
     threads: 1

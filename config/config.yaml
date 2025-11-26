@@ -389,6 +389,7 @@ dbs:
         cre:
             blacklist: 'https://github.com/Boyle-Lab/Blacklist/raw/master/lists/mm10-blacklist.v2.bed.gz'
             encode: 'https://downloads.wenglab.org/V3/mm10-cCREs.bed'
+            phastcons: "https://hgdownload.soe.ucsc.edu/goldenPath/mm10/database/phastConsElements60way.txt.gz"
         gst:
             hall: "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Mm/mh.all.v2025.1.Mm.symbols.gmt"
             kegg: "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Mm/c2.cp.kegg.v2025.1.Mm.symbols.gmt"
