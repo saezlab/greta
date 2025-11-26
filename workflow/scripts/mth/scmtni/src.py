@@ -830,7 +830,10 @@ def remap_all_celltypes(results_dir, outdir, cell_types, mot2tf_file):
 #------------------------
 
 print(celltypes)
-remap_all_celltypes(results_dir=path_output + "Results/", 
+resultsdir=os.path.join(path_output, "Results/")
+print(resultsdir)
+
+remap_all_celltypes(results_dir=resultsdir,
                     outdir=path_output, 
                     cell_types=celltypes,
                     mot2tf_file="/opt/scMTNI/ExampleData/motifs/cisbp_motif2tf.txt")
@@ -841,42 +844,36 @@ remap_all_celltypes(results_dir=path_output + "Results/",
 
 def merge_networks(outdir, output_file):
     edges = {}
-    files = glob.glob(outdir + "Results/*/fold0/cre_net.txt")
-    
+    files = glob.glob(outdir + "/Results/*/fold0/cre_net.txt")
+   
     for file in files:
-        df = pd.read_csv(file, sep=",", header=None, names=["source", "CRE", "target", "weight"])
-
+        df = pd.read_csv(file, sep=",")
         # strip cluster suffix to merge across cell typess
         df["source"] = df["source"].str.replace("_.*", "", regex=True)
         df["target"] = df["target"].str.replace("_.*", "", regex=True)
+        df["score"] = pd.to_numeric(df["score"], errors="coerce")
         
-        df["weight"] = pd.to_numeric(df["weight"], errors="coerce")
-
         for _, row in df.iterrows():
             pair = (row["source"], row["CRE"], row["target"])
-            edges.setdefault(pair, []).append(row["weight"])
-
+            edges.setdefault(pair, []).append(row["score"])
+   
     consensus = []
-    for (tf, cre, target), weights in edges.items():
-        arr = np.array(weights)
-
+    for (tf, cre, target), score in edges.items():
+        arr = np.array(score)
         # maximum absolute value
         max_abs = np.max(np.abs(arr))
-
         # sign product (ignoring zeros)
         signs = np.sign(arr[arr != 0])
         if len(signs) == 0:
             sign = 0
         else:
             sign = np.prod(signs)
-
         consensus_val = max_abs * sign
         consensus.append((tf, cre, target, consensus_val))
-
+        
     consensus_df = pd.DataFrame(consensus, columns=["source", "CRE", "target", "weight"])
-    consensus_df.drop(consensus_df.index[0], inplace=True)
     consensus_df.to_csv(output_file, index=False)
-
+    
     return consensus_df
 
 # Example usage:
@@ -884,5 +881,5 @@ consensus = merge_networks(outdir=path_output, output_file=path_outfile)
 
 
 # Safe cleanup
-shutil.rmtree(path_output, ignore_errors=True)
-print(f"Cleaned up temporary directory {path_output}")
+#shutil.rmtree(path_output, ignore_errors=True)
+#print(f"Cleaned up temporary directory {path_output}")
