@@ -1,8 +1,8 @@
 localrules: gen_tfs_lambert, gen_tfs_lambert_mm10, gen_tfs_scenic, gen_tfs_scenic_mm10
-localrules: gen_gid_ensmbl, gen_pid_uniprot, gen_genome_celloracle, gen_genome_celloracle_mm10, gen_genome_dictys
+localrules: gen_gid_ensmbl, gen_pid_uniprot, gen_genome_celloracle, gen_genome_celloracle_mm10, gen_genome_dictys, gen_genome_dictys_mm10
 localrules: gen_genome_scenicplus, gen_genome_scenicplus_mm10
-localrules: gen_ann_dictys, gen_ann_pando
-localrules: gen_motif_granie, gen_motif_dictys, gen_motif_scenic_rnk, gen_motif_scenic_rnk_mm10, gen_motif_scenic, gen_motif_scenic_mm10, gen_motif_scmtni
+localrules: gen_ann_dictys, gen_ann_dictys_mm10, gen_ann_pando
+localrules: gen_motif_granie, gen_motif_dictys, gen_motif_dictys_mm10, gen_motif_scenic_rnk, gen_motif_scenic_rnk_mm10, gen_motif_scenic, gen_motif_scenic_mm10, gen_motif_scmtni
 localrules: gen_motif_scenicplus, gen_genome_crema, gen_motif_crema, gen_genome_inferelator, download_liftover_chains
 
 
@@ -117,6 +117,14 @@ rule gen_genome_dictys:
         dictys_helper genome_homer.sh hg38 {output}
         """
 
+rule gen_genome_dictys_mm10:
+    threads: 4
+    conda: '../../envs/dictys.yaml'
+    output: directory('dbs/mm10/gen/genome/dictys/')
+    shell:
+        """
+        dictys_helper genome_homer.sh mm10 {output}
+        """
 
 rule gen_genome_scenicplus:
     threads: 4
@@ -239,6 +247,17 @@ rule gen_motif_dictys:
         wget --no-verbose {params.url} -O {output}
         """
 
+rule gen_motif_dictys_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    params: url="https://hocomoco11.autosome.org/final_bundle/hocomoco11/full/MOUSE/mono/HOCOMOCOv11_full_MOUSE_mono_homer_format_0.0001.motif"
+    output: 'dbs/mm10/gen/motif/dictys/dictys.motif'
+    shell:
+        """
+        wget --no-verbose {params.url} -O {output}
+        python workflow/scripts/dbs/gen/motif/fix_dictys_caps.py {output}
+        """
 
 rule gen_motif_scenic_rnk:
     threads: 1
@@ -399,6 +418,21 @@ rule gen_ann_dictys:
         rm {output}.gtf
         """
 
+rule gen_ann_dictys_mm10:
+    threads: 4
+    # conda: '{home_path}/miniforge3/envs/dictys'.format(home_path=home_path)
+    conda: '../../envs/dictys.yaml'
+    params:
+        url="http://ftp.ensembl.org/pub/release-102/gtf/mus_musculus/Mus_musculus.GRCm38.102.gtf.gz"
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gen/ann/dictys/ann.bed'
+    shell:
+        """
+        wget --no-verbose {params.url} -O {output}.gtf.gz && \
+        gunzip {output}.gtf.gz
+        dictys_helper gene_gtf.sh {output}.gtf {output} && \
+        rm {output}.gtf
+        """
 
 rule gen_ann_pando:
     threads: 1
