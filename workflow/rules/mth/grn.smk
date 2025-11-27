@@ -6,7 +6,7 @@ rule grn_run:
     singularity: 'workflow/envs/gretabench.sif'
     input: lambda wildcards: map_rules('mdl', wildcards.mdl),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.{mdl}.grn.csv'
     shell:
         """
         python workflow/scripts/mth/grn.py \

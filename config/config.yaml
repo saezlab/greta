@@ -282,6 +282,23 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
+    mouse:
+        organism: 'mm10'
+        url:
+            gdrive: 'https://drive.usercontent.google.com/download?id=1VfIQQ4Uy6rf9HEaUbHnC3lpfsSmpdjrX&export=download&confirm=t'
+            frag_E1401: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218576&format=file&file=GSE218576%5FB6E14%2D0%2D1%5Fatac%5Ffragments%2Etsv%2Egz'
+            frag_tbi_E1401: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218576&format=file&file=GSE218576%5FB6E14%2D0%2D1%5Fatac%5Ffragments%2Etsv%2Egz%2Etbi%2Egz'
+            h5_E1401: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218576&format=file&file=GSE218576%5FB6E14%2D0%2D1%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
+            frag_E1251: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218576&format=file&file=GSE218576%5FB6E12%2D5%2D1%5Fatac%5Ffragments%2Etsv%2Egz'
+            frag_tbi_E1251: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218576&format=file&file=GSE218576%5FB6E12%2D5%2D1%5Fatac%5Ffragments%2Etsv%2Egz%2Etbi%2Egz'
+            h5_E1251: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE218576&format=file&file=GSE218576%5FB6E12%2D5%2D1%5Ffiltered%5Ffeature%5Fbc%5Fmatrix%2Eh5'
+        samples:
+            ['E1401', 'E1251']
+        cases:
+            all:
+                celltypes: 'all'
+                n_hvg: 16384
+                n_hvr: 65536
 
 
 stab_datasets: ['pitupair']
@@ -336,6 +353,30 @@ dbs:
                 meta: 'https://raw.githubusercontent.com/eQTL-Catalogue/eQTL-Catalogue-resources/refs/heads/master/tabix/tabix_ftp_paths.tsv'
                 url: 'http://ftp.ebi.ac.uk/pub/databases/spot/eQTL/susie/{eqtl_smpl_grp}/{eqtl_tiss}/{eqtl_tiss}.credible_sets.tsv.gz'
                 thr_pval: 1e-5
+    mm10:
+        gen:
+            scenic: 'https://resources.aertslab.org/cistarget/tf_lists/allTFs_mm.txt'
+            lambert: 'https://raw.githubusercontent.com/gifford-lab/ReprogrammingRecovery/main/data/mouse_ensemble_tfs_from_lambertetal_isyes.unique.txt'
+        cre:
+            blacklist: 'https://github.com/Boyle-Lab/Blacklist/raw/master/lists/mm10-blacklist.v2.bed.gz'
+            encode: 'https://downloads.wenglab.org/V3/mm10-cCREs.bed'
+            phastcons: "https://hgdownload.soe.ucsc.edu/goldenPath/mm10/database/phastConsElements60way.txt.gz"
+        gst:
+            hall: "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Mm/mh.all.v2025.1.Mm.symbols.gmt"
+            reac: "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Mm/m2.cp.reactome.v2025.1.Mm.symbols.gmt"
+            prog: "https://github.com/saezlab/progeny/raw/master/data/model_mouse_full.rda"
+        tfb:
+            chipatlas:
+                meta: "https://chip-atlas.dbcls.jp/data/metadata/experimentList.tab"
+                url: "https://chip-atlas.dbcls.jp/data/mm10/assembled/Oth.ALL.50.{chipatlas_tf}.AllCell.bed"
+            remap2022:
+                meta: 'https://remap.univ-amu.fr/storage/remap2022/biotypes/remap2022_mmus_biotypes.xlsx'
+                url:  'https://remap.univ-amu.fr/storage/remap2022/mm10/MACS2/remap2022_nr_macs2_mm10_v1_0.bed.gz'
+            unibind:
+                url: 'https://unibind.uio.no/static/data/20220914/bulk_Robust/Mus_musculus/mm10_compressed_TFBSs.bed.gz'
+        pkn:
+            collectri: 'https://drive.google.com/uc?export=download&id=1EEIT_PDGtAMG1O9L_hV4F1s1Ijep4lDq'
+            dorothea: 'https://drive.google.com/uc?export=download&id=1rZynSkaXUqC7zut6ewvLTXWz_T2Xm1TQ'
 tfb_max_psize: 750
 cre_prom_size: 1000
 topo_min_prop: 0.5

@@ -1,4 +1,4 @@
-localrules: cre_blacklist, cre_encode, cre_gwascatalogue, cre_phastcons, cre_promoters, cre_zhang21
+localrules: cre_blacklist, cre_blacklist_mm10, cre_encode, cre_encode_mm10, cre_gwascatalogue, cre_phastcons, cre_phastcons_mm10, cre_promoters,cre_promoters_mm10, cre_zhang21
 
 
 rule cre_blacklist:
@@ -13,6 +13,19 @@ rule cre_blacklist:
         wget --no-verbose -O - "{params.url}" | zcat > {output}
         """
 
+rule cre_blacklist_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output:
+        'dbs/mm10/cre/blacklist/blacklist.bed'
+    params:
+        url=config['dbs']['mm10']['cre']['blacklist']
+    shell:
+        """
+        mkdir -p $(dirname {output})
+        wget --no-verbose {params.url} -O - | zcat > {output}
+        """
 
 rule cre_encode:
     threads: 1
@@ -28,6 +41,19 @@ rule cre_encode:
         rm {output}.tmp
         """
 
+rule cre_encode_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/cre/encode/encode.bed'
+    params:
+        url=config['dbs']['mm10']['cre']['encode']
+    shell:
+        """
+        wget --no-verbose '{params.url}' -O {output}.tmp && \
+        cat {output}.tmp | sort -k 1,1 -k2,2n | bedtools merge -c 6 -o distinct > {output} && \
+        rm {output}.tmp
+        """
 
 rule cre_gwascatalogue:
     threads: 1
@@ -48,7 +74,7 @@ rule cre_gwascatalogue:
 rule cre_phastcons:
     threads: 1
     singularity: 'workflow/envs/pando.sif'
-    input: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/pando.sif'
     output: 'dbs/hg38/cre/phastcons/phastcons.bed'
     params:
         url=config['dbs']['hg38']['cre']['phastcons']
@@ -64,6 +90,30 @@ rule cre_phastcons:
         rm {output}.tmp
         """
 
+rule cre_phastcons_mm10:
+    threads: 1
+    singularity: "workflow/envs/pando.sif"
+    input:
+        "workflow/envs/pando.sif"
+    output:
+        "dbs/mm10/cre/phastcons/phastcons.bed"
+    params:
+        url = config["dbs"]["mm10"]["cre"]["phastcons"]
+    shell:
+        """
+        # UCSC phastCons elements table for mm10
+        wget --no-verbose '{params.url}' -O {output}.txt.gz && \
+
+        # Convert to BED:
+        # take columns 2-4 (chrom, start, end)
+        zcat {output}.txt.gz \
+          | awk 'BEGIN{{OFS="\t"}}{{print $2, $3, $4}}' > {output}.tmp && \
+
+        sort -k1,1 -k2,2n {output}.tmp \
+          | bedtools merge -i - > {output} && \
+
+        rm {output}.tmp {output}.txt.gz
+        """
 
 rule cre_promoters:
     threads: 1
@@ -75,6 +125,20 @@ rule cre_promoters:
     shell:
         """
         Rscript workflow/scripts/dbs/cre/promoters.R \
+        {params.wsize} \
+        {output}
+        """
+
+rule cre_promoters_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/cre/promoters/promoters.bed'
+    params:
+        wsize=config['cre_prom_size']
+    shell:
+        """
+        Rscript workflow/scripts/dbs/cre/promoters_mm10.R \
         {params.wsize} \
         {output}
         """

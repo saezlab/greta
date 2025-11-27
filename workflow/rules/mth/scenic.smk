@@ -4,10 +4,10 @@ rule mdl_o_grnboost:
     input:
         img='workflow/envs/scenicplus.sif',
         mdata=rules.extract_case.output.mdata,
-        tf=rules.gen_tfs_scenic.output,
-        proms=rules.cre_promoters.output,
+        tf=lambda w: rules.gen_tfs_scenic_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_tfs_scenic.output,
+        proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_grnboost.o_grnboost.o_grnboost.o_grnboost.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_grnboost.o_grnboost.o_grnboost.o_grnboost.mdl.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'] * 2,
@@ -44,13 +44,13 @@ rule mdl_o_scenic:
     input:
         img='workflow/envs/scenicplus.sif',
         mdata=rules.extract_case.output.mdata,
-        tf=rules.gen_tfs_scenic.output,
-        proms=rules.cre_promoters.output,
-        ranking_small=rules.gen_motif_scenic_rnk.output.sml,
-        ranking_big=rules.gen_motif_scenic_rnk.output.big,
-        motifs=rules.gen_motif_scenic.output
+        tf=lambda w: rules.gen_tfs_scenic_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_tfs_scenic.output,
+        proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
+        ranking_small=lambda w: rules.gen_motif_scenic_rnk_mm10.output.sml if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_scenic_rnk.output.sml,
+        ranking_big=lambda w: rules.gen_motif_scenic_rnk_mm10.output.big if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_scenic_rnk.output.big,
+        motifs=lambda w: rules.gen_motif_scenic_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_scenic.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_scenic.o_scenic.o_scenic.o_scenic.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_scenic.o_scenic.o_scenic.o_scenic.mdl.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'] * 2,

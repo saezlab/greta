@@ -3,9 +3,9 @@ rule mdl_o_random:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        tf=rules.gen_tfs_lambert.output,
-        cg=rules.cre_promoters.output,
-    output: out='dts/{dat}/cases/{case}/runs/o_random.o_random.o_random.o_random.mdl.csv'
+        tf=lambda w: rules.gen_tfs_lambert_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_tfs_lambert.output,
+        cg=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
+    output: out='dts/{org}/{dat}/cases/{case}/runs/o_random.o_random.o_random.o_random.mdl.csv'
     params:
         g_perc=config['methods']['random']['g_perc'],
         scale=config['methods']['random']['scale'],
