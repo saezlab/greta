@@ -643,7 +643,7 @@ def run_scmtni_for_batch(datadir, gene_file):
     return gene_file
 
 # -------- Main parallel runner --------
-batch_size = 32  # number of parallel scMTNI runs at a time
+batch_size = 64  # number of parallel scMTNI runs at a time
 
 def parallel_scmtni(datadir, max_workers=batch_size):
     ogids_dir = Path(datadir) / "ogids"
@@ -881,5 +881,5 @@ consensus = merge_networks(outdir=path_output, output_file=path_outfile)
 
 
 # Safe cleanup
-#shutil.rmtree(path_output, ignore_errors=True)
-#print(f"Cleaned up temporary directory {path_output}")
+shutil.rmtree(path_output, ignore_errors=True)
+print(f"Cleaned up temporary directory {path_output}")
