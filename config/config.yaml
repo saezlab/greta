@@ -363,7 +363,6 @@ dbs:
             phastcons: "https://hgdownload.soe.ucsc.edu/goldenPath/mm10/database/phastConsElements60way.txt.gz"
         gst:
             hall: "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Mm/mh.all.v2025.1.Mm.symbols.gmt"
-            kegg: "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Mm/c2.cp.kegg.v2025.1.Mm.symbols.gmt"
             reac: "https://data.broadinstitute.org/gsea-msigdb/msigdb/release/2025.1.Mm/m2.cp.reactome.v2025.1.Mm.symbols.gmt"
             prog: "https://github.com/saezlab/progeny/raw/master/data/model_mouse_full.rda"
         tfb:
