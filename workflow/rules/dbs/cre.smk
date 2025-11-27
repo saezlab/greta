@@ -74,7 +74,7 @@ rule cre_gwascatalogue:
 rule cre_phastcons:
     threads: 1
     singularity: 'workflow/envs/pando.sif'
-    input: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/pando.sif'
     output: 'dbs/hg38/cre/phastcons/phastcons.bed'
     params:
         url=config['dbs']['hg38']['cre']['phastcons']
@@ -94,7 +94,7 @@ rule cre_phastcons_mm10:
     threads: 1
     singularity: "workflow/envs/pando.sif"
     input:
-        "workflow/envs/gretabench.sif"
+        "workflow/envs/pando.sif"
     output:
         "dbs/mm10/cre/phastcons/phastcons.bed"
     params:
