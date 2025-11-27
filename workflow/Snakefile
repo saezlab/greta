@@ -51,9 +51,10 @@ def make_combs_rules(w, rule_name):
 
 
 def list_frags_files(wildcards):
-    return expand('dts/{dat}/{smp}.frags.tsv.gz',
+    return expand('dts/{org}/{dat}/{smp}.frags.tsv.gz',
                     dat=wildcards.dat,
-                    smp=config['dts'][wildcards.dat]['samples'])
+                    smp=config['dts'][wildcards.dat]['samples'],
+                    org=config['dts'][wildcards.dat]['organism'])
 
 
 def restart_mem(wildcards, attempt):
@@ -106,9 +107,7 @@ include: 'rules/dts/lung.smk'
 include: 'rules/dts/eye.smk'
 include: 'rules/dts/skin.smk'
 include: 'rules/dts/embryo.smk'
-include: 'rules/dts/lateanagen.smk'
-include: 'rules/dts/mbrain.smk'
-include: 'rules/dts/retina.smk'
+include: 'rules/dts/mouse.smk'
 
 # Methods
 include: 'rules/mth/celloracle.smk'
