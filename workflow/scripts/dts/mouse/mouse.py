@@ -1,6 +1,8 @@
 import mudata as mu
 import pandas as pd
+import numpy as np
 import scanpy as sc
+import mudata as mu
 import argparse
 
 
@@ -21,17 +23,23 @@ path_output = args['path_output']
 rna = sc.read_h5ad(path_gex)
 atac = sc.read_h5ad(path_peaks)
 obs = pd.read_csv(path_annot, index_col=0)
+
+# Remove all metadata from RNA (keep only index)
+rna.obs = pd.DataFrame(index=rna.obs_names)
+
 # Match
-atac = atac[rna.obs_names].copy()
-# Convert RNA matrix to csr_matrix with int32 dtype
-rna.X = rna.X.tocsr().astype('int32')
-# Remove obs columns from modalities
-rna.obs = rna.obs[[]]
-atac.obs = atac.obs[[]]
-# Create mdata
+common_cells = rna.obs_names[
+    rna.obs_names.isin(atac.obs_names) & rna.obs_names.isin(obs.index)
+]
+rna = rna[common_cells].copy()
+atac = atac[common_cells].copy()
+obs = obs.loc[common_cells].copy()
+
+# Create mdata (global obs only)
 mdata = mu.MuData(
-    {'rna': rna, 'atac': atac,},
+    {'rna': rna, 'atac': atac},
     obs=obs
 )
+
 # Write
 mdata.write(path_output)
