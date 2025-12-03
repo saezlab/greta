@@ -5,7 +5,7 @@ rule pre_celloracle:
         img='workflow/envs/celloracle.sif',
         mdata=rules.extract_case.output.mdata
     output:
-        out='dts/{dat}/cases/{case}/runs/celloracle.pre.h5mu'
+        out='dts/{org}/{dat}/cases/{case}/runs/celloracle.pre.h5mu'
     params:
         k=config['methods']['celloracle']['k']
     resources:
@@ -25,9 +25,9 @@ rule p2g_celloracle:
     singularity: 'workflow/envs/celloracle.sif'
     input:
         pre=lambda w: map_rules('pre', w.pre),
-        csz=rules.gen_genome_celloracle.output
+        csz=lambda w: rules.gen_genome_celloracle_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_celloracle.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.celloracle.p2g.csv',
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.celloracle.p2g.csv',
     params:
         thr_coaccess=config['methods']['celloracle']['thr_coaccess'],
         ext=config['methods']['celloracle']['ext']
@@ -69,12 +69,13 @@ rule tfb_celloracle:
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
-        gnm=rules.gen_genome_celloracle.output
-    output: out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.celloracle.tfb.csv'
+        gnm=lambda w: rules.gen_genome_celloracle_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_celloracle.output
+    output: out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.celloracle.tfb.csv'
     params:
         fpr=config['methods']['celloracle']['fpr'],
         blen=config['methods']['celloracle']['blen'],
-        tfb_thr=config['methods']['celloracle']['tfb_thr']
+        tfb_thr=config['methods']['celloracle']['tfb_thr'],
+        script=lambda w: 'workflow/scripts/mth/celloracle/tfb_mm10.py' if config['dts'][w.dat]['organism'] == 'mm10' else 'workflow/scripts/mth/celloracle/tfb.py'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -82,7 +83,7 @@ rule tfb_celloracle:
         """
         set +e
         timeout $(({resources.runtime}-20))m \
-        python workflow/scripts/mth/celloracle/tfb.py \
+        python {params.script} \
         -d {input.pre} \
         -p {input.p2g} \
         -g {input.gnm} \
@@ -104,7 +105,7 @@ rule mdl_celloracle:
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.celloracle.mdl.csv'
     params:
         a=config['methods']['celloracle']['a'],
         p=config['methods']['celloracle']['p'],
@@ -138,9 +139,9 @@ rule mdl_o_celloracle:
     singularity: 'workflow/envs/celloracle.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        csz=rules.gen_genome_celloracle.output,
+        csz=lambda w: rules.gen_genome_celloracle_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_celloracle.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.mdl.csv',
+        out='dts/{org}/{dat}/cases/{case}/runs/o_celloracle.o_celloracle.o_celloracle.o_celloracle.mdl.csv',
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         k=config['methods']['celloracle']['k'],

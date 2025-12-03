@@ -4,7 +4,7 @@ rule pre_dictys:
     input:
         mdata=rules.extract_case.output.mdata,
     output:
-        out='dts/{dat}/cases/{case}/runs/dictys.pre.h5mu',
+        out='dts/{org}/{dat}/cases/{case}/runs/dictys.pre.h5mu',
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -24,9 +24,9 @@ rule p2g_dictys:
     conda: '../../envs/dictys.yaml'
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
-        ann=rules.gen_ann_dictys.output,
+        ann=lambda w: rules.gen_ann_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_ann_dictys.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.dictys.p2g.csv',
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.dictys.p2g.csv',
     params:
         ext=config['methods']['dictys']['ext'] // 2,
     resources:
@@ -60,10 +60,10 @@ rule tfb_dictys:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         frags=list_frags_files,
-        motif=rules.gen_motif_dictys.output,
-        genome=rules.gen_genome_dictys.output,
+        motif=lambda w: rules.gen_motif_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_dictys.output,
+        genome=lambda w: rules.gen_genome_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_dictys.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.dictys.tfb.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.dictys.tfb.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -101,9 +101,9 @@ rule mdl_dictys:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
-        ann=rules.gen_ann_dictys.output,
+        ann=lambda w: rules.gen_ann_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_ann_dictys.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.dictys.mdl.csv'
     params:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],
@@ -148,17 +148,17 @@ rule mdl_o_dictys:
     container: None
     input:
         mdata=rules.extract_case.output.mdata,
-        ann=rules.gen_ann_dictys.output,
+        ann=lambda w: rules.gen_ann_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_ann_dictys.output,
         frags=list_frags_files,
-        motif=rules.gen_motif_dictys.output,
-        genome=rules.gen_genome_dictys.output,
+        motif=lambda w: rules.gen_motif_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_dictys.output,
+        genome=lambda w: rules.gen_genome_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_dictys.output,
     output:
-        tmp='dts/{dat}/cases/{case}/runs/o_dictys_pre_expr.tsv.gz',
-        d=temp(directory(local('dts/{dat}/cases/{case}/runs/o_dictys_dictys_tmp/'))),
-        pre=temp(local('dts/{dat}/cases/{case}/runs/o_dictys.pre.h5mu')),
-        p2g=temp(local('dts/{dat}/cases/{case}/runs/o_dictys.o_dictys.p2g.csv')),
-        tfb=temp(local('dts/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.tfb.csv')),
-        out='dts/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.mdl.csv',
+        tmp='dts/{org}/{dat}/cases/{case}/runs/o_dictys_pre_expr.tsv.gz',
+        d=temp(directory(local('dts/{org}/{dat}/cases/{case}/runs/o_dictys_dictys_tmp/'))),
+        pre=temp(local('dts/{org}/{dat}/cases/{case}/runs/o_dictys.pre.h5mu')),
+        p2g=temp(local('dts/{org}/{dat}/cases/{case}/runs/o_dictys.o_dictys.p2g.csv')),
+        tfb=temp(local('dts/{org}/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.tfb.csv')),
+        out='dts/{org}/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.mdl.csv',
     params:
         ext=config['methods']['dictys']['ext'] // 2,
         n_p2g_links=config['methods']['dictys']['n_p2g_links'],

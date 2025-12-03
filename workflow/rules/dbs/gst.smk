@@ -1,4 +1,4 @@
-localrules: gst_collectri, gst_dorothea, gst_pthw, gst_prog
+localrules: gst_collectri, gst_collectri_mm10, gst_dorothea, gst_dorothea_mm10, gst_pthw, gst_prog, gst_prog_mm10
 
 
 rule gst_collectri:
@@ -15,6 +15,14 @@ rule gst_collectri:
         net = net[net['source'].isin(tfs)]
         net.to_csv(output[0], index=False)
 
+rule gst_collectri_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/collectri.csv'
+    params: url=config['dbs']['mm10']['pkn']['collectri']
+    shell:
+        "wget --no-check-certificate --no-verbose '{params.url}' -O {output}"
 
 rule gst_dorothea:
     threads: 1
@@ -40,6 +48,14 @@ rule gst_dorothea:
         write.csv(x=df, file="{output}", quote=FALSE, row.names=FALSE);'
         """
 
+rule gst_dorothea_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/dorothea.csv'
+    params: url=config['dbs']['mm10']['pkn']['dorothea']
+    shell:
+        "wget --no-check-certificate --no-verbose '{params.url}' -O {output}"
 
 rule gst_pthw:
     threads: 1
@@ -57,6 +73,23 @@ rule gst_pthw:
         rm {output}.tmp
         """
 
+rule gst_pthw_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output:
+        'dbs/mm10/gst/{db}.csv'
+    params:
+        url=lambda w: config['dbs']['mm10']['gst'][w.db]
+    shell:
+        """
+        wget --no-verbose '{params.url}' -O {output}.tmp && \
+        python -c "import decoupler as dc; \
+        gst = dc.read_gmt('{output}.tmp'); \
+        gst['source'] = ['_'.join(s.split('_')[1:]) for s in gst['source']]; \
+        gst.to_csv('{output}', index=False)" && \
+        rm {output}.tmp
+        """
 
 rule gst_prog:
     threads: 1
@@ -70,6 +103,29 @@ rule gst_prog:
         download.file("{params.url}", destfile = "{output}.rda"); \
         load("{output}.rda"); \
         write.csv(model_human_full, "{output}.rda", row.names = FALSE, quote = FALSE);' && \
+        python -c "import pandas as pd; \
+        prg = pd.read_csv('{output}.rda'); \
+        prg = prg.rename(columns={{'gene': 'target', 'pathway': 'source', 'p.value': 'pval'}}); \
+        prg = prg[['source', 'target', 'weight', 'pval']]; \
+        prg = prg[prg['pval'] < 1e-5]; \
+        n = prg.groupby('source').size(); \
+        prg = prg[prg['source'].isin(n[n > 5].index)]; \
+        prg = prg.sort_values(['source', 'target', 'weight']); \
+        prg.to_csv('{output}', index=False)" && \
+        rm {output}.rda
+        """
+rule gst_prog_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/prog.csv',
+    params: url=lambda w: config['dbs']['mm10']['gst']['prog']
+    shell:
+        """
+        Rscript -e ' \
+        download.file("{params.url}", destfile = "{output}.rda"); \
+        load("{output}.rda"); \
+        write.csv(model_mouse_full, "{output}.rda", row.names = FALSE, quote = FALSE);' && \
         python -c "import pandas as pd; \
         prg = pd.read_csv('{output}.rda'); \
         prg = prg.rename(columns={{'gene': 'target', 'pathway': 'source', 'p.value': 'pval'}}); \

@@ -3,7 +3,7 @@ rule extract_case:
     singularity: 'workflow/envs/gretabench.sif'
     input: lambda w: map_rules('annotate', w.dat)
     output:
-        mdata='dts/{dat}/cases/{case}/mdata.h5mu',
+        mdata='dts/{org}/{dat}/cases/{case}/mdata.h5mu',
     params:
         celltypes=lambda w: config['dts'][w.dat]['cases'][w.case]['celltypes'],
         n_sample=lambda w: config['dts'][w.dat]['cases'][w.case]['n_sample'] if 'n_sample' in config['dts'][w.dat]['cases'][w.case] else '0',
