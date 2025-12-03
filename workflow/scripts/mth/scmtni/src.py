@@ -53,9 +53,6 @@ unmapped_file = os.path.join(path_output, "unmapped.bed")
 # narrow peak Paths
 narrowPeak_paths = "peaks_by_cluster"
 
-
-n_jobs = threads
-
 #-------------------------------------------------------------------------------------
 
 # Load data and make sure celltypes don't have spaces
@@ -643,7 +640,7 @@ def run_scmtni_for_batch(datadir, gene_file):
     return gene_file
 
 # -------- Main parallel runner --------
-batch_size = 64  # number of parallel scMTNI runs at a time
+batch_size = threads  # number of parallel scMTNI runs at a time
 
 def parallel_scmtni(datadir, max_workers=batch_size):
     ogids_dir = Path(datadir) / "ogids"
