@@ -5,7 +5,7 @@ rule pre_figr:
         img='workflow/envs/figr.sif',
         mdata=rules.extract_case.output.mdata
     output:
-        out='dts/{dat}/cases/{case}/runs/figr.pre.h5mu'
+        out='dts/{org}/{dat}/cases/{case}/runs/figr.pre.h5mu'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -24,7 +24,7 @@ rule p2g_figr:
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.figr.p2g.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.figr.p2g.csv'
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         ext=config['methods']['figr']['ext'],
@@ -58,7 +58,7 @@ rule tfb_figr:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.figr.tfb.csv'
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         cellK=config['methods']['figr']['cellK'],
@@ -92,7 +92,7 @@ rule mdl_figr:
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.figr.mdl.csv'
     params:
         cellK=config['methods']['figr']['cellK'],
         thr_score=config['methods']['figr']['thr_score'],
@@ -122,7 +122,7 @@ rule mdl_o_figr:
     singularity: 'workflow/envs/figr.sif'
     input: rules.extract_case.output.mdata,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_figr.o_figr.o_figr.o_figr.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_figr.o_figr.o_figr.o_figr.mdl.csv'
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         ext=config['methods']['figr']['ext'],

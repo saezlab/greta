@@ -6,9 +6,9 @@ rule download_lung:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        raw_annot=temp(local('dts/lung/raw_annot.csv')),
-        frag=temp(local(expand('dts/lung/{sample}.frags.tsv.gz', sample=config['dts']['lung']['samples']))),
-        gex=temp(local(expand('dts/lung/{sample}_matrix.h5', sample=config['dts']['lung']['samples']))),
+        raw_annot=temp(local('dts/hg38/lung/raw_annot.csv')),
+        frag=temp(local(expand('dts/hg38/lung/{sample}.frags.tsv.gz', sample=config['dts']['lung']['samples']))),
+        gex=temp(local(expand('dts/hg38/lung/{sample}_matrix.h5', sample=config['dts']['lung']['samples']))),
     params:
         url_geo=config['dts']['lung']['url']['geo'],
         url_annot=config['dts']['lung']['url']['annot'],
@@ -45,8 +45,8 @@ rule prcannot_lung:
         gex=rules.download_lung.output.gex,
         gid=rules.gen_gid_ensmbl.output,
     output:
-        annot=temp(local('dts/lung/annot.csv')),
-        rna=temp(local('dts/lung/rna.h5ad'))
+        annot=temp(local('dts/hg38/lung/annot.csv')),
+        rna=temp(local('dts/hg38/lung/rna.h5ad'))
     params:
         samples=config['dts']['lung']['samples'],
     shell:
@@ -66,7 +66,7 @@ rule callpeaks_lung:
     input:
         frags=rules.download_lung.output.frag,
         annot=rules.prcannot_lung.output.annot,
-    output: peaks=temp(local('dts/lung/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/lung/peaks.h5ad'))
     resources:
         mem_mb=128000,
         runtime=2160,
@@ -87,7 +87,7 @@ rule annotate_lung:
         gex=rules.prcannot_lung.output.rna,
         peaks=rules.callpeaks_lung.output.peaks,
         annot=rules.prcannot_lung.output.annot,
-    output: out='dts/lung/annotated.h5mu'
+    output: out='dts/hg38/lung/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/lung/lung.py \

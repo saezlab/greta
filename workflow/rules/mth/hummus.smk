@@ -4,7 +4,7 @@ rule mdl_o_hummus:
     input:
         mdata=rules.extract_case.output.mdata,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_hummus.o_hummus.o_hummus.o_hummus.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_hummus.o_hummus.o_hummus.o_hummus.mdl.csv'
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         ext=config['methods']['hummus']['ext'],

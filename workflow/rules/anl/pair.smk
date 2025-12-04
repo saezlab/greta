@@ -5,8 +5,8 @@ rule pair_real_cor:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        pair='dts/{dname}pair/cases/{case}/mdata.h5mu',
-        npair='dts/{dname}npair/cases/{case}/mdata.h5mu',
+        pair='dts/{org}/{dname}pair/cases/{case}/mdata.h5mu',
+        npair='dts/{org}/{dname}npair/cases/{case}/mdata.h5mu',
     output:
         cors='anl/pair/{dname}.{case}.real_corvals.csv',
         stat='anl/pair/{dname}.{case}.real_corsstat.csv',
@@ -26,8 +26,8 @@ rule pair_fake_stats:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        mdata='dts/{dname}pair/cases/{case}/mdata.h5mu',
-        barmap='dts/fake{dname}pair/barmap.csv',
+        mdata='dts/{org}/{dname}pair/cases/{case}/mdata.h5mu',
+        barmap='dts/{org}/fake{dname}pair/barmap.csv',
     output:
         knn='anl/pair/{dname}.{case}.fake_knn.csv',
         cor='anl/pair/{dname}.{case}.fake_cor.csv',
@@ -81,8 +81,8 @@ rule pair_real_qc:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        pair='dts/{dname}pair/cases/{case}/mdata.h5mu',
-        npair='dts/{dname}npair/cases/{case}/mdata.h5mu',
+        pair='dts/{org}/{dname}pair/cases/{case}/mdata.h5mu',
+        npair='dts/{org}/{dname}npair/cases/{case}/mdata.h5mu',
     output:
         qc='anl/pair/{dname}.{case}.qc.csv',
         nc='anl/pair/{dname}.{case}.ncells.csv'

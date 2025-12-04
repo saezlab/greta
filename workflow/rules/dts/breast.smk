@@ -6,7 +6,7 @@ rule download_fragments_breast:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        frag=expand('dts/breast/{sample}.frags.tsv.gz', sample=config['dts']['breast']['samples'])
+        frag=expand('dts/hg38/breast/{sample}.frags.tsv.gz', sample=config['dts']['breast']['samples'])
     params:
         tar=config['dts']['breast']['url']['tar'],
         samples=config['dts']['breast']['samples'],
@@ -33,8 +33,8 @@ rule prcannot_breast:
         img='workflow/envs/gretabench.sif',
         gid=rules.gen_gid_ensmbl.output,
     output:
-        rna=temp(local('dts/breast/rna.h5ad')),
-        ann=temp(local('dts/breast/annot.csv'))
+        rna=temp(local('dts/hg38/breast/rna.h5ad')),
+        ann=temp(local('dts/hg38/breast/annot.csv'))
     params:
         adata=config['dts']['breast']['url']['anndata'],
     shell:
@@ -56,7 +56,7 @@ rule callpeaks_breast:
     input:
         frags=rules.download_fragments_breast.output.frag,
         annot=rules.prcannot_breast.output.ann,
-    output: peaks=temp(local('dts/breast/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/breast/peaks.h5ad'))
     resources:
         mem_mb=128000,
         runtime=720,
@@ -78,7 +78,7 @@ rule annotate_breast:
         path_rna=rules.prcannot_breast.output.rna,
         path_peaks=rules.callpeaks_breast.output.peaks,
         path_ann=rules.prcannot_breast.output.ann,
-    output: out='dts/breast/annotated.h5mu'
+    output: out='dts/hg38/breast/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/breast/breast.py \

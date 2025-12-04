@@ -111,13 +111,14 @@ rule gen_genome_crema:
         wget 'https://raw.githubusercontent.com/zidongzh/CREMA/refs/heads/main/crema_resource/genomes/human.hg38.genome.bed' -O {output}
         """
 
-
 rule gen_genome_dictys:
     threads: 4
     conda: '../../envs/dictys.yaml'
     output: directory('dbs/hg38/gen/genome/dictys/')
     shell:
         """
+        homerpath=$(dirname "$(dirname "$(realpath "$(which homer)")")")
+        $homerpath/configureHomer.pl -install hg38
         dictys_helper genome_homer.sh hg38 {output}
         """
 
@@ -127,6 +128,8 @@ rule gen_genome_dictys_mm10:
     output: directory('dbs/mm10/gen/genome/dictys/')
     shell:
         """
+        homerpath=$(dirname "$(dirname "$(realpath "$(which homer)")")")
+        $homerpath/configureHomer.pl -install mm10
         dictys_helper genome_homer.sh mm10 {output}
         """
 

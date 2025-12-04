@@ -7,7 +7,7 @@ rule mdl_o_scmtni:
         motifs=rules.gen_motif_scmtni.output.motifs_dir,
         promoters=rules.gen_motif_scmtni.output.promoters_dir,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_scmtni.o_scmtni.o_scmtni.o_scmtni.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_scmtni.o_scmtni.o_scmtni.o_scmtni.mdl.csv'
     params:
         ext=config['methods']['scmtni']['ext'],
     resources:

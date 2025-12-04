@@ -6,9 +6,9 @@ rule download_fragments_heart:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        tar=temp(local('dts/heart/fragments.tar')),
-        frag=expand('dts/heart/{sample}.frags.tsv.gz', sample=config['dts']['heart']['samples']),
-        tbis=expand('dts/heart/{sample}.frags.tsv.gz.tbi', sample=config['dts']['heart']['samples'])
+        tar=temp(local('dts/hg38/heart/fragments.tar')),
+        frag=expand('dts/hg38/heart/{sample}.frags.tsv.gz', sample=config['dts']['heart']['samples']),
+        tbis=expand('dts/hg38/heart/{sample}.frags.tsv.gz.tbi', sample=config['dts']['heart']['samples'])
     params:
         tar=config['dts']['heart']['url']['tar']
     shell:
@@ -32,8 +32,8 @@ rule download_anndata_heart:
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
     output:
-        adata=temp(local('dts/heart/multiome_raw.h5ad')),
-        annot=temp(local('dts/heart/atac.h5ad'))
+        adata=temp(local('dts/hg38/heart/multiome_raw.h5ad')),
+        annot=temp(local('dts/hg38/heart/atac.h5ad'))
     params:
         adata=config['dts']['heart']['url']['anndata'],
         annot=config['dts']['heart']['url']['annot']
@@ -48,7 +48,7 @@ rule prcannot_heart:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.download_anndata_heart.output.annot,
-    output: temp(local('dts/heart/annot.csv'))
+    output: temp(local('dts/hg38/heart/annot.csv'))
     shell:
         """
         python workflow/scripts/dts/heart/heart_annot.py \
@@ -63,7 +63,7 @@ rule callpeaks_heart:
     input:
         frags=rules.download_fragments_heart.output.frag,
         annot=rules.prcannot_heart.output,
-    output: peaks=temp(local('dts/heart/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/heart/peaks.h5ad'))
     resources:
         mem_mb=128000,
         runtime=2160,
@@ -86,7 +86,7 @@ rule annotate_heart:
         path_peaks=rules.callpeaks_heart.output.peaks,
         path_annot=rules.prcannot_heart.output,
         gid=rules.gen_gid_ensmbl.output
-    output: out='dts/heart/annotated.h5mu'
+    output: out='dts/hg38/heart/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/heart/heart.py \

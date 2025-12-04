@@ -8,9 +8,9 @@ rule download_embryo:
         img='workflow/envs/figr.sif',
         gid=rules.gen_gid_ensmbl.output,
     output:
-        ann=temp(local('dts/embryo/annot.csv')),
-        frag=temp(local(expand('dts/embryo/{sample}.frags.tsv.gz', sample=config['dts']['embryo']['samples']))),
-        rna=temp(local('dts/embryo/rna.h5ad')),
+        ann=temp(local('dts/hg38/embryo/annot.csv')),
+        frag=temp(local(expand('dts/hg38/embryo/{sample}.frags.tsv.gz', sample=config['dts']['embryo']['samples']))),
+        rna=temp(local('dts/hg38/embryo/rna.h5ad')),
     params:
         url_tar=config['dts']['embryo']['url']['tar'],
         url_rna=config['dts']['embryo']['url']['rna'],
@@ -65,7 +65,7 @@ rule callpeaks_embryo:
     input:
         frags=rules.download_embryo.output.frag,
         annot=rules.download_embryo.output.ann,
-    output: peaks=temp(local('dts/embryo/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/embryo/peaks.h5ad'))
     resources:
         mem_mb=64000,
         runtime=360,
@@ -87,7 +87,7 @@ rule annotate_embryo:
         rna=rules.download_embryo.output.rna,
         peaks=rules.callpeaks_embryo.output.peaks,
         annot=rules.download_embryo.output.ann,
-    output: out='dts/embryo/annotated.h5mu'
+    output: out='dts/hg38/embryo/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/embryo/embryo.py \

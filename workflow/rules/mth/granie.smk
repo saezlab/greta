@@ -5,7 +5,7 @@ rule pre_granie:
         img='workflow/envs/granie.sif',
         mdata=rules.extract_case.output.mdata
     output:
-        out='dts/{dat}/cases/{case}/runs/granie.pre.h5mu'
+        out='dts/{org}/{dat}/cases/{case}/runs/granie.pre.h5mu'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -30,7 +30,7 @@ rule p2g_granie:
         pre=lambda w: map_rules('pre', w.pre),
         gid=rules.gen_gid_ensmbl.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.granie.p2g.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.granie.p2g.csv'
     params: ext=config['methods']['granie']['ext'],
     resources:
         mem_mb=restart_mem,
@@ -66,7 +66,7 @@ rule tfb_granie:
         gid=rules.gen_gid_ensmbl.output,
         tfb=rules.gen_motif_granie.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -101,7 +101,7 @@ rule mdl_granie:
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
         gid=rules.gen_gid_ensmbl.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
     params: thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
         mem_mb=restart_mem,
@@ -136,7 +136,7 @@ rule mdl_o_granie:
         gid=rules.gen_gid_ensmbl.output,
         tfb=rules.gen_motif_granie.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.mdl.csv'
     params:
         ext=config['methods']['granie']['ext'],
         thr_fdr=config['methods']['granie']['thr_fdr'],

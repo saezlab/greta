@@ -3,10 +3,10 @@ rule download_pitupair:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        gex=temp(local('dts/pitupair/multiome_original.h5')),
-        frags='dts/pitupair/smpl.frags.tsv.gz',
-        tbis='dts/pitupair/smpl.frags.tsv.gz.tbi',
-        annot=temp(local('dts/pitupair/annot.csv'))
+        gex=temp(local('dts/hg38/pitupair/multiome_original.h5')),
+        frags='dts/hg38/pitupair/smpl.frags.tsv.gz',
+        tbis='dts/hg38/pitupair/smpl.frags.tsv.gz.tbi',
+        annot=temp(local('dts/hg38/pitupair/annot.csv'))
     params:
         gex=config['dts']['pitupair']['url']['gex'],
         frags=config['dts']['pitupair']['url']['frags'],
@@ -29,7 +29,7 @@ rule callpeaks_pitupair:
         img='workflow/envs/gretabench.sif',
         frags=rules.download_pitupair.output.frags,
         annot=rules.download_pitupair.output.annot,
-    output: peaks=temp(local('dts/pitupair/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/pitupair/peaks.h5ad'))
     resources: mem_mb=64000
     shell:
         """
@@ -50,7 +50,7 @@ rule annotate_pitupair:
         peaks=rules.callpeaks_pitupair.output.peaks,
         gex=rules.download_pitupair.output.gex,
         gid=rules.gen_gid_ensmbl.output,
-    output: out='dts/pitupair/annotated.h5mu'
+    output: out='dts/hg38/pitupair/annotated.h5mu'
     resources: mem_mb=32000
     shell:
         """

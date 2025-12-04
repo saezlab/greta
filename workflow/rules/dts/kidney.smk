@@ -5,7 +5,7 @@ rule download_kidney:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        h5se=temp(local('dts/kidney/data.h5se')),
+        h5se=temp(local('dts/hg38/kidney/data.h5se')),
         frag=temp(local(expand('dts/kidney/{sample}.frags.tsv.gz', sample=config['dts']['kidney']['samples'])))
     params:
         url_h5se=config['dts']['kidney']['url']['h5se'],
@@ -34,8 +34,8 @@ rule prcannot_kidney:
     input:
         h5se=rules.download_kidney.output.h5se
     output:
-        annot=temp(local('dts/kidney/annot.csv')),
-        rna=temp(local('dts/kidney/rna.h5ad'))
+        annot=temp(local('dts/hg38/kidney/annot.csv')),
+        rna=temp(local('dts/hg38/kidney/rna.h5ad'))
     shell:
         """
         python workflow/scripts/dts/kidney/annot.py \
@@ -51,7 +51,7 @@ rule callpeaks_kidney:
     input:
         frags=rules.download_kidney.output.frag,
         annot=rules.prcannot_kidney.output.annot,
-    output: peaks=temp(local('dts/kidney/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/kidney/peaks.h5ad'))
     resources:
         mem_mb=128000,
         runtime=2160,
@@ -73,7 +73,7 @@ rule annotate_kidney:
         peaks=rules.callpeaks_kidney.output.peaks,
         annot=rules.prcannot_kidney.output.annot,
         gid=rules.gen_gid_ensmbl.output,
-    output: out='dts/kidney/annotated.h5mu'
+    output: out='dts/hg38/kidney/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/kidney/kidney.py \

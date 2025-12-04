@@ -3,14 +3,14 @@ rule download_reprofibro:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        tar=temp(local('dts/reprofibro/RAW.tar')),
-        barcodes=temp(local('dts/reprofibro/barcode_map.tsv.gz')),
-        genes=temp(local('dts/reprofibro/genes.tsv.gz')),
-        bars=temp(local(expand('dts/reprofibro/{sample}.barcodes.tsv.gz', sample=config['dts']['reprofibro']['samples']))),
-        frags=expand('dts/reprofibro/{sample}.frags.tsv.gz', sample=config['dts']['reprofibro']['samples']),
-        tbis=expand('dts/reprofibro/{sample}.frags.tsv.gz.tbi', sample=config['dts']['reprofibro']['samples']),
-        mats=temp(local(expand('dts/reprofibro/{sample}.matrix.mtx.gz', sample=config['dts']['reprofibro']['samples']))),
-        annot=temp(local('dts/reprofibro/annot.csv')),
+        tar=temp(local('dts/hg38/reprofibro/RAW.tar')),
+        barcodes=temp(local('dts/hg38/reprofibro/barcode_map.tsv.gz')),
+        genes=temp(local('dts/hg38/reprofibro/genes.tsv.gz')),
+        bars=temp(local(expand('dts/hg38/reprofibro/{sample}.barcodes.tsv.gz', sample=config['dts']['reprofibro']['samples']))),
+        frags=expand('dts/hg38/reprofibro/{sample}.frags.tsv.gz', sample=config['dts']['reprofibro']['samples']),
+        tbis=expand('dts/hg38/reprofibro/{sample}.frags.tsv.gz.tbi', sample=config['dts']['reprofibro']['samples']),
+        mats=temp(local(expand('dts/hg38/reprofibro/{sample}.matrix.mtx.gz', sample=config['dts']['reprofibro']['samples']))),
+        annot=temp(local('dts/hg38/reprofibro/annot.csv')),
     params:
         tar=config['dts']['reprofibro']['url']['tar'],
         barcodes=config['dts']['reprofibro']['url']['barcodes'],
@@ -53,7 +53,7 @@ rule callpeaks_reprofibro:
         img='workflow/envs/gretabench.sif',
         frags=rules.download_reprofibro.output.frags,
         annot=rules.download_reprofibro.output.annot,
-    output: peaks=temp(local('dts/reprofibro/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/reprofibro/peaks.h5ad'))
     resources: mem_mb=64000
     shell:
         """
@@ -77,7 +77,7 @@ rule annotate_reprofibro:
         path_annot=rules.download_reprofibro.output.annot,
         path_barmap=rules.download_reprofibro.output.barcodes,
         gid=rules.gen_gid_ensmbl.output,
-    output: out='dts/reprofibro/annotated.h5mu'
+    output: out='dts/hg38/reprofibro/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/reprofibro/reprofibro.py \

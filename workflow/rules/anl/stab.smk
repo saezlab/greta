@@ -49,7 +49,7 @@ rule run_stab:
     threads: 1
     container: None
     input:
-        expand(['dts/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'], zip, dat=d_lst, case=c_lst, mth=m_lst)
+        expand(['dts/hg38/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'], zip, dat=d_lst, case=c_lst, mth=m_lst)
     output:
         res='anl/stab/{dat}.ovc.csv',
         auc='anl/stab/{dat}.auc.csv',

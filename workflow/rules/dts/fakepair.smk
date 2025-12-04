@@ -7,8 +7,8 @@ rule index_frags_fakepair:
         frags=lambda w: map_rules('download', w_name='{dname}pair'.format(dname=w.dname), out='frags'),
         tbis=lambda w: map_rules('download', w_name='{dname}pair'.format(dname=w.dname), out='tbis'),
     output:
-        frags=temp(local('dts/fake{dname}pair/smpl.frags.tsv.gz')),
-        tbis=temp(local('dts/fake{dname}pair/smpl.frags.tsv.gz.tbi')),
+        frags=temp(local('dts/hg38/fake{dname}pair/smpl.frags.tsv.gz')),
+        tbis=temp(local('dts/hg38/fake{dname}pair/smpl.frags.tsv.gz.tbi')),
     shell:
         """
         cp {input.frags} {output.frags}
@@ -25,7 +25,7 @@ rule coem_fakepair:
         frags=rules.index_frags_fakepair.output.frags,
         tbis=rules.index_frags_fakepair.output.tbis,
     output:
-        cca=temp(local('dts/fake{dname}pair/cca.rds'))
+        cca=temp(local('dts/hg38/fake{dname}pair/cca.rds'))
     resources: mem_mb=128000
     shell:
         """
@@ -43,7 +43,7 @@ rule pair_fakepair:
     input:
         cca=rules.coem_fakepair.output.cca,
         annot=lambda w: map_rules(rule_prefix='download', w_name='{dname}pair'.format(dname=w.dname), out='annot'),
-    output: barmap=temp(local('dts/fake{dname}pair/barmap.csv'))
+    output: barmap=temp(local('dts/hg38/fake{dname}pair/barmap.csv'))
     shell:
         """
         Rscript workflow/scripts/dts/fakepair/paircells.R \
@@ -60,7 +60,7 @@ rule annotate_fakepitupair:
         mdata=rules.annotate_pitupair.output.out,
         barmap='dts/fakepitupair/barmap.csv',
     output:
-        out='dts/fakepitupair/annotated.h5mu'
+        out='dts/hg38/fakepitupair/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/fakepair/fakepair.py \

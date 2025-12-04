@@ -3,8 +3,8 @@ rule download_pbmc10k:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        frags='dts/pbmc10k/smpl.frags.tsv.gz',
-        tbis='dts/pbmc10k/smpl.frags.tsv.gz.tbi',
+        frags='dts/hg38/pbmc10k/smpl.frags.tsv.gz',
+        tbis='dts/hg38/pbmc10k/smpl.frags.tsv.gz.tbi',
     params:
         matrix=config['dts']['pbmc10k']['url']['matrix'],
         atac_frags=config['dts']['pbmc10k']['url']['atac_frags'],
@@ -19,7 +19,7 @@ rule prcannot_pbmc10k:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
-    output: annot=temp(local('dts/pbmc10k/annot.csv')),
+    output: annot=temp(local('dts/hg38/pbmc10k/annot.csv')),
     shell:
         "python workflow/scripts/dts/pbmc10k/prc_annot.py -a {output.annot}"
 
@@ -30,7 +30,7 @@ rule callpeaks_pbmc10k:
     input:
         frags=rules.download_pbmc10k.output.frags,
         annot=rules.prcannot_pbmc10k.output.annot,
-    output: peaks=temp(local('dts/pbmc10k/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/pbmc10k/peaks.h5ad'))
     resources: mem_mb=64000
     shell:
         """
@@ -50,7 +50,7 @@ rule annotate_pbmc10k:
         annot=rules.prcannot_pbmc10k.output.annot,
         peaks=rules.callpeaks_pbmc10k.output.peaks,
         gid=rules.gen_gid_ensmbl.output,
-    output: out='dts/pbmc10k/annotated.h5mu'
+    output: out='dts/hg38/pbmc10k/annotated.h5mu'
     resources: mem_mb=32000
     shell:
         """

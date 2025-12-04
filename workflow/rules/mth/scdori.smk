@@ -5,7 +5,7 @@ rule mdl_o_scdori:
     input:
         mdata=rules.extract_case.output.mdata,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_scdori.o_scdori.o_scdori.o_scdori.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_scdori.o_scdori.o_scdori.o_scdori.mdl.csv'
     params:
         ext=config['methods']['scdori']['ext'] // 2,
     resources:

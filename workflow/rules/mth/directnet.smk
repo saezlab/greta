@@ -6,7 +6,7 @@ rule mdl_o_directnet:
         ann=rules.gen_ann_pando.output,
         tss=rules.gen_tss_directnet.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_directnet.o_directnet.o_directnet.o_directnet.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_directnet.o_directnet.o_directnet.o_directnet.mdl.csv'
     params:
         ext=config['methods']['directnet']['ext'] // 2,
     resources:

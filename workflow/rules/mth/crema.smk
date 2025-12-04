@@ -6,7 +6,7 @@ rule mdl_o_crema:
         gen=rules.gen_genome_crema.output,
         tfs=rules.gen_motif_crema.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_crema.o_crema.o_crema.o_crema.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_crema.o_crema.o_crema.o_crema.mdl.csv'
     params:
         ext=config['methods']['crema']['ext'] // 2,
         site_extension=config['methods']['crema']['site_extension'],

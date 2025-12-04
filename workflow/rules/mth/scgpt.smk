@@ -6,7 +6,7 @@ rule mdl_o_scgpt:
         tf=rules.gen_tfs_lambert.output,
         cg=rules.cre_promoters.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_scgpt.o_scgpt.o_scgpt.o_scgpt.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_scgpt.o_scgpt.o_scgpt.o_scgpt.mdl.csv'
     params:
         batch_size=config['methods']['scgpt']['batch_size'],
         device=config['methods']['scgpt']['device'],

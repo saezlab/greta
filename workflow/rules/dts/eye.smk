@@ -7,9 +7,9 @@ rule download_eye:
         img='workflow/envs/gretabench.sif',
         gid=rules.gen_gid_ensmbl.output,
     output:
-        annot=temp(local('dts/eye/annot.csv')),
-        frag=temp(local(expand('dts/eye/{sample}.frags.tsv.gz', sample=config['dts']['eye']['samples']))),
-        rna=temp(local('dts/eye/rna.h5ad')),
+        annot=temp(local('dts/hg38/eye/annot.csv')),
+        frag=temp(local(expand('dts/hg38/eye/{sample}.frags.tsv.gz', sample=config['dts']['eye']['samples']))),
+        rna=temp(local('dts/hg38/eye/rna.h5ad')),
     params:
         url_tar=config['dts']['eye']['url']['tar'],
         url_ann=config['dts']['eye']['url']['ann'],
@@ -46,7 +46,7 @@ rule callpeaks_eye:
     input:
         frags=rules.download_eye.output.frag,
         annot=rules.download_eye.output.annot,
-    output: peaks=temp(local('dts/eye/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/eye/peaks.h5ad'))
     resources:
         mem_mb=128000,
         runtime=2160,
@@ -68,7 +68,7 @@ rule annotate_eye:
         rna=rules.download_eye.output.rna,
         peaks=rules.callpeaks_eye.output.peaks,
         annot=rules.download_eye.output.annot,
-    output: out='dts/eye/annotated.h5mu'
+    output: out='dts/hg38/eye/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/eye/eye.py \

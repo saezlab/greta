@@ -6,10 +6,10 @@ rule download_brain:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        annot=temp(local('dts/brain/raw_annot.csv')),
-        frags=expand('dts/brain/{sample}.frags.tsv.gz', sample=config['dts']['brain']['samples']),
-        tbis=expand('dts/brain/{sample}.frags.tsv.gz.tbi', sample=config['dts']['brain']['samples']),
-        gex=temp(local(expand('dts/brain/{sample}_filtered_feature_bc_matrix.h5', sample=config['dts']['brain']['samples']))),
+        annot=temp(local('dts/hg38/brain/raw_annot.csv')),
+        frags=expand('dts/hg38/brain/{sample}.frags.tsv.gz', sample=config['dts']['brain']['samples']),
+        tbis=expand('dts/hg38/brain/{sample}.frags.tsv.gz.tbi', sample=config['dts']['brain']['samples']),
+        gex=temp(local(expand('dts/hg38/brain/{sample}_filtered_feature_bc_matrix.h5', sample=config['dts']['brain']['samples']))),
     params:
         dtsts=config['dts']['brain']['url']['full_dataset'],
         annot=config['dts']['brain']['url']['annot'],
@@ -49,7 +49,7 @@ rule prc_annot:
     input:
         img='workflow/envs/gretabench.sif',
         annot=rules.download_brain.output.annot,
-    output: annot=temp(local('dts/brain/annot.csv')),
+    output: annot=temp(local('dts/hg38/brain/annot.csv')),
     params: samples=config['dts']['brain']['samples'],
     shell:
         """
@@ -66,7 +66,7 @@ rule callpeaks_brain:
     input:
         frags=rules.download_brain.output.frags,
         annot=rules.prc_annot.output.annot,
-    output: peaks=temp(local('dts/brain/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/brain/peaks.h5ad'))
     resources:
         mem_mb=110000,
         runtime=2160,
@@ -89,7 +89,7 @@ rule annotate_brain:
         path_peaks=rules.callpeaks_brain.output.peaks,
         path_annot=rules.prc_annot.output.annot,
         gid=rules.gen_gid_ensmbl.output,
-    output: out='dts/brain/annotated.h5mu'
+    output: out='dts/hg38/brain/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/brain/brain.py \

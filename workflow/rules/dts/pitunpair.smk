@@ -3,11 +3,11 @@ rule download_pitunpair:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        gex=temp(local('dts/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
-        peaks=temp(local('dts/pitunpair/peaks.original.h5')),
-        frags='dts/pitunpair/smpl.frags.tsv.gz',
-        tbis='dts/pitunpair/smpl.frags.tsv.gz.tbi',
-        annot=temp(local('dts/pitunpair/annot.csv')),
+        gex=temp(local('dts/hg38/pitunpair/smpl.filtered_feature_bc_matrix.h5')),
+        peaks=temp(local('dts/hg38/pitunpair/peaks.original.h5')),
+        frags='dts/hg38/pitunpair/smpl.frags.tsv.gz',
+        tbis='dts/hg38/pitunpair/smpl.frags.tsv.gz.tbi',
+        annot=temp(local('dts/hg38/pitunpair/annot.csv')),
     params:
         gex=config['dts']['pitunpair']['url']['rna_mtx'],
         peaks=config['dts']['pitunpair']['url']['peaks'],
@@ -32,7 +32,7 @@ rule coembedd_pitunpair:
         peaks=rules.download_pitunpair.output.peaks,
         frags=rules.download_pitunpair.output.frags,
         tbis=rules.download_pitunpair.output.tbis,
-    output: cca=temp(local('dts/pitunpair/cca.rds'))
+    output: cca=temp(local('dts/hg38/pitunpair/cca.rds'))
     shell:
         """
         Rscript workflow/scripts/dts/pitunpair/coembedd.R \
@@ -50,7 +50,7 @@ rule paircells_pitunpair:
     input:
         cca=rules.coembedd_pitunpair.output.cca,
         annot=rules.download_pitunpair.output.annot,
-    output: barmap=temp(local('dts/pitunpair/barmap.csv'))
+    output: barmap=temp(local('dts/hg38/pitunpair/barmap.csv'))
     shell:
         """
         Rscript workflow/scripts/dts/pitunpair/paircells.R \
@@ -67,7 +67,7 @@ rule callpeaks_pitunpair:
         img='workflow/envs/gretabench.sif',
         frags=rules.download_pitunpair.output.frags,
         annot=rules.paircells_pitunpair.output.barmap,
-    output: peaks=temp(local('dts/pitunpair/peaks.h5ad')),
+    output: peaks=temp(local('dts/hg38/pitunpair/peaks.h5ad')),
     resources: mem_mb=32000
     shell:
         """
@@ -89,7 +89,7 @@ rule annotate_pitunpair:
         barmap=rules.paircells_pitunpair.output.barmap,
         gid=rules.gen_gid_ensmbl.output,
     output:
-        out='dts/pitunpair/annotated.h5mu'
+        out='dts/hg38/pitunpair/annotated.h5mu'
     resources: mem_mb=32000
     shell:
         """

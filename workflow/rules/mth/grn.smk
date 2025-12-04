@@ -23,7 +23,7 @@ rule mdl_o_collectri:
         grn=rules.gst_collectri.output,
         proms=rules.cre_promoters.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_collectri.o_collectri.o_collectri.o_collectri.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_collectri.o_collectri.o_collectri.o_collectri.mdl.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
@@ -45,7 +45,7 @@ rule mdl_o_dorothea:
         grn=rules.gst_dorothea.output,
         proms=rules.cre_promoters.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_dorothea.o_dorothea.o_dorothea.o_dorothea.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_dorothea.o_dorothea.o_dorothea.o_dorothea.mdl.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],

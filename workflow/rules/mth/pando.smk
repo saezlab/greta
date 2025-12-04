@@ -6,7 +6,7 @@ rule pre_pando:
         mdata=rules.extract_case.output.mdata,
         ann=rules.gen_ann_pando.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/pando.pre.h5mu'
+        out='dts/{org}/{dat}/cases/{case}/runs/pando.pre.h5mu'
     params:
         organism=lambda w: config['dts'][w.dat]['organism'],
         exclude_exons=config['methods']['pando']['exclude_exons'],
@@ -41,7 +41,7 @@ rule p2g_pando:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         ann=rules.gen_ann_pando.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.pando.p2g.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.pando.p2g.csv'
     params:
         ext=config['methods']['pando']['ext'],
     resources:
@@ -69,7 +69,7 @@ rule tfb_pando:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.pando.tfb.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.pando.tfb.csv'
     params:
         organism=lambda w: config['dts'][w.dat]['organism']
     resources:
@@ -98,7 +98,7 @@ rule mdl_pando:
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
     output:
-        out='dts/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.pando.mdl.csv'
     params:
         thr_corr=config['methods']['pando']['thr_corr'],
         p_thresh=config['methods']['pando']['p_thresh'],
@@ -136,7 +136,7 @@ rule mdl_o_pando:
         mdata=rules.extract_case.output.mdata,
         ann=rules.gen_ann_pando.output,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_pando.o_pando.o_pando.o_pando.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_pando.o_pando.o_pando.o_pando.mdl.csv'
     params:
         exclude_exons=config['methods']['pando']['exclude_exons'],
         ext=config['methods']['pando']['ext'],

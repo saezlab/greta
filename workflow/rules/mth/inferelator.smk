@@ -8,7 +8,7 @@ rule mdl_o_inferelator:
         gtf=rules.gen_genome_inferelator.output.gtf,
         meme=rules.gen_motif_inferelator.output.meme,
     output:
-        out='dts/{dat}/cases/{case}/runs/o_inferelator.o_inferelator.o_inferelator.o_inferelator.mdl.csv'
+        out='dts/{org}/{dat}/cases/{case}/runs/o_inferelator.o_inferelator.o_inferelator.o_inferelator.mdl.csv'
     params:
         ext=config['methods']['inferelator']['ext'] // 2,
     resources:

@@ -8,9 +8,9 @@ rule download_skin:
         img='workflow/envs/gretabench.sif',
         gid=rules.gen_gid_ensmbl.output,
     output:
-        ann=temp(local('dts/skin/annot.csv')),
-        frag=temp(local(expand('dts/skin/{sample}.frags.tsv.gz', sample=config['dts']['skin']['samples']))),
-        rna=temp(local('dts/skin/rna.h5ad')),
+        ann=temp(local('dts/hg38/skin/annot.csv')),
+        frag=temp(local(expand('dts/hg38/skin/{sample}.frags.tsv.gz', sample=config['dts']['skin']['samples']))),
+        rna=temp(local('dts/hg38/skin/rna.h5ad')),
     params:
         url_tar=config['dts']['skin']['url']['tar'],
         url_ann=config['dts']['skin']['url']['ann'],
@@ -45,7 +45,7 @@ rule callpeaks_skin:
     input:
         frags=rules.download_skin.output.frag,
         annot=rules.download_skin.output.ann,
-    output: peaks=temp(local('dts/skin/peaks.h5ad'))
+    output: peaks=temp(local('dts/hg38/skin/peaks.h5ad'))
     resources:
         mem_mb=64000,
         runtime=360,
@@ -67,7 +67,7 @@ rule annotate_skin:
         rna=rules.download_skin.output.rna,
         peaks=rules.callpeaks_skin.output.peaks,
         annot=rules.download_skin.output.ann,
-    output: out='dts/skin/annotated.h5mu'
+    output: out='dts/hg38/skin/annotated.h5mu'
     shell:
         """
         python workflow/scripts/dts/skin/skin.py \
