@@ -328,7 +328,7 @@ dbs:
             dorothea: 'https://github.com/saezlab/dorothea/raw/master/data/dorothea_hs.rda'
         tfm:
             hpa: 'https://www.proteinatlas.org/download/proteinatlas.tsv.zip'
-            tfmdb: 'https://bio.liclab.net/TF-Marker/public/download/download_TFMarker.csv'
+            tfmdb: 'https://zenodo.org/records/5574651/files/download_TFMarker.csv?download=1'
         tfp:
             europmc: None
             intact: 'https://ftp.ebi.ac.uk/pub/databases/intact/current/psimitab/intact.zip'

@@ -30,7 +30,7 @@ rule tfm_tfmdb:
         wget --no-verbose '{params.url}' -O {output} && \
         python -c "import pandas as pd; \
         import sys; \
-        df = pd.read_csv(sys.argv[1]); \
+        df = pd.read_csv(sys.argv[1], sep='\t'); \
         df = df[['Gene Name', 'Cell Name', 'Tissue Type']]; \
         df['ctype'] = df['Cell Name'] + ',' + df['Tissue Type']; \
         df = df.groupby('Gene Name', as_index=False)['ctype'].apply(lambda x: ','.join(x)); \

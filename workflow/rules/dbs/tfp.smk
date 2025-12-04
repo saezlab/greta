@@ -18,7 +18,7 @@ rule tfp_intact:
     input:
         inc=rules.download_intact.output,
         lmb=rules.gen_tfs_lambert.output,
-        pid=rules.gen_pid_uniprot.output,
+        pid=rules.gen_pid_uniprot.output.hg38,
     output: 'dbs/hg38/tfp/intact/intact.tsv'
     shell:
         """

@@ -6,7 +6,7 @@ cluster-status: "slurm-status.py"
 restart-times: 5
 max-jobs-per-second: 5
 max-status-checks-per-second: 5
-local-cores: 1
+local-cores: 16
 latency-wait: 15
 use-conda: True
 use-singularity: True

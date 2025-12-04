@@ -61,16 +61,20 @@ rule gen_gid_ensmbl:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
-    output: expand('dbs/{org}/gen/gid/ensembl.csv', org=orgms)
-    shell: "Rscript workflow/scripts/dbs/gen/gid/ensmbl.R {output}"
+    output:
+        hg38='dbs/hg38/gen/gid/ensembl.csv',
+        mm10='dbs/mm10/gen/gid/ensembl.csv'
+    shell: "Rscript workflow/scripts/dbs/gen/gid/ensmbl.R {output.hg38} {output.mm10}"
 
 
 rule gen_pid_uniprot:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
-    output: expand('dbs/{org}/gen/pid/uniprot.csv', org=orgms)
-    shell: "Rscript workflow/scripts/dbs/gen/pid/uniprot.R {output}"
+    output:
+        hg38='dbs/hg38/gen/pid/uniprot.csv',
+        mm10='dbs/mm10/gen/pid/uniprot.csv'
+    shell: "Rscript workflow/scripts/dbs/gen/pid/uniprot.R {output.hg38} {output.mm10}"
 
 
 rule gen_genome_celloracle:

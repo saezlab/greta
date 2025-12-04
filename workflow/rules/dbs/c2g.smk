@@ -19,7 +19,7 @@ checkpoint c2g_s_eqtlcatalogue:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         img='workflow/envs/gretabench.sif',
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output: 'dbs/hg38/c2g/eqtlcatalogue/raw/{eqtl_smpl_grp}.{eqtl_tiss}.bed',
     params:
         url=config['dbs']['hg38']['c2g']['eqtlcatalogue']['url'],
