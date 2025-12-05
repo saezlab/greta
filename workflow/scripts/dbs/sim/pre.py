@@ -27,8 +27,8 @@ def transform_cre(r):
 
 atac.var_names = [transform_cre(r) for r in atac.var_names]
 
-#rna.X = sps.csr_matrix(rna.X)
-#atac.X = sps.csr_matrix(atac.X)
+rna.X = sps.csr_matrix(rna.X)
+atac.X = sps.csr_matrix(atac.X)
 
 sc.pp.filter_cells(rna, min_genes=200)
 sc.pp.filter_genes(rna, min_cells=3)
@@ -38,20 +38,20 @@ inter = rna.obs_names.intersection(atac.obs_names)
 rna = rna[inter, :].copy()
 atac = atac[inter, :].copy()
 
-rna.layers['counts'] = sps.csr_matrix(rna.X)
-atac.layers['counts'] = sps.csr_matrix(atac.X)
+#rna.layers['counts'] = sps.csr_matrix(rna.X)
+#atac.layers['counts'] = sps.csr_matrix(atac.X)
 
-sc.pp.normalize_total(rna, target_sum=1e4)
-sc.pp.log1p(rna)
-sc.pp.normalize_total(atac, target_sum=1e4)
-sc.pp.log1p(atac)
+#sc.pp.normalize_total(rna, target_sum=1e4)
+#sc.pp.log1p(rna)
+#sc.pp.normalize_total(atac, target_sum=1e4)
+#sc.pp.log1p(atac)
 
 del rna.obs
 del rna.var
-del rna.uns
+#del rna.uns
 del atac.obs
 del atac.var
-del atac.uns
+#del atac.uns
 
 obs = rna.obs.copy()
 obs['batch'] = 'smpl'

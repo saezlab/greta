@@ -20,6 +20,8 @@ rule download_sim:
             base=$(basename "$f")
             path_dataset={output}/$base
             python workflow/scripts/dbs/sim/pre.py $path_dataset
+            python workflow/scripts/dts/extract_case.py \
+            -i $path_dataset/mdata.h5mu -c all -s 0 -d 0 -g 20000 -r 80000 -t None -o $path_dataset/mdata.h5mu
         done
         """
 
@@ -88,7 +90,7 @@ rule sim_random:
 
 
 rule sim_grnboost:
-    threads: 1
+    threads: 2
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         img='workflow/envs/scenicplus.sif',
