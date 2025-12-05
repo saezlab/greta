@@ -140,6 +140,7 @@ include: 'rules/anl/pair.smk'
 include: 'rules/anl/tss.smk'
 include: 'rules/anl/dbs.smk'
 include: 'rules/anl/dts.smk'
+include: 'rules/anl/metrics/simul.smk'
 
 # Plots
 include: 'rules/plt/stab.smk'
