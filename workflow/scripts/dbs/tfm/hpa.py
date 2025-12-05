@@ -37,6 +37,16 @@ for col in c_cols:
 df['ctype'] = [','.join(sorted(set(lst))) for lst in df[c_cols].values]
 df = df.rename(columns={'Gene': 'gene'})[['gene', 'ctype']]
 df = df.sort_values(['gene', 'ctype'])
+mat = df.assign(context=df['ctype'].str.split(',')).explode('context')
+mat['context'] = mat['context'].str.strip()
+mat = pd.crosstab(mat['context'], mat['gene'])
+mat = mat.sum(1)
+ctypes = set(mat[mat >= 3].index)
+def keep_ctype(x, ctypes):
+    lst = x.split(',')
+    return ','.join([c for c in lst if c in ctypes])
+df['ctype'] = [keep_ctype(x, ctypes) for x in df['ctype']]
+df = df.sort_values(['gene', 'ctype'])
 
 # Write
 df.to_csv(out_path, sep='\t', index=False, header=None)
