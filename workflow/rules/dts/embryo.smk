@@ -6,7 +6,7 @@ rule download_embryo:
     singularity: 'workflow/envs/figr.sif'
     input:
         img='workflow/envs/figr.sif',
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         ann=temp(local('dts/hg38/embryo/annot.csv')),
         frag=temp(local(expand('dts/hg38/embryo/{sample}.frags.tsv.gz', sample=config['dts']['embryo']['samples']))),

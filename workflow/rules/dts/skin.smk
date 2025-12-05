@@ -6,7 +6,7 @@ rule download_skin:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         img='workflow/envs/gretabench.sif',
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         ann=temp(local('dts/hg38/skin/annot.csv')),
         frag=temp(local(expand('dts/hg38/skin/{sample}.frags.tsv.gz', sample=config['dts']['skin']['samples']))),

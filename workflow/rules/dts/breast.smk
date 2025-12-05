@@ -31,7 +31,7 @@ rule prcannot_breast:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         img='workflow/envs/gretabench.sif',
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         rna=temp(local('dts/hg38/breast/rna.h5ad')),
         ann=temp(local('dts/hg38/breast/annot.csv'))

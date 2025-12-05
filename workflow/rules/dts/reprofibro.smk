@@ -76,7 +76,7 @@ rule annotate_reprofibro:
         path_peaks=rules.callpeaks_reprofibro.output.peaks,
         path_annot=rules.download_reprofibro.output.annot,
         path_barmap=rules.download_reprofibro.output.barcodes,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output: out='dts/hg38/reprofibro/annotated.h5mu'
     shell:
         """

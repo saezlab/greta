@@ -5,7 +5,7 @@ rule download_eye:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         img='workflow/envs/gretabench.sif',
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         annot=temp(local('dts/hg38/eye/annot.csv')),
         frag=temp(local(expand('dts/hg38/eye/{sample}.frags.tsv.gz', sample=config['dts']['eye']['samples']))),

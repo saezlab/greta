@@ -88,7 +88,7 @@ rule annotate_brain:
         path_gex=rules.download_brain.output.gex,
         path_peaks=rules.callpeaks_brain.output.peaks,
         path_annot=rules.prc_annot.output.annot,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output: out='dts/hg38/brain/annotated.h5mu'
     shell:
         """

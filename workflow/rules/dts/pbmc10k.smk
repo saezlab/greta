@@ -49,7 +49,7 @@ rule annotate_pbmc10k:
     input:
         annot=rules.prcannot_pbmc10k.output.annot,
         peaks=rules.callpeaks_pbmc10k.output.peaks,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output: out='dts/hg38/pbmc10k/annotated.h5mu'
     resources: mem_mb=32000
     shell:

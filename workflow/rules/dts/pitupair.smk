@@ -49,7 +49,7 @@ rule annotate_pitupair:
         annot=rules.download_pitupair.output.annot,
         peaks=rules.callpeaks_pitupair.output.peaks,
         gex=rules.download_pitupair.output.gex,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output: out='dts/hg38/pitupair/annotated.h5mu'
     resources: mem_mb=32000
     shell:

@@ -43,7 +43,7 @@ rule prcannot_lung:
     input:
         raw_annot=rules.download_lung.output.raw_annot,
         gex=rules.download_lung.output.gex,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         annot=temp(local('dts/hg38/lung/annot.csv')),
         rna=temp(local('dts/hg38/lung/rna.h5ad'))

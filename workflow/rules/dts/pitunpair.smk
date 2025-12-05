@@ -87,7 +87,7 @@ rule annotate_pitunpair:
         peaks=rules.callpeaks_pitunpair.output.peaks,
         gex=rules.download_pitunpair.output.gex,
         barmap=rules.paircells_pitunpair.output.barmap,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         out='dts/hg38/pitunpair/annotated.h5mu'
     resources: mem_mb=32000

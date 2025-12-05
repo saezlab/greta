@@ -85,7 +85,7 @@ rule annotate_heart:
         path_h5ad=rules.download_anndata_heart.output.adata,
         path_peaks=rules.callpeaks_heart.output.peaks,
         path_annot=rules.prcannot_heart.output,
-        gid=rules.gen_gid_ensmbl.output
+        gid=rules.gen_gid_ensmbl.output.hg38
     output: out='dts/hg38/heart/annotated.h5mu'
     shell:
         """

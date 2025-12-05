@@ -72,7 +72,7 @@ rule annotate_kidney:
         gex=rules.prcannot_kidney.output.rna,
         peaks=rules.callpeaks_kidney.output.peaks,
         annot=rules.prcannot_kidney.output.annot,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output: out='dts/hg38/kidney/annotated.h5mu'
     shell:
         """
