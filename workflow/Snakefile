@@ -148,6 +148,7 @@ include: 'rules/plt/comb.smk'
 include: 'rules/plt/dbs.smk'
 include: 'rules/plt/eval.smk'
 include: 'rules/plt/figs.smk'
+include: 'rules/plt/simul.smk'
 
 rule all:
     input:

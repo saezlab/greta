@@ -1,4 +1,4 @@
-localrules: topo_inter, topo_fvsd
+localrules: topo_inter, topo_fvsd, topo_simul
 
 
 rule topo_mult:
@@ -46,3 +46,14 @@ rule topo_inter:
         -p {params.min_prop} \
         -o {output}
         """
+
+
+rule topo_simul:
+    threads: 1
+    input: expand('dts/sim/seed_1/{sim_mth}.csv', sim_mth=['celloracle', 'figr', 'pando', 'pearson', 'spearman', 'grnboost', 'random'])
+    output: 'anl/topo/sim.1.ocoeff.csv'
+    shell:
+        """
+        python workflow/scripts/anl/topo/simul.py {output}
+        """
+
