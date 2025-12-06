@@ -154,7 +154,4 @@ rule mdl_scenicplus:
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
         fi
-        
         """
-
-
