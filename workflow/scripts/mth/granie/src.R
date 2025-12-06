@@ -120,5 +120,16 @@ mdl <- dplyr::select(dplyr::ungroup(mdl), source, cre, target, score, pval)
 mdl <- dplyr::summarize(mdl, score = mean(score), pval=mean(pval), .by=c(source, cre, target))
 mdl <- dplyr::arrange(mdl, source, target)
 
+clean_peaks <- function(peaks) {
+  parts <- strsplit(peaks, "[:-]")[[1]]
+  # Ensure that start and end are not in scientific notation
+  chromosome <- parts[1]
+  start <- format(as.numeric(parts[2]), scientific = FALSE)
+  end <- format(as.numeric(parts[3]), scientific = FALSE)
+  fpeaks <- paste0(chromosome, "-", start, "-", end)
+  return(fpeaks)
+}
+mdl$cre <- sapply(as.character(mdl$cre), clean_peaks)
+
 # Write
 write.csv(x = mdl, file = path_out, row.names=FALSE)
