@@ -12,6 +12,7 @@ if df.shape[0] > 0:
     df = df[['TF', 'Region', 'Gene', 'score']]
     df.columns = ['source', 'cre', 'target', 'score']
     df['pval'] = 0.01
+    df['cre'] = df['cre'].str.replace(':', '-')
 else:
     df = pd.DataFrame(columns=['source', 'cre', 'target', 'score', 'pval'])
 df.to_csv(sys.argv[2], index=False)
