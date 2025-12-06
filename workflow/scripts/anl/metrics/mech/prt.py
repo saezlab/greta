@@ -113,51 +113,55 @@ if grn.shape[0] > 0:
 
     # Subset bench data to dataset
     cats = load_cats(dataset, case)
-    cats = [re.escape(c) for c in cats[rsc_name]]
-    msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
-    obs = obs.loc[msk, :]
-    mat = mat.loc[msk, :]
-
-    # Subset by overlap with rna
-    genes = list(genes & set(mat.columns))
-    mat = mat.loc[:, genes].copy()
-    
-    coefs = []
-    pvals = []
-    for dataset in tqdm(obs.index):
-        # Extract
-        tf = obs.loc[dataset, 'TF']
-        tf_mat = mat.loc[[dataset], :]
-        tf_mat = tf_mat[tf_mat != 0].dropna(axis=1)
-        if tf in oracle.all_regulatory_genes_in_TFdict:
-            # Run the simulation for the current TF
-            x = simulate_delta(oracle, [tf], n_steps=3)
-            
-            # Intersect
-            y = tf_mat
-            inter = np.intersect1d(x.columns, y.columns)
-            x, y = x.loc[:, inter].values[0], y.loc[:, inter].values[0]
-
-            # Compute correlation
-            if x.size >= 10:
-                r, p = scipy.stats.spearmanr(x, y)
-            else:
-                r, p = 0., 1.
-            coefs.append(r)
-            pvals.append(p)
-    
-    # Compute recall
-    coefs = np.array(coefs)
-    pvals = np.array(pvals)
-    padj = scipy.stats.false_discovery_control(pvals, method='bh')
-    tp = np.sum((coefs > 0.05) & (padj < 0.05))
-    if tp > 0:
-        prc = tp / coefs.size
-        rcl = tp / obs.shape[0]
-        f01 = f_beta_score(prc, rcl)
+    cats = cats[rsc_name]
+    if cats == 'None':
+        df = pd.DataFrame([[grn_name, np.nan, np.nan, np.nan]], columns=['name', 'prc', 'rcl', 'f01'])
     else:
-        prc, rcl, f01 = 0., 0., 0.
-    df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
+        cats = [re.escape(c) for c in cats]
+        msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
+        obs = obs.loc[msk, :]
+        mat = mat.loc[msk, :]
+    
+        # Subset by overlap with rna
+        genes = list(genes & set(mat.columns))
+        mat = mat.loc[:, genes].copy()
+        
+        coefs = []
+        pvals = []
+        for dataset in tqdm(obs.index):
+            # Extract
+            tf = obs.loc[dataset, 'TF']
+            tf_mat = mat.loc[[dataset], :]
+            tf_mat = tf_mat[tf_mat != 0].dropna(axis=1)
+            if tf in oracle.all_regulatory_genes_in_TFdict:
+                # Run the simulation for the current TF
+                x = simulate_delta(oracle, [tf], n_steps=3)
+                
+                # Intersect
+                y = tf_mat
+                inter = np.intersect1d(x.columns, y.columns)
+                x, y = x.loc[:, inter].values[0], y.loc[:, inter].values[0]
+    
+                # Compute correlation
+                if x.size >= 10:
+                    r, p = scipy.stats.spearmanr(x, y)
+                else:
+                    r, p = 0., 1.
+                coefs.append(r)
+                pvals.append(p)
+        
+        # Compute recall
+        coefs = np.array(coefs)
+        pvals = np.array(pvals)
+        padj = scipy.stats.false_discovery_control(pvals, method='bh')
+        tp = np.sum((coefs > 0.05) & (padj < 0.05))
+        if tp > 0:
+            prc = tp / coefs.size
+            rcl = tp / obs.shape[0]
+            f01 = f_beta_score(prc, rcl)
+        else:
+            prc, rcl, f01 = 0., 0., 0.
+        df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
 else:
     df = pd.DataFrame([[grn_name, np.nan, np.nan, np.nan]], columns=['name', 'prc', 'rcl', 'f01'])
 

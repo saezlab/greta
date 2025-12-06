@@ -1,4 +1,4 @@
-localrules: prior_tfm, prior_tfp, prior_cre
+localrules: prior_tfm, prior_tfp, prior_grn
 
 
 rule prior_tfm:
@@ -6,9 +6,9 @@ rule prior_tfm:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/hg38/tfm/{db}/{db}.tsv',
+        db='dbs/{org}/tfm/{db}/{db}.tsv',
     output:
-        out='anl/metrics/prior/tfm/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/prior/tfm/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
         """
         python workflow/scripts/anl/metrics/prior/tfm.py \
@@ -23,9 +23,9 @@ rule prior_tfp:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/hg38/tfp/{db}/{db}.tsv',
+        db='dbs/{org}/tfp/{db}/{db}.tsv',
     output:
-        out='anl/metrics/prior/tfp/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/prior/tfp/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         thr_p=0.01,
     shell:
@@ -35,58 +35,18 @@ rule prior_tfp:
         """
 
 
-rule prior_tfb:
+rule prior_grn:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/hg38/tfb/{db}/{db}.bed',
+        db='dbs/{org}/gst/{db}.csv',
     output:
-        out='anl/metrics/prior/tfb/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
-    params:
-        grp='source',
+        out='anl/metrics/prior/grn/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
         """
-        python workflow/scripts/anl/metrics/prior/gnm.py \
+        python workflow/scripts/anl/metrics/prior/grn.py \
         -a {input.grn} \
         -b {input.db} \
-        -d {params.grp} \
-        -f {output}
-        """
-
-
-rule prior_cre:
-    threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
-    input:
-        grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/hg38/cre/{db}/{db}.bed',
-    output:
-        out='anl/metrics/prior/cre/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
-    shell:
-        """
-        python workflow/scripts/anl/metrics/prior/gnm.py \
-        -a {input.grn} \
-        -b {input.db} \
-        -f {output}
-        """
-
-
-rule prior_c2g:
-    threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
-    input:
-        grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        resource='dbs/hg38/c2g/{db}/{db}.bed',
-    output:
-        out='anl/metrics/prior/c2g/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
-    params:
-        grp='target',
-    shell:
-        """
-        python workflow/scripts/anl/metrics/prior/gnm.py \
-        -a {input.grn} \
-        -b {input.resource} \
-        -d {params.grp} \
-        -f {output}
+        -f {output.out}
         """

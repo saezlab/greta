@@ -6,7 +6,12 @@
             "chipatlas": ["B-Cell", "B-cell (CD19+)", "Bone Marrow Cells", "Bone marrow mononuclear cells", "Bone marrow nuclear cells", "CD20+ B cells", "CD4+ T cells", "CD8+ T cells", "Dendritic Cells", "Macrophages", "Mast Cells", "Memory B cells", "Memory T cells", "Monocytes", "Monocytes-CD14+", "Naive B cells", "Natural Killer T-Cells", "Natural killer cells", "T cells", "Th1 Cells", "Th17 Cells", "Th2 Cells", "Treg"],
             "remap2022": ["B-cell", "CD4", "CD4-pos", "CD8", "T-cell", "Th1", "Th17", "macrophage", "monocyte", "peripheral-blood-mononuclear-cell", "primary-B-cell", "primary-monocyte"],
             "unibind": ["B cells", "CD4 CD25 CD45RA T cells", "CD4 CD25 T cells", "CD4 T cells", "T cells", "Th17 cells", "Th2 cells", "macrophage", "macrophage hypo il", "macrophage il4", "macrophages", "macrophages ifng", "macrophages il4", "macrophages tpp", "monocyte derived macrophages", "monocyte macro", "monocytes blood", "monocytes of peripheral blood", "peripheral blood mononuclear cells"],
+            "blacklist": "None",
+            "encode": "None",
             "gwascatalogue": ["chronic lymphocytic leukemia", "Hodgkins lymphoma, multiple myeloma, chronic lymphocytic leukemia", "acute myeloid leukemia", "acute lymphoblastic leukemia", "B-cell lymphoma/leukemia 10 measurement", "induced myeloid leukemia cell differentiation protein Mcl-1 measurement", "leukemia inhibitory factor receptor measurement", "leukemia inhibitory factor measurement", "lymphoid leukemia", "B-cell acute lymphoblastic leukemia", "chronic myelogenous leukemia", "childhood acute lymphoblastic leukemia"],
+            "phastcons": "None",
+            "promoters": "None",
+            "zhang21": "None",
             "eqtlcatalogue": ["B cell", "CD16+ monocyte", "CD4+ T cell", "CD8+ T cell", "NK cell", "Tfh cell", "Th1 cell", "Th17 cell", "Th2 cell", "Treg memory", "Treg naive", "blood", "macrophage", "monocyte", "neutrophil"],
             "knocktf": ["Blood", "Haematopoietic_and_lymphoid_tissue", "Haematopoietic_and_lymphoid_tissue_Blood"]
         }

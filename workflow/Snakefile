@@ -131,6 +131,7 @@ include: 'rules/mth/scmtni.smk'
 
 # Analyses
 include: 'rules/anl/metrics/prior.smk'
+include: 'rules/anl/metrics/genom.smk'
 include: 'rules/anl/metrics/pred.smk'
 include: 'rules/anl/metrics/mech.smk'
 include: 'rules/anl/metrics/utils.smk'

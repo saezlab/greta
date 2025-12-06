@@ -6,7 +6,7 @@ rule mech_tfa:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         rsc=rules.prt_knocktf.output.dir,
     output:
-        out='anl/metrics/mech/tfa/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/mech/tfa/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
         """
         python workflow/scripts/anl/metrics/mech/tfa.py \
@@ -23,7 +23,7 @@ rule mech_prt:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         rsc=rules.prt_knocktf.output.dir,
     output:
-        out='anl/metrics/mech/prt/{db}/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/mech/prt/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'] * 2,
@@ -47,7 +47,7 @@ rule extract_mech_tfm:
     input:
         mdata=rules.extract_case.output.mdata,
         tf=rules.gen_tfs_lambert.output,
-    output: 'anl/metrics/mech/sss/sss/{dat}.{case}/tfm.csv'
+    output: 'anl/metrics/mech/sss/sss/{org}.{dat}.{case}/tfm.csv'
     shell:
         """
         python workflow/scripts/anl/metrics/mech/tfm.py {input.mdata} {input.tf} {output}
@@ -61,7 +61,7 @@ rule mech_sss:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
         tfm=rules.extract_mech_tfm.output,
     output:
-        out='anl/metrics/mech/sss/sss/{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
+        out='anl/metrics/mech/sss/sss/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
         thr_pval=0.01,
     resources:
@@ -76,6 +76,3 @@ rule mech_sss:
             awk 'BEGIN {{ print "name,prc,rcl,f01" }}' > {output.out}
         fi
     	"""
-
-
-

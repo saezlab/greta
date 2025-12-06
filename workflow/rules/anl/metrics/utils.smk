@@ -6,7 +6,7 @@ rule aggr_metric:
     input:
         lambda w: make_combs_rules(w=w, rule_name='{typ}_{tsk}'.format(typ=w.type, tsk=w.task))
     output:
-        'anl/metrics/{type}/{task}/{db}/{dat}.{case}.scores.csv'
+        'anl/metrics/{type}/{task}/{db}/{org}.{dat}.{case}.scores.csv'
     shell:
         """
         python workflow/scripts/anl/metrics/aggregate.py \
@@ -32,18 +32,18 @@ rule metric_summ:
             'anl/metrics/pred/gsets/prog/{dat}.{case}.scores.csv',
             'anl/metrics/prior/tfm/hpa/{dat}.{case}.scores.csv',
             'anl/metrics/prior/tfm/tfmdb/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/tfp/europmc/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/tfp/intact/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/tfb/chipatlas/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/tfb/remap2022/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/tfb/unibind/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/cre/blacklist/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/cre/encode/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/cre/gwascatalogue/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/cre/phastcons/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/cre/zhang21/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/cre/promoters/{dat}.{case}.scores.csv',
-            'anl/metrics/prior/c2g/eqtlcatalogue/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/tfp/europmc/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/tfp/intact/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/tfb/chipatlas/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/tfb/remap2022/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/tfb/unibind/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/cre/blacklist/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/cre/encode/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/cre/gwascatalogue/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/cre/phastcons/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/cre/zhang21/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/cre/promoters/{dat}.{case}.scores.csv',
+            'anl/metrics/genom/c2g/eqtlcatalogue/{dat}.{case}.scores.csv',
         ]
     output: 'anl/metrics/summary/{dat}.{case}.csv'
     shell:
