@@ -115,9 +115,10 @@ muo_data <- find_modules(
 print('Extract and filter')
 grn <- NetworkModules(muo_data)@meta %>%
     dplyr::select(-pval) %>%
-    dplyr::rename(source = tf, score = estimate, pval = padj) %>%
-    dplyr::select(source, target, score, pval) %>%
-    dplyr::arrange(source, target)
+    dplyr::rename(source = tf, score = estimate, pval = padj, cre = regions) %>%
+    dplyr::select(source, cre, target, score, pval) %>%
+    dplyr::arrange(source, target) %>%
+    separate_rows(cre, sep = ";")
 
 # Write
 write.csv(x = grn, file = path_grn, row.names=FALSE)
