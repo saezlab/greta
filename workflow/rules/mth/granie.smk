@@ -133,7 +133,7 @@ rule mdl_o_granie:
     singularity: 'workflow/envs/granie.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
         tfb=rules.gen_motif_granie.output,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_granie.o_granie.o_granie.o_granie.mdl.csv'

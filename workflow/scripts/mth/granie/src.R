@@ -114,10 +114,10 @@ GRN = GRaNIE::filterGRNAndConnectGenes(
 )
 mdl <- dplyr::select(GRN@connections$all.filtered$`0`, TF.ENSEMBL, TF_peak.r, peak.ID, peak_gene.r, gene.ENSEMBL, TF_peak.fdr, peak_gene.p_adj)
 mdl <- dplyr::mutate(dplyr::rowwise(mdl), score = sign(TF_peak.r) * mean(c(abs(TF_peak.r), abs(peak_gene.r))))
-mdl <- dplyr::mutate(dplyr::ungroup(mdl), source=gsym[as.character(TF.ENSEMBL)], target=gsym[as.character(gene.ENSEMBL)])
+mdl <- dplyr::mutate(dplyr::ungroup(mdl), source=gsym[as.character(TF.ENSEMBL)], cre=peak.ID, target=gsym[as.character(gene.ENSEMBL)])
 mdl <- dplyr::mutate(dplyr::rowwise(mdl), pval = mean(c(TF_peak.fdr, peak_gene.p_adj)))
-mdl <- dplyr::select(dplyr::ungroup(mdl), source, target, score, pval)
-mdl <- dplyr::summarize(mdl, score = mean(score), pval=mean(pval), .by=c(source, target))
+mdl <- dplyr::select(dplyr::ungroup(mdl), source, cre, target, score, pval)
+mdl <- dplyr::summarize(mdl, score = mean(score), pval=mean(pval), .by=c(source, cre, target))
 mdl <- dplyr::arrange(mdl, source, target)
 
 # Write
