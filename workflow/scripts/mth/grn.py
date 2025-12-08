@@ -29,13 +29,14 @@ if mdl.empty:
     os._exit(0)
 
 # Limit to 100k largest absolute scores
-mdl = mdl.nlargest(100_000, 'score', keep='all').reset_index(drop=True)
+mdl['abs_score'] = mdl['score'].abs()
+mdl = mdl.nlargest(100_000, 'abs_score', keep='all').reset_index(drop=True)
+mdl = mdl.drop(columns=['abs_score'])
 tfs = set(mdl['source'].unique())
 gns = set(mdl['target'].unique())
 
 # Skip baselines
-baselines = {'collectri', 'dorothea', 'random', 'scenic'}
-if lst[0] in baselines or lst[0].startswith('o_'):
+if lst[0].startswith('o_'):
     mdl.to_csv(path_out, index=False)
     os._exit(0)
 
