@@ -1,5 +1,5 @@
 rule extract_case:
-    threads: 32
+    threads: 16
     singularity: 'workflow/envs/gretabench.sif'
     input: lambda w: map_rules('annotate', w.dat)
     output:

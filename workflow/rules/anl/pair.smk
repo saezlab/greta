@@ -29,9 +29,9 @@ rule pair_fake_stats:
         mdata='dts/{org}/{dname}pair/cases/{case}/mdata.h5mu',
         barmap='dts/{org}/fake{dname}pair/barmap.csv',
     output:
-        knn='anl/pair/{dname}.{case}.fake_knn.csv',
-        cor='anl/pair/{dname}.{case}.fake_cor.csv',
-        prp='anl/pair/{dname}.{case}.fake_prp.csv',
+        knn='anl/pair/{org}.{dname}.{case}.fake_knn.csv',
+        cor='anl/pair/{org}.{dname}.{case}.fake_cor.csv',
+        prp='anl/pair/{org}.{dname}.{case}.fake_prp.csv',
     singularity:
         'workflow/envs/gretabench.sif'
     shell:

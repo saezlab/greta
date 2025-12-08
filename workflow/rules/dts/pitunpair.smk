@@ -24,23 +24,25 @@ rule download_pitunpair:
 
 
 rule coembedd_pitunpair:
-    threads: 32
-    singularity: 'workflow/envs/figr.sif'
+    threads: 4
+    conda: '../../envs/glue.yaml'
     input:
         gex=rules.download_pitunpair.output.gex,
-        annot=rules.download_pitunpair.output.annot,
-        peaks=rules.download_pitunpair.output.peaks,
-        frags=rules.download_pitunpair.output.frags,
-        tbis=rules.download_pitunpair.output.tbis,
-    output: cca=temp(local('dts/hg38/pitunpair/cca.rds'))
+        acc=rules.download_pitunpair.output.peaks,
+        gid=rules.gen_gid_ensmbl.output.hg38,
+        ann=rules.download_pitunpair.output.annot,
+    output: temp(local('dts/hg38/pitunpair/X_glue.csv'))
+    resources:
+        partition='gpu-single',
+        slurm='gres=gpu:1'
     shell:
         """
-        Rscript workflow/scripts/dts/pitunpair/coembedd.R \
+        python workflow/scripts/dts/coembed.py \
         {input.gex} \
-        {input.annot} \
-        {input.peaks} \
-        {input.frags} \
-        {output.cca}
+        {input.acc} \
+        {input.gid} \
+        {input.ann} \
+        {output}
         """
 
 
@@ -48,15 +50,15 @@ rule paircells_pitunpair:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
     input:
-        cca=rules.coembedd_pitunpair.output.cca,
-        annot=rules.download_pitunpair.output.annot,
-    output: barmap=temp(local('dts/hg38/pitunpair/barmap.csv'))
+        emb=rules.coembedd_pitunpair.output,
+        ann=rules.download_pitunpair.output.annot,
+    output: temp(local('dts/hg38/pitunpair/barmap.csv'))
     shell:
         """
         Rscript workflow/scripts/dts/pitunpair/paircells.R \
-        {input.cca} \
-        {input.annot} \
-        {output.barmap}
+        {input.emb} \
+        {input.ann} \
+        {output}
         """
 
 
@@ -66,7 +68,7 @@ rule callpeaks_pitunpair:
     input:
         img='workflow/envs/gretabench.sif',
         frags=rules.download_pitunpair.output.frags,
-        annot=rules.paircells_pitunpair.output.barmap,
+        annot=rules.paircells_pitunpair.output,
     output: peaks=temp(local('dts/hg38/pitunpair/peaks.h5ad')),
     resources: mem_mb=32000
     shell:
@@ -86,7 +88,7 @@ rule annotate_pitunpair:
     input:
         peaks=rules.callpeaks_pitunpair.output.peaks,
         gex=rules.download_pitunpair.output.gex,
-        barmap=rules.paircells_pitunpair.output.barmap,
+        barmap=rules.paircells_pitunpair.output,
         gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         out='dts/hg38/pitunpair/annotated.h5mu'

@@ -22,10 +22,10 @@ rule plt_fake:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        knn='anl/pair/pitu.all.fake_knn.csv',
-        ctp='anl/pair/pitu.all.fake_prp.csv',
-        cor='anl/pair/pitu.all.fake_cor.csv',
-        ocf='anl/pair/pitu.all.pvsf.csv',
+        knn='anl/pair/hg38.pitu.all.fake_knn.csv',
+        ctp='anl/pair/hg38.pitu.all.fake_prp.csv',
+        cor='anl/pair/hg38.pitu.all.fake_cor.csv',
+        ocf='anl/pair/hg38.pitu.all.pvsf.csv',
     output: 'plt/pair/fake.pdf'
     shell:
         """

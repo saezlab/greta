@@ -17,11 +17,8 @@ path_barmap = args['path_barmap']
 path_output = args['path_output']
 
 # Read
-mdata = mu.read('dts/pitupair/annotated.h5mu')
-barmap = pd.read_csv('dts/fakepitupair/barmap.csv')
-
-# Format RNA barmap
-barmap.loc[:, 'RNA'] = ['smpl_' + b.replace('-1', '') for b in barmap['RNA']]
+mdata = mu.read(path_mdata)
+barmap = pd.read_csv(path_barmap)
 
 # Make sure intersection of all
 inter = set(barmap['RNA']) & set(barmap['ATAC']) & set(mdata.obs_names)

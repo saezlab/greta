@@ -7,8 +7,8 @@ rule topo_mult:
     input:
         lambda w: make_combs_rules(w=w, rule_name='grn_run')
     output:
-        stats='anl/topo/{dat}.{case}.stats_mult.csv',
-        sims='anl/topo/{dat}.{case}.sims_mult.csv',
+        stats='anl/topo/{org}.{dat}.{case}.stats_mult.csv',
+        sims='anl/topo/{org}.{dat}.{case}.sims_mult.csv',
     resources:
         mem_mb=128000
     shell:
@@ -25,7 +25,7 @@ rule topo_fvsd:
     input:
         stats=rules.topo_mult.output.stats,
         sims=rules.topo_mult.output.sims,
-    output: 'anl/topo/{dat}.{case}.fvsd.csv',
+    output: 'anl/topo/{org}.{dat}.{case}.fvsd.csv',
     shell:
         """
         python workflow/scripts/anl/topo/fvsd.py {input.sims} {input.stats} {output}
@@ -36,7 +36,7 @@ rule topo_inter:
     threads: 1
     input:
         lambda w: make_combs_rules(w=w, mthds=mthds, baselines=baselines, rule_name='grn_run')
-    output: 'anl/topo/{dat}.{case}.inter.csv',
+    output: 'anl/topo/{org}.{dat}.{case}.inter.csv',
     params: min_prop=config['topo_min_prop']
     shell:
         """

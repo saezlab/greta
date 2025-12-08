@@ -7,7 +7,7 @@ rule mdl_o_pearson:
         mdata=rules.extract_case.output.mdata,
         tf=rules.gen_tfs_lambert.output,
         proms=rules.cre_promoters.output,
-    output: out='dts/{dat}/cases/{case}/runs/o_pearson.o_pearson.o_pearson.o_pearson.mdl.csv'
+    output: out='dts/{org}/{dat}/cases/{case}/runs/o_pearson.o_pearson.o_pearson.o_pearson.mdl.csv'
     params:
         mode=config['methods']['pearson']['mode'],
         thr_r2=config['methods']['pearson']['thr_r2'],
@@ -32,7 +32,7 @@ rule mdl_o_spearman:
         mdata=rules.extract_case.output.mdata,
         tf=rules.gen_tfs_lambert.output,
         proms=rules.cre_promoters.output,
-    output: out='dts/{dat}/cases/{case}/runs/o_spearman.o_spearman.o_spearman.o_spearman.mdl.csv'
+    output: out='dts/{org}/{dat}/cases/{case}/runs/o_spearman.o_spearman.o_spearman.o_spearman.mdl.csv'
     params:
         mode=config['methods']['spearman']['mode'],
         thr_r2=config['methods']['spearman']['thr_r2'],

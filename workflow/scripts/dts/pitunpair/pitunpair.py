@@ -34,6 +34,8 @@ barmap.index.name = None
 rna = sc.read_10x_h5(path_expr, genome="GRCh38")
 del rna.obs
 rna.var.index.name = None
+rna.obs_names = ['smpl_' + i.split('-')[0] for i in rna.obs_names]
+rna = rna[~rna.obs_names.duplicated()].copy()
 
 # Filter RNA data based on barmap
 rna = rna[barmap['RNA'].values, :]

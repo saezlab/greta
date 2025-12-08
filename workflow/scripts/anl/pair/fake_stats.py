@@ -24,7 +24,7 @@ mdata = mu.read(args.mdata_path)
 barmap = pd.read_csv(args.barmap_path)
 
 # Format RNA barmap
-barmap.loc[:, 'RNA'] = ['smpl_' + b.replace('-1', '') for b in barmap['RNA']]
+#barmap.loc[:, 'RNA'] = ['smpl_' + b.replace('-1', '') for b in barmap['RNA']]
 
 # Make sure intersection of all
 inter = np.intersect1d(np.intersect1d(barmap['ATAC'], barmap['RNA']), mdata.obs_names)

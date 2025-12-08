@@ -17,23 +17,25 @@ rule index_frags_fakepair:
 
 
 rule coem_fakepair:
-    threads: 32
-    singularity: 'workflow/envs/figr.sif'
+    threads: 4
+    conda: '../../envs/glue.yaml'
     input:
         gex=lambda w: map_rules(rule_prefix='download', w_name='{dname}pair'.format(dname=w.dname), out='gex'),
-        peaks=lambda w: map_rules('callpeaks', w_name='{dname}pair'.format(dname=w.dname), out='peaks'),
-        frags=rules.index_frags_fakepair.output.frags,
-        tbis=rules.index_frags_fakepair.output.tbis,
-    output:
-        cca=temp(local('dts/hg38/fake{dname}pair/cca.rds'))
-    resources: mem_mb=128000
+        acc=lambda w: map_rules('callpeaks', w_name='{dname}pair'.format(dname=w.dname), out='peaks'),
+        gid=rules.gen_gid_ensmbl.output.hg38,
+        ann=lambda w: map_rules(rule_prefix='download', w_name='{dname}pair'.format(dname=w.dname), out='annot'),
+    output: temp(local('dts/hg38/fake{dname}pair/X_glue.csv'))
+    resources:
+        partition='gpu-single',
+        slurm='gres=gpu:1'
     shell:
         """
-        Rscript workflow/scripts/dts/fakepair/coembedd.R \
+        python workflow/scripts/dts/fakepair/coembed.py \
         {input.gex} \
-        {input.peaks} \
-        {input.frags} \
-        {output.cca}
+        {input.acc} \
+        {input.gid} \
+        {input.ann} \
+        {output}
         """
 
 
@@ -41,15 +43,15 @@ rule pair_fakepair:
     threads: 1
     singularity: 'workflow/envs/figr.sif'
     input:
-        cca=rules.coem_fakepair.output.cca,
+        emd=rules.coem_fakepair.output,
         annot=lambda w: map_rules(rule_prefix='download', w_name='{dname}pair'.format(dname=w.dname), out='annot'),
-    output: barmap=temp(local('dts/hg38/fake{dname}pair/barmap.csv'))
+    output: temp(local('dts/hg38/fake{dname}pair/barmap.csv'))
     shell:
         """
         Rscript workflow/scripts/dts/fakepair/paircells.R \
-        {input.cca} \
+        {input.emd} \
         {input.annot} \
-        {output.barmap}
+        {output}
         """
 
 localrules: annotate_fakepitupair
@@ -58,7 +60,7 @@ rule annotate_fakepitupair:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.annotate_pitupair.output.out,
-        barmap='dts/fakepitupair/barmap.csv',
+        barmap='dts/hg38/fakepitupair/barmap.csv',
     output:
         out='dts/hg38/fakepitupair/annotated.h5mu'
     shell:

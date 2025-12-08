@@ -8,34 +8,40 @@ optmatch::setMaxProblemSize(size = Inf)
 
 # Parse args
 args <- commandArgs(trailingOnly = F)
-path_cca <- args[6]
-path_ctypes <- args[7]
-path_barMap_out <- args[8]
-
+path_inp <- args[6]
+path_ann <- args[7]
+path_out <- args[8]
 
 # Load Data
-CCA_PCs <- readRDS(path_cca)
-isATAC <- grepl("^smpl_",rownames(CCA_PCs))
-ATAC_PCs <- CCA_PCs[isATAC,]
-RNA_PCs <- CCA_PCs[!isATAC,]
+x <- read.csv(path_inp)
+x <- x[!duplicated(x[[1]]), ]
+rownames(x) <- x[[1]]
+x <- as.matrix(x[ , -1])
+x_glue_rna <- x[grepl("^rna_", rownames(x)), ]
+x_glue_atac <- x[grepl("^atac_", rownames(x)), ]
 
 # Pair with FigR
 pairing <- pairCells(
-    ATAC = ATAC_PCs,
-    RNA = RNA_PCs,
+    ATAC = x_glue_atac,
+    RNA = x_glue_rna,
+    min_subgraph_size = 100,
     keepUnique = TRUE
 )
 
 # Filter paired object
 pairing <- pairing[order(pairing$dist, decreasing = FALSE), ]
-pairing <- pairing[!duplicated(pairing$ATAC),]
+pairing <- pairing[!duplicated(pairing$ATAC) & !duplicated(pairing$RNA) ,]
 
 # Merge ctype info
-ctypes <- read.csv(path_ctypes)
-pairing <- merge(pairing, ctypes, by.x='RNA', by.y='X')
+ann <- read.csv(path_ann, row.names=1)
+ann$X <- paste0("rna_", sapply(strsplit(as.character(ann$X), "-"), `[`, 1))
+ann <- ann[!duplicated(ann[[1]]), ]
+pairing <- merge(pairing, ann, by.x='RNA', by.y='X')
 pairing['batch'] <- 'smpl'
 pairing <- pairing[, c('ATAC', 'RNA', 'batch', 'celltype', 'dist')]
+pairing$RNA <- gsub("rna_", "smpl_", as.character(pairing$RNA))
+pairing$ATAC <- gsub("atac_", "smpl_", as.character(pairing$ATAC))
 rownames(pairing) <- pairing$ATAC
 
 # Write
-write.csv(pairing, path_barMap_out, row.names = FALSE)
+write.csv(pairing, path_out, row.names = FALSE)
