@@ -265,5 +265,15 @@ mdl <- figR.d %>%
     rename(source=Motif, target=DORC, score=Score) %>%
     arrange(source, target)
 
+# Merge with p2g
+mdl <- mdl %>%
+    inner_join(
+        cisCorr.filt %>% select(Gene, cre = PeakRanges),
+        by = c("target" = "Gene"),
+        relationship = "many-to-many"
+    ) %>%
+    select(source, cre, target, score, pval) %>%
+    mutate(cre=sub(":", "-", cre, fixed = TRUE))
+
 # Write
 write.csv(x = mdl, file = path_out, row.names=FALSE)
