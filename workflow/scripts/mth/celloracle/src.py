@@ -247,9 +247,13 @@ if __name__ == '__main__':
     n_targets = grn.groupby(['source']).size().reset_index(name='counts')
     n_targets = n_targets[n_targets['counts'] > 5]
     grn = grn[grn['source'].isin(n_targets['source'])]
-    
+
+    # Add cres
+    bgrn = pd.merge(p2g, tfb).rename(columns={'tf': 'source', 'gene': 'target'})[['source', 'cre', 'target']]
+    grn = pd.merge(bgrn, grn, how='inner')
+
     # Write
     grn.to_csv(path_out, index=False)
-    
+
     print('Done')
     os._exit(0)  # Add this else it gets stuck
