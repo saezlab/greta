@@ -49,4 +49,5 @@ df = pd.DataFrame(df, columns=['source', 'target', 'score']); \
 df['pval'] = 0.01; \
 df['score'] = df['score'].astype(float); \
 df = df[df['score'].abs() > float(sys.argv[3])]; \
-df.to_csv(sys.argv[4], index=False)" $output_d/net_nweight.tsv.gz $output_d/binlinking.tsv.gz $thr_score $out_path
+df.to_csv(sys.argv[4], index=False)" $output_d/net_nweight.tsv.gz $output_d/binlinking.tsv.gz $thr_score $out_path.tmp && \
+python workflow/scripts/mth/dictys/add_cres.py $p2g_path $tfb_path $out_path.tmp $out_path
