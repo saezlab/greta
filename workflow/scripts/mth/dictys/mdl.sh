@@ -8,6 +8,7 @@ while [[ "$#" -gt 0 ]]; do
         --pre_path) pre_path="$2"; shift ;;
         --p2g_path) p2g_path="$2"; shift ;;
         --tfb_path) tfb_path="$2"; shift ;;
+        --mdl_path) mdl_path="$2"; shift ;;
         --annot) annot="$2"; shift ;;
         --distance) distance="$2"; shift ;;
         --n_p2g_links) n_p2g_links="$2"; shift ;;
@@ -22,7 +23,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [ $(wc -l < $p2g_path) -eq 1 ] || [ $(wc -l < $tfb_path) -eq 1 ] || [ $(basename $pre_path | grep -q '^granie'; echo $?) -eq 0 ]; then
-    echo "source,target,score,pval" > "$out_path"
+    echo "source,cre,target,score,pval" > "$out_path"
     mkdir -p "$output_d"
     exit 0
 fi && \
@@ -49,5 +50,5 @@ df = pd.DataFrame(df, columns=['source', 'target', 'score']); \
 df['pval'] = 0.01; \
 df['score'] = df['score'].astype(float); \
 df = df[df['score'].abs() > float(sys.argv[3])]; \
-df.to_csv(sys.argv[4], index=False)" $output_d/net_nweight.tsv.gz $output_d/binlinking.tsv.gz $thr_score $out_path.tmp && \
-python workflow/scripts/mth/dictys/add_cres.py $p2g_path $tfb_path $out_path.tmp $out_path
+df.to_csv(sys.argv[4], index=False)" $output_d/net_nweight.tsv.gz $output_d/binlinking.tsv.gz $thr_score $mdl_path && \
+python workflow/scripts/mth/dictys/add_cres.py -p $p2g_path -t $tfb_path -m $mdl_path -o $out_path

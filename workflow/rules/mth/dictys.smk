@@ -175,6 +175,7 @@ rule mdl_o_dictys:
         path_pre=$path_tmp/pre.h5mu
         path_p2g=$path_tmp/p2g.csv
         path_tfb=$path_tmp/tfb.csv
+        path_mdl=$path_tmp/mdl.csv
         set +e
         timeout $(({resources.runtime}-20))m bash -c \
         "mkdir -p $path_tmp && \
@@ -203,6 +204,7 @@ rule mdl_o_dictys:
         --pre_path $path_pre \
         --p2g_path $path_p2g \
         --tfb_path $path_tfb \
+        --mdl_path $path_mdl \
         --annot {input.ann} \
         --distance {params.ext} \
         --n_p2g_links {params.n_p2g_links} \
@@ -213,7 +215,7 @@ rule mdl_o_dictys:
         --out_path {output.out}"
         rm -rf $path_tmp
         if [ $? -eq 124 ]; then
-            awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}
+            awk 'BEGIN {{ print "source,cre,target,score,pval" }}' > {output.out}
             rm -rf $path_tmp
         fi
         """
