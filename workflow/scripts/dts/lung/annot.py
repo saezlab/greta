@@ -26,7 +26,7 @@ obs = obs[obs['celltype'].isin(ncells.index)]
 adata = []
 for sample in samples:
     print(sample)
-    path_sample = f'dts/lung/{sample}_matrix.h5'
+    path_sample = f'dts/hg38/lung/{sample}_matrix.h5'
     rna = sc.read_10x_h5(path_sample)
     rna.obs.index = [f'{sample}_' + i.replace('-1', '') for i in rna.obs.index]
     # Basic filter

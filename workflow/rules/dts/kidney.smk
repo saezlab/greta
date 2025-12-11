@@ -6,7 +6,7 @@ rule download_kidney:
     input: 'workflow/envs/figr.sif'
     output:
         h5se=temp(local('dts/hg38/kidney/data.h5se')),
-        frag=temp(local(expand('dts/kidney/{sample}.frags.tsv.gz', sample=config['dts']['kidney']['samples'])))
+        frag=temp(local(expand('dts/hg38/kidney/{sample}.frags.tsv.gz', sample=config['dts']['kidney']['samples'])))
     params:
         url_h5se=config['dts']['kidney']['url']['h5se'],
         url_tar=config['dts']['kidney']['url']['tar'],

@@ -6,18 +6,18 @@ rule download_fragments_heart:
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
-        tar=temp(local('dts/hg38/heart/fragments.tar')),
         frag=expand('dts/hg38/heart/{sample}.frags.tsv.gz', sample=config['dts']['heart']['samples']),
         tbis=expand('dts/hg38/heart/{sample}.frags.tsv.gz.tbi', sample=config['dts']['heart']['samples'])
     params:
         tar=config['dts']['heart']['url']['tar']
     shell:
         """
-        data_path=$(dirname "{output.tar}")
-        wget --no-verbose '{params.tar}' -O '{output.tar}'
-        tar -xvf '{output.tar}' -C "$data_path"
+        data_path=$(dirname "{output.frag[0]}")
+        path_tar=$data_path/fragments.tar
+        wget --no-verbose '{params.tar}' -O $path_tar
+        tar -xvf $path_tar -C "$data_path"
         rm "$data_path"/*.tbi
-        rm {output.tar}
+        rm $path_tar
         for file in $data_path/*_atac_fragments.tsv.gz; do
             base_name=$(basename "$file" _atac_fragments.tsv.gz);
             new_file="${{base_name#*_}}.frags.tsv.gz";
