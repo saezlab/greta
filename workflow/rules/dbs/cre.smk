@@ -1,7 +1,7 @@
 localrules: cre_blacklist, cre_blacklist_mm10, cre_encode, cre_encode_mm10, cre_gwascatalogue, cre_phastcons, cre_phastcons_mm10, cre_promoters,cre_promoters_mm10, cre_zhang21
 
 
-rule cre_blacklist:
+rule cre_blacklist_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -13,7 +13,20 @@ rule cre_blacklist:
         wget --no-verbose -O - "{params.url}" | zcat > {output}
         """
 
-rule cre_blacklist_mm10:
+rule cre_blacklist:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/cre/blacklist/blacklist.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_cre_blacklist.bed.gz?download=1' \
+        -O {output}
+        """
+
+rule cre_blacklist_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -27,7 +40,20 @@ rule cre_blacklist_mm10:
         wget --no-verbose {params.url} -O - | zcat > {output}
         """
 
-rule cre_encode:
+rule cre_blacklist_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/cre/blacklist/blacklist.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_cre_blacklist.bed.gz?download=1' \
+        -O {output}
+        """
+
+rule cre_encode_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -41,7 +67,20 @@ rule cre_encode:
         rm {output}.tmp
         """
 
-rule cre_encode_mm10:
+rule cre_encode:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/cre/encode/encode.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_cre_encode.bed.gz?download=1' \
+        -O {output}
+        """
+
+rule cre_encode_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -55,7 +94,20 @@ rule cre_encode_mm10:
         rm {output}.tmp
         """
 
-rule cre_gwascatalogue:
+rule cre_encode_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/cre/encode/encode.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_cre_encode.bed.gz?download=1' \
+        -O {output}
+        """
+
+rule cre_gwascatalogue_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -70,8 +122,20 @@ rule cre_gwascatalogue:
         mv {output}.tmp {output}
         """
 
+rule cre_gwascatalogue:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/cre/gwascatalogue/gwascatalogue.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_cre_gwascatalogue.bed.gz?download=1' \
+        -O {output}
+        """
 
-rule cre_phastcons:
+rule cre_phastcons_old:
     threads: 1
     singularity: 'workflow/envs/pando.sif'
     input: 'workflow/envs/pando.sif'
@@ -90,7 +154,20 @@ rule cre_phastcons:
         rm {output}.tmp
         """
 
-rule cre_phastcons_mm10:
+rule cre_phastcons:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/cre/phastcons/phastcons.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_cre_phastcons.bed.gz?download=1' \
+        -O {output}
+        """
+
+rule cre_phastcons_mm10_old:
     threads: 1
     singularity: "workflow/envs/pando.sif"
     input:
@@ -103,19 +180,29 @@ rule cre_phastcons_mm10:
         """
         # UCSC phastCons elements table for mm10
         wget --no-verbose '{params.url}' -O {output}.txt.gz && \
-
         # Convert to BED:
         # take columns 2-4 (chrom, start, end)
         zcat {output}.txt.gz \
           | awk 'BEGIN{{OFS="\t"}}{{print $2, $3, $4}}' > {output}.tmp && \
-
         sort -k1,1 -k2,2n {output}.tmp \
           | bedtools merge -i - > {output} && \
-
         rm {output}.tmp {output}.txt.gz
         """
 
-rule cre_promoters:
+rule cre_phastcons_mm10:
+    threads: 1
+    singularity: "workflow/envs/gretabench.sif"
+    input: "workflow/envs/gretabench.sif"
+    output: "dbs/mm10/cre/phastcons/phastcons.bed.gz"
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_cre_phastcons.bed.gz?download=1' \
+        -O {output}
+        """
+
+rule cre_promoters_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -129,7 +216,20 @@ rule cre_promoters:
         {output}
         """
 
-rule cre_promoters_mm10:
+rule cre_promoters:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/cre/promoters/promoters.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_cre_promoters.bed.gz?download=1' \
+        -O {output}
+        """
+
+rule cre_promoters_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -143,8 +243,20 @@ rule cre_promoters_mm10:
         {output}
         """
 
+rule cre_promoters_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/cre/promoters/promoters.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_cre_promoters.bed.gz?download=1' \
+        -O {output}
+        """
 
-rule cre_zhang21:
+rule cre_zhang21_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -156,4 +268,17 @@ rule cre_zhang21:
         wget --no-verbose '{params.url}' -O {output}.tmp && \
         zcat {output}.tmp | bedtools merge > {output} && \
         rm {output}.tmp
+        """
+
+rule cre_zhang21:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/cre/zhang21/zhang21.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_cre_zhang21.bed.gz?download=1' \
+        -O {output}
         """

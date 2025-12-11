@@ -2,6 +2,7 @@ rule mdl_o_inferelator:
     threads: 16
     singularity: 'workflow/envs/inferelator.sif'
     input:
+        img='workflow/envs/inferelator.sif',
         mdata=rules.extract_case.output.mdata,
         gid=rules.gen_gid_ensmbl.output,
         fa=rules.gen_genome_inferelator.output.fa,

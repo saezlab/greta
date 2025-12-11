@@ -2,6 +2,7 @@ rule mdl_o_hummus:
     threads: 16
     singularity: 'workflow/envs/hummus.sif'
     input:
+        img='workflow/envs/hummus.sif',
         mdata=rules.extract_case.output.mdata,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_hummus.o_hummus.o_hummus.o_hummus.mdl.csv'

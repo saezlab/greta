@@ -1,7 +1,7 @@
 localrules: tfm_hpa, tfm_tfmdb
 
 
-rule tfm_hpa:
+rule tfm_hpa_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.gen_tfs_lambert.output
@@ -17,8 +17,20 @@ rule tfm_hpa:
         -o {output}
         """
 
+rule tfm_hpa:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: workflow/envs/gretabench.sif
+    output: 'dbs/hg38/tfm/hpa/hpa.tsv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_tfm_hpa.tsv.gz?download=1' \
+        -O {output}
+        """
 
-rule tfm_tfmdb:
+rule tfm_tfmdb_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -39,4 +51,17 @@ rule tfm_tfmdb:
         df = df.rename(columns={{'Gene Name': 'gene'}}); \
         df = df.sort_values(['gene', 'ctype']); \
         df.to_csv(sys.argv[1], sep='\\t', index=False, header=None)" {output}
+        """
+
+rule tfm_tfmdb:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/tfm/tfmdb/tfmdb.tsv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_tfm_tfmdb.tsv.gz?download=1' \
+        -O {output}
         """

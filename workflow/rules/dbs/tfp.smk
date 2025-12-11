@@ -13,8 +13,7 @@ rule download_intact:
         rm {output}.zip
         """
 
-
-rule tfp_intact:
+rule tfp_intact_old:
     input:
         inc=rules.download_intact.output,
         lmb=rules.gen_tfs_lambert.output,
@@ -26,6 +25,18 @@ rule tfp_intact:
         {input.inc} {input.lmb} {input.pid} {output}
         """
 
+rule tfp_intact:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/tfp/intact/intact.tsv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_tfp_intact.tsv.gz?download=1' \
+        -O {output}
+        """
 
 rule tfp_europmc_raw:
     threads: 1
@@ -45,8 +56,7 @@ rule tfp_europmc_raw:
         {input} {params.min_chars} {params.min_n} {output.single} {output.pairs}
         """
 
-
-rule tfp_europmc:
+rule tfp_europmc_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
@@ -60,4 +70,17 @@ rule tfp_europmc:
         """
         python workflow/scripts/dbs/tfp/europmc.py \
         {input.single} {input.pairs} {params.pval_thr} {params.min_odds} {output}
+        """
+
+rule tfp_europmc:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/tfp/europmc/europmc.tsv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_tfp_europmc.tsv.gz?download=1' \
+        -O {output}
         """

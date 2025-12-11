@@ -2,6 +2,7 @@ rule mdl_o_directnet:
     threads: 1
     singularity: 'workflow/envs/directnet.sif'
     input:
+        img='workflow/envs/directnet.sif',
         mdata=rules.extract_case.output.mdata,
         ann=rules.gen_ann_pando.output,
         tss=rules.gen_tss_directnet.output,

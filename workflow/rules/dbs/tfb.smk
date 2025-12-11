@@ -15,7 +15,6 @@ checkpoint tfb_m_chipatlas:
         python workflow/scripts/dbs/tfb/chipatlas_meta.py {output} {input}
         """
 
-
 rule tfb_t_chipatlas:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -35,15 +34,13 @@ rule tfb_t_chipatlas:
         fi
         """
 
-
 def chipatlas_aggr(wildcards):
     import pandas as pd
     meta_file = checkpoints.tfb_m_chipatlas.get().output[0]
     tfs = sorted(pd.read_csv(meta_file, sep='\t', header=None)[1].unique())
     return expand("dbs/hg38/tfb/chipatlas/raw/{chipatlas_tf}.bed", chipatlas_tf=tfs)
 
-
-rule tfb_chipatlas:
+rule tfb_chipatlas_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: chipatlas_aggr
@@ -52,6 +49,19 @@ rule tfb_chipatlas:
         """
         cat dbs/hg38/tfb/chipatlas/raw/*.bed |
         python workflow/scripts/dbs/tfb/aggregate.py > {output}
+        """
+
+rule tfb_chipatlas:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/tfb/chipatlas/chipatlas.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_tfb_chipatlas.bed.gz?download=1' \
+        -O {output}
         """
 
 checkpoint tfb_m_chipatlas_mm10:
@@ -66,7 +76,6 @@ checkpoint tfb_m_chipatlas_mm10:
         wget --no-verbose '{params.mta}' -O {output} && \
         python workflow/scripts/dbs/tfb/chipatlas_meta.py {output} {input}
         """
-
 
 rule tfb_t_chipatlas_mm10:
     threads: 1
@@ -87,15 +96,13 @@ rule tfb_t_chipatlas_mm10:
         fi
         """
 
-
 def chipatlas_aggr_mm10(wildcards):
     import pandas as pd
     meta_file = checkpoints.tfb_m_chipatlas_mm10.get().output[0]
     tfs = sorted(pd.read_csv(meta_file, sep='\t', header=None)[1].unique())
     return expand("dbs/mm10/tfb/chipatlas/raw/{chipatlas_tf}.bed", chipatlas_tf=tfs)
 
-
-rule tfb_chipatlas_mm10:
+rule tfb_chipatlas_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: chipatlas_aggr_mm10
@@ -104,6 +111,19 @@ rule tfb_chipatlas_mm10:
         """
         cat dbs/mm10/tfb/chipatlas/raw/*.bed |
         python workflow/scripts/dbs/tfb/aggregate.py > {output}
+        """
+
+rule tfb_chipatlas_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/tfb/chipatlas/chipatlas.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_tfb_chipatlas.bed.gz?download=1' \
+        -O {output}
         """
 
 rule tfb_m_remap2022:
@@ -118,7 +138,6 @@ rule tfb_m_remap2022:
         wget --no-verbose '{params.mta}' -O - | \
         python workflow/scripts/dbs/tfb/remap2022_meta.py {input} {output}
         """
-
 
 checkpoint tfb_r_remap2022:
     threads: 1
@@ -143,14 +162,12 @@ checkpoint tfb_r_remap2022:
         rm {output}.tmp
         """
 
-
 def remap2022_aggr(wildcards):
     remap2022_dir = checkpoints.tfb_r_remap2022.get().output[0]
     tfs = glob_wildcards(remap2022_dir + "/{tf}.bed").tf
     return expand(remap2022_dir + '/{tf}.bed', tf=tfs)
 
-
-rule tfb_remap2022:
+rule tfb_remap2022_old:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: remap2022_aggr
@@ -162,6 +179,19 @@ rule tfb_remap2022:
         cat dbs/hg38/tfb/remap2022/raw/*.bed.tmp |
         python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
         rm dbs/hg38/tfb/remap2022/raw/*.bed.tmp
+        """
+
+rule tfb_remap2022:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/tfb/remap2022/remap2022.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_tfb_remap2022.bed.gz?download=1' \
+        -O {output}
         """
 
 rule tfb_m_remap2022_mm10:
@@ -176,7 +206,6 @@ rule tfb_m_remap2022_mm10:
         wget --no-verbose '{params.mta}' -O - | \
         python workflow/scripts/dbs/tfb/remap2022_meta_mm10.py {input} {output}
         """
-
 
 checkpoint tfb_r_remap2022_mm10:
     threads: 1
@@ -201,14 +230,12 @@ checkpoint tfb_r_remap2022_mm10:
         rm {output}.tmp
         """
 
-
 def remap2022_aggr_mm10(wildcards):
     remap2022_dir = checkpoints.tfb_r_remap2022_mm10.get().output[0]
     tfs = glob_wildcards(remap2022_dir + "/{tf}.bed").tf
     return expand(remap2022_dir + '/{tf}.bed', tf=tfs)
 
-
-rule tfb_remap2022_mm10:
+rule tfb_remap2022_mm10_old:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: remap2022_aggr_mm10
@@ -220,6 +247,19 @@ rule tfb_remap2022_mm10:
         cat dbs/mm10/tfb/remap2022/raw/*.bed.tmp |
         python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
         rm dbs/mm10/tfb/remap2022/raw/*.bed.tmp
+        """
+
+rule tfb_remap2022_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/tfb/remap2022/remap2022.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_tfb_remap2022.bed.gz?download=1' \
+        -O {output}
         """
 
 checkpoint tfb_r_unibind:
@@ -242,15 +282,13 @@ checkpoint tfb_r_unibind:
         rm {output}.tmp
         """
 
-
 def unibind_aggr(w):
     checkpoints.tfb_r_unibind.get()
     unibind_dir = checkpoints.tfb_r_unibind.get().output[0]
     tfs = glob_wildcards(unibind_dir + "/{tf}.bed")
     return expand("dbs/hg38/tfb/unibind/raw/{tf}.bed", tf=tfs.tf)
 
-
-rule tfb_unibind:
+rule tfb_unibind_old:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: unibind_aggr
@@ -262,6 +300,19 @@ rule tfb_unibind:
         cat dbs/hg38/tfb/unibind/raw/*.bed.tmp |
         python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
         rm dbs/hg38/tfb/unibind/raw/*.bed.tmp
+        """
+
+rule tfb_unibind:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/tfb/unibind/unibind.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_tfb_unibind.bed.gz?download=1' \
+        -O {output}
         """
 
 checkpoint tfb_r_unibind_mm10:
@@ -284,15 +335,13 @@ checkpoint tfb_r_unibind_mm10:
         rm {output}.tmp
         """
 
-
 def unibind_aggr_mm10(w):
     checkpoints.tfb_r_unibind_mm10.get()
     unibind_dir = checkpoints.tfb_r_unibind_mm10.get().output[0]
     tfs = glob_wildcards(unibind_dir + "/{tf}.bed")
     return expand("dbs/mm10/tfb/unibind/raw/{tf}.bed", tf=tfs.tf)
 
-
-rule tfb_unibind_mm10:
+rule tfb_unibind_mm10_old:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: unibind_aggr_mm10
@@ -304,4 +353,17 @@ rule tfb_unibind_mm10:
         cat dbs/mm10/tfb/unibind/raw/*.bed.tmp |
         python workflow/scripts/dbs/tfb/aggregate.py > {output} && \
         rm dbs/mm10/tfb/unibind/raw/*.bed.tmp
+        """
+
+rule tfb_unibind_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/tfb/unibind/unibind.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_tfb_unibind.bed.gz?download=1' \
+        -O {output}
         """

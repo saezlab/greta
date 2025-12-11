@@ -1,7 +1,7 @@
 localrules: gst_collectri, gst_collectri_mm10, gst_dorothea, gst_dorothea_mm10, gst_pthw, gst_prog, gst_prog_mm10
 
 
-rule gst_collectri:
+rule gst_collectri_old:
     threads: 1
     input: rules.gen_tfs_lambert.output
     output: 'dbs/hg38/gst/collectri.csv'
@@ -15,7 +15,20 @@ rule gst_collectri:
         net = net[net['source'].isin(tfs)]
         net.to_csv(output[0], index=False)
 
-rule gst_collectri_mm10:
+rule gst_collectri:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/gst/collectri.csv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_gst_collectri.csv.gz?download=1' \
+        -O {output}
+        """
+
+rule gst_collectri_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -24,7 +37,20 @@ rule gst_collectri_mm10:
     shell:
         "wget --no-check-certificate --no-verbose '{params.url}' -O {output}"
 
-rule gst_dorothea:
+rule gst_collectri_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/collectri.csv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_gst_collectri.csv.gz?download=1' \
+        -O {output}
+        """
+
+rule gst_dorothea_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.gen_tfs_lambert.output
@@ -48,7 +74,20 @@ rule gst_dorothea:
         write.csv(x=df, file="{output}", quote=FALSE, row.names=FALSE);'
         """
 
-rule gst_dorothea_mm10:
+rule gst_dorothea:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/gst/dorothea.csv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_gst_dorothea.csv.gz?download=1' \
+        -O {output}
+        """
+
+rule gst_dorothea_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -57,7 +96,20 @@ rule gst_dorothea_mm10:
     shell:
         "wget --no-check-certificate --no-verbose '{params.url}' -O {output}"
 
-rule gst_pthw:
+rule gst_dorothea_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/dorothea.csv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_gst_dorothea.csv.gz?download=1' \
+        -O {output}
+        """
+
+rule gst_pthw_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -73,7 +125,20 @@ rule gst_pthw:
         rm {output}.tmp
         """
 
-rule gst_pthw_mm10:
+rule gst_pthw:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/gst/{db}.csv.gz',
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_gst_{wildcards.db}.csv.gz?download=1' \
+        -O {output}
+        """
+
+rule gst_pthw_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -91,7 +156,20 @@ rule gst_pthw_mm10:
         rm {output}.tmp
         """
 
-rule gst_prog:
+rule gst_pthw_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/{db}.csv.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_gst_{wildcards.db}.csv.gz?download=1' \
+        -O {output}
+        """
+
+rule gst_prog_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -114,7 +192,21 @@ rule gst_prog:
         prg.to_csv('{output}', index=False)" && \
         rm {output}.rda
         """
-rule gst_prog_mm10:
+
+rule gst_prog:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/gst/prog.csv.gz',
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_gst_prog.csv.gz?download=1' \
+        -O {output}
+        """
+
+rule gst_prog_mm10_old:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
@@ -136,4 +228,17 @@ rule gst_prog_mm10:
         prg = prg.sort_values(['source', 'target', 'weight']); \
         prg.to_csv('{output}', index=False)" && \
         rm {output}.rda
+        """
+
+rule gst_prog_mm10:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/mm10/gst/prog.csv.gz',
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/mm10_gst_prog.csv.gz?download=1' \
+        -O {output}
         """

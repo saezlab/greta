@@ -134,7 +134,7 @@ rule gen_genome_dictys_mm10:
         """
 
 rule gen_genome_scenicplus:
-    threads: 4
+    threads: 1
     singularity: 'workflow/envs/scenicplus.sif'
     input: 'workflow/envs/scenicplus.sif'
     output:
@@ -143,16 +143,28 @@ rule gen_genome_scenicplus:
         tss='dbs/hg38/gen/genome/scenicplus/tss.tsv',
     shell:
         """
-        scenicplus prepare_data download_genome_annotations \
-        --species hsapiens \
-        --genome_annotation_out_fname {output.ann} \
-        --chromsizes_out_fname {output.csz}
-        pycistopic tss get_tss \
-        --output {output.tss} \
-        --name "hsapiens_gene_ensembl" \
-        --to-chrom-source ucsc \
-        --ucsc hg38 \
-        --no-cache
+        #scenicplus prepare_data download_genome_annotations \
+        #--species hsapiens \
+        #--genome_annotation_out_fname {output.ann} \
+        #--chromsizes_out_fname {output.csz}
+        #pycistopic tss get_tss \
+        #--output {output.tss} \
+        #--name "hsapiens_gene_ensembl" \
+        #--to-chrom-source ucsc \
+        #--ucsc hg38 \
+        #--no-cache
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/scenicplus_annot.tsv.gz?download=1' \
+        -O {output.ann}.gz
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/scenicplus_chromsizes.tsv.gz?download=1' \
+        -O {output.csz}.gz
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/scenicplus_tss.csv.gz?download=1' \
+        -O {output.tss}.gz
+        gzip -d {output.ann}.gz
+        gzip -d {output.csz}.gz
+        gzip -d {output.tss}.gz
         """
 
 rule gen_genome_scenicplus_mm10:

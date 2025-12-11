@@ -7,7 +7,8 @@ rule dwn_image:
     resources:
         mem_mb=8000,
         runtime=config['max_mins_per_step'],
+    params: id=config['zenodo_id']
     shell:
         """
-        wget "https://zenodo.org/records/15058660/files/{wildcards.name_img}.sif?download=1" -O {output}
+        wget "https://zenodo.org/records/{params.id}/files/{wildcards.name_img}.sif?download=1" -O {output}
         """

@@ -3,16 +3,16 @@ localrules: download_sim
 rule download_sim:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input:
-        img='workflow/envs/gretabench.sif',
+    input: 'workflow/envs/gretabench.sif',
     output: directory('dbs/sim')
-    params:
-        url=config['url_sim'],
+    params: id=config['zenodo_id']
     shell:
         """
         path_sim=$(dirname {output})
         path_tmp=$path_sim/tmp.zip
-        wget --no-verbose "{params.url}" -O $path_tmp
+        wget --no-verbose \
+        "https://zenodo.org/records/{params.id}/files/simulated_data.zip?download=1" \
+        -O $path_tmp
         python -c "import zipfile, os; os.makedirs('$path_sim', exist_ok=True); [zipfile.ZipFile('$path_tmp').extract(m, '$path_sim') for m in zipfile.ZipFile('$path_tmp').namelist()]"
         mv $path_sim/simulations {output}
         rm -rf $path_tmp

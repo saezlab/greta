@@ -2,6 +2,7 @@ rule mdl_o_scmtni:
     threads: 16
     singularity: 'workflow/envs/scmtni.sif'
     input:
+        img='workflow/envs/scmtni.sif',
         mdata=rules.extract_case.output.mdata,
         chainfiles=rules.download_liftover_chains.output.hg38ToHg19,
         motifs=rules.gen_motif_scmtni.output.motifs_dir,

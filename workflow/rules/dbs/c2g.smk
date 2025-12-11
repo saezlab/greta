@@ -1,5 +1,4 @@
-localrules: c2g_m_eqtlcatalogue, c2g_s_eqtlcatalogue
-
+localrules: c2g_m_eqtlcatalogue, c2g_s_eqtlcatalogue, c2g_eqtlcatalogue
 
 
 checkpoint c2g_m_eqtlcatalogue:
@@ -12,7 +11,6 @@ checkpoint c2g_m_eqtlcatalogue:
         wget --no-verbose '{params.url}' -O - | \
         awk -F'\t' '$9 == "ge" {{ print $1, $2, $6 }}' OFS='\t' > {output}
         """
-        
 
 checkpoint c2g_s_eqtlcatalogue:
     threads: 1
@@ -35,7 +33,6 @@ checkpoint c2g_s_eqtlcatalogue:
         {output}
         """
 
-
 def eqtlcat_smpls(wildcards):
     meta_path = checkpoints.c2g_m_eqtlcatalogue.get().output[0]
     grps = []
@@ -46,7 +43,6 @@ def eqtlcat_smpls(wildcards):
             grps.append(grp)
             tisss.append(tiss)
     return expand('dbs/hg38/c2g/eqtlcatalogue/raw/{eqtl_smpl_grp}.{eqtl_tiss}.bed', zip, eqtl_smpl_grp=grps, eqtl_tiss=tisss)
-
 
 checkpoint c2g_g_eqtlcatalogue:
     threads: 32
@@ -64,15 +60,12 @@ checkpoint c2g_g_eqtlcatalogue:
         {output}
         """
 
-
 def eqtlcat_genes(wildcards):
     gdir = checkpoints.c2g_g_eqtlcatalogue.get().output[0]
     genes = glob_wildcards(os.path.join(gdir, "{gene}.bed")).gene
     return expand(os.path.join(gdir, "{gene}.bed"), gene=genes)
 
-
-
-rule c2g_eqtlcatalogue:
+rule c2g_eqtlcatalogue_old:
     threads: 32
     singularity: 'workflow/envs/gretabench.sif'
     input: eqtlcat_genes
@@ -83,4 +76,17 @@ rule c2g_eqtlcatalogue:
         'sort -k1,1 -k2,2n "{{}}" | bedtools merge -i - -c 4,5 -o distinct,distinct > "{{}}.tmp"' && \
         cat dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed.tmp > {output} && \
         rm dbs/hg38/c2g/eqtlcatalogue/raw/genes/*.bed.tmp
+        """
+
+rule c2g_eqtlcatalogue:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: 'workflow/envs/gretabench.sif'
+    output: 'dbs/hg38/c2g/eqtlcatalogue/eqtlcatalogue.bed.gz'
+    params: id=config['zenodo_id']
+    shell:
+        """
+        wget --no-check-certificate --no-verbose \
+        'https://zenodo.org/records/{params.id}/files/hg38_c2g_eqtlcatalogue.bed.gz?download=1' \
+        -O {output}
         """
