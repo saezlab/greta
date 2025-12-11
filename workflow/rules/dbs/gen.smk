@@ -141,6 +141,7 @@ rule gen_genome_scenicplus:
         ann='dbs/hg38/gen/genome/scenicplus/annotation.tsv',
         csz='dbs/hg38/gen/genome/scenicplus/chromsizes.tsv',
         tss='dbs/hg38/gen/genome/scenicplus/tss.tsv',
+    params: id=config['zenodo_id']
     shell:
         """
         #scenicplus prepare_data download_genome_annotations \

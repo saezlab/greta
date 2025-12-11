@@ -35,7 +35,7 @@ rule topo_fvsd:
 rule topo_inter:
     threads: 1
     input:
-        lambda w: make_combs_rules(w=w, mthds=mthds, baselines=baselines, rule_name='grn_run')
+        lambda w: make_combs_rules(w=w, rule_name='grn_run')
     output: 'anl/topo/{org}.{dat}.{case}.inter.csv',
     params: min_prop=config['topo_min_prop']
     shell:

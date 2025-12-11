@@ -15,4 +15,4 @@ response = requests.get(url)
 bed = pd.read_csv(StringIO(response.text), sep='\t', header=None)[[0, 1, 2, 3]].dropna().sort_values([0, 1, 2])
 
 # Save file
-bed.to_csv(out_path, sep="\t", index=False, header=False)
+bed.to_csv(out_path, sep="\t", index=False, header=False, compression="gzip")

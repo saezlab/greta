@@ -5,8 +5,8 @@ rule tss_gocoef:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        tss_a='dbs/hg38/gen/tss/{mth_a}.bed',
-        tss_b='dbs/hg38/gen/tss/{mth_b}.bed',
+        tss_a='dbs/hg38/gen/tss/{mth_a}.bed.gz',
+        tss_b='dbs/hg38/gen/tss/{mth_b}.bed.gz',
     output: temp(local('anl/tss/ocoef/{mth_a}.{mth_b}.csv'))
     resources:
         mem_mb=2000,
@@ -19,8 +19,8 @@ rule tss_gocoef:
         -o {output}
         """
 
-
-tss_paths = [f'anl/tss/ocoef/{mth_a}.{mth_b}.csv' for mth_a, mth_b in combinations([x for x in mthds], 2)]
+tss_mthds = ['celloracle', 'crema', 'dictys', 'directnet', 'figr', 'granie', 'hummus', 'inferelator', 'pando', 'scdori', 'scenicplus', 'scmtni']
+tss_paths = [f'anl/tss/ocoef/{mth_a}.{mth_b}.csv' for mth_a, mth_b in combinations([x for x in tss_mthds], 2)]
 rule tss_aggr:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -40,8 +40,8 @@ rule tss_dist:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         c=rules.tss_aggr.output,
-        g='anl/topo/{dat}.{case}.stats_mult.csv'
-    output: "anl/tss/{dat}.{case}.dist.csv"
+        g='anl/topo/{org}.{dat}.{case}.stats_mult.csv'
+    output: "anl/tss/{org}.{dat}.{case}.dist.csv"
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],

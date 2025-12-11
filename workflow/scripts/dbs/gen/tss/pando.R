@@ -22,4 +22,4 @@ bed <- data.frame(Chromosome = chr_names, Start = start_pos, End = end_pos, Name
 bed <- dplyr::arrange(bed, Chromosome, Start, End)
 
 # Write
-write.table(x = bed, file = path_out, sep = '\t', row.names = FALSE, quote = FALSE, col.names = FALSE)
+write.table(x = bed, file = gzfile(path_out), sep = '\t', row.names = FALSE, quote = FALSE, col.names = FALSE)

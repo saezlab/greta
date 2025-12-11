@@ -14,7 +14,7 @@ end_pos <- end(TSSg)
 gene_names <- mcols(TSSg)$gene_name
 
 # Transform it into a data frame
-data <- data.frame(Chromosome = chr, Start = start_pos - 1, End = end_pos - 1, Name = gene_names)
+data <- data.frame(Chromosome = chr, Start = start_pos, End = end_pos, Name = gene_names)
 
 # Write
-write.table(x = data, file = path_out, sep = '\t', row.names = FALSE, quote = FALSE, col.names = FALSE)
+write.table(x = data, file = gzfile(path_out), sep = '\t', row.names = FALSE, quote = FALSE, col.names = FALSE)

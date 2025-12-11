@@ -20,7 +20,7 @@ rule tfm_hpa_old:
 rule tfm_hpa:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: workflow/envs/gretabench.sif
+    input: 'workflow/envs/gretabench.sif'
     output: 'dbs/hg38/tfm/hpa/hpa.tsv.gz'
     params: id=config['zenodo_id']
     shell:

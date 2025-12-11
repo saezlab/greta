@@ -41,10 +41,10 @@ def make_combs_rules(w, rule_name):
             rule_outputs.append(
                 format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
             )
-    elif w.dat in stab_datasets:
-        for mth in mthds:
-            if config['methods'][mth]['modular']:
-                rule_outputs.append(format_rule(out, w=w, pre=mth))
+    #elif w.dat in stab_datasets:
+    #    for mth in mthds:
+    #        if config['methods'][mth]['modular']:
+    #            rule_outputs.append(format_rule(out, w=w, pre=mth))
     for mth in mthds:
         rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
     return rule_outputs
@@ -70,7 +70,7 @@ orgms = [k for k in config['dbs'] if k != 'ont']
 mthds = [m for m in list(config['methods'].keys())]
 is_modular = [config['methods'][m]['modular'] for m in mthds]
 m_mthds = [m for m, is_m in zip(mthds, is_modular) if is_m]
-
+baselines = ['collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'scgpt', 'random']
 
 datasets = list(config['dts'].keys())
 stab_datasets = config['stab_datasets']

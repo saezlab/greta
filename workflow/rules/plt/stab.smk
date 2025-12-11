@@ -23,11 +23,11 @@ rule plt_sims:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        sims='anl/topo/pitupair.all.sims_mult.csv',
-        stats='anl/topo/pitupair.all.stats_mult.csv',
+        sims='anl/topo/hg38.pitupair.all.sims_mult.csv',
+        stats='anl/topo/hg38.pitupair.all.stats_mult.csv',
         tss=rules.tss_aggr.output,
-        dst='anl/tss/pitupair.all.dist.csv',
-        net='anl/topo/pitupair.all.inter.csv',
+        dst='anl/tss/hg38.pitupair.all.dist.csv',
+        net='anl/topo/hg38.pitupair.all.inter.csv',
     output: 'plt/stab/sims.pdf'
     shell:
         """
@@ -40,7 +40,7 @@ rule plt_AREG:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        sims='anl/topo/pitupair.all.sims_mult.csv',
+        sims='anl/topo/hg38.pitupair.all.sims_mult.csv',
         gann='dbs/hg38/gen/ann/dictys/ann.bed',
     output: 'plt/stab/links_AREG.pdf'
     params:

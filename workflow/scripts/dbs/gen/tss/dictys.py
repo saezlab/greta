@@ -14,8 +14,8 @@ bed = pd.read_csv(input_path, sep='\t', header=None)
 # Process columns
 bed.columns = ['Chromosome', 'Start', 'End', 'Name', 'score', 'strand']
 bed = bed[['Chromosome', 'Start', 'End', 'Name']]
-bed['Start'] = bed['Start'] - 1
-bed['End'] = bed['End'] - 1
+bed['Start'] = bed['Start']
+bed['End'] = bed['End']
 
 # Save file
-bed.to_csv(out_path, sep="\t", index=False, header=None)
+bed.to_csv(out_path, sep="\t", index=False, header=None, compression="gzip")

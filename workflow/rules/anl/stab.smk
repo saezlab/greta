@@ -1,6 +1,6 @@
 localrules: run_stab, stab_ovsd, stab_cor, stab_unsmthds
 
-n_seeds = 10
+n_seeds = 3
 
 def get_stab_paths(config, mthds, datasets):
     ns = [1024, 2048, 4096, 8192, 16384]

@@ -1,11 +1,10 @@
-# Initiate arguments
-args <- commandArgs(trailingOnly = F)
-path_out <- args[6]
-
-
 library(HuMMuS)
 library(EnsDb.Hsapiens.v86)
 library(dplyr)
+
+# Initiate arguments
+args <- commandArgs(trailingOnly = F)
+path_out <- args[6]
 
 # Extract TSS
 gene_range = get_genome_annotations(EnsDb.Hsapiens.v86)
@@ -25,8 +24,5 @@ data <- data %>% filter(gene.type == "protein_coding")
 data <- data %>%
   dplyr::select(Chromosome, Start, End, Name)
 
-
-write.csv(x = data, file = path_out)
-
-
-
+# Write
+write.table(x = data, file = gzfile(path_out), sep = '\t', row.names = FALSE, quote = FALSE, col.names = FALSE)
