@@ -83,9 +83,9 @@ methods:
         ext: 500000
     scgpt:
         modular: False
-        batch_size: 16
+        batch_size: 8
         device: 'cuda:0'
-        n_hvg: 16384
+        n_hvg: 8192
         min_score: 0.9
     scmtni:
         modular: False

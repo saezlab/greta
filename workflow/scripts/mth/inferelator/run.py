@@ -10,6 +10,10 @@ path_tmp = sys.argv[1]
 ncores = int(sys.argv[2])
 path_out = sys.argv[3]
 
+if os.path.isfile(os.path.join(path_tmp, 'empty.txt')):
+    grn = pd.DataFrame(columns=['source', 'cre', 'target', 'score'])
+    grn.to_csv(path_out, index=False)
+    os._exit(0)
 
 # Run
 if __name__ == '__main__':
@@ -25,7 +29,7 @@ worker.set_file_paths(
 worker.set_network_data_flags(use_no_gold_standard=True)
 worker.set_file_properties(metadata_handler='nonbranching')
 path_adata = os.path.join(path_tmp, 'adatas')
-for file in glob.glob(os.path.join(path_adata, '*.h5ad'))[:4]:
+for file in glob.glob(os.path.join(path_adata, '*.h5ad')):
     name = os.path.basename(file).replace('.h5ad', '')
     task = worker.create_task(
         task_name=name,

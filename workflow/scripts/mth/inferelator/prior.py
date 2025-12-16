@@ -8,19 +8,24 @@ from inferelator_prior.motifs.motif_scan import MotifScan
 from inferelator_prior.processor.prior import MotifScorer
 from tqdm import tqdm
 import pyranges as pr
+import scanpy as sc
 
 
 # Read
 path_data = sys.argv[1]
-path_fa = sys.argv[2]
-path_gtf = sys.argv[3]
-path_motif = sys.argv[4]
-window_size = int(sys.argv[5])
-path_out = sys.argv[6]
+path_hvg = sys.argv[2]
+path_fa = sys.argv[3]
+path_gtf = sys.argv[4]
+path_motif = sys.argv[5]
+window_size = int(sys.argv[6])
+path_out = sys.argv[7]
 
 # Read
 mdata = mu.read(path_data)
-genes = mdata.mod['rna'].var_names.astype('U')
+# Select HVG (else it takes days to finish)
+hvg = pd.read_csv(path_hvg, header=None)[0].values.ravel()
+rna = mdata.mod['rna'][:, hvg].copy()
+genes = rna.var_names.astype('U')
 peaks = mdata.mod['atac'].var_names.astype('U')
 
 # Format
@@ -30,9 +35,10 @@ peaks = peaks[['Chromosome', 'Start', 'End']]
 
 # Write
 celltypes = np.unique(mdata.obs['celltype'].values)
+rna = rna[:, hvg].copy()
 path_adatas = os.path.join(path_out, 'adatas')
 for i, celltype in enumerate(celltypes):
-    tmp = mdata.mod['rna'][mdata.obs['celltype'] == celltype]
+    tmp = rna[mdata.obs['celltype'] == celltype]
     os.makedirs(path_adatas, exist_ok=True)
     celltype = celltype.strip().replace(' ', '_')
     tmp.write(os.path.join(path_adatas, f'task_{celltype}.h5ad'))
@@ -81,6 +87,10 @@ pr_genes = genes[[nfm.GTF_CHROMOSOME, nfm.SEQ_START, nfm.SEQ_STOP, 'gene_name']]
 pr_genes = pr.PyRanges(pr_genes)
 pr_peaks = pr.PyRanges(peaks)
 p2g = pr_genes.intersect(pr_peaks).df.rename(columns={'gene_name': 'gene'})
+if p2g.empty:
+    with open(os.path.join(path_out, 'empty.txt'), 'w') as f:
+        f.write('p2g is empty\n')
+        os._exit(0)
 p2g['cre'] = p2g['Chromosome'].astype(str) + '-' + p2g['Start'].astype(str) + '-' + p2g['End'].astype(str)
 p2g['score'] = 1
 p2g = p2g[['cre', 'gene', 'score']]
