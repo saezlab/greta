@@ -77,17 +77,16 @@ library(presto)
 markers_all <- presto:::wilcoxauc.Seurat(X = muo_data, group_by = 'celltype', assay = 'data', seurat_assay = 'SCT')
 markers_all <- markers_all[which(markers_all$auc > 0.5), , drop = FALSE]
 markers <- data.frame(gene = markers_all$feature, group = markers_all$group)
-c <- unique(markers$group)
+groups <- unique(markers$group)
 marker_list <- list()
-for (i in 1:length(c)) {
-  marker1<- markers_all[markers$group == c[i],]
+for (i in 1:length(groups)) {
+  marker1<- markers_all[markers$group == groups[i],]
   marker_list[[i]] <- as.character(marker1$feature[marker1$auc > 0.5])
 }
 markers_groups <- unique(unlist(marker_list))
 markers_groups <- lapply(markers_groups, function(x) strsplit(x,"[.]")[[1]][1])
 markers_groups <- unique(unlist(markers_groups))
-focused_markers <- data.frame(gene=unique(markers$gene)) #markers[which(markers$group %in% groups), , drop = FALSE]
-focused_markers$group <- 'A'
+groups <- levels(Idents(muo_data))
 da_peaks_list <- list()
 for (i in 1:length(groups)) {
   print(i)
@@ -108,11 +107,11 @@ muo_data <- Run_DIRECT_NET(muo_data, k_neigh = 50, atacbinary=TRUE, max_overlap=
                            genome.info=genome.info, focus_markers=markers_groups, window = ext)
 direct.net_result <- Misc(muo_data, slot = 'direct.net')
 direct.net_result <- as.data.frame(do.call(cbind,direct.net_result))
-CREs_Gene <- generate_CRE_Gene_links(direct.net_result, markers = focused_markers)
+CREs_Gene <- generate_CRE_Gene_links(direct.net_result, markers = markers)
 Focused_CREs <- generate_CRE(L_G_record = CREs_Gene$distal, P_L_G_record = CREs_Gene$promoter, da_peaks_list=da_peaks_list)
-L_TF_record <- generate_peak_TF_links(peaks_bed_list = Focused_CREs$distal, species="Homo sapiens", genome = BSgenome.Hsapiens.UCSC.hg38, markers = focused_markers)
-P_L_TF_record <- generate_peak_TF_links(peaks_bed_list = Focused_CREs$promoter, species="Homo sapiens", genome = BSgenome.Hsapiens.UCSC.hg38, markers = focused_markers)
-network_links <- generate_links_for_Cytoscape(L_G_record = Focused_CREs$L_G_record, L_TF_record, P_L_G_record = Focused_CREs$P_L_G_record, P_L_TF_record, groups=c('A'))
+L_TF_record <- generate_peak_TF_links(peaks_bed_list = Focused_CREs$distal, species="Homo sapiens", genome = BSgenome.Hsapiens.UCSC.hg38, markers = markers)
+P_L_TF_record <- generate_peak_TF_links(peaks_bed_list = Focused_CREs$promoter, species="Homo sapiens", genome = BSgenome.Hsapiens.UCSC.hg38, markers = markers)
+network_links <- generate_links_for_Cytoscape(L_G_record = Focused_CREs$L_G_record, L_TF_record, P_L_G_record = Focused_CREs$P_L_G_record, P_L_TF_record, groups=groups)
 
 # Format GRN       
 grn <- network_links[, c('TF', 'Gene')]

@@ -13,5 +13,5 @@ with gzip.open(input_gtf, 'rt') as f:
                 tss += f'{chrom}\t{start}\t{start}\t{gene}\n'
             elif strand == '-':
                 tss += f'{chrom}\t{end}\t{end}\t{gene}\n'
-with gzip.open(output_bed, 'rt') as f:
+with gzip.open(output_bed, 'wt') as f:
     f.write(tss)
