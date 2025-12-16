@@ -153,9 +153,6 @@ rule mdl_o_dictys:
         motif=lambda w: rules.gen_motif_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_motif_dictys.output,
         genome=lambda w: rules.gen_genome_dictys_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_genome_dictys.output,
     output:
-        pre=temp(local('dts/{org}/{dat}/cases/{case}/runs/o_dictys.pre.h5mu')),
-        p2g=temp(local('dts/{org}/{dat}/cases/{case}/runs/o_dictys.o_dictys.p2g.csv')),
-        tfb=temp(local('dts/{org}/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.tfb.csv')),
         out='dts/{org}/{dat}/cases/{case}/runs/o_dictys.o_dictys.o_dictys.o_dictys.mdl.csv',
     params:
         ext=config['methods']['dictys']['ext'] // 2,
