@@ -19,7 +19,7 @@ def compute_pval(tf_a, tf_b, grn):
         d = len(total - (trg_a | trg_b))
         s, p = ss.fisher_exact([[a, b], [c, d]], alternative='greater')
     else:
-        s, p = 0, np.nan
+        s, p = 0., 1.
     return s, p
 
 
