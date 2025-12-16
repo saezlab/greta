@@ -13,7 +13,7 @@ rule mdl_o_crema:
         site_extension=config['methods']['crema']['site_extension'],
         thr_fdr=config['methods']['crema']['thr_fdr'],
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'] * 2,
     shell:
         """
@@ -32,7 +32,7 @@ rule mdl_o_crema:
         Rscript workflow/scripts/mth/crema/src.R \
         {input.mdata} \
         $path_tmp/inserts.tsv.gz \
-        {input.tfs} \ 
+        {input.tfs} \
         {params.ext} \
         {params.site_extension} \
         {params.thr_fdr} \

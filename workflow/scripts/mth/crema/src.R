@@ -46,6 +46,7 @@ rna <- SCTransform(rna)
 frag_inserts_object <- CreateFragmentObject(path=path_inserts, cells=colnames(rna))
 
 # Format gene coords
+print('Format gene coords')
 genebody_coords <- keepStandardChromosomes(
     ensembldb::genes(EnsDb.Hsapiens.v86),
     species="Homo_sapiens",
@@ -66,12 +67,14 @@ genebody_coords_list <- c(
 )
 genebody_coords <- unlist(as(genebody_coords_list, "GRangesList"))
 genebody_coords <- sort(genebody_coords)
+genebody_coords <- trim(genebody_coords)
 
 # Load TF motifs
 motifs <- readRDS(path_motifdb)
 motif_tfs <- unique(sapply(strsplit(names(motifs), split = "_"), function(x){x[1]}))
 
 # Filter
+print('Filter assay')
 exp_mtx <- GetAssayData(rna, assay = "RNA", slot = "counts")
 exp_mtx <- filter_exp_mtx_genes(exp_mtx, gene_names_remove_pattern = "^MT-", proportion_cells_detected = 1e-3)
 TFs_select <- intersect(motif_tfs, row.names(exp_mtx))
@@ -84,18 +87,29 @@ exp_mtx <- GetAssayData(rna, assay = "SCT", slot = "counts")
 TFs_select <- intersect(TFs_select, row.names(exp_mtx))
 genes_select <- intersect(genes_select, row.names(exp_mtx))
 exp_mtx <- as.matrix(exp_mtx[union(TFs_select, genes_select), ])
+genebody_coords <- genebody_coords[genebody_coords$gene_name %in% genes_select, ]
 
 # Open windows
+print('Open windows')
+genebody_coords <- genebody_coords[genebody_coords$gene_name %in% genes_select]
+tss <- ifelse(
+    test = (GenomicRanges::strand(genebody_coords) == "+" | GenomicRanges::strand(genebody_coords) == "*"),
+    yes = GenomicRanges::start(genebody_coords), no = GenomicRanges::end(genebody_coords)
+)
+msk <- !is.na(tss)
+genebody_coords <- genebody_coords[msk, ]
+
 crema_regions <- select_proximal_regions(
     genes = genes_select, 
     gene_body_gr = genebody_coords, 
     window_up = ext,
-    window_down = ext
+    window_down = ext,
 )
 crema_regions_str <- lapply(crema_regions, Signac::GRangesToString)
 
 # Run for all genes
 test_genes <- rownames(exp_mtx)
+print('Running across genes')
 grn <- pblapply(test_genes, function(test_gene) {
     res_gene <- ATAC_weighted_tf_model_highres(
         test_gene,
@@ -111,11 +125,12 @@ grn <- pblapply(test_genes, function(test_gene) {
         site_extension = site_extension
     )
     if (is.data.frame(res_gene)) {
-        res_gene <- res_gene[p.adjust(res_gene$`Pr(>|t|)`, method = "fdr") < thr_fdr, ]
         res_gene$target <- test_gene
+        res_gene <- res_gene[p.adjust(res_gene$`Pr(>|t|)`, method = "fdr") < thr_fdr, ]
     }
     res_gene
 })
+print('Merging')
 grn <- do.call(rbind, grn[!is.na(grn)])
 grn <- grn[, c('Estimate', 'Pr(>|t|)', 'target')]
 colnames(grn) <- c('score', 'pval', 'target')
