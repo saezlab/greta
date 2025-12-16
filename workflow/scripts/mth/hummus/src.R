@@ -103,7 +103,7 @@ hummus <- bipartite_tfs2peaks(
 print("Open GRNBoost2 layer")
 rna_network <- read.csv(rna_network_path, sep = ",")
 rna_network <- rna_network[, c("TF", "target", "importance")]
-rna_network <- rna_network[1:grn_number_edges, ]
+rna_network <- rna_network[1:min(grn_number_edges, nrow(rna_network)), ]
 # Add external networks
 hummus <- add_network(
     hummus,
