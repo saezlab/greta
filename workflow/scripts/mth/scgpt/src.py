@@ -250,7 +250,7 @@ def tokenize_adata(
 # ---------------------------
 # scGPT model
 # ---------------------------
-def build_model_from_cfg(vocab: GeneVocab, cfg: Dict, device: str):
+def build_model_from_cfg(_model_dir: Path, vocab: GeneVocab, cfg: Dict, device: str):
     embsize   = cfg["embsize"]
     nhead     = cfg["nheads"]
     d_hid     = cfg["d_hid"]
@@ -286,15 +286,13 @@ def build_model_from_cfg(vocab: GeneVocab, cfg: Dict, device: str):
     try:
         from scgpt.model import load_pretrained
         load_pretrained(model, state_dict=torch.load(
-            Path(os.environ.get("SCGPT_MODEL_DIR", "./save/scGPT_human")) / "best_model.pt",
-            map_location="cpu",
+            Path(os.environ.get("SCGPT_MODEL_DIR", "./save/scGPT_human")) / "best_model.pt", map_location="cpu",
         ))
         loaded = True
     except Exception:
         pass
     if not loaded:
-        sd = torch.load(Path(os.environ.get("SCGPT_MODEL_DIR", "./save/scGPT_human")) / "best_model.pt",
-                        map_location="cpu")
+        sd = torch.load(_model_dir / "best_model.pt", map_location="cpu")
         model.load_state_dict(sd, strict=False)
 
     model.eval().to(device)
@@ -585,7 +583,7 @@ def run(args: argparse.Namespace) -> None:
     _model_dir, vocab, cfg, _state = load_checkpoint_and_vocab(args.model_dir)
 
     # Build model
-    model = build_model_from_cfg(vocab, cfg, device=args.device)
+    model = build_model_from_cfg(_model_dir, vocab, cfg, device=args.device)
 
     # Load & preprocess data
     data_path = Path(args.data)

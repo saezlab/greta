@@ -5,6 +5,7 @@ rule mdl_o_scgpt:
         mdata=rules.extract_case.output.mdata,
         tf=rules.gen_tfs_lambert.output,
         cg=rules.cre_promoters.output,
+        model=rules.gen_genome_scgpt.output
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_scgpt.o_scgpt.o_scgpt.o_scgpt.mdl.csv'
     params:
@@ -12,11 +13,10 @@ rule mdl_o_scgpt:
         device=config['methods']['scgpt']['device'],
         n_hvg=config['methods']['scgpt']['n_hvg'],
         min_score=config['methods']['scgpt']['min_score'],
-        model_dir='dbs/hg38/gen/genome/scgpt',
     resources:
         partition='gpu-single',
         mem_mb=restart_mem,
-        runtime=config['max_mins_per_step'] * 2,
+        runtime=1440,
         slurm="gres=gpu:1",
     shell:
         """
@@ -31,6 +31,6 @@ rule mdl_o_scgpt:
         --min_score {params.min_score} \
         --min_top_q 5 \
         --verbose \
-        --model_dir {params.model_dir} \
+        --model_dir {input.model} \
         --out {output.out}
         """

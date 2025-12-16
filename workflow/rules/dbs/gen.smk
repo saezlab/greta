@@ -228,6 +228,16 @@ rule gen_genome_inferelator:
         """
 
 
+rule gen_genome_scgpt:
+    threads: 1
+    conda: '../../envs/scgpt.yaml'
+    output: directory('dbs/hg38/gen/genome/scgpt')
+    shell:
+        """
+        python workflow/scripts/dbs/gen/genome/scgpt.py {output}
+        """
+
+
 rule gen_motif_crema:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -417,7 +427,8 @@ rule gen_motif_inferelator:
         meme='dbs/hg38/gen/motif/inferelator/cisbp.meme'
     shell:
         """
-        wget --no-verbose 'https://cisbp.ccbr.utoronto.ca/tmp/Homo_sapiens_2025_08_22_6:07_pm.zip' -O {output.zip}
+        # Extract a new link per day from here: https://github.com/flatironinstitute/inferelator-prior/blob/release/Tutorial.md
+        wget --no-verbose 'https://cisbp.ccbr.utoronto.ca/tmp/Homo_sapiens_2025_12_12_12:39_am.zip' -O {output.zip}
         unzip {output.zip} -d {output.dir}
         python -m inferelator_prior.pwm_to_meme --motif {output.dir}/pwms_all_motifs/* --info {output.dir}/TF_Information_all_motifs_plus.txt --out {output.meme}
         """

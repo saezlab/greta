@@ -31,3 +31,4 @@ dependencies:
       - torchtext==0.16.2
       - scgpt
       - gdown
+      - numpy==1.26.4
