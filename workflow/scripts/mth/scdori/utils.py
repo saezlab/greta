@@ -18,7 +18,7 @@ def aggregate_grn_max_val(grn_act, grn_rep, rna_metacell):
     stacked = np.stack([grn_rep, grn_act], axis=0)  # shape (2, num_topics, num_tfs, num_genes)
 
     # Collapse along first two dims
-    stacked = stacked.reshape(-1, 300, 4000) 
+    stacked = stacked.reshape(-1, stacked.shape[2], stacked.shape[3])
 
     # Find indices of max abs value along 0th axis
     idx = np.abs(stacked).argmax(axis=0)
