@@ -1,13 +1,13 @@
 rule dbs_stats:
     threads: 1
     input:
-        paths_prt=expand('dbs/hg38/prt/{prt}/meta.csv', prt=config['dbs']['hg38']['prt'].keys()),
-        paths_gst=expand('dbs/hg38/gst/{gst}.csv', gst=config['dbs']['hg38']['gst'].keys()),
-        paths_tfm=expand('dbs/hg38/tfm/{tfm}/{tfm}.tsv', tfm=config['dbs']['hg38']['tfm'].keys()),
-        paths_tfp=expand('dbs/hg38/tfp/{tfp}/{tfp}.tsv', tfp=config['dbs']['hg38']['tfp'].keys()),
-        paths_tfb=expand('dbs/hg38/tfb/{tfb}/{tfb}.bed', tfb=config['dbs']['hg38']['tfb'].keys()),
-        paths_cre=expand('dbs/hg38/cre/{cre}/{cre}.bed', cre=config['dbs']['hg38']['cre'].keys()),
-        paths_c2g=expand('dbs/hg38/c2g/{c2g}/{c2g}.bed', c2g=config['dbs']['hg38']['c2g'].keys()),
+        paths_prt=expand('dbs/hg38/prt/{prt}/meta.csv.gz', prt=config['dbs']['hg38']['prt'].keys()),
+        paths_gst=expand('dbs/hg38/gst/{gst}.csv.gz', gst=config['dbs']['hg38']['gst'].keys()),
+        paths_tfm=expand('dbs/hg38/tfm/{tfm}/{tfm}.tsv.gz', tfm=config['dbs']['hg38']['tfm'].keys()),
+        paths_tfp=expand('dbs/hg38/tfp/{tfp}/{tfp}.tsv.gz', tfp=config['dbs']['hg38']['tfp'].keys()),
+        paths_tfb=expand('dbs/hg38/tfb/{tfb}/{tfb}.bed.gz', tfb=config['dbs']['hg38']['tfb'].keys()),
+        paths_cre=expand('dbs/hg38/cre/{cre}/{cre}.bed.gz', cre=config['dbs']['hg38']['cre'].keys()),
+        paths_c2g=expand('dbs/hg38/c2g/{c2g}/{c2g}.bed.gz', c2g=config['dbs']['hg38']['c2g'].keys()),
     output: 'anl/dbs/stats.csv'
     resources:
         mem_mb=32000
@@ -29,11 +29,11 @@ rule dbs_terms:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: 
-        paths_prt=expand('dbs/hg38/prt/{prt}/meta.csv', prt=config['dbs']['hg38']['prt'].keys()),
-        paths_tfm=expand('dbs/hg38/tfm/{tfm}/{tfm}.tsv', tfm=config['dbs']['hg38']['tfm'].keys()),
-        paths_tfb=expand('dbs/hg38/tfb/{tfb}/{tfb}.bed', tfb=config['dbs']['hg38']['tfb'].keys()),
-        paths_cre=expand('dbs/hg38/cre/{cre}/{cre}.bed', cre=config['dbs']['hg38']['cre'].keys()),
-        paths_c2g=expand('dbs/hg38/c2g/{c2g}/{c2g}.bed', c2g=config['dbs']['hg38']['c2g'].keys()),
+        paths_prt=expand('dbs/hg38/prt/{prt}/meta.csv.gz', prt=config['dbs']['hg38']['prt'].keys()),
+        paths_tfm=expand('dbs/hg38/tfm/{tfm}/{tfm}.tsv.gz', tfm=config['dbs']['hg38']['tfm'].keys()),
+        paths_tfb=expand('dbs/hg38/tfb/{tfb}/{tfb}.bed.gz', tfb=config['dbs']['hg38']['tfb'].keys()),
+        paths_cre=expand('dbs/hg38/cre/{cre}/{cre}.bed.gz', cre=config['dbs']['hg38']['cre'].keys()),
+        paths_c2g=expand('dbs/hg38/c2g/{c2g}/{c2g}.bed.gz', c2g=config['dbs']['hg38']['c2g'].keys()),
     output: 'anl/dbs/terms.csv'
     resources:
         mem_mb=64000
