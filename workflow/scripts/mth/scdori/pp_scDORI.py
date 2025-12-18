@@ -94,6 +94,19 @@ def wrapper_scdori_preprocessing(ppConfig):
                     tf_names_all.append(tf_name)
     tf_names_all = sorted(list(set(tf_names_all)))
 
+
+    ## Checking if number of HVGs and TFs to select is not more than available
+    if ppConfig.num_genes > data_rna.shape[1]:
+        logger.warning(
+            f"Requested number of genes ({ppConfig.num_genes}) is more than available genes ({data_rna.shape[1]}). Setting to maximum available."
+        )
+        ppConfig.num_genes = data_rna.shape[1]
+    if ppConfig.num_tfs > len(tf_names_all):
+        logger.warning(
+            f"Requested number of TFs ({ppConfig.num_tfs}) is more than available TFs ({len(tf_names_all)}). Setting to maximum available."
+        )
+        ppConfig.num_tfs = len(tf_names_all)
+
     data_rna, final_genes, final_tfs = compute_hvgs_and_tfs(
         data_rna=data_rna,
         tf_names=tf_names_all,
@@ -103,7 +116,10 @@ def wrapper_scdori_preprocessing(ppConfig):
         num_tfs=ppConfig.num_tfs,
         min_cells=ppConfig.min_cells_per_gene,
     )
-
+    ## Check whether any barcode lacks expression of all TFs
+    barcode_mask = data_rna[:,data_rna.var['gene_type'] == 'TF'].X.sum(1) != 0
+    data_rna = data_rna[barcode_mask].copy()
+    data_atac = data_atac[barcode_mask].copy()
     chrom_sizes_path = genome_dir / f"{ppConfig.genome_assembly}.chrom.sizes"
     extended_genes_bed_df = create_extended_gene_bed(
         gtf_df,
@@ -116,25 +132,39 @@ def wrapper_scdori_preprocessing(ppConfig):
     extended_genes_bed_df.to_csv(gene_bed_file, sep="\t", header=False, index=False)
     logger.info(f"Created extended gene bed => {gene_bed_file}")
 
-    # Fragment coordinates are in different format, chr1-start-end and not chr1:start-end, modified script accordingly
-    data_atac.var["chr"] = [x.split("-")[0] for x in data_atac.var.index]
-    data_atac.var["start"] = [
-        int(x.split("-")[1]) for x in data_atac.var.index
-    ]
-    data_atac.var["end"] = [
-        int(x.split("-")[2]) for x in data_atac.var.index
-    ]
-    data_atac.var["peak_name"] = data_atac.var.index
-    all_peaks_bed = out_dir / "peaks_all.bed"
-    data_atac.var[["chr", "start", "end", "peak_name"]].to_csv(
-        all_peaks_bed, sep="\t", header=False, index=False
-    )
+    if ppConfig.species.lower() == "human":
+        # Fragment coordinates are in different format, chr1-start-end and not chr1:start-end, modified script accordingly
+        data_atac.var["chr"] = [x.split("-")[0] for x in data_atac.var.index]
+        data_atac.var["start"] = [
+            int(x.split("-")[1]) for x in data_atac.var.index
+        ]
+        data_atac.var["end"] = [
+            int(x.split("-")[2]) for x in data_atac.var.index
+        ]
+        data_atac.var["peak_name"] = data_atac.var.index
+        all_peaks_bed = out_dir / "peaks_all.bed"
+        data_atac.var[["chr", "start", "end", "peak_name"]].to_csv(
+            all_peaks_bed, sep="\t", header=False, index=False
+        )
+    elif ppConfig.species.lower() == "mouse":
+
+        data_atac.var["chr"] = [x.split(":")[0] for x in data_atac.var.index]
+        data_atac.var["start"] = [
+            int(x.split(":")[1].split("-")[0]) for x in data_atac.var.index
+        ]
+        data_atac.var["end"] = [int(x.split(":")[1].split("-")[1]) for x in data_atac.var.index]
+        data_atac.var["peak_name"] = data_atac.var.index
+        all_peaks_bed = out_dir / "peaks_all.bed"
+        data_atac.var[["chr", "start", "end", "peak_name"]].to_csv(
+            all_peaks_bed, sep="\t", header=False, index=False
+        )
+    else:
+        raise ValueError("Species not recognized. Please use 'human' or 'mouse'.")
 
     intersected_bed = out_dir / "peaks_intersected.bed"
     run_bedtools_intersect(
         a_bed=all_peaks_bed, b_bed=gene_bed_file, out_bed=intersected_bed
     )
-
     peaks_intersected = pd.read_csv(intersected_bed, sep="\t", header=None)
     peaks_intersected.columns = ["chr", "start", "end", "peak_name"]
     windowed_set = set(peaks_intersected["peak_name"])
