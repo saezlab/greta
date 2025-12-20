@@ -58,8 +58,8 @@ scDoRIConfig:
   genes_user: []
   tfs_user: []
   motif_database: "cisbp"
-  num_genes: 4000
-  num_tfs: 300
+  num_genes: 30000
+  num_tfs: 2000
   min_cells_per_gene: 4
 
   ## Genomic window and peaks
