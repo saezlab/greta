@@ -8,7 +8,6 @@ from inferelator_prior.motifs.motif_scan import MotifScan
 from inferelator_prior.processor.prior import MotifScorer
 from tqdm import tqdm
 import pyranges as pr
-import scanpy as sc
 
 
 # Read

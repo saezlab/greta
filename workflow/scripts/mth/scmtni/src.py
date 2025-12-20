@@ -868,7 +868,7 @@ def merge_networks(outdir, output_file):
         consensus_val = max_abs * sign
         consensus.append((tf, cre, target, consensus_val))
         
-    consensus_df = pd.DataFrame(consensus, columns=["source", "CRE", "target", "weight"])
+    consensus_df = pd.DataFrame(consensus, columns=["source", "cre", "target", "score"])
     consensus_df.to_csv(output_file, index=False)
     
     return consensus_df
