@@ -6,7 +6,7 @@ library(motifmatchr)
 library(rhdf5)
 library(EnsDb.Hsapiens.v86)
 library(CREMA)
-library(pbapply)
+library(parallel)
 library(BSgenome.Hsapiens.UCSC.hg38)
 
 
@@ -20,6 +20,7 @@ ext <- as.numeric(args[9])
 site_extension <- as.numeric(args[10])
 thr_fdr <- as.numeric(args[11])
 path_out <- args[12]
+threads <- as.numeric(args[13])
 
 # Read data
 print('Open object')
@@ -110,7 +111,7 @@ crema_regions_str <- lapply(crema_regions, Signac::GRangesToString)
 # Run for all genes
 test_genes <- rownames(exp_mtx)
 print('Running across genes')
-grn <- pblapply(test_genes, function(test_gene) {
+grn <- mclapply(test_genes, function(test_gene) {
     res_gene <- ATAC_weighted_tf_model_highres(
         test_gene,
         TFs = TFs_select,
@@ -122,14 +123,14 @@ grn <- pblapply(test_genes, function(test_gene) {
         genome = BSgenome.Hsapiens.UCSC.hg38,
         return_val = "df",
         regression_method = "ols",
-        site_extension = site_extension
+        site_extension = site_extension,
     )
     if (is.data.frame(res_gene)) {
         res_gene$target <- test_gene
         res_gene <- res_gene[p.adjust(res_gene$`Pr(>|t|)`, method = "fdr") < thr_fdr, ]
     }
     res_gene
-})
+}, mc.cores = threads)
 print('Merging')
 grn <- do.call(rbind, grn[!is.na(grn)])
 grn <- grn[, c('Estimate', 'Pr(>|t|)', 'target')]
