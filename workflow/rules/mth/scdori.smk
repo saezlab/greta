@@ -10,7 +10,7 @@ rule mdl_o_scdori:
         ext=config['methods']['scdori']['ext'] // 2,
     resources:
         partition='gpu-single',
-        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 3,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 4,
         runtime=config['max_mins_per_step'] * 2,
         slurm="gres=gpu:1,gpumem_per_gpu:60GB"
     shell:
