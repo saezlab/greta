@@ -103,25 +103,35 @@ for (i in 1:length(groups)) {
 }
 
 # Run GRN
-muo_data <- Run_DIRECT_NET(muo_data, k_neigh = 50, atacbinary=TRUE, max_overlap=0.5, size_factor_normalize=TRUE,
+k_neigh <- min(table(muo_data@meta.data$celltype)) - 1
+muo_data <- Run_DIRECT_NET(muo_data, k_neigh = k_neigh, atacbinary=TRUE, max_overlap=0.5, size_factor_normalize=TRUE,
                            genome.info=genome.info, focus_markers=markers_groups, window = ext)
 direct.net_result <- Misc(muo_data, slot = 'direct.net')
 direct.net_result <- as.data.frame(do.call(cbind,direct.net_result))
 CREs_Gene <- generate_CRE_Gene_links(direct.net_result, markers = markers)
 Focused_CREs <- generate_CRE(L_G_record = CREs_Gene$distal, P_L_G_record = CREs_Gene$promoter, da_peaks_list=da_peaks_list)
 L_TF_record <- generate_peak_TF_links(peaks_bed_list = Focused_CREs$distal, species="Homo sapiens", genome = BSgenome.Hsapiens.UCSC.hg38, markers = markers)
+if (length(L_TF_record) == 0) {
+    writeLines("source,cre,target,score", path_grn)
+    quit(save = "no", status = 0)
+}
 P_L_TF_record <- generate_peak_TF_links(peaks_bed_list = Focused_CREs$promoter, species="Homo sapiens", genome = BSgenome.Hsapiens.UCSC.hg38, markers = markers)
-network_links <- generate_links_for_Cytoscape(L_G_record = Focused_CREs$L_G_record, L_TF_record, P_L_G_record = Focused_CREs$P_L_G_record, P_L_TF_record, groups=groups)
+msk <- !sapply(P_L_TF_record, is.null)
+network_links <- generate_links_for_Cytoscape(L_G_record = Focused_CREs$L_G_record[msk], L_TF_record[msk], P_L_G_record = Focused_CREs$P_L_G_record[msk], P_L_TF_record[msk], groups=groups[msk])
 
-# Format GRN       
+# Format GRN
 grn <- network_links[, c('TF', 'Gene')]
 colnames(grn) <- c('source', 'gene')
-p2g <- do.call(rbind, unlist(CREs_Gene, recursive = FALSE))
+p2g <- c(Focused_CREs$L_G_record[msk],
+                 Focused_CREs$P_L_G_record[msk])
+p2g <- do.call(rbind, p2g)
+p2g <- p2g[!duplicated(p2g[c("loci", "gene")]), ]
 rownames(p2g) <- NULL
 colnames(p2g) <- c('cre', 'gene')
 grn <- merge(grn, p2g, by = "gene", all = FALSE)[, c('source', 'cre', 'gene')]
 colnames(grn) <- c('source', 'cre', 'target')
 grn$score <- 1
+grn$cre <- gsub("_", "-", grn$cre)
 
 # Write
 write.csv(x = grn, file = path_grn, row.names=FALSE)
