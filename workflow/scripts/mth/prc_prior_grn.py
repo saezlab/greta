@@ -35,9 +35,10 @@ grn = grn[grn['source'].astype('U').isin(genes) & grn['target'].astype('U').isin
 proms = proms[proms.Name.astype('U').isin(genes)]
 
 # Filter by peaks
-proms = proms.overlap(peaks)
-proms.cre = proms.df['Chromosome'].astype(str) + '-' + proms.df['Start'].astype(str) + '-' + proms.df['End'].astype(str)
-proms = proms.df[['cre', 'Name']].rename(columns={'Name': 'target'})
+proms = proms.nearest(peaks)
+proms = proms.df[proms.df['Distance'] == 0]
+proms['cre'] = proms['Chromosome'].astype(str) + '-' + proms['Start_b'].astype(str) + '-' + proms['End_b'].astype(str)
+proms = proms[['cre', 'Name']].rename(columns={'Name': 'target'}).drop_duplicates()
 
 # Merge
 grn = pd.merge(grn, proms, how='inner')[['source', 'cre', 'target', 'weight']]

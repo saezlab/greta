@@ -141,9 +141,10 @@ def load_adata(path: Path, path_proms: Path):
     peaks[['Chromosome', 'Start', 'End']] = peaks['cre'].str.split('-', n=2, expand=True)
     peaks = pr.PyRanges(peaks[['Chromosome', 'Start', 'End']])
     proms = proms[proms.Name.astype('U').isin(genes)]
-    proms = proms.overlap(peaks)
-    proms.cre = proms.df['Chromosome'].astype(str) + '-' + proms.df['Start'].astype(str) + '-' + proms.df['End'].astype(str)
-    proms = proms.df[['cre', 'Name']].rename(columns={'Name': 'target'})
+    proms = proms.nearest(peaks)
+    proms = proms.df[proms.df['Distance'] == 0]
+    proms['cre'] = proms['Chromosome'].astype(str) + '-' + proms['Start_b'].astype(str) + '-' + proms['End_b'].astype(str)
+    proms = proms[['cre', 'Name']].rename(columns={'Name': 'target'}).drop_duplicates()
     rna = mdata.mod["rna"].copy()
     rna.obs = mdata.obs
     return rna, proms

@@ -32,6 +32,7 @@ rule mdl_o_grnboost:
         # Process GRN
         python workflow/scripts/mth/scenic/process_grn.py \
         -g $path_adj \
+        -m {input.mdata} \
         -p {input.proms} \
         -o {output.out}
 
@@ -86,6 +87,7 @@ rule mdl_o_scenic:
         # Step 4: Process GRN
         python workflow/scripts/mth/scenic/process_grn.py \
         -g $path_adj \
+        -m {input.mdata} \
         -p {input.proms} \
         -r $path_reg \
         -o {output.out}

@@ -1,6 +1,7 @@
 import pyranges as pr
 import pandas as pd
 import numpy as np
+import mudata as mu
 import os
 import argparse
 
@@ -8,12 +9,14 @@ import argparse
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-g','--grn_path', required=True)
+parser.add_argument('-m','--mdata_path')
 parser.add_argument('-p','--proms_path')
 parser.add_argument('-r','--reg_path')
 parser.add_argument('-o','--out_path', required=True)
 args = vars(parser.parse_args())
 
 grn_path = args['grn_path']
+mdata_path = args['mdata_path']
 proms_path = args['proms_path']
 out_path = args['out_path']
 reg_path = args['reg_path']
@@ -25,10 +28,18 @@ top_n = int(np.ceil(grn.shape[0] * 0.1))
 grn = grn.sort_values('score', ascending=False).head(top_n)
 
 if proms_path:
+    # Get peaks
+    peaks = mu.read(os.path.join(mdata_path, 'mod', 'atac')).var_names.astype('U')
+    peaks = pd.DataFrame(peaks, columns=['cre'])
+    peaks[['Chromosome', 'Start', 'End']] = peaks['cre'].str.split('-', n=2, expand=True)
+    peaks = pr.PyRanges(peaks[['Chromosome', 'Start', 'End']])
+    # Format peaks
+    proms = pr.read_bed(proms_path)
+    proms = proms.nearest(peaks)
+    proms = proms.df[proms.df['Distance'] == 0]
+    proms['cre'] = proms['Chromosome'].astype(str) + '-' + proms['Start_b'].astype(str) + '-' + proms['End_b'].astype(str)
+    proms = proms[['cre', 'Name']].rename(columns={'Name': 'target'}).drop_duplicates()
     # Merge
-    proms = pr.read_bed(proms_path).df
-    proms['cre'] = proms['Chromosome'].astype(str) + '-' + proms['Start'].astype(str) + '-' + proms['End'].astype(str)
-    proms = proms[['cre', 'Name']].rename(columns={'Name': 'target'})
     grn = pd.merge(grn, proms, on='target', how='inner')
     cols = ['source', 'cre', 'target', 'score']
 else:
