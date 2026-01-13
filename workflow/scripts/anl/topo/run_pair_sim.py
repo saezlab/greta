@@ -24,8 +24,8 @@ args = vars(parser.parse_args())
 stat_path = args['stat_path']
 sim_path = args['sim_path']
 
-dat, case = os.path.basename(stat_path).split('.')[:2]
-paths = glob.glob(os.path.join('dts', dat, 'cases', case, 'runs', '*.grn.csv'))
+org, dat, case = os.path.basename(stat_path).split('.')[:3]
+paths = glob.glob(os.path.join('dts', org, dat, 'cases', case, 'runs', '*.grn.csv'))
 
 print('Reading and computing grns stats...')
 names = []

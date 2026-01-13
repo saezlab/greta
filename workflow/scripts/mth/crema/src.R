@@ -21,6 +21,7 @@ site_extension <- as.numeric(args[10])
 thr_fdr <- as.numeric(args[11])
 path_out <- args[12]
 threads <- as.numeric(args[13])
+path_hvg <- args[14]
 
 # Read data
 print('Open object')
@@ -34,6 +35,10 @@ rna <- Matrix::sparseMatrix(
 colnames(rna) <- indata$obs$`_index`
 rownames(rna) <- indata$mod$rna$var$`_index`
 h5closeAll()
+
+# Filter hvg
+hvg <- readLines(gzfile(path_hvg))
+rna <- rna[hvg, ]
 
 # Format
 rna <- CreateSeuratObject(
@@ -85,9 +90,12 @@ genes_select <- genes_select[genes_select %in% genebody_coords$symbol[as.charact
 print(paste("num of TFs selected:", length(TFs_select)))
 print(paste("num of genes selected:", length(genes_select)))
 exp_mtx <- GetAssayData(rna, assay = "SCT", slot = "counts")
+# Filter just by TFs else it cannot scale
 TFs_select <- intersect(TFs_select, row.names(exp_mtx))
-genes_select <- intersect(genes_select, row.names(exp_mtx))
-exp_mtx <- as.matrix(exp_mtx[union(TFs_select, genes_select), ])
+#genes_select <- intersect(genes_select, row.names(exp_mtx))
+#exp_mtx <- as.matrix(exp_mtx[union(TFs_select, genes_select), ])
+genes_select <- TFs_select
+exp_mtx <- as.matrix(exp_mtx[TFs_select, ])
 genebody_coords <- genebody_coords[genebody_coords$gene_name %in% genes_select, ]
 
 # Open windows
@@ -101,7 +109,7 @@ msk <- !is.na(tss)
 genebody_coords <- genebody_coords[msk, ]
 
 crema_regions <- select_proximal_regions(
-    genes = genes_select, 
+    genes = genes_select,
     gene_body_gr = genebody_coords, 
     window_up = ext,
     window_down = ext,
@@ -110,6 +118,11 @@ crema_regions_str <- lapply(crema_regions, Signac::GRangesToString)
 
 # Run for all genes
 test_genes <- rownames(exp_mtx)
+print(paste("Running on TFs selected:", length(test_genes)))
+if (length(test_genes) == 0) {
+    writeLines("source,cre,target,score", path_out)
+    quit(save = "no", status = 0)
+}
 print('Running across genes')
 grn <- mclapply(test_genes, function(test_gene) {
     res_gene <- ATAC_weighted_tf_model_highres(

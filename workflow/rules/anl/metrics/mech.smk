@@ -58,8 +58,8 @@ rule mech_sss:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
+        mdata=rules.extract_case.output.mdata,
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        tfm=rules.extract_mech_tfm.output,
     output:
         out='anl/metrics/mech/sss/sss/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
@@ -71,7 +71,7 @@ rule mech_sss:
         """
         set +e
         timeout $(({resources.runtime}-20))m \
-    	python workflow/scripts/anl/metrics/mech/sim.py {input.grn} {input.tfm} {params.thr_pval} {output.out}
+    	python workflow/scripts/anl/metrics/mech/sim.py {input.mdata} {input.grn} {params.thr_pval} {output.out}
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "name,prc,rcl,f01" }}' > {output.out}
         fi

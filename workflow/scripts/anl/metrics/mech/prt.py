@@ -108,8 +108,8 @@ if grn.shape[0] > 0:
     oracle.all_regulatory_genes_in_TFdict = [t for t in oracle.all_regulatory_genes_in_TFdict if t in tf_n_trgs]
 
     # Read benchmark data
-    mat = pd.read_csv(os.path.join(bnc_path, 'diff.csv'), index_col=0)
-    obs = pd.read_csv(os.path.join(bnc_path, 'meta.csv'), index_col=0)
+    mat = pd.read_csv(os.path.join(bnc_path, 'diff.csv.gz'), index_col=0)
+    obs = pd.read_csv(os.path.join(bnc_path, 'meta.csv.gz'), index_col=0)
 
     # Subset bench data to dataset
     cats = load_cats(dataset, case)

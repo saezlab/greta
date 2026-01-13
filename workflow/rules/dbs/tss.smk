@@ -1,4 +1,4 @@
-localrules: gen_tss_celloracle, gen_tss_crema, gen_tss_dictys, gen_tss_figr, gen_tss_granie, gen_tss_pando, gen_tss_scenicplus, gen_tss_scdori, gen_tss_scmtni
+localrules: gen_tss_celloracle, gen_tss_crema, gen_tss_dictys, gen_tss_figr, gen_tss_granie, gen_tss_pando, gen_tss_scenicplus, gen_tss_scdori, gen_tss_scmtni, gen_tss_promoters
 
 
 rule gen_tss_celloracle:

@@ -9,6 +9,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import read_config, savefigs
+import argparse
 
 
 def read_config(path_config='config/config.yaml'):
@@ -31,7 +32,7 @@ def make_sim_mat(df, col_name, prefix):
 def plot_heatmap(df, col, title, prefix, mthds, baselines, figs):
     order = mthds + baselines
     mat = make_sim_mat(df, col, prefix).loc[order, order]
-    h = ma.Heatmap(mat, cmap='Purples', width=1.5, height=1.5, name=title, label="Overlap\nCoefficient", vmin=0, vmax=1)
+    h = ma.Heatmap(mat, cmap='Purples', width=2, height=2, name=title, label="Overlap\nCoefficient", vmin=0, vmax=1)
     h.add_bottom(mp.Labels(mat.columns))
     h.add_left(mp.Labels(mat.index))
     h.add_top(mp.Title(title))
@@ -72,18 +73,29 @@ def barstats(df, col, title, figs):
     figs.append(fig)
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-a','--path_sims', required=True)
+parser.add_argument('-b','--path_stats', required=True)
+parser.add_argument('-c','--path_tss', required=True)
+parser.add_argument('-d','--path_dts', required=True)
+parser.add_argument('-e','--path_net', required=True)
+parser.add_argument('-f','--path_out', required=True)
+parser.add_argument('-g','--baselines', required=True, nargs='+')
+args = parser.parse_args()
+
 # Read config
 config = read_config()
 palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
-baselines = config['baselines']
+baselines = args.baselines
+mthds = [m for m in mthds if m not in baselines]
 
 # Read
-sims = pd.read_csv(sys.argv[1])
-stats = pd.read_csv(sys.argv[2])
-tss = pd.read_csv(sys.argv[3])
-dst = pd.read_csv(sys.argv[4])
-net = pd.read_csv(sys.argv[5])
+sims = pd.read_csv(args.path_sims)
+stats = pd.read_csv(args.path_stats)
+tss = pd.read_csv(args.path_tss)
+dst = pd.read_csv(args.path_dts)
+net = pd.read_csv(args.path_net)
 
 # Format names
 sims['name_a'] = [n.split('.')[0] for n in sims['name_a']]
@@ -103,6 +115,8 @@ sims['name_b'] = sims['name_b'].str.replace('o_', '')
 stats['name'] = stats['name'].str.replace('o_', '')
 
 # Format TSS
+tss['tss_a'] = tss['tss_a'].str.replace('.gz', '')
+tss['tss_b'] = tss['tss_b'].str.replace('.gz', '')
 tss = tss.groupby(['tss_a', 'tss_b'], as_index=False)['ocoef'].mean()
 
 # Format distances
@@ -125,10 +139,9 @@ figs = []
 plot_heatmap(sims, col='tf_oc', title='TFs', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
 plot_heatmap(sims, col='edge_oc', title='Edges', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
 plot_heatmap(sims, col='target_oc', title='Genes', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
+plot_heatmap(tss, col='ocoef', title='TSS', prefix='tss', mthds=mthds, baselines=['promoters'], figs=figs)
 
-plot_heatmap(tss, col='ocoef', title='TSS', prefix='tss', mthds=mthds, baselines=baselines, figs=figs)
-
-fig, ax = plt.subplots(1, 1, figsize=(2, 2), dpi=150)
+fig, ax = plt.subplots(1, 1, figsize=(2, 2.5), dpi=150)
 
 sns.boxplot(
     data=dst,
@@ -155,7 +168,7 @@ barstats(stats, col='odegree', title='Regulon size', figs=figs)
 barstats(stats, col='betweenc', title='B. centrality', figs=figs)
 barstats(stats, col='eigv', title='E. centrality', figs=figs)
 
-h = ma.Heatmap(mat, cmap='Purples', width=1.5, height=1.5, label="Overlap\nCoefficient", vmin=0, vmax=1)
+h = ma.Heatmap(mat, cmap='Purples', width=2, height=8, label="Overlap\nCoefficient", vmin=0, vmax=1)
 h.add_bottom(mp.Labels(mat.columns))
 h.add_left(mp.Labels(mat.index))
 h.render()
@@ -163,4 +176,4 @@ plt.close()
 figs.append(h.figure)
 
 # Write
-savefigs(figs, sys.argv[6])
+savefigs(figs, args.path_out)

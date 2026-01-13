@@ -11,11 +11,13 @@ from utils import ocoeff
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--inp_path', required=True)
+parser.add_argument('-n','--n_seeds', required=True)
 parser.add_argument('-r','--res_path', required=True)
 parser.add_argument('-a','--auc_path', required=True)
 args = vars(parser.parse_args())
 
 inp_path = args['inp_path']
+n_seeds = int(args['n_seeds'])
 res_path = args['res_path']
 auc_path = args['auc_path']
 
@@ -54,24 +56,24 @@ def get_grn_stats(df):
 df = pd.read_csv(inp_path, sep=' ', header=None)
 dataset = os.path.basename(res_path).replace('.csv', '')
 res = []
-seeds = np.array(['0', '1', '2'])
+seeds = np.array([str(i) for i in range(n_seeds)])
 for _, row in list(df.iterrows()):
     s, time, mem = row[0], row[1], row[2]
-    mth = re.search(r'mdl_(.*?)_dat', s).group(1)
-    ds = re.search(r'=(.*?).case=', s).group(1)
+    mth = re.search(r'mdl_(.*?)_org', s).group(1)
+    ds = re.search(r'dat=([^.]+)', s).group(1)
     case = re.search(r'case=([\w_]+)', s).group(1)
-    
+    org = re.search(r'org=([^.]+)', s).group(1)
     if (ds == dataset) or (case != 'all'):
         if case.startswith('16384'):
             if case.startswith('16384_16384_'):
                 cat = 'full'
                 ncells, nfeats, seed = case.split('_')
                 n = 16384
-                net = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
-                          format(dataset=ds, ncells=ncells, nfeats=nfeats, seed=seed, mth=mth))
+                net = pd.read_csv('dts/{org}/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
+                          format(org=org, dataset=ds, ncells=ncells, nfeats=nfeats, seed=seed, mth=mth))
                 for s in [s for s in seeds if s != seed]:
-                    ref = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
-                          format(dataset=ds, ncells=ncells, nfeats=nfeats, seed=s, mth=mth))
+                    ref = pd.read_csv('dts/{org}/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
+                          format(org=org, dataset=ds, ncells=ncells, nfeats=nfeats, seed=s, mth=mth))
                     tmp = pd.DataFrame(index=[0])
                     tmp['mth'] = mth.replace('o_', '')
                     tmp['cat'] = cat
@@ -96,10 +98,10 @@ for _, row in list(df.iterrows()):
             ncells, nfeats = n, 16384
         else:
             continue
-        ref = pd.read_csv('dts/{dataset}/cases/16384_16384_0/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
-                          format(dataset=ds, mth=mth))
-        net = pd.read_csv('dts/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
-                          format(dataset=ds, ncells=ncells, nfeats=nfeats, seed=seed, mth=mth))
+        ref = pd.read_csv('dts/{org}/{dataset}/cases/16384_16384_0/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
+                          format(org=org, dataset=ds, mth=mth))
+        net = pd.read_csv('dts/{org}/{dataset}/cases/{ncells}_{nfeats}_{seed}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'.
+                          format(org=org, dataset=ds, ncells=ncells, nfeats=nfeats, seed=seed, mth=mth))
         tmp = pd.DataFrame(index=[0])
         tmp['mth'] = mth.replace('o_', '')
         tmp['cat'] = cat

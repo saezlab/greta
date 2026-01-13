@@ -6,7 +6,7 @@ rule prior_tfm:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/{org}/tfm/{db}/{db}.tsv',
+        db='dbs/{org}/tfm/{db}/{db}.tsv.gz',
     output:
         out='anl/metrics/prior/tfm/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
@@ -23,7 +23,7 @@ rule prior_tfp:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/{org}/tfp/{db}/{db}.tsv',
+        db='dbs/{org}/tfp/{db}/{db}.tsv.gz',
     output:
         out='anl/metrics/prior/tfp/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
@@ -40,7 +40,7 @@ rule prior_grn:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/{org}/gst/{db}.csv',
+        db='dbs/{org}/gst/{db}.csv.gz',
     output:
         out='anl/metrics/prior/grn/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:

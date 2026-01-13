@@ -389,7 +389,7 @@ dbs:
             dorothea: 'https://drive.google.com/uc?export=download&id=1rZynSkaXUqC7zut6ewvLTXWz_T2Xm1TQ'
 tfb_max_psize: 750
 cre_prom_size: 1000
-topo_min_prop: 0.5
+topo_min_prop: 0.33
 
 # Simulated data
 zenodo_id: 17872739

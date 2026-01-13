@@ -40,7 +40,9 @@ def test_predictability(mdata, train, test, grn, col_source='source', col_target
         y = y[msk]
         X = X[msk, :]
         return X, y
-    net = grn.iloc[np.argsort(-abs(grn['score'])), :].drop_duplicates([col_source, col_target])
+    net = grn.drop_duplicates([col_source, col_target]).copy()
+    net['abs_score'] = abs(net['score'])
+    net = net.sort_values('abs_score', ascending=False)
     net = net.groupby(col_target)[col_source].apply(lambda x: list(x) if ntop is None else list(x)[:ntop])
     cor = []
     for target in tqdm(net.index):
@@ -54,7 +56,7 @@ def test_predictability(mdata, train, test, grn, col_source='source', col_target
             train_X, train_y = remove_zeros(train_X, train_y)
             test_X, test_y = remove_zeros(test_X, test_y)
             if test_y.size >= 10:
-                reg = XGBRegressor(random_state=0).fit(train_X, train_y)
+                reg = XGBRegressor(random_state=0, n_jobs=1).fit(train_X, train_y)
                 pred_y = reg.predict(test_X)
                 if np.any(pred_y != pred_y[0]):
                     s, p = scipy.stats.spearmanr(pred_y, test_y)  # Spearman to control for outliers
@@ -69,7 +71,7 @@ def test_predictability(mdata, train, test, grn, col_source='source', col_target
 if grn.shape[0] > 0:
     mdata = mu.read_h5mu(data_path)
     train, test = train_test_split(mdata.obs_names, test_size=0.33, random_state=42, stratify=mdata.obs['celltype'])
-    cor = test_predictability(mdata=mdata, train=train, test=test, grn=grn)
+    cor = test_predictability(mdata=mdata, train=train, test=test, grn=grn, col_source=col_source, col_target=col_target, mod_source=mod_source, mod_target=mod_target)
     sig_cor = cor[(cor['padj'] < 0.05) & (cor['coef'] > 0.05)]
     n_hits = sig_cor.shape[0]
     if n_hits > 0:

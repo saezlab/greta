@@ -8,17 +8,21 @@ import sys
 
 
 path_mdata = sys.argv[1]
-path_tfs = sys.argv[2]
+path_grn = sys.argv[2]
 path_out = sys.argv[3]
 
 # Read
-tfs = pd.read_csv(path_tfs, header=None)[0].values
-rna = mu.read(os.path.join(path_mdata, 'mod', 'rna'))
+mdata = mu.read(path_mdata)
+adata = mdata.mod['rna'].copy()
+adata.obs = mdata.obs.copy()
+grn = pd.read_csv(path_grn)
+
+# Ensure uniqueness but keep score
+grn = grn.groupby(['source', 'target'], as_index=False)['score'].mean()
 
 # Filter and update
 inter = rna.var_names.intersection(tfs)
 rna = rna[:, inter].copy()
-rna.obs = mu.read(path_mdata).obs.loc[:, ['celltype']].copy()
 
 # Extract DEG tfs
 sc.tl.rank_genes_groups(rna, groupby='celltype', method='wilcoxon')

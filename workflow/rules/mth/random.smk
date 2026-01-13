@@ -11,7 +11,7 @@ rule mdl_o_random:
         scale=config['methods']['random']['scale'],
         tf_g_ratio=config['methods']['random']['tf_g_ratio'],
         w_size=config['methods']['random']['w_size'] // 2,
-        seed=config['methods']['random']['seed'],
+        seed=lambda w: config['dts'][w.dat]['cases'][w.case]['seed'] if 'n_sample' in config['dts'][w.dat]['cases'][w.case] else '0',
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],

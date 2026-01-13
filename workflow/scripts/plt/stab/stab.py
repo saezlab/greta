@@ -6,6 +6,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import read_config, savefigs
+import argparse
 
 
 def base_stability(df, col, title, mthds, baselines, palette, figs):
@@ -15,7 +16,7 @@ def base_stability(df, col, title, mthds, baselines, palette, figs):
     data['seeds'] = [''.join(sorted([str(int(sa)), str(int(sb))])) for sa, sb in zip(data['seed'], data['other_seed'])]
     data = data.drop_duplicates(['mth', 'seeds'])
     sns.boxplot(data=data, y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette, fliersize=0)
-    sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette)
+    sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette, size=0)
     ax.tick_params(axis='x', rotation=90)
     ax.set_xlabel('')
     ax.set_ylabel('Methods')
@@ -27,7 +28,7 @@ def base_stability(df, col, title, mthds, baselines, palette, figs):
     data['seeds'] = [''.join(sorted([str(int(sa)), str(int(sb))])) for sa, sb in zip(data['seed'], data['other_seed'])]
     data = data.drop_duplicates(['mth', 'seeds'])
     sns.boxplot(data=data, y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette, fliersize=0)
-    sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette)
+    sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette, size=0)
     ax.tick_params(axis='x', rotation=90)
     ax.set_xlabel('Overlap coefficient')
     ax.set_ylabel('Baselines')
@@ -91,15 +92,23 @@ def auc(df, typ, title, palette, figs):
     figs.append(fig)
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-d','--path_df', required=True)
+parser.add_argument('-b','--baselines', required=True, nargs='+')
+parser.add_argument('-a','--path_ac', required=True)
+parser.add_argument('-o','--path_out', required=True)
+args = parser.parse_args()
+
 # Read
-df = pd.read_csv(sys.argv[1])
-ac = pd.read_csv(sys.argv[2])
+df = pd.read_csv(args.path_df)
+ac = pd.read_csv(args.path_ac)
 
 # Read config
 config = read_config()
 palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
-baselines = config['baselines']
+baselines = args.baselines
+mthds = [m for m in mthds if m not in baselines]
 
 # Plot
 figs = []
@@ -124,4 +133,4 @@ auc(ac, typ='e_ocoeff', title='Edges', palette=palette, figs=figs)
 auc(ac, typ='t_ocoeff', title='Genes', palette=palette, figs=figs)
 
 # Write
-savefigs(figs, sys.argv[3])
+savefigs(figs, args.path_out)

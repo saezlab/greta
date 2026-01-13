@@ -1,6 +1,6 @@
 localrules: run_stab, stab_ovsd, stab_cor, stab_unsmthds
 
-n_seeds = 3
+n_seeds = 10
 
 def get_stab_paths(config, mthds, datasets):
     ns = [1024, 2048, 4096, 8192, 16384]
@@ -53,6 +53,8 @@ rule run_stab:
     output:
         res='anl/stab/{dat}.ovc.csv',
         auc='anl/stab/{dat}.auc.csv',
+    params:
+        n_seeds=n_seeds,
     shell:
         """
         last_date=$(stat -c %y {input[0]} | cut -d ' ' -f 1)
@@ -61,6 +63,7 @@ rule run_stab:
         awk '/^ +mdl_/ {{jobname=$1; getline; if ($1 == "batch") print jobname, $2, $3}}' > {output.res}.tmp &&
         python workflow/scripts/anl/stab/run_stab.py \
         -i {output.res}.tmp \
+        -n {params.n_seeds} \
         -r {output.res} \
         -a {output.auc} &&
         rm {output.res}.tmp
@@ -74,9 +77,15 @@ rule stab_cor:
     output:
         wgt='anl/stab/{dat}.wgt.csv',
         cor='anl/stab/{dat}.cor.csv',
+    params:
+        baselines=baselines,
     shell:
         """
-        python workflow/scripts/anl/stab/seeds.py {input} {output.wgt} {output.cor}
+        python workflow/scripts/anl/stab/seeds.py \
+        -d {input} \
+        -b {params.baselines} \
+        -i {output.wgt} \
+        -c {output.cor}
         """
 
 

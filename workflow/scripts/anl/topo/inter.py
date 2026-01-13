@@ -14,15 +14,13 @@ args = parser.parse_args()
 grns = []
 blns = []
 for grn_path in args.paths_grns:
-    name = grn_path.split('.')[-3]
-    if name.startswith('o_') and (name not in args.baselines):
-        grn = pd.read_csv(grn_path).drop_duplicates(['source', 'target'])
-        grn['name'] = name.replace('o_', '')
-        grns.append(grn)
-    elif name in args.baselines:
-        grn = pd.read_csv(grn_path).drop_duplicates(['source', 'target']).drop(columns='cre')
-        grn['name'] = name
+    name = grn_path.split('.')[-3].replace('o_', '')
+    grn = pd.read_csv(grn_path).drop(columns='cre').drop_duplicates(['source', 'target'])
+    grn['name'] = name
+    if name in args.baselines:
         blns.append(grn)
+    else:
+        grns.append(grn)
         
 min_n = np.floor(args.min_prop * len(grns))
 grns = pd.concat(grns)

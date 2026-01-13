@@ -27,7 +27,7 @@ rule pred_gsets:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda w: rules.grn_run.output.out.format(**w),
-        rsc='dbs/hg38/gst/{db}.csv'
+        rsc='dbs/hg38/gst/{db}.csv.gz'
     output:
         out='anl/metrics/pred/gsets/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:

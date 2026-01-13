@@ -6,6 +6,7 @@ rule mdl_o_crema:
         mdata=rules.extract_case.output.mdata,
         gen=rules.gen_genome_crema.output,
         tfs=rules.gen_motif_crema.output,
+        hvg=rules.hvg_inf.output,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_crema.o_crema.o_crema.o_crema.mdl.csv'
     params:
@@ -13,7 +14,7 @@ rule mdl_o_crema:
         site_extension=config['methods']['crema']['site_extension'],
         thr_fdr=config['methods']['crema']['thr_fdr'],
     resources:
-        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 4,
         runtime=2800,
     shell:
         """
@@ -37,6 +38,7 @@ rule mdl_o_crema:
         {params.site_extension} \
         {params.thr_fdr} \
         {output.out} \
-        {threads} && \
+        {threads} \
+        {input.hvg} && \
         rm -r $path_tmp
         """

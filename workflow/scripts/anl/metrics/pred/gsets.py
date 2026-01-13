@@ -74,7 +74,6 @@ if grn.shape[0] > 0:
     dc.run_ulm(
         mat=rna,
         net=ptw,
-        weight=None,
         use_raw=False,
         verbose=True
     )

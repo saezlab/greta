@@ -1,6 +1,6 @@
 localrules: tss_aggr
 
-
+# Need to modify this so that it does not use tss file as input for baselines
 rule tss_gocoef:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -19,7 +19,7 @@ rule tss_gocoef:
         -o {output}
         """
 
-tss_mthds = ['celloracle', 'crema', 'dictys', 'directnet', 'figr', 'granie', 'hummus', 'inferelator', 'pando', 'scdori', 'scenicplus', 'scmtni']
+tss_mthds = [m for m in mthds if m not in baselines] + ['promoters']
 tss_paths = [f'anl/tss/ocoef/{mth_a}.{mth_b}.csv' for mth_a, mth_b in combinations([x for x in tss_mthds], 2)]
 rule tss_aggr:
     threads: 1
@@ -45,9 +45,12 @@ rule tss_dist:
     resources:
         mem_mb=restart_mem,
         runtime=config['max_mins_per_step'],
+    params:
+        baselines=baselines,
     shell:
         """
         python workflow/scripts/anl/tss/dist.py \
         -g {input.g} \
+        -b {baselines} \
         -o {output}
         """

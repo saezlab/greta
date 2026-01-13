@@ -5,12 +5,12 @@ rule plt_npair:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        pmd='dts/pitupair/cases/all/mdata.h5mu',
-        nmd='dts/pitunpair/cases/all/mdata.h5mu',
-        ral='anl/pair/pitu.all.real_corvals.csv',
-        qc='anl/pair/pitu.all.qc.csv',
-        nc='anl/pair/pitu.all.ncells.csv',
-        oc='anl/pair/pitu.all.pvsn.csv',
+        pmd='dts/hg38/pitupair/cases/all/mdata.h5mu',
+        nmd='dts/hg38/pitunpair/cases/all/mdata.h5mu',
+        ral='anl/pair/hg38.pitu.all.real_corvals.csv',
+        qc='anl/pair/hg38.pitu.all.qc.csv',
+        nc='anl/pair/hg38.pitu.all.ncells.csv',
+        oc='anl/pair/hg38.pitu.all.pvsn.csv',
     output: 'plt/pair/npair.pdf'
     shell:
         """

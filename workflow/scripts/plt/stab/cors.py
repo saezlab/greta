@@ -6,16 +6,24 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import read_config, savefigs
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-w','--path_repl_wgt', required=True)
+parser.add_argument('-b','--baselines', required=True, nargs='+')
+parser.add_argument('-c','--path_repl_cor', required=True)
+parser.add_argument('-o','--path_out', required=True)
+args = parser.parse_args()
 
 # Read config
 config = read_config()
 palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
-baselines = config['baselines']
+baselines = args.baselines
+mthds = [m for m in mthds if m not in baselines]
 
-path_repl_wgt = sys.argv[1]
-path_repl_cor = sys.argv[2]
+path_repl_wgt = args.path_repl_wgt
+path_repl_cor = args.path_repl_cor
 repl_wgt = pd.read_csv(path_repl_wgt)
 repl_cor = pd.read_csv(path_repl_cor)
 
@@ -46,11 +54,11 @@ for mth in repl_wgt['mth'].unique():
         figs.append(fig)
         
 
-fig, ax = plt.subplots(1, 1, figsize=(1.5, 1), dpi=150)
+fig, ax = plt.subplots(1, 1, figsize=(1.5, 2), dpi=150)
 order = mthds + baselines
 order = [m for m in order if m in repl_cor['mth'].unique()]
-sns.boxplot(data=repl_cor, x='stat', y='mth', hue='mth', fill=None, ax=ax, palette=palette, order=order)
-sns.stripplot(data=repl_cor, x='stat', y='mth', hue='mth', ax=ax, palette=palette, order=order)
+sns.boxplot(data=repl_cor, x='stat', y='mth', hue='mth', fill=None, ax=ax, palette=palette, order=order, fliersize=0)
+sns.stripplot(data=repl_cor, x='stat', y='mth', hue='mth', ax=ax, palette=palette, order=order, size=0)
 ax.set_xlabel('Pearson ρ')
 ax.set_ylabel('')
 ax.set_xticks([0, 0.5, 1])
@@ -58,4 +66,4 @@ ax.set_xlim(-0.05, 1.05)
 figs.append(fig)
 
 # Write
-savefigs(figs, sys.argv[3])
+savefigs(figs, args.path_out)

@@ -12,10 +12,12 @@ rule plt_dwns:
     output:
         stab='plt/stab/dwns.pdf',
         cors='plt/stab/cors.pdf',
+    params:
+        baselines=baselines,
     shell:
         """
-        python workflow/scripts/plt/stab/stab.py {input.ovc} {input.auc} {output.stab}
-        python workflow/scripts/plt/stab/cors.py {input.wgt} {input.cor} {output.cors}
+        python workflow/scripts/plt/stab/stab.py -d {input.ovc} -b {baselines} -a {input.auc} -o {output.stab}
+        python workflow/scripts/plt/stab/cors.py -w {input.wgt} -b {baselines} -c {input.cor} -o {output.cors}
         """
 
 
@@ -29,10 +31,12 @@ rule plt_sims:
         dst='anl/tss/hg38.pitupair.all.dist.csv',
         net='anl/topo/hg38.pitupair.all.inter.csv',
     output: 'plt/stab/sims.pdf'
+    params:
+        baselines=baselines,
     shell:
         """
         python workflow/scripts/plt/stab/sims.py \
-        {input.sims} {input.stats} {input.tss} {input.dst} {input.net} {output}
+        -a {input.sims} -b {input.stats} -c {input.tss} -d {input.dst} -e {input.net} -f {output} -g {params.baselines}
         """
 
 
@@ -45,12 +49,14 @@ rule plt_AREG:
     output: 'plt/stab/links_AREG.pdf'
     params:
         gene='AREG',
-        tfs=['FOSL1', 'FOSL2', 'JUNB'],
-        wsize=250000
+        tfs=['JUND', 'FOSL2', 'JUNB'],
+        wsize=250000,
+        baselines=baselines,
     shell:
         """
         python workflow/scripts/plt/stab/links.py \
         -s {input.sims} \
+        -b {params.baselines} \
         -g {params.gene} \
         -t {params.tfs} \
         -a {input.gann} \

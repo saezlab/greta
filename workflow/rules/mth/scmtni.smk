@@ -18,6 +18,7 @@ rule mdl_o_scmtni:
         """
         path_out=$(dirname {output.out})
         path_out=$path_out/tmp_o_scmtni
+        rm -rf $path_out
         mkdir -p $path_out
         python workflow/scripts/mth/scmtni/src.py \
         -a {input.mdata} \

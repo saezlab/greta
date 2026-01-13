@@ -5,7 +5,7 @@ rule genom_tfb:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/{org}/tfb/{db}/{db}.bed',
+        db='dbs/{org}/tfb/{db}/{db}.bed.gz',
     output:
         out='anl/metrics/genom/tfb/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:
@@ -25,7 +25,7 @@ rule genom_cre:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        db='dbs/{org}/cre/{db}/{db}.bed',
+        db='dbs/{org}/cre/{db}/{db}.bed.gz',
     output:
         out='anl/metrics/genom/cre/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     shell:
@@ -42,7 +42,7 @@ rule genom_c2g:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),
-        resource='dbs/{org}/c2g/{db}/{db}.bed',
+        resource='dbs/{org}/c2g/{db}/{db}.bed.gz',
     output:
         out='anl/metrics/genom/c2g/{db}/{org}.{dat}.{case}/{pre}.{p2g}.{tfb}.{mdl}.scores.csv'
     params:

@@ -31,7 +31,7 @@ grn_name = os.path.basename(grn_path).replace('.grn.csv', '')
 data_path = os.path.join(os.path.dirname(os.path.dirname(grn_path)), 'mdata.h5mu')
 dataset = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(data_path))))
 case = os.path.basename(os.path.dirname(data_path))
-resource_name = os.path.basename(resource_path).replace('.bed', '')
+resource_name = os.path.basename(resource_path).replace('.bed', '').replace('.gz', '')
 
 def read_grn(grn_path, grp=None):
     grn = pd.read_csv(grn_path)
@@ -49,7 +49,7 @@ def read_grn(grn_path, grp=None):
     return pr.PyRanges(grn)
 
 grn = read_grn(grn_path=grn_path, grp=grp)
-cat_resources = ['gwascatalogue']
+cat_resources = ['chipatlas', 'remap2022', 'unibind', 'gwascatalogue', 'eqtlcatalogue']
 if grn.df.shape[0] > 0:
     # Read resource and filter by cats
     db = pr.read_bed(resource_path)

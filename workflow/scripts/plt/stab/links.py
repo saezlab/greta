@@ -35,33 +35,21 @@ def window(gene, w_size):
     return tss_window
 
 
-def get_links(mthds, baselines, dat, case, target):
+def get_links(mthds, baselines, org, dat, case, target):
     links = []
     for mth in mthds:
-        tfb = pd.read_csv(f'dts/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.tfb.csv').rename(columns={'score': 'tfb_score'})
-        if np.isinf(tfb['tfb_score']).any():
-            max_finite = tfb['tfb_score'][np.isfinite(tfb['tfb_score'])].max()
-            tfb['tfb_score'] = tfb['tfb_score'].replace(np.inf, max_finite)
-        tfb['tfb_score'] = norm_score(tfb['tfb_score'].values)
-         
-        p2g = pd.read_csv(f'dts/{dat}/cases/{case}/runs/{mth}.{mth}.p2g.csv').rename(columns={'score': 'p2g_score'})
-        p2g['p2g_score'] = norm_score(p2g['p2g_score'].values)
-        p2g = p2g[p2g['gene'] == target]
-        link = pd.merge(tfb, p2g, on='cre')[['tf', 'cre', 'gene', 'tfb_score', 'p2g_score']]
-        link['mth'] = mth
-    
-        mdl = pd.read_csv(f'dts/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.mdl.csv').rename(columns={'source': 'tf', 'target': 'gene', 'score': 'mdl_score'})
-        mdl['mdl_score'] = norm_score(mdl['mdl_score'].abs().values)
-        mdl['mdl_score'] = mdl['mdl_score'].abs().rank(method='average', pct=True)
-        link = pd.merge(mdl[['tf', 'gene', 'mdl_score']], link, how='inner')
-        links.append(link)
-    for mth in baselines:
-        mdl = pd.read_csv(f'dts/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv').rename(columns={'source': 'tf', 'target': 'gene', 'score': 'mdl_score'})
+        mdl = pd.read_csv(f'dts/{org}/{dat}/cases/{case}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv').rename(columns={'source': 'tf', 'target': 'gene', 'score': 'mdl_score'})
         mdl['mth'] = mth
         mdl = mdl[mdl['gene'] == target]
         mdl['mdl_score'] = mdl['mdl_score'].abs().rank(method='average', pct=True)
         links.append(mdl)
-    links = pd.concat(links).drop(columns=['tfb_score', 'p2g_score'])
+    for mth in baselines:
+        mdl = pd.read_csv(f'dts/{org}/{dat}/cases/{case}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv').rename(columns={'source': 'tf', 'target': 'gene', 'score': 'mdl_score'})
+        mdl['mth'] = mth
+        mdl = mdl[mdl['gene'] == target]
+        mdl['mdl_score'] = mdl['mdl_score'].abs().rank(method='average', pct=True)
+        links.append(mdl)
+    links = pd.concat(links)
     links = links.assign(score=lambda x: x['mdl_score'])
     return links
 
@@ -92,8 +80,8 @@ def get_gannot(path_gannot, target, w_size, atac):
     return x_min, x_max, gs_gr, tss, chromosome, strand, cres_gr
 
 
-def mean_data(dat, case):
-    mdata = mu.read(f'dts/{dat}/cases/{case}/mdata.h5mu')
+def mean_data(org, dat, case):
+    mdata = mu.read(f'dts/{org}/{dat}/cases/{case}/mdata.h5mu')
     rna = mdata.mod['rna']
     rna.obs = mdata.obs
     atac = mdata.mod['atac']
@@ -249,6 +237,7 @@ def plot_omic(adata, feat_gr, x_min, x_max, cmap, mode, ax):
 # Init args
 parser = argparse.ArgumentParser()
 parser.add_argument('-s','--path_sims', required=True)
+parser.add_argument('-b','--baselines', required=True, nargs='+')
 parser.add_argument('-g','--target', required=True)
 parser.add_argument('-t','--tfs', required=True, nargs='+')
 parser.add_argument('-a','--path_gannot', required=True)
@@ -257,6 +246,7 @@ parser.add_argument('-o','--path_out', required=True)
 args = vars(parser.parse_args())
 
 path_sims = args['path_sims']
+baselines = args['baselines']
 target = args['target']
 tfs = args['tfs']
 path_gannot = args['path_gannot']
@@ -264,19 +254,18 @@ w_size = args['w_size']
 path_out = args['path_out']
 
 # Extract dataset and case
-dat, case = os.path.basename(path_sims).split('.')[:2]
+org, dat, case = os.path.basename(path_sims).split('.')[:3]
 
 # Read config
 config = read_config()
 palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
-baselines = config['baselines']
 
 # Find links
-links = get_links(mthds, baselines, dat, case, target)
+links = get_links(mthds, baselines, org, dat, case, target)
 
 # Summarize per celltype
-rna, atac = mean_data(dat, case)
+rna, atac = mean_data(org, dat, case)
 
 # Extract gannot data
 x_min, x_max, gs_gr, tss, chromosome, strand, cres_gr = get_gannot(path_gannot, target, w_size, atac)
