@@ -34,7 +34,7 @@ rule dbs_terms:
         paths_tfb=expand('dbs/hg38/tfb/{tfb}/{tfb}.bed.gz', tfb=config['dbs']['hg38']['tfb'].keys()),
         paths_cre=expand('dbs/hg38/cre/{cre}/{cre}.bed.gz', cre=config['dbs']['hg38']['cre'].keys()),
         paths_c2g=expand('dbs/hg38/c2g/{c2g}/{c2g}.bed.gz', c2g=config['dbs']['hg38']['c2g'].keys()),
-    output: 'anl/dbs/terms.csv'
+    output: 'anl/dbs/terms.csv.gz'
     resources:
         mem_mb=64000
     shell:
