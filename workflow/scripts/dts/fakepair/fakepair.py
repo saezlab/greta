@@ -37,5 +37,22 @@ obs = barmap.set_index('ATAC')
 obs.index.name = None
 fmdata.obs = obs
 
+# Filter small celltypes
+ncells = fmdata.obs.groupby('celltype').size()
+ctypes = ncells[ncells >= 25].index
+fmdata = fmdata[fmdata.obs['celltype'].isin(ctypes)]
+
+# Filter for potential empty features
+rna = fmdata.mod['rna']
+msk = rna.X.sum(0) != 0.
+rna = rna[:, msk].copy()
+fmdata.mod['rna'] = rna
+
+atac = fmdata.mod['atac']
+msk = atac.X.sum(0) != 0.
+atac = atac[:, msk].copy()
+fmdata.mod['atac'] = atac
+del fmdata.varm
+
 # Write
 fmdata.write(path_output)
