@@ -42,13 +42,13 @@ for db_path in db_paths:
             db = pd.read_csv(db_path, header=None, sep='\t', usecols=[4])[4]
             terms = set()
             for r in tqdm(db):
-                terms.update(r.split(','))
+                terms.update([t.strip() for t in r.split(',')])
             terms = sorted(terms)
         elif task == 'tfm':
             db = pd.read_csv(db_path, sep='\t', header=None, usecols=[1])[1]
             terms = set()
             for r in db:
-                terms.update(r.split(','))
+                terms.update([t.strip() for t in r.split(',')])
             terms = sorted(terms)
         elif task == 'prt':
             db = pd.read_csv(db_path)
@@ -59,9 +59,9 @@ for db_path in db_paths:
             for r in tqdm(db):
                 r = r.split(',')
                 if isinstance(r, str):
-                    r = [r]
+                    r = [r.strip()]
                 for s_r in r:
-                    terms.update(s_r.split('|'))
+                    terms.update([t.strip() for t in s_r.split('|')])
             terms = sorted(terms)
         else:
             raise ValueError('db {db} of task {task} has no defined terms'.format(db=db_name, task=task))
