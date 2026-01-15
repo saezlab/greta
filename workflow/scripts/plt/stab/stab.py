@@ -113,24 +113,28 @@ mthds = [m for m in mthds if m not in baselines]
 # Plot
 figs = []
 base_stability(df, col='s_ocoeff', title='TFs', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
-base_stability(df, col='e_ocoeff', title='Edges', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
+base_stability(df, col='c_ocoeff', title='CREs', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
 base_stability(df, col='t_ocoeff', title='Genes', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
+base_stability(df, col='e_ocoeff', title='Edges', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
 
 sampled_stability(df, col='s_ocoeff', ylabel='TF Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
-sampled_stability(df, col='e_ocoeff', ylabel='Edge Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
+sampled_stability(df, col='c_ocoeff', ylabel='CRE Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
 sampled_stability(df, col='t_ocoeff', ylabel='Gene Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
+sampled_stability(df, col='e_ocoeff', ylabel='Edge Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
 
 sampled_stability(df, col='n_sources', ylabel='Number of TFs', palette=palette, figs=figs)
-sampled_stability(df, col='n_edges', ylabel='Number of edges', palette=palette, figs=figs)
+sampled_stability(df, col='n_cres', ylabel='Number of CREs', palette=palette, figs=figs)
 sampled_stability(df, col='n_targets', ylabel='Number of Genes', palette=palette, figs=figs)
+sampled_stability(df, col='n_edges', ylabel='Number of edges', palette=palette, figs=figs)
 sampled_stability(df, col='r_size', ylabel='Regulon size', palette=palette, figs=figs)
 
 sampled_stability(df, col='h', ylabel='Time (hours)', palette=palette, figs=figs)
 sampled_stability(df, col='gb', ylabel='Memory (GBs)', palette=palette, figs=figs)
 
 auc(ac, typ='s_ocoeff', title='TFs', palette=palette, figs=figs)
-auc(ac, typ='e_ocoeff', title='Edges', palette=palette, figs=figs)
+auc(ac, typ='c_ocoeff', title='CREs', palette=palette, figs=figs)
 auc(ac, typ='t_ocoeff', title='Genes', palette=palette, figs=figs)
+auc(ac, typ='e_ocoeff', title='Edges', palette=palette, figs=figs)
 
 # Write
 savefigs(figs, args.path_out)

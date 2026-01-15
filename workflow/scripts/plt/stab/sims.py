@@ -137,8 +137,9 @@ mat = mat.loc[r_order, c_order]
 figs = []
 
 plot_heatmap(sims, col='tf_oc', title='TFs', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
-plot_heatmap(sims, col='edge_oc', title='Edges', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
+plot_heatmap(sims, col='cre_oc', title='CREs', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
 plot_heatmap(sims, col='target_oc', title='Genes', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
+plot_heatmap(sims, col='edge_oc', title='Edges', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
 plot_heatmap(tss, col='ocoef', title='TSS', prefix='tss', mthds=mthds, baselines=['promoters'], figs=figs)
 
 fig, ax = plt.subplots(1, 1, figsize=(2, 2.5), dpi=150)
@@ -162,8 +163,9 @@ ax.set_ylabel('')
 figs.append(fig)
 
 barstats(stats, col='n_tfs', title='Number TFs', figs=figs)
-barstats(stats, col='n_edges', title='Number Edges', figs=figs)
+barstats(stats, col='n_cres', title='Number CREs', figs=figs)
 barstats(stats, col='n_targets', title='Number Genes', figs=figs)
+barstats(stats, col='n_edges', title='Number Edges', figs=figs)
 barstats(stats, col='odegree', title='Regulon size', figs=figs)
 barstats(stats, col='betweenc', title='B. centrality', figs=figs)
 barstats(stats, col='eigv', title='E. centrality', figs=figs)

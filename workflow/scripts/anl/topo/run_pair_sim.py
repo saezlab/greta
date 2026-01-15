@@ -32,22 +32,26 @@ names = []
 dfs = []
 stats = []
 tfs = []
-edges = []
+cres = []
 genes = []
+edges = []
 
 for path in tqdm(paths):
     name = get_grn_name(path)
     names.append(name)
-    df = pd.read_csv(path).drop_duplicates(['source', 'target'], keep='first')
+    df = pd.read_csv(path)
     stat = get_grn_stats(df)
     stats.append([name] + list(stat))
     tfs.append(set(df['source']))
-    edges.append(set(df['source'] + '|' + df['target']))
+    cres.append(set(df['cre']))
     genes.append(set(df['target']))
+    tdf = df.drop_duplicates(['source', 'target'], keep='first')
+    edges.append(set(tdf['source'] + '|' + tdf['target']))
+    
     
 
 # Store as df
-cols = ['name', 'n_tfs', 'n_edges', 'n_targets', 'odegree', 'betweenc', 'eigv']
+cols = ['name', 'n_tfs', 'n_cres', 'n_targets', 'n_edges', 'odegree', 'betweenc', 'eigv']
 stats = pd.DataFrame(stats, columns=cols)
 
 print('Computing pairwise overlap coefficients...')
@@ -65,23 +69,27 @@ def set_ocoef(a, b):
 names_a = []
 names_b = []
 tf_coefs = []
-edge_coefs = []
+cre_coefs = []
 target_coefs = []
+edge_coefs = []
 for i in tqdm(range(len(names))):
     name_a = names[i]
     tf_a = tfs[i]
-    ed_a = edges[i]
+    cr_a = cres[i]
     gn_a = genes[i]
+    ed_a = edges[i]
     for j in range(i, len(names)):
         name_b = names[j]
         tf_b = tfs[j]
-        ed_b = edges[j]
+        cr_b = cres[j]
         gn_b = genes[j]
+        ed_b = edges[j]
         names_a.append(name_a)
         names_b.append(name_b)
         tf_coefs.append(set_ocoef(tf_a, tf_b))
-        edge_coefs.append(set_ocoef(ed_a, ed_b))
+        cre_coefs.append(set_ocoef(cr_a, cr_b))
         target_coefs.append(set_ocoef(gn_a, gn_b))
+        edge_coefs.append(set_ocoef(ed_a, ed_b))
 
 
 # Store as df
@@ -89,8 +97,9 @@ sims = pd.DataFrame()
 sims['name_a'] = names_a
 sims['name_b'] = names_b
 sims['tf_oc'] = tf_coefs
-sims['edge_oc'] = edge_coefs
+sims['cre_oc'] = cre_coefs
 sims['target_oc'] = target_coefs
+sims['edge_oc'] = edge_coefs
 
 # Write
 stats.to_csv(stat_path, index=False)

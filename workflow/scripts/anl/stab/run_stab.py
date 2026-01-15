@@ -44,12 +44,14 @@ def memory_to_gb(memory_str):
 
 def get_grn_stats(df):
     n_s = df['source'].unique().size
-    n_e = df.shape[0]
+    n_c = df['cre'].unique().size
     n_t = df['target'].unique().size
-    n_r = df.groupby(['source']).count()['target'].mean()
+    tdf = df.drop_duplicates(['source', 'target'])
+    n_e = tdf.shape[0]
+    n_r = tdf.groupby(['source']).count()['target'].mean()
     if np.isnan(n_r):
         n_r = 0.
-    return n_s, n_e, n_t, n_r
+    return n_s, n_c, n_t, n_e, n_r
 
 
 # Read
@@ -83,9 +85,10 @@ for _, row in list(df.iterrows()):
                     tmp['h'] = time_to_hours(time)
                     tmp['gb'] = memory_to_gb(mem)
                     tmp['s_ocoeff'] = ocoeff(ref, net, on=['source'])
-                    tmp['e_ocoeff'] = ocoeff(ref, net, on=['source', 'target'])
+                    tmp['c_ocoeff'] = ocoeff(ref, net, on=['cre'])
                     tmp['t_ocoeff'] = ocoeff(ref, net, on=['target'])
-                    tmp[['n_sources', 'n_edges', 'n_targets', 'r_size']] = get_grn_stats(net)
+                    tmp['e_ocoeff'] = ocoeff(ref, net, on=['source', 'target'])
+                    tmp[['n_sources', 'n_cres', 'n_targets', 'n_edges', 'r_size']] = get_grn_stats(net)
                     res.append(tmp)
                 continue
             else:
@@ -111,9 +114,10 @@ for _, row in list(df.iterrows()):
         tmp['h'] = time_to_hours(time)
         tmp['gb'] = memory_to_gb(mem)
         tmp['s_ocoeff'] = ocoeff(ref, net, on=['source'])
-        tmp['e_ocoeff'] = ocoeff(ref, net, on=['source', 'target'])
+        tmp['c_ocoeff'] = ocoeff(ref, net, on=['cre'])
         tmp['t_ocoeff'] = ocoeff(ref, net, on=['target'])
-        tmp[['n_sources', 'n_edges', 'n_targets', 'r_size']] = get_grn_stats(net)
+        tmp['e_ocoeff'] = ocoeff(ref, net, on=['source', 'target'])
+        tmp[['n_sources', 'n_cres', 'n_targets', 'n_edges', 'r_size']] = get_grn_stats(net)
         res.append(tmp)
 res = pd.concat(res)
 
@@ -126,7 +130,7 @@ res = res.sort_values(['mth', 'cat', 'n', 'seed']).reset_index(drop=True)
 # Compute stab score (auc)
 mdf = res.groupby(['mth', 'cat', 'n']).mean().reset_index()
 aucs = []
-types = ['s_ocoeff', 'e_ocoeff', 't_ocoeff']
+types = ['s_ocoeff', 'c_ocoeff', 't_ocoeff', 'e_ocoeff']
 for mth in mdf['mth'].sort_values().unique():
     for cat in ['fixed_nfeats', 'fixed_ncells']:
         tmp = mdf[(mdf['mth'] == mth) & (mdf['cat'].isin([cat, 'full']))]
