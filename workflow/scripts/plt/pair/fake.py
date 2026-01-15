@@ -20,7 +20,8 @@ df_oc = pd.read_csv(sys.argv[4])
 config = read_config()
 palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
-baselines = config['baselines']
+baselines = ['collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'scgpt', 'random']
+mthds = [m for m in mthds if m not in baselines]
 
 # Plot
 figs = []

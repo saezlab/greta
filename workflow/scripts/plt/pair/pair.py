@@ -23,7 +23,8 @@ df_oc = pd.read_csv(sys.argv[6])
 config = read_config()
 palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
-baselines = config['baselines']
+baselines = ['collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'scgpt', 'random']
+mthds = [m for m in mthds if m not in baselines]
 
 figs = []
 fig, ax = plt.subplots(1, 1, figsize=(4, 4), dpi=150)
@@ -89,6 +90,7 @@ sns.boxplot(
     ax=ax,
     palette=cmap,
     fill=None,
+    fliersize=0,
 )
 sns.stripplot(
     data=df_qc,
@@ -113,6 +115,7 @@ sns.boxplot(
     ax=ax,
     palette=cmap,
     fill=None,
+    fliersize=0,
 )
 sns.stripplot(
     data=df_qc,
