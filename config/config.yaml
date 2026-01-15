@@ -53,7 +53,7 @@ methods:
         modular: False
         ext: 500000
     pando:
-        modular: False
+        modular: True
         exclude_exons: 'TRUE'
         ext: 500000
         thr_corr: 0.05
@@ -312,7 +312,7 @@ dts:
 
 
 stab_datasets: ['pitupair']
-modular_datasets: ['pbmc10k']
+modular_datasets: ['pitupair']
 nocombs_datasets: ['pitupair', 'pitunpair', 'fakepitupair']
 big_datasets: ['brain', 'heartatlas']
 

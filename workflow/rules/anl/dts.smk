@@ -6,8 +6,8 @@ rule dts_qcstats:
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.extract_case.output.mdata
     output:
-        qc='anl/dts/{dat}.{case}.qc.csv',
-        nc='anl/dts/{dat}.{case}.nc.csv',
+        qc='anl/dts/{org}.{dat}.{case}.qc.csv',
+        nc='anl/dts/{org}.{dat}.{case}.nc.csv',
     shell:
         """
         python workflow/scripts/anl/dts/qcstats.py \

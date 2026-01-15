@@ -93,7 +93,7 @@ rule stab_ovsd:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input: rules.topo_mult.output.sims,
-    output: 'anl/stab/{dat}.{case}.ovsd.csv'
+    output: 'anl/stab/{org}.{dat}.{case}.ovsd.csv'
     shell:
         """
         python workflow/scripts/anl/stab/ovsd.py {input} {output}
