@@ -23,23 +23,20 @@ del m.mod['rna']; \
 m.mod['scATAC'] = m.mod['atac']; \
 del m.mod['atac']; \
 m.mod['scATAC'].var_names = m.mod['scATAC'].var_names.str.replace('-', ':', 1); \
-m.write(sys.argv[2])" $path_pre $new_dir/mdata.h5mu
-
+m.write(sys.argv[2])" $path_pre $new_dir/mdata.h5mu && \
 scenicplus prepare_data search_spance \
 --multiome_mudata_fname $new_dir/mdata.h5mu \
 --gene_annotation_fname $path_ann \
 --chromsizes_fname $path_csz \
 --upstream 1000 $ext \
 --downstream 1000 $ext \
---out_fname $new_dir/space.tsv
-
+--out_fname $new_dir/space.tsv && \
 scenicplus grn_inference region_to_gene \
 --multiome_mudata_fname $new_dir/mdata.h5mu \
 --search_space_fname $new_dir/space.tsv \
 --temp_dir $TMPDIR \
 --out_region_to_gene_adjacencies $new_dir/rg_adj.tsv \
---n_cpu $threads
-
+--n_cpu $threads && \
 python -c "import pandas as pd; \
 import sys; \
 tab = pd.read_table(sys.argv[1]); \

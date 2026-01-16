@@ -1,5 +1,5 @@
 rule mdl_o_scenicplus:
-    threads: 32
+    threads: 16
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         img='workflow/envs/scenicplus.sif',
@@ -62,7 +62,7 @@ rule pre_scenicplus:
 
 
 rule p2g_scenicplus:
-    threads: 32
+    threads: 4
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         dir=rules.mdl_o_scenicplus.output.dir,
@@ -78,7 +78,7 @@ rule p2g_scenicplus:
         ext=config['methods']['scenicplus']['ext'] // 2,
     shell:
         """
-        new_dir=$(dirname {output.out})/{wildcards.pre}_scenicplus_p2g/
+        new_dir=$(dirname {output.out})/tmp_scenicplus_pre-{wildcards.pre}_p2g-scenicplus/
         mkdir -p $new_dir
         set +e
         timeout $(({resources.runtime}-20))m \
@@ -89,11 +89,12 @@ rule p2g_scenicplus:
         --path_csz {input.csz} \
         --ext {params.ext} \
         --threads {threads} \
-        --path_out {output.out}
+        --path_out {output.out} && \
+        rm -rf $new_dir
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "cre,gene,score" }}' > {output.out}
+            rm -rf $new_dir
         fi
-        rm -rf $new_dir
         """
 
 
@@ -122,7 +123,7 @@ rule tfb_scenicplus:
 
 
 rule mdl_scenicplus:
-    threads: 32
+    threads: 16
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
@@ -138,7 +139,7 @@ rule mdl_scenicplus:
         runtime=config['max_mins_per_step'],
     shell:
         """
-        new_dir=$(dirname {output.out})/{wildcards.pre}_{wildcards.p2g}_{wildcards.tfb}_scenicplus_mdl/
+        new_dir=$(dirname {output.out})/tmp_scenicplus_pre-{wildcards.pre}_p2g-{wildcards.p2g}_tfb-{wildcards.tfb}/
         mkdir -p $new_dir
         set +e
         timeout $(({resources.runtime}-20))m \

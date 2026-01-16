@@ -28,7 +28,7 @@ rule p2g_granie:
     singularity: 'workflow/envs/granie.sif'
     input:
         pre=lambda w: map_rules('pre', w.pre),
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/{pre}.granie.p2g.csv'
     params: ext=config['methods']['granie']['ext'],
@@ -63,7 +63,7 @@ rule tfb_granie:
     input:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
         tfb=rules.gen_motif_granie.output,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
@@ -99,7 +99,7 @@ rule mdl_granie:
         pre=lambda wildcards: map_rules('pre', wildcards.pre),
         p2g=lambda wildcards: map_rules('p2g', wildcards.p2g),
         tfb=lambda wildcards: map_rules('tfb', wildcards.tfb),
-        gid=rules.gen_gid_ensmbl.output,
+        gid=rules.gen_gid_ensmbl.output.hg38,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
     params: thr_fdr=config['methods']['granie']['thr_fdr'],

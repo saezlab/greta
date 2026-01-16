@@ -64,7 +64,7 @@ rule tfb_figr:
         cellK=config['methods']['figr']['cellK'],
         dorcK=config['methods']['figr']['dorcK'],
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'],
     shell:
         """
