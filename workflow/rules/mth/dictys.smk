@@ -14,7 +14,7 @@ rule pre_dictys:
         python workflow/scripts/mth/dictys/pre.py \
         -m {input.mdata} \
         -t $path_expr \
-        -o {output.out}
+        -o {output.out} && \
         rm -f $path_expr
         """
 
@@ -119,6 +119,7 @@ rule mdl_dictys:
         """
         set +e
         path_tmp=$(dirname {output.out})/tmp_dictys_pre-{wildcards.pre}_p2g-{wildcards.p2g}_tfb-{wildcards.tfb}
+        path_mdl=$path_tmp/mdl.csv
         mkdir -p $path_tmp
         timeout $(({resources.runtime}-20))m \
         bash workflow/scripts/mth/dictys/mdl.sh \
@@ -126,6 +127,7 @@ rule mdl_dictys:
         --pre_path {input.pre} \
         --p2g_path {input.p2g} \
         --tfb_path {input.tfb} \
+        --mdl_path $path_mdl \
         --annot {input.ann} \
         --distance {params.ext} \
         --n_p2g_links {params.n_p2g_links} \
@@ -133,7 +135,7 @@ rule mdl_dictys:
         --device {params.device} \
         --thr_score {params.thr_score} \
         --use_p2g {params.use_p2g} \
-        --out_path {output.out}
+        --out_path {output.out} && \
         rm -rf $path_tmp
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,target,score,pval" }}' > {output.out}

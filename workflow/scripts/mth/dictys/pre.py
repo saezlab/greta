@@ -37,6 +37,11 @@ rna.X = rna.layers['counts'].todense().A.copy()
 atac = mdata.mod['atac']
 atac.X = atac.layers['counts'].todense().A.copy()
 
+# Find common obs
+inter = rna.obs_names.intersection(atac.obs_names)
+rna = rna[inter, :].copy()
+atac = atac[inter, :].copy()
+
 # Update
 mdata.mod['rna'] = rna
 mdata.mod['atac'] = atac
