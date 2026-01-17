@@ -28,6 +28,10 @@ if mdl.empty:
     grn.to_csv(path_out, index=False)
     os._exit(0)
 
+# Handle mdl with present cres that are not o_methods
+if (not lst[0].startswith('o_')) and 'cre' in mdl.columns:
+    mdl = mdl.drop(columns=['cre']).drop_duplicates(['source', 'target'])
+
 # Limit to 100k largest absolute scores
 mdl['abs_score'] = mdl['score'].abs()
 mdl = mdl.nlargest(100_000, 'abs_score', keep='all').reset_index(drop=True)
