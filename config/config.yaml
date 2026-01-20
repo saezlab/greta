@@ -95,6 +95,8 @@ methods:
         mode: 'spearman'
         thr_r2: 0.1
 
+baselines: ['collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'scgpt', 'random']
+
 colors:
     nets:
         celloracle: '#1e76b4'
@@ -138,8 +140,7 @@ dts:
             tar: 'https://datasets.cellxgene.cziscience.com/32e9543f-f40f-4698-b877-8c7a67a5e266-fragment.tsv.bgz'
             anndata: 'https://datasets.cellxgene.cziscience.com/ab8821d8-7548-4592-b83e-f308ad36b312.h5ad'
         samples:
-            ['ID1', 'ID2', 'ID3', 'ID4', 'ID5', 'ID6', 'ID7', 'ID8',
-            'ID9', 'ID10', 'ID11', 'ID12', 'ID13', 'ID14', 'ID15', 'ID16']
+            ['ID13', 'ID14']  # Filter for Asian American Females
         cases:
             all:
                 celltypes: 'all'
@@ -164,7 +165,7 @@ dts:
             tar: 'https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE196235&format=file'
             ann: 'https://drive.google.com/uc?export=download&id=19C8I3ZwtI-WKXOj_RSF_KoY4ySWoPl-5'
         samples:
-            ['LGS1OD', 'LGS1OS', 'LGS3OD', 'LGS3OS']  # Filter for Females
+            ['LGS1OD', 'LGS3OD']  # Filter for Females
         cases:
             all:
                 celltypes: 'all'
@@ -176,8 +177,7 @@ dts:
             tar: 'https://zenodo.org/records/8029990/files'
             h5se: 'https://zenodo.org/records/8029990/files/raw_snATAC_and_snRNA_human_kidney.h5Seurat?download=1'
         samples:
-            ['20210421E', '20210421F', '20210421G', '20210421H', '20210804A', '20210804C', 
-            '20210820A', '20210820B', '20210901A', '20210901B', '20210917A', '20210917B']
+            ['20210804A', '20210917A']  # Downsample to two samples
         cases:
             all:
                 celltypes: 'all'
@@ -206,8 +206,7 @@ dts:
             anndata: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Global_raw.h5ad'
             annot: 'https://cellgeni.cog.sanger.ac.uk/heartcellatlas/v2/Adult_Peaks.h5ad'
         samples:
-            ['HCAHeartST10781063', 'HCAHeartST10781062', 'HCAHeart9508819',
-            'HCAHeart9508821', 'HCAHeart9917173', 'HCAHeartST11023240', 'HCAHeartST11023239']
+            ['HCAHeart9508821', 'HCAHeart9508819', 'HCAHeart9917173']  # Filter for LV and Male
         cases:
             all:
                 celltypes: 'all'
@@ -292,7 +291,7 @@ dts:
                 celltypes: 'all'
                 n_hvg: 16384
                 n_hvr: 65536
-    mouse:
+    epalate:
         organism: 'mm10'
         url:
             gdrive: 'https://drive.usercontent.google.com/download?id=1VfIQQ4Uy6rf9HEaUbHnC3lpfsSmpdjrX&export=download&confirm=t'

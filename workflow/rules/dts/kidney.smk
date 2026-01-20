@@ -36,12 +36,15 @@ rule prcannot_kidney:
     output:
         annot=temp(local('dts/hg38/kidney/annot.csv')),
         rna=temp(local('dts/hg38/kidney/rna.h5ad'))
+    params:
+        samples=config['dts']['kidney']['samples'],
     shell:
         """
         python workflow/scripts/dts/kidney/annot.py \
-        {input.h5se} \
-        {output.annot} \
-        {output.rna}
+        -a {input.h5se} \
+        -b {output.annot} \
+        -c {output.rna} \
+        -d {params.samples}
         """
 
 

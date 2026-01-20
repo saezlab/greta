@@ -3,10 +3,22 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 import anndata as ad
-import sys
-path_h5 = sys.argv[1]
-path_obs = sys.argv[2]
-path_adata = sys.argv[3]
+import argparse
+
+
+# Init args
+parser = argparse.ArgumentParser()
+parser.add_argument('-a','--path_h5', required=True)
+parser.add_argument('-b','--path_obs', required=True)
+parser.add_argument('-c','--path_adata', required=True)
+parser.add_argument('-d','--sample_ids', required=True, nargs='+')
+args = vars(parser.parse_args())
+
+path_h5 = args['path_h5']
+path_obs = args['path_obs']
+path_adata = args['path_adata']
+sample_ids = args['sample_ids']
+
 # Read
 with h5py.File(path_h5, 'r') as f:
     data = f['/assays/RNA/counts/data'][:]
@@ -24,9 +36,11 @@ obs.index = [f'{batch}_{barcode}' for batch, barcode in zip(obs['batch'], obs['b
 obs.index = [i.replace('-1', '') for i in obs.index]
 obs = obs.drop(columns=['library', 'barcode'])
 # Filter low abundant cells
-ncells = obs.groupby('celltype').size()
-ctypes = set(ncells.index[ncells >= 100])
-msk_obs = obs['celltype'].isin(ctypes)
+msk_ids = obs['batch'].isin(sample_ids)
+tobs = obs[msk_ids]
+ncells = tobs.groupby('celltype').size()
+ctypes = set(ncells.index[ncells >= 50])
+msk_obs = (obs['celltype'].isin(ctypes)) & msk_ids
 X = X[msk_obs, :]
 obs = obs.loc[msk_obs, :]
 var = pd.DataFrame(index=genes)
