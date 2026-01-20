@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import scanpy as sc
 import mudata as mu
+import scipy.sparse as sps
 import argparse
 
 
@@ -21,6 +22,7 @@ path_output = args['path_output']
 
 # Read
 rna = sc.read_h5ad(path_gex)
+rna.X = sps.csr_matrix(rna.X)
 atac = sc.read_h5ad(path_peaks)
 obs = pd.read_csv(path_annot, index_col=0)
 # Match
