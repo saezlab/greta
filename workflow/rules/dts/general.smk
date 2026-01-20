@@ -1,3 +1,5 @@
+localrules: dts_gzip, compress_all
+
 rule extract_case:
     threads: 16
     singularity: 'workflow/envs/gretabench.sif'
@@ -22,4 +24,38 @@ rule extract_case:
         -r '{params.n_hvr}' \
         -t '{params.root}' \
         -o '{output.mdata}'
+        """
+
+rule dts_gzip:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.extract_case.output.mdata,
+    output: 'dts/compressed/{org}_dts_{dat}_{case}.h5mu.gz'
+    shell:
+        """
+        python workflow/scripts/dts/compress.py {input} {output}
+        """
+
+rule compress_all:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        [
+            'dts/compressed/hg38_dts_brain_all.h5mu.gz',
+            'dts/compressed/hg38_dts_breast_all.h5mu.gz',
+            'dts/compressed/hg38_dts_embryo_all.h5mu.gz',
+            'dts/compressed/hg38_dts_eye_all.h5mu.gz',
+            'dts/compressed/hg38_dts_heart_all.h5mu.gz',
+            'dts/compressed/hg38_dts_kidney_all.h5mu.gz',
+            'dts/compressed/hg38_dts_pbmc10k_all.h5mu.gz',
+            'dts/compressed/hg38_dts_pitupair_all.h5mu.gz',
+            'dts/compressed/hg38_dts_reprofibro_all.h5mu.gz',
+            'dts/compressed/hg38_dts_skin_all.h5mu.gz',
+            'dts/compressed/mm10_dts_epalate_all.h5mu.gz',
+        ]
+    output:
+        'dts/compressed/done.txt'
+    shell:
+        """
+        touch {output}
         """
