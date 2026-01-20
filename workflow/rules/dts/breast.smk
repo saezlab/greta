@@ -2,7 +2,7 @@ localrules: prcannot_breast, annotate_breast
 
 
 rule download_fragments_breast:
-    threads: 16
+    threads: 2
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
