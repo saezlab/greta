@@ -33,7 +33,7 @@ rule p2g_granie:
         out='dts/{org}/{dat}/cases/{case}/runs/{pre}.granie.p2g.csv'
     params: ext=config['methods']['granie']['ext'],
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -68,7 +68,7 @@ rule tfb_granie:
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.granie.tfb.csv'
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'],
     shell:
         """
@@ -104,7 +104,7 @@ rule mdl_granie:
         out='dts/{org}/{dat}/cases/{case}/runs/{pre}.{p2g}.{tfb}.granie.mdl.csv'
     params: thr_fdr=config['methods']['granie']['thr_fdr'],
     resources:
-        mem_mb=restart_mem,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
         runtime=config['max_mins_per_step'],
     shell:
         """

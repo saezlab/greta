@@ -122,7 +122,7 @@ rule mdl_dictys:
         path_mdl=$path_tmp/mdl.csv
         mkdir -p $path_tmp
         timeout $(({resources.runtime}-20))m \
-        bash workflow/scripts/mth/dictys/mdl.sh \
+        bash workflow/scripts/mth/dictys/mdl_d.sh \
         --output_d $path_tmp \
         --pre_path {input.pre} \
         --p2g_path {input.p2g} \
