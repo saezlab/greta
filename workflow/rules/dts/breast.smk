@@ -37,15 +37,17 @@ rule prcannot_breast:
         ann=temp(local('dts/hg38/breast/annot.csv'))
     params:
         adata=config['dts']['breast']['url']['anndata'],
+        samples=config['dts']['breast']['samples'],
     shell:
         """
         path_breast=$(dirname {output.rna})
-        wget --no-verbose '{params.adata}' -O "${{path_breast}}/tmp.h5ad"
+        wget --no-verbose '{params.adata}' -O "${{path_breast}}/tmp.h5ad" && \
         python workflow/scripts/dts/breast/annot.py \
-        "${{path_breast}}/tmp.h5ad" \
-        {input.gid} \
-        {output.rna} \
-        {output.ann}
+        -a"${{path_breast}}/tmp.h5ad" \
+        -b {input.gid} \
+        -c {output.rna} \
+        -d {output.ann} \
+        -e {params.samples} && \
         rm $path_breast/tmp.h5ad
         """
 

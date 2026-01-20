@@ -1,7 +1,7 @@
 localrules: prcannot_kidney, annotate_kidney
 
 rule download_kidney:
-    threads: 12
+    threads: 2
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
