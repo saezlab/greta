@@ -6,10 +6,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from utils import read_config
 
 
-def fixed_pip(mthds, sts, mat, title):
+def fixed_pip(m_mthds, sts, mat, title):
     res = []
     steps = ['pre', 'c2g', 'tfb', 'mdl']
-    for mth in mthds:
+    for mth in m_mthds:
         # Extract steps
         msk_mth = (sts['pre'] == mth) & (sts['c2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
         msk_pre = (sts['pre'] != mth) & (sts['c2g'] == mth) & (sts['tfb'] == mth) & (sts['mdl'] == mth)
@@ -41,10 +41,12 @@ sim = pd.read_csv(sys.argv[1])
 sts = pd.read_csv(sys.argv[2])
 config = read_config()
 mthds = list(config['methods'].keys())
+is_modular = [config['methods'][m]['modular'] for m in mthds]
+m_mthds = [m for m, is_m in zip(mthds, is_modular) if is_m]
 
 # Remove original runs and baselines
 sim = sim[~(sim['name_a'].str.startswith('o_') | sim['name_b'].str.startswith('o_'))]
-sim = sim[(sim['name_a'].str.split('.', expand=True)[0].isin(mthds) & sim['name_b'].str.split('.', expand=True)[0].isin(mthds))]
+sim = sim[(sim['name_a'].str.split('.', expand=True)[0].isin(m_mthds) & sim['name_b'].str.split('.', expand=True)[0].isin(m_mthds))]
 
 # Find ocoeffs for fixed vs one step change
 df = None
@@ -55,9 +57,9 @@ for oc in ['tf_oc', 'edge_oc', 'target_oc']:
     t_sts = sts.set_index('name').loc[mat.index].rename(columns={'p2g': 'c2g'})
     t_sts[['pre', 'c2g', 'tfb', 'mdl']] = t_sts.reset_index()['name_a'].str.split('.', n=4, expand=True).values
     if df is None:
-        df = fixed_pip(mthds, t_sts, mat, title=oc)
+        df = fixed_pip(m_mthds, t_sts, mat, title=oc)
     else:
-        df = pd.merge(df, fixed_pip(mthds, t_sts, mat, title=oc), on=['mth', 'step', 'rest'])
+        df = pd.merge(df, fixed_pip(m_mthds, t_sts, mat, title=oc), on=['mth', 'step', 'rest'])
 
 # Write
 df.to_csv(sys.argv[3], index=False)

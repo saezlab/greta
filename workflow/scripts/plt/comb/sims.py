@@ -60,6 +60,8 @@ config = read_config()
 palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
 baselines = config['baselines']
+is_modular = [config['methods'][m]['modular'] for m in mthds]
+m_mthds = [m for m, is_m in zip(mthds, is_modular) if is_m]
 
 
 mdata = mu.read(sys.argv[1])
@@ -157,7 +159,7 @@ for oc in ['tf_oc', 'edge_oc', 'target_oc']:
     np.fill_diagonal(mat.values, 1)
     t_sts = sts.set_index('name').loc[mat.index].rename(columns={'p2g': 'c2g'})
     t_sts[['pre', 'c2g', 'tfb', 'mdl']] = t_sts.reset_index()['name_a'].str.split('.', n=4, expand=True).values
-    figs.append(fixed_pip(mthds, fvsd, title=oc))
+    figs.append(fixed_pip(m_mthds, fvsd, title=oc))
     figs.append(sim_mat(mat, t_sts, palette))
 
 fig, axes = plt.subplots(2, 1, figsize=(2, 4), tight_layout=True)
