@@ -34,6 +34,7 @@ common_cells = rna.obs_names[
 rna = rna[common_cells].copy()
 atac = atac[common_cells].copy()
 obs = obs.loc[common_cells].copy()
+del rna.var
 
 # Create mdata (global obs only)
 mdata = mu.MuData(
