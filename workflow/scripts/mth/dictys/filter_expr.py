@@ -10,4 +10,5 @@ namet = list(namereg) + [x for x in nametarget if x not in set(namereg)]
 
 expr_sub = expr.loc[namet]
 expr_sub = expr_sub.loc[:, expr_sub.sum(axis=0) > 0]
-expr.loc[:, expr_sub.columns].to_csv(sys.argv[3], sep='\t', header=True, index=True)
+msk = expr.columns.isin(expr_sub.columns)
+expr.loc[:, msk].to_csv(sys.argv[3], sep='\t', header=True, index=True)
