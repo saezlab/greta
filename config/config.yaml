@@ -96,6 +96,7 @@ methods:
         thr_r2: 0.1
 
 baselines: ['collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'scgpt', 'random']
+mm10_methods: ['celloracle', 'dictys', 'figr', 'scenicplus', 'collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'random']
 
 colors:
     nets:

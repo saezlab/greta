@@ -45,8 +45,12 @@ def make_combs_rules(w, rule_name):
     #    for mth in mthds:
     #        if config['methods'][mth]['modular']:
     #            rule_outputs.append(format_rule(out, w=w, pre=mth))
-    for mth in mthds:
-        rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
+    if w.org == 'hg38':
+        for mth in mthds:
+            rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
+    elif w.org == 'mm10':
+        for mth in mm10_mthds:
+            rule_outputs.append(format_rule(out, w=w, pre='o_' + mth))
     return rule_outputs
 
 
@@ -68,6 +72,7 @@ configfile: 'config/config.yaml'
 
 orgms = [k for k in config['dbs'] if k != 'ont']
 mthds = [m for m in list(config['methods'].keys())]
+mm10_mthds = config['mm10_methods']
 is_modular = [config['methods'][m]['modular'] for m in mthds]
 m_mthds = [m for m, is_m in zip(mthds, is_modular) if is_m]
 baselines = ['collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'scgpt', 'random']

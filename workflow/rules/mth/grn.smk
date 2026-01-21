@@ -21,7 +21,7 @@ rule mdl_o_collectri:
     input:
         mdata=rules.extract_case.output.mdata,
         grn=rules.gst_collectri.output,
-        proms=rules.cre_promoters.output,
+        proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_collectri.o_collectri.o_collectri.o_collectri.mdl.csv'
     resources:
@@ -43,7 +43,7 @@ rule mdl_o_dorothea:
     input:
         mdata=rules.extract_case.output.mdata,
         grn=rules.gst_dorothea.output,
-        proms=rules.cre_promoters.output,
+        proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_dorothea.o_dorothea.o_dorothea.o_dorothea.mdl.csv'
     resources:

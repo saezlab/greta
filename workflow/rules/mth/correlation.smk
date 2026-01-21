@@ -6,7 +6,7 @@ rule mdl_o_pearson:
     input:
         mdata=rules.extract_case.output.mdata,
         tf=rules.gen_tfs_lambert.output,
-        proms=rules.cre_promoters.output,
+        proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output: out='dts/{org}/{dat}/cases/{case}/runs/o_pearson.o_pearson.o_pearson.o_pearson.mdl.csv'
     params:
         mode=config['methods']['pearson']['mode'],
@@ -31,7 +31,7 @@ rule mdl_o_spearman:
     input:
         mdata=rules.extract_case.output.mdata,
         tf=rules.gen_tfs_lambert.output,
-        proms=rules.cre_promoters.output,
+        proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output: out='dts/{org}/{dat}/cases/{case}/runs/o_spearman.o_spearman.o_spearman.o_spearman.mdl.csv'
     params:
         mode=config['methods']['spearman']['mode'],
