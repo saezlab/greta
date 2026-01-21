@@ -26,6 +26,7 @@ del rna.var
 rna.X = sps.csr_matrix(rna.X)
 atac = sc.read_h5ad(path_peaks)
 obs = pd.read_csv(path_annot, index_col=0)
+obs['celltype'] = obs['celltype'].str.replace('/', '_')
 
 # Create mdata
 mdata = mu.MuData(
