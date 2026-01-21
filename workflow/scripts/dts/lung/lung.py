@@ -21,6 +21,7 @@ path_output = args['path_output']
 
 # Read
 rna = sc.read_h5ad(path_gex)
+rna.X = rna.X.astype(np.float32)
 atac = sc.read_h5ad(path_peaks)
 obs = pd.read_csv(path_annot, index_col=0)
 # Match

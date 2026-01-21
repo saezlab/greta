@@ -45,6 +45,7 @@ rule compress_all:
             'dts/compressed/hg38_dts_breast_all.h5mu.gz',
             'dts/compressed/hg38_dts_embryo_all.h5mu.gz',
             'dts/compressed/hg38_dts_eye_all.h5mu.gz',
+            'dts/compressed/hg38_dts_lung_all.h5mu.gz',
             'dts/compressed/hg38_dts_heart_all.h5mu.gz',
             'dts/compressed/hg38_dts_kidney_all.h5mu.gz',
             'dts/compressed/hg38_dts_pbmc10k_all.h5mu.gz',
