@@ -153,7 +153,7 @@ ax.set_ylabel('Total features (log1p)')
 ax.legend().set_visible(False)
 figs.append(fig)
 
-for oc in ['tf_oc', 'edge_oc', 'target_oc']:
+for oc in ['tf_oc', 'cre_oc', 'target_oc', 'edge_oc']:
     mat = df.dropna().pivot(index='name_a', columns='name_b', values=oc).fillna(0)
     mat = mat + mat.T
     np.fill_diagonal(mat.values, 1)
@@ -190,4 +190,4 @@ ax.set_ylabel('')
 figs.append(fig)
 
 # Write
-savefigs(figs, sys.argv[8], index_pngs=[0, 5, 7, 9])
+savefigs(figs, sys.argv[8], index_pngs=[0, 5, 7, 9, 11])

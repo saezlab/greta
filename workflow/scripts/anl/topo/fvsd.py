@@ -50,7 +50,7 @@ sim = sim[(sim['name_a'].str.split('.', expand=True)[0].isin(m_mthds) & sim['nam
 
 # Find ocoeffs for fixed vs one step change
 df = None
-for oc in ['tf_oc', 'edge_oc', 'target_oc']:
+for oc in ['tf_oc', 'cre_oc', 'target_oc', 'edge_oc']:
     mat = sim.dropna().pivot(index='name_a', columns='name_b', values=oc).fillna(0)
     mat = mat + mat.T
     np.fill_diagonal(mat.values, 1)
