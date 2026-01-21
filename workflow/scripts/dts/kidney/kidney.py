@@ -46,6 +46,8 @@ del rna.obs
 del rna.var
 # Match
 atac = atac[rna.obs_names].copy()
+# Dtype
+rna.X = rna.X.astype(np.float32)
 # Create mdata
 mdata = mu.MuData(
     {'rna': rna, 'atac': atac,},

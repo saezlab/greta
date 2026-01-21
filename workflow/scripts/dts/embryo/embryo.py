@@ -23,7 +23,7 @@ path_output = args['path_output']
 # Read
 rna = sc.read_h5ad(path_gex)
 del rna.var
-rna.X = sps.csr_matrix(rna.X)
+rna.X = sps.csr_matrix(rna.X).astype(np.float32)
 atac = sc.read_h5ad(path_peaks)
 obs = pd.read_csv(path_annot, index_col=0)
 obs['celltype'] = obs['celltype'].str.replace('/', '_')
