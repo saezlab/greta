@@ -409,7 +409,22 @@ def sort_bed(in_file, out_file):
 
 
 #------------------------
-# 2. Run bedtools intersects
+# 2. Filter to standard chromosomes
+#------------------------
+def filter_standard_chroms(in_file):
+    """Filter BED file to keep only standard chromosomes (chr1-22, X, Y, M)."""
+    in_file = Path(in_file)
+    tmp_file = in_file.with_suffix(".tmp")
+    subprocess.run(
+        f"grep -E '^chr([0-9]+|X|Y|M)\t' {in_file} > {tmp_file} && mv {tmp_file} {in_file}",
+        shell=True,
+        check=True
+    )
+    print(f"Filtered {in_file} to standard chromosomes")
+
+
+#------------------------
+# 3. Run bedtools intersects
 #------------------------
 def run_bedtools_intersects(cell_types, outdir, motif_file, promoter_file, bedtools_path="bedtools"):
     Path(outdir).mkdir(parents=True, exist_ok=True)
@@ -543,6 +558,7 @@ for ct in celltypes:
     sorted_peaks = inpath.with_name(inpath.stem + ".sorted" + inpath.suffix)
 
     sort_bed(inpath, sorted_peaks)
+    filter_standard_chroms(sorted_peaks)
 
 
 print("Running bedtools intersects...")
