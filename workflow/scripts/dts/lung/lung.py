@@ -2,6 +2,7 @@ import mudata as mu
 import pandas as pd
 import numpy as np
 import scanpy as sc
+import scipy.sparse as sps
 import mudata as mu
 import argparse
 
@@ -21,6 +22,8 @@ path_output = args['path_output']
 
 # Read
 rna = sc.read_h5ad(path_gex)
+rna.X.sort_indices()
+rna.X = rna.X.tocsr()
 rna.X = rna.X.astype(np.float32)
 atac = sc.read_h5ad(path_peaks)
 obs = pd.read_csv(path_annot, index_col=0)
