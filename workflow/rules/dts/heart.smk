@@ -1,15 +1,16 @@
-localrules: prcannot_heart
+localrules: prcannot_heart, download_anndata_heart
 
 
 rule download_fragments_heart:
-    threads: 7
+    threads: 2
     singularity: 'workflow/envs/figr.sif'
     input: 'workflow/envs/figr.sif'
     output:
         frag=expand('dts/hg38/heart/{sample}.frags.tsv.gz', sample=config['dts']['heart']['samples']),
         tbis=expand('dts/hg38/heart/{sample}.frags.tsv.gz.tbi', sample=config['dts']['heart']['samples'])
     params:
-        tar=config['dts']['heart']['url']['tar']
+        tar=config['dts']['heart']['url']['tar'],
+        samples=config['dts']['heart']['samples']
     shell:
         """
         data_path=$(dirname "{output.frag[0]}")
@@ -18,10 +19,23 @@ rule download_fragments_heart:
         tar -xvf $path_tar -C "$data_path"
         rm "$data_path"/*.tbi
         rm $path_tar
+        samples=({params.samples})
         for file in $data_path/*_atac_fragments.tsv.gz; do
             base_name=$(basename "$file" _atac_fragments.tsv.gz);
             new_file="${{base_name#*_}}.frags.tsv.gz";
-            mv $file $data_path/$new_file
+            # Check if sample is in configured samples list
+            keep=false
+            for s in "${{samples[@]}}"; do
+                if [[ "$new_file" == "$s.frags.tsv.gz" ]]; then
+                    keep=true
+                    break
+                fi
+            done
+            if [[ "$keep" == true ]]; then
+                mv $file $data_path/$new_file
+            else
+                rm $file
+            fi
         done && \
         ls $data_path/*.frags.tsv.gz | xargs -n 1 -P {threads} bash workflow/scripts/dts/format_frags.sh
         """
