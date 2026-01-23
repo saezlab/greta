@@ -26,9 +26,23 @@ rule download_eye:
         python workflow/scripts/dts/eye/split.py \
         -a {output.annot} \
         -s {params.samples}
+        samples=({params.samples})
         for sample in $path_eye/*.frags.tsv; do
-            echo $sample 1>&2
-            gzip $sample
+            base_name=$(basename "$sample" .frags.tsv)
+            # Check if sample is in configured samples list
+            keep=false
+            for s in "${{samples[@]}}"; do
+                if [[ "$base_name" == "$s" ]]; then
+                    keep=true
+                    break
+                fi
+            done
+            if [[ "$keep" == true ]]; then
+                echo $sample 1>&2
+                gzip $sample
+            else
+                rm $sample
+            fi
         done
         python workflow/scripts/dts/eye/prcrna.py \
         {input.gid} \
