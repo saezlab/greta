@@ -186,7 +186,8 @@ rule mdl_o_dictys:
         -d $path_pre \
         -t $path_tmp \
         -p $path_p2g \
-        -e {params.ext} \
+        -e {params.ext} \#snakemake --profile config/slurm/ --retries 0 plt/stab/fig.pdf
+
         -g {input.ann} && \
         bash workflow/scripts/mth/dictys/tfb.sh \
         --input_pre $path_pre \
@@ -211,8 +212,8 @@ rule mdl_o_dictys:
         --device {params.device} \
         --thr_score {params.thr_score} \
         --use_p2g {params.use_p2g} \
-        --out_path {output.out}"
-        rm -rf $path_tmp
+        --out_path {output.out} && \
+        rm -rf $path_tmp"
         if [ $? -eq 124 ]; then
             awk 'BEGIN {{ print "source,cre,target,score,pval" }}' > {output.out}
             rm -rf $path_tmp
