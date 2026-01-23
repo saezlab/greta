@@ -34,6 +34,7 @@ rule topo_fvsd:
 
 rule topo_inter:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input: lambda w: make_combs_rules(w=w, rule_name='grn_run')
     output: 'anl/topo/{org}.{dat}.{case}.inter.csv',
     params: min_prop=config['topo_min_prop']
