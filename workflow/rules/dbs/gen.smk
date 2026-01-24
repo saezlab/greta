@@ -407,13 +407,16 @@ rule download_liftover_chains:
     singularity: 'workflow/envs/gretabench.sif'
     input: 'workflow/envs/gretabench.sif'
     output:
-        hg38ToHg19 = "dbs/chain_files/hg38ToHg19.over.chain.gz"
+        hg38ToHg19 = "dbs/chain_files/hg38ToHg19.over.chain.gz",
+        hg19ToHg38 = "dbs/chain_files/hg19ToHg38.over.chain.gz"
     params:
-        url_hg38ToHg19 = "http://hgdownload.cse.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz"
+        url_hg38ToHg19 = "http://hgdownload.cse.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz",
+        url_hg19ToHg38 = "http://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz"
     shell:
         """
         mkdir -p dbs/chain_files
         wget --no-verbose {params.url_hg38ToHg19} -O {output.hg38ToHg19}
+        wget --no-verbose {params.url_hg19ToHg38} -O {output.hg19ToHg38}
         """
 
 

@@ -27,6 +27,7 @@ parser.add_argument('-e','--motif_dir', required=True)
 parser.add_argument('-f','--promoter_dir', required=True)
 parser.add_argument('-g','--window_size', required=True)
 parser.add_argument('-i','--threads', required=True)
+parser.add_argument('-j','--path_chainFiles_rev', required=True)
 
 
 args = vars(parser.parse_args())
@@ -42,6 +43,7 @@ promoter_scmtni = os.path.join(promoter_dir, "Homo_sapiens.GRCh37.74.TSS.5000.be
 promoter_file = os.path.join(promoter_dir, "Homo_sapiens.GRCh37.74.TSS.customWindow.bed")
 window_size = int(args['window_size'])
 threads = int(args['threads'])
+path_chainFiles_rev = args['path_chainFiles_rev']
 
 
 # liftover files
@@ -855,21 +857,21 @@ remap_all_celltypes(results_dir=resultsdir,
 #-------------------------------------------------------------------------------------
 # Merge networks across cell types
 
-def merge_networks(outdir, output_file):
+def merge_networks(outdir):
     edges = {}
     files = glob.glob(outdir + "/Results/*/fold0/cre_net.txt")
-   
+
     for file in files:
         df = pd.read_csv(file, sep=",")
         # strip cluster suffix to merge across cell typess
         df["source"] = df["source"].str.replace("_.*", "", regex=True)
         df["target"] = df["target"].str.replace("_.*", "", regex=True)
         df["score"] = pd.to_numeric(df["score"], errors="coerce")
-        
+
         for _, row in df.iterrows():
             pair = (row["source"], row["CRE"], row["target"])
             edges.setdefault(pair, []).append(row["score"])
-   
+
     consensus = []
     for (tf, cre, target), score in edges.items():
         arr = np.array(score)
@@ -883,15 +885,80 @@ def merge_networks(outdir, output_file):
             sign = np.prod(signs)
         consensus_val = max_abs * sign
         consensus.append((tf, cre, target, consensus_val))
-        
+
     consensus_df = pd.DataFrame(consensus, columns=["source", "cre", "target", "score"])
-    consensus_df.to_csv(output_file, index=False)
-    
+
     return consensus_df
 
-# Example usage:
-consensus = merge_networks(outdir=path_output, output_file=path_outfile)
 
+#-------------------------------------------------------------------------------------
+# LiftOver CRE coordinates from hg19 back to hg38
+
+def liftover_cre_to_hg38(consensus_df, chain_file, output_dir):
+    """
+    Lift CRE coordinates from hg19 back to hg38.
+    """
+    # Extract unique CREs
+    cres = consensus_df['cre'].unique()
+
+    # Write to BED file with name column for tracking
+    input_bed = os.path.join(output_dir, "cre_hg19.bed")
+    output_bed = os.path.join(output_dir, "cre_hg38.bed")
+    unmapped = os.path.join(output_dir, "cre_unmapped.bed")
+
+    with open(input_bed, 'w') as f:
+        for cre in cres:
+            parts = cre.split('-')
+            if len(parts) == 3:
+                # BED format: chrom, start, end, name
+                f.write(f"{parts[0]}\t{parts[1]}\t{parts[2]}\t{cre}\n")
+
+    # Run liftOver
+    subprocess.run([
+        "liftOver",
+        input_bed,
+        chain_file,
+        output_bed,
+        unmapped
+    ], check=True)
+
+    # Build mapping using name column
+    hg19_to_hg38 = {}
+    with open(output_bed) as f:
+        for line in f:
+            parts = line.strip().split('\t')
+            if len(parts) >= 4:
+                hg38_coord = f"{parts[0]}-{parts[1]}-{parts[2]}"
+                hg19_coord = parts[3]  # original name
+                hg19_to_hg38[hg19_coord] = hg38_coord
+
+    # Update consensus dataframe
+    n_before = len(consensus_df)
+    consensus_df['cre'] = consensus_df['cre'].map(lambda x: hg19_to_hg38.get(x, None))
+
+    # Remove rows where CRE couldn't be lifted
+    consensus_df = consensus_df.dropna(subset=['cre'])
+    n_after = len(consensus_df)
+
+    if n_before != n_after:
+        print(f"Removed {n_before - n_after} edges with unmappable CREs")
+
+    print(f"Successfully lifted {len(hg19_to_hg38)} CREs from hg19 to hg38")
+
+    return consensus_df
+
+
+# Merge networks across cell types
+print("Merging networks across cell types...")
+consensus = merge_networks(outdir=path_output)
+
+# Lift CRE coordinates back to hg38
+print("Lifting CRE coordinates from hg19 to hg38...")
+consensus = liftover_cre_to_hg38(consensus, path_chainFiles_rev, path_output)
+
+# Save final output
+consensus.to_csv(path_outfile, index=False)
+print(f"Saved final network with hg38 coordinates to {path_outfile}")
 
 # Safe cleanup
 shutil.rmtree(path_output, ignore_errors=True)

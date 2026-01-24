@@ -5,6 +5,7 @@ rule mdl_o_scmtni:
         img='workflow/envs/scmtni.sif',
         mdata=rules.extract_case.output.mdata,
         chainfiles=rules.download_liftover_chains.output.hg38ToHg19,
+        chainfiles_rev=rules.download_liftover_chains.output.hg19ToHg38,
         motifs=rules.gen_motif_scmtni.output.motifs_dir,
         promoters=rules.gen_motif_scmtni.output.promoters_dir,
     output:
@@ -28,5 +29,6 @@ rule mdl_o_scmtni:
         -e {input.motifs} \
         -f {input.promoters} \
         -g {params.ext} \
-        -i {threads}
+        -i {threads} \
+        -j {input.chainfiles_rev}
         """
