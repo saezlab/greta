@@ -1,5 +1,5 @@
 rule mdl_o_grnboost:
-    threads: 16
+    threads: 15
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         img='workflow/envs/scenicplus.sif',
@@ -40,7 +40,7 @@ rule mdl_o_grnboost:
         """
 
 rule mdl_o_scenic:
-    threads: 16
+    threads: 15
     singularity: 'workflow/envs/scenicplus.sif'
     input:
         img='workflow/envs/scenicplus.sif',
