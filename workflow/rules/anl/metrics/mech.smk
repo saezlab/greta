@@ -17,7 +17,7 @@ rule mech_tfa:
 
 
 rule mech_prt:
-    threads: 16
+    threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
         grn=lambda wildcards: rules.grn_run.output.out.format(**wildcards),

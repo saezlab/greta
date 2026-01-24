@@ -30,6 +30,8 @@ resource_name = os.path.basename(resource_path).split('.')[0]
 
 # Read grn
 grn = pd.read_csv(grn_path)
+if dataset in ['fakepitupair', 'pitunpair']:
+    dataset = 'pitupair'
 
 if grn.shape[0] > 0:
     # Read resource and filter by cats

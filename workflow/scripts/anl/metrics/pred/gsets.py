@@ -69,6 +69,8 @@ def get_pw_hits(data, thr_pval, thr_prop):
 
 if grn.shape[0] > 0:
     ptw = pd.read_csv(ptw_path)
+    if 'weight' not in ptw.columns:
+        ptw['weight'] = 1.
     rna = mu.read(os.path.join(data_path, 'mod', 'rna'))
     # Infer pathway activities
     dc.run_ulm(

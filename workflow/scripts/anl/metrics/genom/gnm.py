@@ -49,6 +49,8 @@ def read_grn(grn_path, grp=None):
     return pr.PyRanges(grn)
 
 grn = read_grn(grn_path=grn_path, grp=grp)
+if dataset in ['fakepitupair', 'pitunpair']:
+    dataset = 'pitupair'
 cat_resources = ['chipatlas', 'remap2022', 'unibind', 'gwascatalogue', 'eqtlcatalogue']
 if grn.df.shape[0] > 0:
     # Read resource and filter by cats

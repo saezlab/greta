@@ -31,6 +31,8 @@ rsc_name = os.path.basename(bnc_path)
 # Read GRN
 grn = pd.read_csv(grn_path)
 grn = grn.drop_duplicates(['source', 'target'], keep='first')
+if dataset in ['fakepitupair', 'pitunpair']:
+    dataset = 'pitupair'
 
 if grn.shape[0] > 0:
     # Read dataset

@@ -44,6 +44,9 @@ rsc_name = os.path.basename(bnc_path)
 grn = pd.read_csv(grn_path)
 grn = grn.drop_duplicates(['source', 'target'], keep='first')
 
+if dataset in ['fakepitupair', 'pitunpair']:
+    dataset = 'pitupair'
+
 def init_celloracle(adata, grn, fit_grn):
     oracle = Oracle()
     oracle.adata = adata
