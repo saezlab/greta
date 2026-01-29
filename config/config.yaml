@@ -121,6 +121,72 @@ colors:
         scgpt: '#7e7e7e'
         random: 'black'
 
+dts_names:
+    lung: Lung
+    embryo: Embryo
+    skin: Skin
+    heart: Heart
+    pbmc10k: PBMC
+    epalate: Palate
+    kidney: Kidney
+    eye: Eye
+    pitupair: Pituitary
+    breast: Breast
+    reprofibro: Reprog. Fibro
+    brain: Brain
+
+dbs_names:
+  eqtlcatalogue: "eQTL Catalogue"
+  blacklist: "ENCODE Blacklist"
+  encode: "ENCODE CREs"
+  gwascatalogue: "GWAS Catalog"
+  promoters: "Promoters"
+  zhang21: "Zhang21"
+  phastcons: "phastCons"
+  chipatlas: "ChIP-Atlas"
+  remap2022: "ReMap 2022"
+  unibind: "UniBind"
+  knocktf: "KnockTF"
+  hpa: "Human Protein Atlas (HPA)"
+  tfmdb: "TF-Marker"
+  europmc: "Europe PMC"
+  intact: "IntAct"
+  reac: Reactome
+  hall: Hallmarks
+  kegg: KEGG
+  prog: PROGENy
+  gtf: G ~ TF
+  cretf: CRE ~ TF
+    
+
+class_names:
+  genom: Genomic
+  mech: Mechanistic
+  pred: Predictive
+  prior: Prior
+
+method_names:
+  celloracle: CellOracle
+  collectri: CollecTRI
+  crema: CREMA
+  dictys: Dictys
+  directnet: DirectNet
+  dorothea: DoRothEA
+  figr: FigR
+  granie: GRaNIE
+  grnboost: GRNBoost2
+  hummus: HuMMuS
+  inferelator: Inferelator
+  pando: Pando
+  pearson: Pearson
+  random: Random
+  scdori: scDORi
+  scenic: SCENIC
+  scenicplus: SCENIC+
+  scgpt: scGPT
+  scmtni: scMTNI
+  spearman: Spearman
+
 # Datasets
 dts:
     brain:

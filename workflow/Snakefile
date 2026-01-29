@@ -32,11 +32,11 @@ def format_rule(out, w, pre, p2g=None, tfb=None, mdl=None, resource=None):
     return frm
 
 
-def make_combs_rules(w, rule_name):
+def make_combs_rules(w, rule_name, do_decoupling=True):
     from itertools import product
     out = getattr(rules, rule_name).output.out
     rule_outputs = []
-    if w.dat in modular_datasets:
+    if w.dat in modular_datasets and do_decoupling:
         for pre, p2g, tfb, mdl in product(m_mthds, repeat=4):
             rule_outputs.append(
                 format_rule(out, w=w, pre=pre, p2g=p2g, tfb=tfb, mdl=mdl)
