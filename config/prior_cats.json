@@ -1906,6 +1906,8 @@
                 "HaCaT  keratinocytes",
                 "HNEK  epidermal keratinocytes"
             ],
+            "blacklist": "None",
+            "encode": "None",
             "gwascatalogue": [
                 "aging",
                 "longevity",
@@ -1943,6 +1945,9 @@
                 "fibroblast growth factor 2 measurement",
                 "fibroblast growth factor 21 measurement"
             ],
+            "phastcons": "None",
+            "promoters": "None",
+            "zhang21": "None",
             "eqtlcatalogue": [
                 "fibroblast",
                 "iPSC",
