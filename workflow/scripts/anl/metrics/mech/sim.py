@@ -87,7 +87,8 @@ def find_hits(sss, ct_sets, tfs, thr_pval):
     return df
 
 
-def get_prc_rcl(hits):
+def get_prc_rcl(hits, all_celltypes):
+    # Precision (unchanged logic)
     n_ct_per_ss = hits.sum(1)
     tp = (n_ct_per_ss == 1).sum()
     if tp > 0:
@@ -95,18 +96,19 @@ def get_prc_rcl(hits):
         prc = tp / (tp + fp)
     else:
         prc = 0
-    
-    n_cts = hits.sum(0)
-    tp = (n_cts > 0).sum()
+
+    # Recall - count dropped cell types as FN
+    recovered_cts = set(hits.columns[hits.sum(0) > 0])
+    tp = len(recovered_cts)
+    fn = len(all_celltypes - recovered_cts)  # Includes both: dropped CTs + CTs with 0 matches
     if tp > 0:
-        tn = (n_cts == 0).sum()
-        rcl = tp / (tp + tn)
+        rcl = tp / (tp + fn)
     else:
         rcl = 0
     return prc, rcl
 
 
-def compute_score(grn, ct_df, thr_pval=0.01):
+def compute_score(grn, ct_df, all_celltypes, thr_pval=0.01):
     # Find ct sets
     ct_sets = ct_df.groupby('celltype')['tf'].apply(lambda x: set(x))
     # Filter for tfs
@@ -123,7 +125,7 @@ def compute_score(grn, ct_df, thr_pval=0.01):
         sss = trap_spaces.compute_steady_states(primes, max_output=int(100_000))
         hits = find_hits(sss, ct_sets, tfs, thr_pval)
         print('Done')
-        prc, rcl = get_prc_rcl(hits)
+        prc, rcl = get_prc_rcl(hits, all_celltypes)
         f01 = f_beta_score(prc, rcl)
         return prc, rcl, f01
     else:
@@ -144,6 +146,8 @@ grn = pd.read_csv(path_grn)
 if grn.shape[0] > 0:
     # Ensure uniqueness but keep score
     grn = grn.groupby(['source', 'target'], as_index=False)['score'].mean()
+    # Get all cell types before filtering
+    all_celltypes = set(adata.obs['celltype'].unique())
     # Find TF markers
     sources = grn['source'].unique()
     ct_df = _get_source_markers(
@@ -153,7 +157,7 @@ if grn.shape[0] > 0:
         thr_deg_padj=2.22e-16,
     )
     # Compute score
-    prc, rcl, f01 = compute_score(grn, ct_df)
+    prc, rcl, f01 = compute_score(grn, ct_df, all_celltypes)
     # Transform to df
     df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
 else:
