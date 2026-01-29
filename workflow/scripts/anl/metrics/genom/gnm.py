@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 import pyranges as pr
 import mudata as mu
-from tqdm import tqdm
-import re
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -42,6 +40,7 @@ def read_grn(grn_path, grp=None):
                 grn = grn[['Chromosome', 'Start', 'End', grp]].rename(columns={grp: 'Name'})
             else:
                 grn = grn[['Chromosome', 'Start', 'End']]
+            grn = grn.drop_duplicates()
         else:
             grn = None
     else:
@@ -61,9 +60,10 @@ if grn.df.shape[0] > 0:
         df = pd.DataFrame([[grn_name, np.nan, np.nan, np.nan]], columns=['name', 'prc', 'rcl', 'f01'])
     else:
         if resource_name in cat_resources:
-            cats = [re.escape(c) for c in cats]
             print('Filtering for {0} cats'.format(len(cats)))
-            db = db[db.df['Score'].str.contains('|'.join(cats))]
+            cats_set = set(cats)
+            mask = db.df['Score'].apply(lambda x: any(c.strip() in cats_set for c in x.split(',')))
+            db = db[mask]
 
         # Filter genomic resource by measured CREs and or genes
         genes = mu.read(os.path.join(data_path, 'mod', 'rna')).var_names.astype('U')
