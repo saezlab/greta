@@ -690,78 +690,137 @@ def get_hierarchical_db_order(db_mean, db_hierarchy, class_order):
     return ordered_cols
 
 
+def wrap_text_by_words(text, max_width=12):
+    """Wrap text at word boundaries only, no mid-word breaks."""
+    wrapper = textwrap.TextWrapper(
+        width=max_width,
+        break_long_words=False,
+        break_on_hyphens=False
+    )
+    lines = wrapper.wrap(text)
+    wrapped_text = '\n'.join(lines)
+    max_line_width = max(len(line) for line in lines) if lines else 0
+    num_lines = len(lines)
+    return wrapped_text, max_line_width, num_lines
+
+
+def precompute_wrapped_titles(task_boundaries_per_class, task_names_map, max_width=12):
+    """Pre-compute all wrapped task titles and their dimensions."""
+    wrapped_titles = {}
+    class_max_line_widths = {}
+    global_max_lines = 1
+
+    for cls, boundaries in task_boundaries_per_class.items():
+        wrapped_titles[cls] = {}
+        max_width_in_class = 0
+        max_lines_in_class = 1
+
+        for start, end, task in boundaries:
+            label = task_names_map.get(task, task)
+            wrapped_text, max_line_width, num_lines = wrap_text_by_words(label, max_width)
+            wrapped_titles[cls][task] = wrapped_text
+            max_width_in_class = max(max_width_in_class, max_line_width)
+            max_lines_in_class = max(max_lines_in_class, num_lines)
+
+        class_max_line_widths[cls] = max_width_in_class
+        global_max_lines = max(global_max_lines, max_lines_in_class)
+
+    return wrapped_titles, class_max_line_widths, global_max_lines
+
+
 def create_database_heatmap_figure(db_mean, db_ranks, db_hierarchy, method_order,
                                     class_order, config):
     """Create heatmap with hierarchical headers (Class -> Task -> Database).
 
     Layout:
     - Rows: methods (same order as main figure)
-    - Columns: databases grouped by task, grouped by class (separate heatmaps per class)
-    - Top headers: Class labels (spanning), Task labels (spanning)
+    - Columns: databases grouped by task, grouped by class (separate heatmaps per TASK)
+    - Top headers: Class labels (spanning), Task labels (per task)
     - Bottom: Database names (rotated 90 degrees)
     """
     baselines = set([config['method_names'][b] for b in config['baselines']])
     n_methods = len(method_order)
 
-    # Columns are (db, task) tuples - convert to set for reliable membership checking
+    # Columns are (db, task) tuples
     col_list = db_mean.columns.tolist()
-    available_cols = set(col_list)
 
-    # Build class and task structure
-    class_cols = {}  # {class: [(db, task), ...]}
-    task_boundaries_per_class = {}  # {class: [(start, end, task), ...]}
+    # Get config mappings
+    task_names_map = config.get('task_names', {})
+    class_names_map = config.get('class_names', {})
+    db_names_map = config.get('dbs_names', {})
+    class_colors = {'genom': '#e6f3ff', 'pred': '#fff3e6', 'prior': '#e6ffe6', 'mech': '#ffe6f3'}
 
+    # Build task structure: list of (class, task, [(db, task), ...]) in order
+    task_list = []  # [(cls, task, col_list), ...]
     for cls in class_order:
         cls_rows = db_hierarchy[db_hierarchy['class'] == cls]
         cls_col_list = [(d, t) for d, t in col_list
                         if any((cls_rows['db'] == d) & (cls_rows['task'] == t))]
-        if cls_col_list:
-            class_cols[cls] = cls_col_list
-            # Find task boundaries within this class
-            boundaries = []
-            current_task = None
-            task_start = 0
-            for i, (d, t) in enumerate(cls_col_list):
-                if t != current_task:
-                    if current_task is not None:
-                        boundaries.append((task_start, i - 1, current_task))
-                    current_task = t
-                    task_start = i
-            if current_task is not None:
-                boundaries.append((task_start, len(cls_col_list) - 1, current_task))
-            task_boundaries_per_class[cls] = boundaries
+        if not cls_col_list:
+            continue
+        # Group by task within this class
+        current_task = None
+        task_cols = []
+        for d, t in cls_col_list:
+            if t != current_task:
+                if current_task is not None:
+                    task_list.append((cls, current_task, task_cols))
+                current_task = t
+                task_cols = []
+            task_cols.append((d, t))
+        if current_task is not None:
+            task_list.append((cls, current_task, task_cols))
 
-    # Calculate widths for each class (number of columns)
-    class_widths = {cls: len(cols) for cls, cols in class_cols.items()}
-    total_cols = sum(class_widths.values())
-    n_classes = len(class_cols)
+    # Pre-compute wrapped titles and dimensions for each task
+    task_wrapped_titles = {}  # {task: wrapped_text}
+    task_title_widths = {}  # {task: max_line_width}
+    global_max_lines = 1
+    for cls, task, cols in task_list:
+        label = task_names_map.get(task, task)
+        wrapped_text, max_line_width, num_lines = wrap_text_by_words(label, max_width=12)
+        task_wrapped_titles[task] = wrapped_text
+        task_title_widths[task] = max_line_width
+        global_max_lines = max(global_max_lines, num_lines)
 
-    # Create figure with separate heatmap for each class
-    # Width ratios: method names (1), then each class proportional to its column count, with gaps
+    # Calculate width for each task: max(n_cols, title_width_in_cols)
+    # where title_width_in_cols approximates how many columns the title needs
+    CHARS_PER_COLUMN = 2.5  # approximate characters that fit per heatmap column
+    task_widths = []
+    for cls, task, cols in task_list:
+        n_cols = len(cols)
+        title_chars = task_title_widths[task]
+        title_width_in_cols = title_chars / CHARS_PER_COLUMN
+        effective_width = max(n_cols, title_width_in_cols)
+        task_widths.append(effective_width)
+
+    total_cols = sum(len(cols) for _, _, cols in task_list)
+
+    # Build width_ratios: [method_names, task1, task2, gap, task3, ...]
+    # Gaps only between classes
     gap_width = 0.3
     width_ratios = [1.5]  # method names column
-    for i, cls in enumerate(class_order):
-        if cls in class_cols:
-            width_ratios.append(class_widths[cls])
-            if i < len(class_order) - 1:  # gap between classes
-                width_ratios.append(gap_width)
-
-    # Remove trailing gap if present
-    if width_ratios[-1] == gap_width:
-        width_ratios = width_ratios[:-1]
+    gs_col_mapping = []  # maps task index to gs column
+    current_class = None
+    for i, (cls, task, cols) in enumerate(task_list):
+        if current_class is not None and cls != current_class:
+            # Add gap between classes
+            width_ratios.append(gap_width)
+        width_ratios.append(task_widths[i])
+        gs_col_mapping.append(len(width_ratios) - 1)
+        current_class = cls
 
     n_width_cols = len(width_ratios)
-    width_ratios = [1, 7, 0.3, 3, 0.3, 5, 0.3, 5]
-    #width_ratios[-1] = 5
-    print(width_ratios)
+
+    # Dynamic task header height based on max lines
+    task_header_height = 0.4 * global_max_lines
 
     fig = plt.figure(figsize=(max(14, total_cols * 0.5), max(6, n_methods * 0.35)))
 
     # GridSpec: class header, task header, heatmap, db labels, colorbar
     gs = GridSpec(5, n_width_cols, figure=fig,
-                  height_ratios=[0.4, 0.8, 10, 1.5, 0.3],
+                  height_ratios=[0.4, task_header_height, 10, 1.5, 0.3],
                   width_ratios=width_ratios,
-                  wspace=0.05, hspace=0.02)
+                  wspace=0.02, hspace=0.02)
 
     # --- Method names (leftmost column, spanning heatmap rows) ---
     ax_names = fig.add_subplot(gs[2, 0])
@@ -781,60 +840,59 @@ def create_database_heatmap_figure(db_mean, db_ranks, db_hierarchy, method_order
     cmap = plt.cm.viridis
     threshold = (vmin + vmax) / 2
 
-    class_names_map = config.get('class_names', {})
-    task_names_map = config.get('task_names', {})
-    db_names_map = config.get('dbs_names', {})
-    class_colors = {'genom': '#e6f3ff', 'pred': '#fff3e6', 'prior': '#e6ffe6', 'mech': '#ffe6f3'}
-
     im = None
-    gs_col = 1  # Start after method names column
 
-    for cls in class_order:
-        if cls not in class_cols:
-            continue
+    # Track class spans for class headers
+    class_spans = {}  # {cls: (start_gs_col, end_gs_col)}
+    for i, (cls, task, cols) in enumerate(task_list):
+        gs_col = gs_col_mapping[i]
+        if cls not in class_spans:
+            class_spans[cls] = [gs_col, gs_col]
+        else:
+            class_spans[cls][1] = gs_col
 
-        cls_col_list = class_cols[cls]
-        n_cls_cols = len(cls_col_list)
-
-        # --- Class header ---
-        ax_class = fig.add_subplot(gs[0, gs_col])
-        ax_class.set_xlim(-0.5, n_cls_cols - 0.5)
+    # --- Class headers (spanning multiple task columns) ---
+    for cls, (start_col, end_col) in class_spans.items():
+        ax_class = fig.add_subplot(gs[0, start_col:end_col + 1])
+        ax_class.set_xlim(0, 1)
         ax_class.set_ylim(0, 1)
         ax_class.axis('off')
-        rect = plt.Rectangle((-0.5, 0), n_cls_cols, 1,
+        rect = plt.Rectangle((0, 0), 1, 1,
                               facecolor=class_colors.get(cls, 'white'),
                               edgecolor='black', linewidth=1)
         ax_class.add_patch(rect)
         label = class_names_map.get(cls, cls)
-        ax_class.text((n_cls_cols - 1) / 2, 0.5, label, ha='center', va='center',
+        ax_class.text(0.5, 0.5, label, ha='center', va='center',
                       fontsize=10, fontweight='bold')
+
+    # --- Render each task as separate heatmap ---
+    for i, (cls, task, cols) in enumerate(task_list):
+        gs_col = gs_col_mapping[i]
+        n_task_cols = len(cols)
 
         # --- Task header ---
         ax_task = fig.add_subplot(gs[1, gs_col])
-        ax_task.set_xlim(-0.5, n_cls_cols - 0.5)
+        ax_task.set_xlim(0, 1)
         ax_task.set_ylim(0, 1)
         ax_task.axis('off')
+        rect = plt.Rectangle((0, 0), 1, 1,
+                              facecolor='white', edgecolor='gray', linewidth=0.5)
+        ax_task.add_patch(rect)
+        wrapped_label = task_wrapped_titles[task]
+        ax_task.text(0.5, 0.5, wrapped_label, ha='center', va='center', fontsize=9)
 
-        for start, end, task in task_boundaries_per_class[cls]:
-            rect = plt.Rectangle((start - 0.5, 0), end - start + 1, 1,
-                                  facecolor='white', edgecolor='gray', linewidth=0.5)
-            ax_task.add_patch(rect)
-            label = task_names_map.get(task, task)
-            wrapped_label = '\n'.join(textwrap.wrap(label, width=8))
-            ax_task.text((start + end) / 2, 0.5, wrapped_label, ha='center', va='center', fontsize=10)
-
-        # --- Heatmap for this class ---
+        # --- Heatmap for this task ---
         ax_heatmap = fig.add_subplot(gs[2, gs_col])
-        heatmap_data = db_mean[cls_col_list].values
+        heatmap_data = db_mean[cols].values
 
         im = ax_heatmap.imshow(heatmap_data, aspect='auto', cmap=cmap, vmin=vmin, vmax=vmax)
 
         # Add ranking text
-        for i in range(n_methods):
-            for j in range(n_cls_cols):
-                col = cls_col_list[j]
-                rank_val = db_ranks.loc[method_order[i], col]
-                cell_val = heatmap_data[i, j]
+        for row_i in range(n_methods):
+            for col_j in range(n_task_cols):
+                col = cols[col_j]
+                rank_val = db_ranks.loc[method_order[row_i], col]
+                cell_val = heatmap_data[row_i, col_j]
                 if pd.isna(rank_val) or pd.isna(cell_val):
                     rank_str = '-'
                     text_color = 'gray'
@@ -844,32 +902,23 @@ def create_database_heatmap_figure(db_mean, db_ranks, db_hierarchy, method_order
                         rank_str = f'{int(rank_val)}'
                     else:
                         rank_str = f'{rank_val:.1f}'
-                ax_heatmap.text(j, i, rank_str, ha='center', va='center',
+                ax_heatmap.text(col_j, row_i, rank_str, ha='center', va='center',
                                fontsize=10, color=text_color)
 
         ax_heatmap.set_yticks([])
         ax_heatmap.set_xticks([])
 
-        # Draw dashed lines between tasks
-        for start, end, task in task_boundaries_per_class[cls]:
-            if start > 0:
-                ax_heatmap.axvline(x=start - 0.5, color='gray', linewidth=0.5, linestyle='--')
-
         # --- Database labels at bottom (rotated 90 degrees) ---
         ax_db = fig.add_subplot(gs[3, gs_col])
-        ax_db.set_xlim(-0.5, n_cls_cols - 0.5)
+        ax_db.set_xlim(-0.5, n_task_cols - 0.5)
         ax_db.set_ylim(0, 1)
         ax_db.axis('off')
 
-        for i, (db, task) in enumerate(cls_col_list):
+        for j, (db, _) in enumerate(cols):
             label = db_names_map.get(db, db)
-            ax_db.text(i, 1, label, ha='center', va='top', fontsize=10, rotation=90)
-
-        # Move to next column (skip gap column)
-        gs_col += 2  # +1 for heatmap, +1 for gap
+            ax_db.text(j, 1, label, ha='center', va='top', fontsize=10, rotation=90)
 
     # --- Colorbar (small, centered at bottom) ---
-    # Create a small axis for colorbar in the middle
     cbar_width = 0.15
     cbar_left = 0.5 - cbar_width / 2
     cbar_ax = fig.add_axes([cbar_left, 0.02, cbar_width, 0.015])
