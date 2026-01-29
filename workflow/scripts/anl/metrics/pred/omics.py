@@ -7,6 +7,7 @@ from tqdm import tqdm
 import scipy
 import argparse
 import sys
+import pyranges as pr
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import f_beta_score
@@ -33,6 +34,17 @@ grn_name = os.path.basename(grn_path).replace('.grn.csv', '')
 data_path = os.path.join(os.path.dirname(os.path.dirname(grn_path)), 'mdata.h5mu')
 
 grn = pd.read_csv(grn_path)
+
+
+def map_regions(a, b):
+    def to_df(regions):
+        data = [r.split('-') for r in regions]
+        return pd.DataFrame(data, columns=['Chromosome','Start','End']).assign(Start=lambda x: x.Start.astype(int), End=lambda x: x.End.astype(int), region=regions)
+    pr_a = pr.PyRanges(to_df(a))
+    pr_b = pr.PyRanges(to_df(b))
+    joined = pr_b.join(pr_a, suffix='_a')
+    return joined.df[['region','region_a']].rename(columns={'region':'cre','region_a':'new_cre'})
+
 
 def test_predictability(mdata, train, test, grn, col_source='source', col_target='target', mod_source='rna', mod_target='rna', ntop=5):
     def remove_zeros(X, y):
@@ -70,6 +82,14 @@ def test_predictability(mdata, train, test, grn, col_source='source', col_target
 
 if grn.shape[0] > 0:
     mdata = mu.read_h5mu(data_path)
+    # Filter GRN
+    genes = mdata.mod['rna'].var_names
+    peaks = mdata.mod['atac'].var_names
+    cres = grn['cre'].unique()
+    mapped_regions = map_regions(list(peaks), list(cres))
+    grn = pd.merge(grn, mapped_regions, on='cre', how='inner').drop(columns=['cre']).rename(columns={'new_cre': 'cre'})
+    grn = grn[(grn['target'].isin(genes)) & (grn['source'].isin(genes))]
+    # Split and test
     train, test = train_test_split(mdata.obs_names, test_size=0.33, random_state=42, stratify=mdata.obs['celltype'])
     cor = test_predictability(mdata=mdata, train=train, test=test, grn=grn, col_source=col_source, col_target=col_target, mod_source=mod_source, mod_target=mod_target)
     sig_cor = cor[(cor['padj'] < 0.05) & (cor['coef'] > 0.05)]
