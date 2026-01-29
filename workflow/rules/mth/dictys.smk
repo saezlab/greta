@@ -186,8 +186,7 @@ rule mdl_o_dictys:
         -d $path_pre \
         -t $path_tmp \
         -p $path_p2g \
-        -e {params.ext} \#snakemake --profile config/slurm/ --retries 0 plt/stab/fig.pdf
-
+        -e {params.ext} \
         -g {input.ann} && \
         bash workflow/scripts/mth/dictys/tfb.sh \
         --input_pre $path_pre \
