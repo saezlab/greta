@@ -1,4 +1,4 @@
-localrules: topo_inter, topo_fvsd, topo_simul
+localrules: topo_inter, topo_fvsd, topo_simul, topo_aggr
 
 
 rule topo_mult:
@@ -16,6 +16,23 @@ rule topo_mult:
         python workflow/scripts/anl/topo/run_pair_sim.py \
         -t {output.stats} \
         -s {output.sims}
+        """
+
+def find_topo_aggr_paths(dat):
+    org = config['dts'][dat]['organism']
+    case = 'all'
+    return f'anl/topo/{org}.{dat}.{case}.stats_mult.csv'
+
+rule topo_aggr:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: [find_topo_aggr_paths(dat=d) for d in config['dts']]
+    output: 'anl/topo/stats.csv'
+    shell:
+        """
+        python workflow/scripts/anl/topo/aggr_stats.py \
+        -i {input} \
+        -o {output}
         """
 
 

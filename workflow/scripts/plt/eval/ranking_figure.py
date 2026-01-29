@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.gridspec import GridSpec
-from scipy.stats import rankdata, kruskal, norm
+from scipy.stats import rankdata, kruskal, norm, pearsonr
 from itertools import combinations
 import yaml
 
@@ -52,6 +52,11 @@ def load_scalability_data(path_scalability):
 def load_pair_data(path_pair):
     """Load paired comparison data from CSV."""
     return pd.read_csv(path_pair)
+
+
+def load_stats_data(path_stats):
+    """Load topology statistics data."""
+    return pd.read_csv(path_stats)
 
 
 def compute_scalability_rankings(scalability_df):
@@ -977,6 +982,111 @@ def create_pair_comparison_figure(pair_df, config):
     return fig
 
 
+def create_topology_correlation_figure(df, stats_df, config):
+    """Create scatter plots of network topology statistics vs F0.1 performance.
+
+    Args:
+        df: Metrics DataFrame with columns 'dts', 'name', 'f01'
+        stats_df: Topology stats DataFrame with columns 'dts', 'name', '# TFs', etc.
+        config: Configuration dictionary with method colors
+
+    Returns:
+        matplotlib Figure with 5 scatter plots and shared legend
+    """
+    # Get method colors from config
+    method_colors_old = config['colors']['nets']
+    method_colors = {config['method_names'][k]: method_colors_old[k] for k in method_colors_old}
+
+    # Merge metrics and stats on ['dts', 'name']
+    merged = df.merge(stats_df, on=['dts', 'name'], how='inner')
+
+    # Aggregate by method name: compute mean of numeric columns
+    agg_df = merged.groupby('name').mean(numeric_only=True).reset_index()
+
+    # Stat columns to plot
+    stat_columns = ['# TFs', '# CREs', '# Genes', '# Edges', 'Regulon size']
+
+    # Create figure: 1 row x 5 columns
+    fig, axes = plt.subplots(1, 5, figsize=(12, 3), sharey=True)
+
+    # Get all method names for consistent legend
+    method_names = agg_df['name'].unique()
+
+    # First pass: compute all correlations and p-values
+    correlations = []
+    for i, stat_col in enumerate(stat_columns):
+        x = agg_df[stat_col].values
+        y = agg_df['f01'].values
+        mask = ~(np.isnan(x) | np.isnan(y))
+        if mask.sum() > 2:
+            r, p = pearsonr(x[mask], y[mask])
+            correlations.append({'stat': stat_col, 'r': r, 'p': p})
+        else:
+            correlations.append({'stat': stat_col, 'r': np.nan, 'p': np.nan})
+
+    # Apply FDR correction (Benjamini-Hochberg)
+    p_values = np.array([c['p'] for c in correlations])
+    valid_mask = ~np.isnan(p_values)
+    if valid_mask.sum() > 0:
+        fdr_adjusted = benjamini_hochberg(p_values[valid_mask])
+        fdr_full = np.full(len(p_values), np.nan)
+        fdr_full[valid_mask] = fdr_adjusted
+        for i, c in enumerate(correlations):
+            c['fdr'] = fdr_full[i]
+
+    # Second pass: create plots with FDR-corrected significance
+    for i, stat_col in enumerate(stat_columns):
+        ax = axes[i]
+
+        # Get data for this stat
+        x = agg_df[stat_col].values
+        y = agg_df['f01'].values
+        names = agg_df['name'].values
+
+        # Scatter plot colored by method
+        for j, name in enumerate(names):
+            color = method_colors.get(name, 'gray')
+            ax.scatter(x[j], y[j], c=color, s=50, label=name if i == 0 else None,
+                      edgecolors='white', linewidth=0.5)
+
+        # Get correlation result for this stat
+        corr = correlations[i]
+        if not np.isnan(corr['r']):
+            r = corr['r']
+            fdr = corr['fdr']
+
+            # Significance stars based on FDR < 0.05
+            if fdr < 0.001:
+                stars = '***'
+            elif fdr < 0.01:
+                stars = '**'
+            elif fdr < 0.05:
+                stars = '*'
+            else:
+                stars = ''
+
+            # Annotate with r value and stars (bottom right)
+            ax.text(0.95, 0.05, f'r = {r:.2f} {stars}', transform=ax.transAxes,
+                   fontsize=9, va='bottom', ha='right')
+
+        ax.set_xlabel(stat_col, fontsize=9)
+        if i == 0:
+            ax.set_ylabel('Mean F0.1', fontsize=9)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.tick_params(labelsize=8)
+
+    # Create shared legend below the plots
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0),
+              ncol=5, fontsize=8, frameon=False)
+
+    # Adjust layout to make room for legend
+    fig.subplots_adjust(bottom=0.35)
+
+    return fig
+
+
 def main():
     """Main function to generate the ranking figure."""
     # Parse arguments
@@ -986,11 +1096,14 @@ def main():
                         help='Path to scalability CSV (columns: mth, h, gb, use_gpu)')
     parser.add_argument('-p', '--path_pair', required=True,
                         help='Path to pair comparison CSV')
+    parser.add_argument('-t', '--path_stats', required=True,
+                        help='Path to topology stats CSV (columns: dts, name, # TFs, etc.)')
     parser.add_argument('-o', '--path_out', required=True)
     args = vars(parser.parse_args())
     path_inp = args['path_inp']
     path_scalability = args['path_scalability']
     path_pair = args['path_pair']
+    path_stats = args['path_stats']
     path_out = args['path_out']
 
     # Load data
@@ -1001,6 +1114,9 @@ def main():
 
     # Load scalability data
     scalability_df = load_scalability_data(path_scalability)
+
+    # Load topology stats data
+    stats_df = load_stats_data(path_stats)
 
     # Compute aggregations
     overall_mean, class_mean, dataset_mean = compute_aggregations(df)
@@ -1060,12 +1176,16 @@ def main():
     # Create pair comparison figure (page 4)
     fig4 = create_pair_comparison_figure(pair_df, config)
 
+    # Create topology correlation figure (page 5)
+    fig5 = create_topology_correlation_figure(df, stats_df, config)
+
     # Save multi-page PDF
     with PdfPages(path_out) as pdf:
         pdf.savefig(fig1, bbox_inches='tight', dpi=300)
         pdf.savefig(fig2, bbox_inches='tight', dpi=300)
         pdf.savefig(fig3, bbox_inches='tight', dpi=300)
         pdf.savefig(fig4, bbox_inches='tight', dpi=300)
+        pdf.savefig(fig5, bbox_inches='tight', dpi=300)
 
     plt.close('all')
 

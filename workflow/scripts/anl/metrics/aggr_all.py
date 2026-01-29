@@ -85,7 +85,7 @@ mth_dict = {
     'pando': 'Pando',
     'pearson': 'Pearson',
     'random': 'Random',
-    'scdori': 'scDORi',
+    'scdori': 'scDoRI',
     'scenic': 'SCENIC',
     'scenicplus': 'SCENIC+',
     'scgpt': 'scGPT',
