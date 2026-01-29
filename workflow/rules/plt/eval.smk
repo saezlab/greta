@@ -4,9 +4,12 @@ localrules: fig_eval
 rule fig_eval:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
-    input: rules.metric_summ.output.metrics
+    input:
+        metrics=rules.metric_summ.output.metrics,
+        scale=rules.metric_summ.output.scale,
+        pair=rules.metric_summ.output.pair,
     output: 'plt/eval/fig.pdf'
     shell:
         """
-        python workflow/scripts/plt/eval/ranking_figure.py -i {input} -o {output}
+        python workflow/scripts/plt/eval/ranking_figure.py -i {input.metrics} -s {input.scale} -p {input.pair} -o {output}
         """

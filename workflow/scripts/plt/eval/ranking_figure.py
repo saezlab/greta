@@ -49,6 +49,11 @@ def load_scalability_data(path_scalability):
     return df
 
 
+def load_pair_data(path_pair):
+    """Load paired comparison data from CSV."""
+    return pd.read_csv(path_pair)
+
+
 def compute_scalability_rankings(scalability_df):
     """Compute rankings for scalability metrics where lower is better.
 
@@ -151,8 +156,8 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
     # Row 1: [names, barplot, gap, class_heatmap, gap, dataset_heatmap, gap, scal_time, scal_mem, scal_gpu]
     # Row 2: [empty spaces and colorbars for f01, time, memory]
     # Ratios based on user request: barplot=2, class=1, dataset=3, scalability=1 (split into 3)
-    gs = GridSpec(2, 10, figure=fig,
-                  width_ratios=[1, 1, 0.01, 1, 0.01, 3, 0.01, 0.33, 0.33, 0.34],
+    gs = GridSpec(2, 11, figure=fig,
+                  width_ratios=[1, 1, 0.01, 1, 0.01, 3, 0.01, 0.33, 0.33, 0.33, 0.34],
                   height_ratios=[20, 1],
                   wspace=0.02, hspace=0.15)
 
@@ -160,13 +165,14 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
     ax_bar = fig.add_subplot(gs[0, 1])
     ax_class = fig.add_subplot(gs[0, 3])
     ax_dataset = fig.add_subplot(gs[0, 5])
-    ax_scalability = fig.add_subplot(gs[0, 7:10])
+    ax_scalability = fig.add_subplot(gs[0, 7:11])
 
     # Colorbar axes in bottom row - balanced sizes
-    # F0.1 under class (ratio 1), time/mem under their columns (ratio 0.33 each)
+    # F0.1 under class (ratio 1), stab/time/mem under their columns (ratio 0.33 each)
     ax_cbar_f01 = fig.add_subplot(gs[1, 3])
-    ax_cbar_time = fig.add_subplot(gs[1, 7])
-    ax_cbar_mem = fig.add_subplot(gs[1, 8])
+    ax_cbar_stab = fig.add_subplot(gs[1, 7])
+    ax_cbar_time = fig.add_subplot(gs[1, 8])
+    ax_cbar_mem = fig.add_subplot(gs[1, 9])
 
     n_methods = len(method_order)
     y_positions = np.arange(n_methods)
@@ -274,7 +280,8 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
     ax_dataset.set_yticks([])
 
     # --- Scalability Heatmap (ax_scalability) ---
-    # Prepare scalability data: Time (h), Mem (GB), GPU
+    # Prepare scalability data: Stability, Time (h), Mem (GB), GPU
+    stab_values = scalability_df['stability'].values
     time_values = scalability_df['h'].values
     mem_values = scalability_df['gb'].values
     gpu_values = scalability_df['use_gpu'].values
@@ -283,26 +290,42 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
     mem_ranks = scalability_ranks['gb'].values
 
     # Normalize for colormaps
+    stab_norm = (stab_values - np.nanmin(stab_values)) / (np.nanmax(stab_values) - np.nanmin(stab_values))
     time_norm = (time_values - np.nanmin(time_values)) / (np.nanmax(time_values) - np.nanmin(time_values))
     mem_norm = (mem_values - np.nanmin(mem_values)) / (np.nanmax(mem_values) - np.nanmin(mem_values))
 
-    # Create combined scalability array for display (3 columns)
-    scalability_combined = np.column_stack([time_norm, mem_norm, np.zeros(n_methods)])
+    # Plot stability column with Greens colormap (darker = higher/better)
+    stab_data = stab_norm.reshape(-1, 1)
+    ax_scalability.imshow(stab_data, aspect='auto', cmap=plt.cm.Greens,
+                          vmin=0, vmax=1, extent=[-0.5, 0.5, n_methods - 0.5, -0.5])
 
     # Plot time column with Reds colormap
     time_data = time_norm.reshape(-1, 1)
     im_time = ax_scalability.imshow(time_data, aspect='auto', cmap=plt.cm.Reds_r,
-                                     vmin=0, vmax=1, extent=[-0.5, 0.5, n_methods - 0.5, -0.5])
+                                     vmin=0, vmax=1, extent=[0.5, 1.5, n_methods - 0.5, -0.5])
 
     # Plot memory column with Blues colormap
     mem_data = mem_norm.reshape(-1, 1)
     ax_scalability.imshow(mem_data, aspect='auto', cmap=plt.cm.Blues_r,
-                          vmin=0, vmax=1, extent=[0.5, 1.5, n_methods - 0.5, -0.5])
+                          vmin=0, vmax=1, extent=[1.5, 2.5, n_methods - 0.5, -0.5])
 
     # Plot GPU column with gray background
     gpu_data = np.zeros((n_methods, 1))
     ax_scalability.imshow(gpu_data, aspect='auto', cmap='Greys', vmin=0, vmax=1,
-                          extent=[1.5, 2.5, n_methods - 0.5, -0.5], alpha=0.2)
+                          extent=[2.5, 3.5, n_methods - 0.5, -0.5], alpha=0.2)
+
+    # Add text for stability values (2 decimal places)
+    for i in range(n_methods):
+        stab_val = stab_values[i]
+        cell_norm = stab_norm[i]
+        if pd.isna(stab_val):
+            val_str = '-'
+            text_color = 'gray'
+        else:
+            text_color = 'white' if cell_norm > 0.5 else 'black'
+            val_str = f'{stab_val:.2f}'
+        ax_scalability.text(0, i, val_str, ha='center', va='center',
+                           fontsize=8, color=text_color)
 
     # Add text for time values (actual hours)
     for i in range(n_methods):
@@ -318,7 +341,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
                 val_str = f'{time_val:.1f}'
             else:
                 val_str = f'{time_val:.2f}'
-        ax_scalability.text(0, i, val_str, ha='center', va='center',
+        ax_scalability.text(1, i, val_str, ha='center', va='center',
                            fontsize=8, color=text_color)
 
     # Add text for memory values (actual GB)
@@ -335,7 +358,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
                 val_str = f'{mem_val:.0f}'
             else:
                 val_str = f'{mem_val:.1f}'
-        ax_scalability.text(1, i, val_str, ha='center', va='center',
+        ax_scalability.text(2, i, val_str, ha='center', va='center',
                            fontsize=8, color=text_color)
 
     # Add GPU symbols (checkmark or X) - bold and larger
@@ -343,14 +366,14 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
         gpu_val = gpu_values[i]
         symbol = '✓' if gpu_val else '✗'
         text_color = 'green' if gpu_val else 'gray'
-        ax_scalability.text(2, i, symbol, ha='center', va='center',
+        ax_scalability.text(3, i, symbol, ha='center', va='center',
                            fontsize=14, fontweight='bold', color=text_color)
 
     # Configure scalability axes
-    ax_scalability.set_xlim(-0.5, 2.5)
+    ax_scalability.set_xlim(-0.5, 3.5)
     ax_scalability.set_ylim(n_methods - 0.5, -0.5)
-    ax_scalability.set_xticks([0, 1, 2])
-    ax_scalability.set_xticklabels(['Time (h)', 'Mem (GB)', 'GPU'], fontsize=10, rotation=90)
+    ax_scalability.set_xticks([0, 1, 2, 3])
+    ax_scalability.set_xticklabels(['Stability', 'Time (h)', 'Mem (GB)', 'GPU'], fontsize=10, rotation=90)
     ax_scalability.xaxis.set_ticks_position('top')
     ax_scalability.set_yticks([])
 
@@ -359,6 +382,14 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
     cbar_f01 = plt.colorbar(im_dataset, cax=ax_cbar_f01, orientation='horizontal')
     cbar_f01.set_label('Mean F0.1', fontsize=9)
     cbar_f01.ax.tick_params(labelsize=8)
+
+    # Stability colorbar (Greens)
+    sm_stab = plt.cm.ScalarMappable(cmap=plt.cm.Greens,
+                                     norm=plt.Normalize(vmin=np.nanmin(stab_values),
+                                                        vmax=np.nanmax(stab_values)))
+    cbar_stab = plt.colorbar(sm_stab, cax=ax_cbar_stab, orientation='horizontal')
+    cbar_stab.set_label('Mean\nOverlap\nCoefficient', fontsize=8)
+    cbar_stab.ax.tick_params(labelsize=7)
 
     # Time colorbar (Reds)
     sm_time = plt.cm.ScalarMappable(cmap=plt.cm.Reds_r,
@@ -541,7 +572,7 @@ def create_dataset_boxplot_figure(dataset_mean, posthoc_df, config, dataset_orde
     dts_to_pos = {dts: i + 1 for i, dts in enumerate(dataset_order)}
 
     # Create figure
-    fig, ax = plt.subplots(figsize=(5, 3))
+    fig, ax = plt.subplots(figsize=(4, 2))
 
     # Boxplot using seaborn
     sns.boxplot(data=plot_df, x='Dataset', y='Mean F0.1', ax=ax, width=0.6, order=dataset_order)
@@ -849,6 +880,54 @@ def create_database_heatmap_figure(db_mean, db_ranks, db_hierarchy, method_order
     return fig
 
 
+def create_pair_comparison_figure(pair_df, config):
+    """Create barplot figure comparing Unpaired vs Paired and Synthetic vs Paired."""
+    # Get method colors from config with name mapping
+    method_colors_old = config['colors']['nets']
+    method_colors = {config['method_names'][k]: method_colors_old[k] for k in method_colors_old}
+
+    # Filter data into two subsets (note: typo "Synthethic" in CSV)
+    unpaired_df = pair_df[pair_df['type'] == 'Unpaired vs Paired'].copy()
+    synthetic_df = pair_df[pair_df['type'] == 'Synthethic vs Paired'].copy()
+
+    # Order methods by f01 values from "Unpaired vs Paired" comparison
+    unpaired_df = unpaired_df.sort_values('f01', ascending=False)
+    method_order = unpaired_df['name'].tolist()
+
+    # Reorder synthetic_df to match
+    synthetic_df = synthetic_df.set_index('name').loc[method_order].reset_index()
+
+    # Create 1x2 subplot figure
+    fig, axes = plt.subplots(1, 2, figsize=(7, 3.5), sharex=True, sharey=True)
+
+    # Plot Unpaired vs Paired (left panel)
+    ax1 = axes[0]
+    bar_colors = [method_colors.get(m, 'gray') for m in method_order]
+    y_positions = np.arange(len(method_order))
+    ax1.barh(y_positions, unpaired_df['f01'].values, color=bar_colors, height=0.8)
+    ax1.axvline(x=0, ls='--', lw=1, c='black')
+    ax1.set_yticks(y_positions)
+    ax1.set_yticklabels(method_order, fontsize=9)
+    ax1.set_xlabel('ΔF0.1', fontsize=10)
+    ax1.set_title('Unpaired vs Paired', fontsize=11)
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+
+    # Plot Synthetic vs Paired (right panel)
+    ax2 = axes[1]
+    ax2.barh(y_positions, synthetic_df['f01'].values, color=bar_colors, height=0.8)
+    ax2.axvline(x=0, ls='--', lw=1, c='black')
+    ax2.set_yticks(y_positions)
+    ax2.set_yticklabels(method_order, fontsize=9)
+    ax2.set_xlabel('ΔF0.1', fontsize=10)
+    ax2.set_title('Synthetic vs Paired', fontsize=11)
+    ax2.spines['top'].set_visible(False)
+    ax2.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+    return fig
+
+
 def main():
     """Main function to generate the ranking figure."""
     # Parse arguments
@@ -856,14 +935,20 @@ def main():
     parser.add_argument('-i', '--path_inp', required=True)
     parser.add_argument('-s', '--path_scalability', required=True,
                         help='Path to scalability CSV (columns: mth, h, gb, use_gpu)')
+    parser.add_argument('-p', '--path_pair', required=True,
+                        help='Path to pair comparison CSV')
     parser.add_argument('-o', '--path_out', required=True)
     args = vars(parser.parse_args())
     path_inp = args['path_inp']
     path_scalability = args['path_scalability']
+    path_pair = args['path_pair']
     path_out = args['path_out']
 
     # Load data
     df, config = load_data(path_inp)
+
+    # Load pair data
+    pair_df = load_pair_data(path_pair)
 
     # Load scalability data
     scalability_df = load_scalability_data(path_scalability)
@@ -923,11 +1008,15 @@ def main():
         config
     )
 
+    # Create pair comparison figure (page 4)
+    fig4 = create_pair_comparison_figure(pair_df, config)
+
     # Save multi-page PDF
     with PdfPages(path_out) as pdf:
         pdf.savefig(fig1, bbox_inches='tight', dpi=300)
         pdf.savefig(fig2, bbox_inches='tight', dpi=300)
         pdf.savefig(fig3, bbox_inches='tight', dpi=300)
+        pdf.savefig(fig4, bbox_inches='tight', dpi=300)
 
     plt.close('all')
 

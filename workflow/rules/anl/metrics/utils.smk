@@ -76,9 +76,11 @@ rule metric_summ:
         scale='anl/stab/pitupair.ovc.csv'
     output:
         metrics='anl/metrics/summary/metrics.csv',
-        scale='anl/metrics/summary/scalability.csv'
+        scale='anl/metrics/summary/scalability.csv',
+        pair='anl/metrics/summary/pair.csv',
     shell:
         """
         python workflow/scripts/anl/metrics/aggr_all.py {output.metrics} && \
-        python workflow/scripts/anl/metrics/scalability.py {input.scale} {output.scale}
+        python workflow/scripts/anl/metrics/scalability.py {input.scale} {output.scale} && \
+        python workflow/scripts/anl/metrics/pair.py {output.metrics} {output.pair}
         """

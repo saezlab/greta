@@ -30,9 +30,9 @@ mth_dict = {
 }
 
 df = pd.read_csv(path_inp)
-cols = ['mth', 'seed', 'h', 'gb']
-df = df[df['cat'] == 'full'][cols].drop_duplicates(['mth', 'h', 'gb']).sort_values(['mth', 'seed'])
-df = df.groupby(['mth'])[['h', 'gb']].mean().reset_index()
+df = df[df['cat'] == 'full']
+df = df.groupby(['mth'], as_index=False)[['e_ocoeff', 'h', 'gb']].mean()
 df['use_gpu'] = df['mth'].isin(uses_gpu)
 df['mth'] = [mth_dict[n] for n in df['mth']]
+df = df.rename(columns={'e_ocoeff': 'stability'})
 df.to_csv(path_out, index=False)
