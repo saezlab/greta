@@ -20,7 +20,7 @@ rule mdl_o_collectri:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        grn=rules.gst_collectri.output,
+        grn=lambda w: rules.gst_collectri_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gst_collectri.output,
         proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_collectri.o_collectri.o_collectri.o_collectri.mdl.csv'
@@ -42,7 +42,7 @@ rule mdl_o_dorothea:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        grn=rules.gst_dorothea.output,
+        grn=lambda w: rules.gst_dorothea_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gst_dorothea.output,
         proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output:
         out='dts/{org}/{dat}/cases/{case}/runs/o_dorothea.o_dorothea.o_dorothea.o_dorothea.mdl.csv'

@@ -5,7 +5,7 @@ rule mdl_o_pearson:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        tf=rules.gen_tfs_lambert.output,
+        tf=lambda w: rules.gen_tfs_lambert_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_tfs_lambert.output,
         proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output: out='dts/{org}/{dat}/cases/{case}/runs/o_pearson.o_pearson.o_pearson.o_pearson.mdl.csv'
     params:
@@ -30,7 +30,7 @@ rule mdl_o_spearman:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         mdata=rules.extract_case.output.mdata,
-        tf=rules.gen_tfs_lambert.output,
+        tf=lambda w: rules.gen_tfs_lambert_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.gen_tfs_lambert.output,
         proms=lambda w: rules.cre_promoters_mm10.output if config['dts'][w.dat]['organism'] == 'mm10' else rules.cre_promoters.output,
     output: out='dts/{org}/{dat}/cases/{case}/runs/o_spearman.o_spearman.o_spearman.o_spearman.mdl.csv'
     params:
