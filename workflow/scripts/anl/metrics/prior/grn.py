@@ -30,8 +30,8 @@ resource_name = os.path.basename(resource_path).replace('.csv', '')
 
 # Read grn
 grn = pd.read_csv(grn_path)
-
-if grn.shape[0] > 0:
+grn_name_simple = grn_name.split('.')[0].replace('o_', '')
+if grn.shape[0] > 0 and grn_name_simple not in ['collectri', 'dorothea']:
     # Read resource and filter by cats
     db = pd.read_csv(resource_path)
     
