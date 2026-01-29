@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import sys
 import os
+import mudata as mu
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import f_beta_score
 
@@ -40,7 +41,12 @@ def find_pairs(grn, thr_pval):
 
 # Read
 grn = pd.read_csv(sys.argv[1]).drop_duplicates(['source', 'target'])
+data_path = os.path.join(os.path.dirname(os.path.dirname(sys.argv[1])), 'mdata.h5mu')
+genes = mu.read(os.path.join(data_path, 'mod', 'rna')).var_names.astype('U')
 tfp = pd.read_csv(sys.argv[2], sep='\t', header=None)
+
+# Filter by mdata genes
+tfp = tfp[tfp[0].isin(genes) & tfp[1].isin(genes)]
 
 # Process
 tfs = set(tfp[0]) | set(tfp[1])
