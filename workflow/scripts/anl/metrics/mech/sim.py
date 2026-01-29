@@ -141,23 +141,23 @@ adata = mdata.mod['rna'].copy()
 adata.obs = mdata.obs.copy()
 grn_name = os.path.basename(path_grn).replace('.grn.csv', '')
 grn = pd.read_csv(path_grn)
-
-# Ensure uniqueness but keep score
-grn = grn.groupby(['source', 'target'], as_index=False)['score'].mean()
-# Find TF markers
-sources = grn['source'].unique()
-ct_df = _get_source_markers(
-    adata=adata,
-    sources=sources,
-    thr_deg_lfc=2,
-    thr_deg_padj=2.22e-16,
-)
-
-# Compute score
-prc, rcl, f01 = compute_score(grn, ct_df)
-
-# Transform to df
-df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
+if grn.shape[0] > 0:
+    # Ensure uniqueness but keep score
+    grn = grn.groupby(['source', 'target'], as_index=False)['score'].mean()
+    # Find TF markers
+    sources = grn['source'].unique()
+    ct_df = _get_source_markers(
+        adata=adata,
+        sources=sources,
+        thr_deg_lfc=2,
+        thr_deg_padj=2.22e-16,
+    )
+    # Compute score
+    prc, rcl, f01 = compute_score(grn, ct_df)
+    # Transform to df
+    df = pd.DataFrame([[grn_name, prc, rcl, f01]], columns=['name', 'prc', 'rcl', 'f01'])
+else:
+    df = pd.DataFrame(columns=['name', 'prc', 'rcl', 'f01'])
 
 # Write
 df.to_csv(path_out, index=False)
