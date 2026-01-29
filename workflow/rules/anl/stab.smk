@@ -1,4 +1,4 @@
-localrules: run_stab, stab_ovsd, stab_cor, stab_unsmthds
+localrules: run_stab, stab_ovsd, stab_cor
 
 n_seeds = 10
 
@@ -100,20 +100,20 @@ rule stab_ovsd:
         """
 
 
-for i in range(n_seeds):
-    config['dts']['pbmc10k']['cases'][str(i)] = config['dts']['pbmc10k']['cases']['all'].copy()
-    config['dts']['pbmc10k']['cases'][str(i)]['n_sample'] = 1000000
-    config['dts']['pbmc10k']['cases'][str(i)]['seed'] = str(i)
+#for i in range(n_seeds):
+#    config['dts']['pbmc10k']['cases'][str(i)] = config['dts']['pbmc10k']['cases']['all'].copy()
+#    config['dts']['pbmc10k']['cases'][str(i)]['n_sample'] = 1000000
+#    config['dts']['pbmc10k']['cases'][str(i)]['seed'] = str(i)
 
-rule stab_unsmthds:
-    threads: 1
-    container: None
-    input: [[[os.path.join(os.path.dirname(p), '{dat}.' + str(case), f'{mth}.{mth}.{mth}.{mth}.scores.csv') for p in rules.metric_summ.input] for case in list(range(n_seeds)) + ['all']] for mth in ['dictys', 'scenicplus']]
-    output: 'anl/stab/unsmthds/{dat}.scores.csv'
-    shell:
-        """
-        python workflow/scripts/anl/metrics/aggregate.py \
-        -i {input} \
-        -o {output} \
-        -a
-        """
+#rule stab_unsmthds:
+#    threads: 1
+#    container: None
+#    input: [[[os.path.join(os.path.dirname(p), '{dat}.' + str(case), f'{mth}.{mth}.{mth}.{mth}.scores.csv') for p in rules.metric_summ.input] for case in #list(range(n_seeds)) + ['all']] for mth in ['dictys', 'scenicplus']]
+#    output: 'anl/stab/unsmthds/{dat}.scores.csv'
+#    shell:
+#        """
+#        python workflow/scripts/anl/metrics/aggregate.py \
+#        -i {input} \
+#        -o {output} \
+#        -a
+#        """
