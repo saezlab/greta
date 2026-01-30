@@ -6,7 +6,7 @@ df = pd.read_csv(sys.argv[1])
 
 pair = df[df['dts'] == 'Pituitary']
 npair = df[df['dts'] == 'Unpaired Pituitary']
-fake = df[df['dts'] == 'Synthethic Pituitary']
+fake = df[df['dts'] == 'Synthetic Pituitary']
 pvn = (npair.set_index(['class', 'task', 'db', 'name'])['f01'] - pair.set_index(['class', 'task', 'db', 'name'])['f01']).reset_index()
 pvf = (fake.set_index(['class', 'task', 'db', 'name'])['f01'] - pair.set_index(['class', 'task', 'db', 'name'])['f01']).reset_index()
 
