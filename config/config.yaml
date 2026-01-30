@@ -157,7 +157,19 @@ dbs_names:
   prog: PROGENy
   gtf: G ~ TF
   cretf: CRE ~ TF
-    
+
+task_names:
+  cre: CREs
+  c2g: CRE to Gene
+  tfb: TF Binding
+  gst: Gene Sets
+  omic: Omics
+  tfm: TF Markers
+  tfp: TF Pairs
+  grn: Reference GRN
+  tfa: TF Scoring
+  sss: Steady State Simulation
+  prt: Perturbation Forecasting
 
 class_names:
   genom: Genomic
