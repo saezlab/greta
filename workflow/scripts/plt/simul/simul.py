@@ -42,7 +42,8 @@ ax.set_ylabel('')
 # Eval
 df = pd.read_csv(path_eval)
 config = read_config()
-palette = config['colors']['nets']
+palette_old = config['colors']['nets']
+palette = {config['method_names'][k]: palette_old[k] for k in palette_old}
 
 fig_eval, ax = plt.subplots(1, 1, figsize=(3, 3))
 sns.barplot(data=df, x='f01', y='name', hue='name', palette=palette, ax=ax)

@@ -4,7 +4,14 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import f_beta_score
 
+def read_config(path_config='config/config.yaml'):
+    import yaml
+    with open(path_config, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
 path_out = sys.argv[1]
+config = read_config()
 
 gt = pd.read_csv('dbs/sim/GT_GRN.csv', index_col=0).rename(columns={'regulator': 'source'})
 
@@ -27,4 +34,6 @@ for mth in names:
     res.append([mth, prc, rcl, f01])
 
 res = pd.DataFrame(res, columns=['name', 'prc', 'rcl', 'f01'])
+mth_names = config['method_names']
+res['name'] = [mth_names[m] for m in res['name']]
 res.to_csv(path_out, index=False)

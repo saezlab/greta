@@ -67,6 +67,7 @@ rule topo_inter:
 
 rule topo_simul:
     threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
     input: expand('dts/sim/seed_1/{sim_mth}.csv', sim_mth=['celloracle', 'figr', 'pando', 'pearson', 'spearman', 'grnboost', 'random'])
     output: 'anl/topo/sim.1.ocoeff.csv'
     shell:
