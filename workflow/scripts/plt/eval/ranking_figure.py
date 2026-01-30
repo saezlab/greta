@@ -241,7 +241,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
                 rank_str = '-'
                 text_color = 'gray'
             else:
-                text_color = 'white' if cell_val > threshold else 'black'
+                text_color = 'white' if cell_val < threshold else 'black'
                 # Format rank as integer if whole number, else show one decimal
                 if rank_val == int(rank_val):
                     rank_str = f'{int(rank_val)}'
@@ -271,7 +271,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
                 rank_str = '-'
                 text_color = 'gray'
             else:
-                text_color = 'white' if cell_val > threshold else 'black'
+                text_color = 'white' if cell_val < threshold else 'black'
                 if rank_val == int(rank_val):
                     rank_str = f'{int(rank_val)}'
                 else:
@@ -902,7 +902,7 @@ def create_database_heatmap_figure(db_mean, db_ranks, db_hierarchy, method_order
                     rank_str = '-'
                     text_color = 'gray'
                 else:
-                    text_color = 'white' if cell_val > threshold else 'black'
+                    text_color = 'white' if cell_val < threshold else 'black'
                     if rank_val == int(rank_val):
                         rank_str = f'{int(rank_val)}'
                     else:
