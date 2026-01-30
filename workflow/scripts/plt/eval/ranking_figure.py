@@ -30,7 +30,7 @@ def load_data(path_inp, config_path='config/config.yaml'):
     df = pd.read_csv(path_inp)
 
     # Exclude control datasets
-    df = df[~df['dts'].isin(['Synthethic Pituitary', 'Unpaired Pituitary'])]
+    df = df[~df['dts'].isin(['Synthetic Pituitary', 'Unpaired Pituitary'])]
 
     return df, config
 
@@ -369,7 +369,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
     # Add GPU symbols (checkmark or X) - bold and larger
     for i in range(n_methods):
         gpu_val = gpu_values[i]
-        symbol = '✓' if gpu_val else '✗'
+        symbol = '✓' if gpu_val else ''
         text_color = 'green' if gpu_val else 'gray'
         ax_scalability.text(3, i, symbol, ha='center', va='center',
                            fontsize=14, fontweight='bold', color=text_color)
@@ -577,10 +577,10 @@ def create_dataset_boxplot_figure(dataset_mean, posthoc_df, config, dataset_orde
     dts_to_pos = {dts: i + 1 for i, dts in enumerate(dataset_order)}
 
     # Create figure
-    fig, ax = plt.subplots(figsize=(4, 2))
+    fig, ax = plt.subplots(figsize=(5, 3))
 
     # Boxplot using seaborn
-    sns.boxplot(data=plot_df, x='Dataset', y='Mean F0.1', ax=ax, width=0.6, order=dataset_order)
+    sns.boxplot(data=plot_df, x='Dataset', y='Mean F0.1', ax=ax, width=0.6, order=dataset_order, fill=False)
 
     # Rotate x-tick labels
     ax.tick_params(axis='x', labelsize=10, rotation=90)
