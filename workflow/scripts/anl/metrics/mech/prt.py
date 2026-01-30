@@ -95,6 +95,7 @@ def simulate_delta(oracle, tfs, n_steps=3):
 if grn.shape[0] > 0:
     # Read dataset
     rna = mu.read(os.path.join(data_path, 'mod', 'rna'))
+    rna_var_names_full = set(rna.var_names)  # Store before subsetting for GRN-independent filtering
 
     # Subset data to grn
     genes = set(grn['source']) | set(grn['target'])
@@ -121,6 +122,16 @@ if grn.shape[0] > 0:
         df = pd.DataFrame([[grn_name, np.nan, np.nan, np.nan]], columns=['name', 'prc', 'rcl', 'f01'])
     else:
         cats = [re.escape(c) for c in cats]
+        # Filter using FULL RNA genes (GRN-independent) for denominators
+        msk_full = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna_var_names_full) & (obs['logFC'] < -0.5)
+        obs_full = obs.loc[msk_full, :]
+        n_experiments = obs_full.shape[0]  # Recall denominator (GRN-independent)
+
+        # Precision denominator: GRN TFs present in perturbation DB
+        grn_tfs = set(grn['source'])
+        n_grn_tfs_in_prt = len(grn_tfs & set(obs_full['TF']))
+
+        # Filter for actual simulation using GRN-subset genes
         msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
         obs = obs.loc[msk, :]
         mat = mat.loc[msk, :]
@@ -153,14 +164,14 @@ if grn.shape[0] > 0:
                 coefs.append(r)
                 pvals.append(p)
         
-        # Compute recall
+        # Compute precision and recall
         coefs = np.array(coefs)
         pvals = np.array(pvals)
         padj = scipy.stats.false_discovery_control(pvals, method='bh')
         tp = np.sum((coefs > 0.05) & (padj < 0.05))
-        if tp > 0:
-            prc = tp / coefs.size
-            rcl = tp / obs.shape[0]
+        if n_grn_tfs_in_prt > 0 and n_experiments > 0 and tp > 0:
+            prc = tp / n_grn_tfs_in_prt
+            rcl = tp / n_experiments
             f01 = f_beta_score(prc, rcl)
         else:
             prc, rcl, f01 = 0., 0., 0.
