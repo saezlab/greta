@@ -131,39 +131,44 @@ dts_names:
     kidney: Kidney
     eye: Eye
     pitupair: Pituitary
+    fakepitupair: Synthetic Pituitary
+    pitunpair: Unpaired Pituitary
     breast: Breast
     reprofibro: Reprog. Fibro
     brain: Brain
 
 dbs_names:
-  eqtlcatalogue: "eQTL Catalogue"
-  blacklist: "ENCODE Blacklist"
-  encode: "ENCODE CREs"
-  gwascatalogue: "GWAS Catalog"
-  promoters: "Promoters"
-  zhang21: "Zhang21"
-  phastcons: "phastCons"
-  chipatlas: "ChIP-Atlas"
-  remap2022: "ReMap 2022"
-  unibind: "UniBind"
-  knocktf: "KnockTF"
-  hpa: "Human Protein Atlas (HPA)"
-  tfmdb: "TF-Marker"
-  europmc: "Europe PMC"
-  intact: "IntAct"
+  eqtlcatalogue: eQTL Catalogue
+  blacklist: ENCODE Blacklist
+  encode: ENCODE CREs
+  gwascatalogue: GWAS Catalog
+  promoters: Promoters
+  zhang21: Zhang21
+  phastcons: phastCons
+  chipatlas: ChIP-Atlas
+  remap2022: ReMap 2022
+  unibind: UniBind
+  knocktf: KnockTF
+  hpa: HPA
+  tfmdb: TF-Marker
+  europmc: Europe PMC
+  intact: IntAct
   reac: Reactome
   hall: Hallmarks
   kegg: KEGG
   prog: PROGENy
-  gtf: G ~ TF
-  cretf: CRE ~ TF
+  gtf: Gene ~ TFs
+  cretf: CRE ~ TFs
+  gcre: Gene ~ CREs
+  sss: Boolean rules
+  collectri: CollecTRI
 
 task_names:
   cre: CREs
   c2g: CRE to Gene
   tfb: TF Binding
-  gst: Gene Sets
-  omic: Omics
+  gsets: Gene Sets
+  omics: Omics
   tfm: TF Markers
   tfp: TF Pairs
   grn: Reference GRN

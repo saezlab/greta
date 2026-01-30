@@ -1,97 +1,23 @@
 import pandas as pd
 import glob
 import sys
+import yaml
 
 path_out = sys.argv[1]
 
-class_dict = {
-    'genom': 'Genomic',
-    'mech': 'Mechanistic',
-    'pred': 'Predictive',
-    'prior': 'Prior',
-}
 
-db_dict = {
-    'eqtlcatalogue': 'eQTL Catalogue',
-    'blacklist': 'ENCODE Blacklist',
-    'encode': 'ENCODE CREs',
-    'gwascatalogue': 'GWAS Catalog',
-    'promoters': 'Promoters',
-    'zhang21': 'Zhang21',
-    'phastcons': 'phastCons',
-    'chipatlas': 'ChIP-Atlas',
-    'remap2022': 'ReMap 2022',
-    'unibind': 'UniBind',
-    'knocktf': 'KnockTF',
-    'hpa': 'Human Protein Atlas (HPA)',
-    'tfmdb': 'TF-Marker',
-    'europmc': 'Europe PMC',
-    'intact': 'IntAct',
-    'hall': 'Hallmarks',
-    'reac': 'Reactome',
-    'prog': 'PROGENy',
-    'kegg': 'KEGG',
-    'gtf': 'Gene ~ TFs',
-    'cretf': 'CRE ~ TFs',
-    'gcre': 'Gene ~ CREs',
-    'collectri': 'CollecTRI',
-    'sss': 'Boolean rules',
-    'knocktf': 'KnockTF',
-}
+def read_config(path_config='config/config.yaml'):
+    with open(path_config, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
 
-task_dict = {
-    'cre': 'CREs',
-    'c2g': 'CRE to Gene',
-    'tfb': 'TF binding',
-    'gsets': 'Gene sets',
-    'omics': 'Omics',
-    'tfm': 'TF markers',
-    'tfp': 'TF pairs',
-    'grn': 'Reference GRN',
-    'tfa': 'TF scoring',
-    'sss': 'Steady state simulation',
-    'prt': 'Perturbation forecasting',
-}
 
-dts_dict = {
-    'lung': 'Lung',
-    'embryo': 'Embryo',
-    'skin': 'Skin',
-    'heart': 'Heart',
-    'pbmc10k': 'PBMC',
-    'epalate': 'Palate',
-    'kidney': 'Kidney',
-    'eye': 'Eye',
-    'pitupair': 'Pituitary',
-    'fakepitupair': 'Synthethic Pituitary',
-    'pitunpair': 'Unpaired Pituitary',
-    'breast': 'Breast',
-    'reprofibro': 'Reprog. Fibro',
-    'brain': 'Brain',
-}
-
-mth_dict = {
-    'celloracle': 'CellOracle',
-    'collectri': 'CollecTRI',
-    'crema': 'CREMA',
-    'dictys': 'Dictys',
-    'directnet': 'DirectNet',
-    'dorothea': 'DoRothEA',
-    'figr': 'FigR',
-    'granie': 'GRaNIE',
-    'grnboost': 'GRNBoost2',
-    'hummus': 'HuMMuS',
-    'inferelator': 'Inferelator',
-    'pando': 'Pando',
-    'pearson': 'Pearson',
-    'random': 'Random',
-    'scdori': 'scDoRI',
-    'scenic': 'SCENIC',
-    'scenicplus': 'SCENIC+',
-    'scgpt': 'scGPT',
-    'scmtni': 'scMTNI',
-    'spearman': 'Spearman',
-}
+config = read_config()
+class_dict = config['class_names']
+db_dict = config['dbs_names']
+task_dict = config['task_names']
+dts_dict = config['dts_names']
+mth_dict = config['method_names']
 
 lst_paths = glob.glob('anl/metrics/*/*/*/*.*.all.scores.csv')
 df = []
