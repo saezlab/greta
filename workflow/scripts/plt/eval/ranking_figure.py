@@ -59,6 +59,11 @@ def load_stats_data(path_stats):
     return pd.read_csv(path_stats)
 
 
+def load_database_size_data(path_db_size):
+    """Load database size data from CSV."""
+    return pd.read_csv(path_db_size)
+
+
 def compute_scalability_rankings(scalability_df):
     """Compute rankings for scalability metrics where lower is better.
 
@@ -931,6 +936,304 @@ def create_database_heatmap_figure(db_mean, db_ranks, db_hierarchy, method_order
     cbar.set_label('Mean F0.1', fontsize=9)
     cbar.ax.tick_params(labelsize=7)
 
+    return fig, col_list
+
+
+def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
+    """Create heatmap showing database sizes across datasets.
+
+    Layout:
+    - Rows: 14 datasets ordered alphabetically (excluding control datasets)
+    - Columns: databases grouped by task, grouped by class (same as figure 3)
+    - Cell values: size values displayed as text with viridis coloring
+    - Colorbars: 8 colorbars (one per label type), grouped by class at bottom
+    """
+    # Get config mappings
+    task_names_map = config.get('task_names', {})
+    class_names_map = config.get('class_names', {})
+    db_names_map = config.get('dbs_names', {})
+    class_colors = {'genom': 'white', 'pred': 'white', 'prior': 'white', 'mech': 'white'}
+
+    # Exclude control datasets
+    db_size_df = db_size_df[~db_size_df['dts'].isin(['Synthetic Pituitary', 'Unpaired Pituitary'])]
+
+    # Get unique datasets ordered alphabetically
+    dataset_order = sorted(db_size_df['dts'].unique())
+    n_datasets = len(dataset_order)
+
+    # Create label lookup: {(db, task): label}
+    label_lookup = {}
+    for _, row in db_size_df.drop_duplicates(['db', 'task']).iterrows():
+        label_lookup[(row['db'], row['task'])] = row['label']
+
+    # Get unique labels and compute min/max for each
+    all_labels = db_size_df['label'].unique()
+    label_ranges = {}
+    for label in all_labels:
+        label_data = db_size_df[db_size_df['label'] == label]['size']
+        label_ranges[label] = (label_data.min(), label_data.max())
+
+    # Create pivot table: rows = dts, columns = (db, task)
+    # First, aggregate by (dts, db, task) - should be one value per combo
+    pivot_df = db_size_df.pivot_table(index='dts', columns=['db', 'task'], values='size', aggfunc='first')
+
+    # Filter to only columns that exist in ordered_cols
+    available_cols = [col for col in ordered_cols if col in pivot_df.columns]
+    pivot_df = pivot_df[available_cols]
+
+    # Reorder rows alphabetically
+    pivot_df = pivot_df.reindex(dataset_order)
+
+    # Get hierarchy info from ordered_cols
+    db_hierarchy = db_size_df[['db', 'task', 'class']].drop_duplicates()
+
+    # Build task structure from ordered_cols
+    task_list = []  # [(cls, task, col_list), ...]
+    class_order_internal = ['Genomic', 'Predictive', 'Prior', 'Mechanistic']
+
+    for cls in class_order_internal:
+        cls_rows = db_hierarchy[db_hierarchy['class'] == cls]
+        cls_col_list = [(d, t) for d, t in available_cols
+                        if any((cls_rows['db'] == d) & (cls_rows['task'] == t))]
+        if not cls_col_list:
+            continue
+        # Group by task within this class
+        current_task = None
+        task_cols = []
+        for d, t in cls_col_list:
+            if t != current_task:
+                if current_task is not None:
+                    task_list.append((cls, current_task, task_cols))
+                current_task = t
+                task_cols = []
+            task_cols.append((d, t))
+        if current_task is not None:
+            task_list.append((cls, current_task, task_cols))
+
+    # Pre-compute wrapped titles and dimensions for each task
+    task_wrapped_titles = {}
+    task_title_widths = {}
+    global_max_lines = 1
+    for cls, task, cols in task_list:
+        label = task_names_map.get(task, task)
+        wrapped_text, max_line_width, num_lines = wrap_text_by_words(label, max_width=12)
+        task_wrapped_titles[task] = wrapped_text
+        task_title_widths[task] = max_line_width
+        global_max_lines = max(global_max_lines, num_lines)
+
+    # Calculate width for each task
+    CHARS_PER_COLUMN = 2.5
+    task_widths = []
+    for cls, task, cols in task_list:
+        n_cols = len(cols)
+        title_chars = task_title_widths[task]
+        title_width_in_cols = title_chars / CHARS_PER_COLUMN
+        effective_width = max(n_cols, title_width_in_cols)
+        task_widths.append(effective_width)
+
+    total_cols = sum(len(cols) for _, _, cols in task_list)
+
+    # Build width_ratios with gaps between classes
+    gap_width = 0.3
+    width_ratios = [1.5]  # dataset names column
+    gs_col_mapping = []
+    current_class = None
+    for i, (cls, task, cols) in enumerate(task_list):
+        if current_class is not None and cls != current_class:
+            width_ratios.append(gap_width)
+        width_ratios.append(task_widths[i])
+        gs_col_mapping.append(len(width_ratios) - 1)
+        current_class = cls
+
+    n_width_cols = len(width_ratios)
+
+    # Dynamic task header height based on max lines
+    task_header_height = 0.4 * global_max_lines
+
+    fig = plt.figure(figsize=(max(14, total_cols * 0.5), max(8, n_datasets * 0.45)))
+
+    # GridSpec: class header, task header, heatmap, db labels, colorbar row
+    gs = GridSpec(5, n_width_cols, figure=fig,
+                  height_ratios=[0.4, task_header_height, 10, 2.5, 1.2],
+                  width_ratios=width_ratios,
+                  wspace=0.02, hspace=0.08)
+
+    # --- Dataset names (leftmost column, spanning heatmap rows) ---
+    ax_names = fig.add_subplot(gs[2, 0])
+    ax_names.set_xlim(0, 1)
+    ax_names.set_ylim(-0.5, n_datasets - 0.5)
+    ax_names.invert_yaxis()
+    ax_names.axis('off')
+
+    for i, dts in enumerate(dataset_order):
+        ax_names.text(1, i, dts, ha='right', va='center', fontsize=9, color='black')
+
+    # Colormap for all cells
+    cmap = plt.cm.viridis
+
+    # Track class spans for class headers
+    class_spans = {}
+    for i, (cls, task, cols) in enumerate(task_list):
+        gs_col = gs_col_mapping[i]
+        # Map class name to short form for colors
+        cls_short = {'Genomic': 'genom', 'Predictive': 'pred', 'Prior': 'prior', 'Mechanistic': 'mech'}.get(cls, cls)
+        if cls not in class_spans:
+            class_spans[cls] = [gs_col, gs_col, cls_short]
+        else:
+            class_spans[cls][1] = gs_col
+
+    # --- Class headers (spanning multiple task columns) ---
+    for cls, (start_col, end_col, cls_short) in class_spans.items():
+        ax_class = fig.add_subplot(gs[0, start_col:end_col + 1])
+        ax_class.set_xlim(0, 1)
+        ax_class.set_ylim(0, 1)
+        ax_class.axis('off')
+        rect = plt.Rectangle((0, 0), 1, 1,
+                              facecolor=class_colors.get(cls_short, 'white'),
+                              edgecolor='black', linewidth=1)
+        ax_class.add_patch(rect)
+        ax_class.text(0.5, 0.5, cls, ha='center', va='center',
+                      fontsize=10, fontweight='bold')
+
+    # --- Render each task as separate heatmap ---
+    for i, (cls, task, cols) in enumerate(task_list):
+        gs_col = gs_col_mapping[i]
+        n_task_cols = len(cols)
+
+        # --- Task header ---
+        ax_task = fig.add_subplot(gs[1, gs_col])
+        ax_task.set_xlim(0, 1)
+        ax_task.set_ylim(0, 1)
+        ax_task.axis('off')
+        rect = plt.Rectangle((0, 0), 1, 1,
+                              facecolor='white', edgecolor='gray', linewidth=0.5)
+        ax_task.add_patch(rect)
+        wrapped_label = task_wrapped_titles[task]
+        ax_task.text(0.5, 0.5, wrapped_label, ha='center', va='center', fontsize=9)
+
+        # --- Heatmap for this task ---
+        ax_heatmap = fig.add_subplot(gs[2, gs_col])
+        heatmap_data = pivot_df[cols].values
+
+        # We need to color each cell based on its label's scale
+        # Create a normalized data array for coloring
+        color_data = np.zeros_like(heatmap_data, dtype=float)
+        for row_i in range(n_datasets):
+            for col_j in range(n_task_cols):
+                col = cols[col_j]
+                label = label_lookup.get(col, None)
+                val = heatmap_data[row_i, col_j]
+                if pd.isna(val) or label is None:
+                    color_data[row_i, col_j] = np.nan
+                else:
+                    lmin, lmax = label_ranges[label]
+                    if lmax > lmin:
+                        color_data[row_i, col_j] = (val - lmin) / (lmax - lmin)
+                    else:
+                        color_data[row_i, col_j] = 0.5
+
+        ax_heatmap.imshow(color_data, aspect='auto', cmap=cmap, vmin=0, vmax=1)
+
+        # Add size text
+        for row_i in range(n_datasets):
+            for col_j in range(n_task_cols):
+                val = heatmap_data[row_i, col_j]
+                norm_val = color_data[row_i, col_j]
+                if pd.isna(val):
+                    val_str = '-'
+                    text_color = 'gray'
+                else:
+                    # Format with k notation for compact display
+                    if val >= 1000:
+                        val_str = f'{val/1000:.0f}k'
+                    else:
+                        val_str = f'{int(val)}'
+                    # Text color: white on dark background, black on light
+                    text_color = 'white' if norm_val < 0.5 else 'black'
+                ax_heatmap.text(col_j, row_i, val_str, ha='center', va='center',
+                               fontsize=7, color=text_color)
+
+        ax_heatmap.set_yticks([])
+        ax_heatmap.set_xticks([])
+
+        # --- Database labels at bottom (rotated 90 degrees) ---
+        ax_db = fig.add_subplot(gs[3, gs_col])
+        ax_db.set_xlim(-0.5, n_task_cols - 0.5)
+        ax_db.set_ylim(0, 1)
+        ax_db.axis('off')
+
+        for j, (db, _) in enumerate(cols):
+            label = db_names_map.get(db, db)
+            ax_db.text(j, 1, label, ha='center', va='top', fontsize=10, rotation=90)
+
+    # --- Colorbars grouped by class at bottom ---
+    # Labels by class:
+    # Genomic: # Regions
+    # Predictive: # Enriched Sets, # Features
+    # Prior: # TFs, # TF pairs, # Edges
+    # Mechanistic: # Experiments, # Cell types
+    label_to_class = {
+        '# Regions': 'Genomic',
+        '# Enriched Sets': 'Predictive',
+        '# Features': 'Predictive',
+        '# TFs': 'Prior',
+        '# TF pairs': 'Prior',
+        '# Edges': 'Prior',
+        '# Experiments': 'Mechanistic',
+        '# Cell types': 'Mechanistic'
+    }
+
+    # Find which labels actually have data
+    labels_with_data = [l for l in label_ranges.keys() if label_ranges[l][0] != label_ranges[l][1] or label_ranges[l][0] > 0]
+
+    # Group labels by class
+    class_labels = {'Genomic': [], 'Predictive': [], 'Prior': [], 'Mechanistic': []}
+    for label in labels_with_data:
+        cls = label_to_class.get(label)
+        if cls:
+            class_labels[cls].append(label)
+
+    # Create colorbars under each class section
+    for cls, (start_col, end_col, cls_short) in class_spans.items():
+        labels_in_cls = class_labels.get(cls, [])
+        if not labels_in_cls:
+            continue
+
+        ax_cbar_row = fig.add_subplot(gs[4, start_col:end_col + 1])
+        ax_cbar_row.axis('off')
+
+        n_cbars = len(labels_in_cls)
+        cbar_width_frac = 0.7 / n_cbars  # Fraction of bbox width per colorbar
+        cbar_gap_frac = 0.05  # Gap between colorbars as fraction of bbox width
+
+        # Calculate total width used by all colorbars and gaps
+        total_used_frac = n_cbars * cbar_width_frac + (n_cbars - 1) * cbar_gap_frac
+        # Starting offset to center the colorbars
+        start_offset_frac = (1.0 - total_used_frac) / 2
+
+        for j, label in enumerate(labels_in_cls):
+            lmin, lmax = label_ranges[label]
+            # Create a small axes for each colorbar within this class section
+            # Position relative to the parent axes, centered
+            bbox = ax_cbar_row.get_position()
+            left = bbox.x0 + (start_offset_frac + j * (cbar_width_frac + cbar_gap_frac)) * bbox.width
+            width = cbar_width_frac * bbox.width
+            bottom = bbox.y0 + 0.35 * bbox.height
+            height = 0.35 * bbox.height
+
+            cbar_ax = fig.add_axes([left, bottom, width, height])
+            sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=lmin, vmax=lmax))
+            cbar = plt.colorbar(sm, cax=cbar_ax, orientation='horizontal')
+
+            # Shorten label for display
+            short_label = label.replace('# ', '#')
+            cbar.set_label(short_label, fontsize=7)
+            cbar.ax.tick_params(labelsize=6)
+
+            # Format tick labels
+            if lmax >= 10000:
+                cbar.ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'{x/1000:.0f}k'))
+
     return fig
 
 
@@ -1098,12 +1401,15 @@ def main():
                         help='Path to pair comparison CSV')
     parser.add_argument('-t', '--path_stats', required=True,
                         help='Path to topology stats CSV (columns: dts, name, # TFs, etc.)')
+    parser.add_argument('-d', '--path_db_size', required=True,
+                        help='Path to database size CSV')
     parser.add_argument('-o', '--path_out', required=True)
     args = vars(parser.parse_args())
     path_inp = args['path_inp']
     path_scalability = args['path_scalability']
     path_pair = args['path_pair']
     path_stats = args['path_stats']
+    path_db_size = args['path_db_size']
     path_out = args['path_out']
 
     # Load data
@@ -1117,6 +1423,9 @@ def main():
 
     # Load topology stats data
     stats_df = load_stats_data(path_stats)
+
+    # Load database size data
+    db_size_df = load_database_size_data(path_db_size)
 
     # Compute aggregations
     overall_mean, class_mean, dataset_mean = compute_aggregations(df)
@@ -1164,7 +1473,7 @@ def main():
     method_order = mean_class_rank.sort_values(ascending=True).index.tolist()
 
     # Create database heatmap figure (page 3)
-    fig3 = create_database_heatmap_figure(
+    fig3, ordered_cols = create_database_heatmap_figure(
         db_mean.loc[method_order],
         db_ranks.loc[method_order],
         db_hierarchy,
@@ -1179,6 +1488,9 @@ def main():
     # Create topology correlation figure (page 5)
     fig5 = create_topology_correlation_figure(df, stats_df, config)
 
+    # Create database size heatmap figure (page 6)
+    fig6 = create_database_size_heatmap_figure(db_size_df, ordered_cols, config)
+
     # Save multi-page PDF
     with PdfPages(path_out) as pdf:
         pdf.savefig(fig1, bbox_inches='tight', dpi=300)
@@ -1186,6 +1498,7 @@ def main():
         pdf.savefig(fig3, bbox_inches='tight', dpi=300)
         pdf.savefig(fig4, bbox_inches='tight', dpi=300)
         pdf.savefig(fig5, bbox_inches='tight', dpi=300)
+        pdf.savefig(fig6, bbox_inches='tight', dpi=300)
 
     plt.close('all')
 

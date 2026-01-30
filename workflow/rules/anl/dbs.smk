@@ -24,6 +24,17 @@ rule dbs_stats:
         -o {output}
         """
 
+localrules: dbs_n_per_dts
+rule dbs_n_per_dts:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: rules.metric_summ.output.metrics
+    output: 'anl/dbs/n_per_dts.csv'
+    shell:
+        """
+        python workflow/scripts/anl/dbs/n_per_dts.py {output}
+        """
+
 
 rule dbs_hg38_terms:
     threads: 1
