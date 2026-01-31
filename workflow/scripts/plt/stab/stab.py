@@ -15,6 +15,7 @@ def base_stability(df, col, title, mthds, baselines, palette, figs):
     data = df[df['cat'].isin(['full']) & df['mth'].isin(mthds)].copy()
     data['seeds'] = [''.join(sorted([str(int(sa)), str(int(sb))])) for sa, sb in zip(data['seed'], data['other_seed'])]
     data = data.drop_duplicates(['mth', 'seeds'])
+    data['mth'] = [mth_dict[m] for m in data['mth']]
     sns.boxplot(data=data, y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette, fliersize=0)
     sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette, size=0)
     ax.tick_params(axis='x', rotation=90)
@@ -27,6 +28,7 @@ def base_stability(df, col, title, mthds, baselines, palette, figs):
     data = df[df['cat'].isin(['full']) & df['mth'].isin(baselines)].copy()
     data['seeds'] = [''.join(sorted([str(int(sa)), str(int(sb))])) for sa, sb in zip(data['seed'], data['other_seed'])]
     data = data.drop_duplicates(['mth', 'seeds'])
+    data['mth'] = [mth_dict[m] for m in data['mth']]
     sns.boxplot(data=data, y='mth', x=col, hue='mth', ax=ax, fill=False, palette=palette, fliersize=0)
     sns.stripplot(data=data, y='mth', x=col, hue='mth', ax=ax, palette=palette, size=0)
     ax.tick_params(axis='x', rotation=90)
@@ -42,6 +44,8 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
     fig, axes = plt.subplots(1, 2, figsize=(4, 2), dpi=150, sharex=False)
     axes = axes.ravel()
     ax = axes[0]
+    df = df.copy()
+    df['mth'] = [mth_dict[m] for m in df['mth']]
     sns.pointplot(data=df[df['cat'].isin(['fixed_nfeats', 'full'])], x='n', y=col, hue='mth', ax=ax, errorbar=None, palette=palette)
     ax.legend().set_visible(False)
     ax.tick_params(axis='x', rotation=90)
@@ -74,7 +78,9 @@ def sampled_stability(df, col, ylabel, palette, figs, plot_diag=False):
 
 
 def auc(df, typ, title, palette, figs):
-    data = df[df['type'] == typ].pivot(index='mth', columns='cat', values='auc').reset_index()
+    data = df.copy()
+    data['mth'] = [mth_dict[m] for m in data['mth']]
+    data = data[data['type'] == typ].pivot(index='mth', columns='cat', values='auc').reset_index()
     fig, ax = plt.subplots(1, 1, figsize=(2, 2), dpi=150)
     sns.scatterplot(data, y='fixed_nfeats', x='fixed_ncells', hue='mth', palette=palette)
     ax.set_xlim(-0.05, 1.05)
@@ -105,10 +111,14 @@ ac = pd.read_csv(args.path_ac)
 
 # Read config
 config = read_config()
-palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
 baselines = args.baselines
 mthds = [m for m in mthds if m not in baselines]
+
+# Rename
+mth_dict = config['method_names']
+palette_old = config['colors']['nets']
+palette = {config['method_names'][k]: palette_old[k] for k in palette_old}
 
 # Plot
 figs = []

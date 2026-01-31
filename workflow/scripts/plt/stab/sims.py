@@ -29,12 +29,12 @@ def make_sim_mat(df, col_name, prefix):
     return similarity_matrix
 
 
-def plot_heatmap(df, col, title, prefix, mthds, baselines, figs):
+def plot_heatmap(df, col, title, prefix, mthds, baselines, figs, method_names):
     order = mthds + baselines
     mat = make_sim_mat(df, col, prefix).loc[order, order]
-    h = ma.Heatmap(mat, cmap='Purples', width=2, height=2, name=title, label="Overlap\nCoefficient", vmin=0, vmax=1)
-    h.add_bottom(mp.Labels(mat.columns))
-    h.add_left(mp.Labels(mat.index))
+    h = ma.Heatmap(mat, cmap='Purples', width=3, height=3, name=title, label="Overlap\nCoefficient", vmin=0, vmax=1)
+    h.add_bottom(mp.Labels(prettify(mat.columns, method_names)))
+    h.add_left(mp.Labels(prettify(mat.index, method_names)))
     h.add_top(mp.Title(title))
     h.add_legends()
     h.render()
@@ -42,30 +42,38 @@ def plot_heatmap(df, col, title, prefix, mthds, baselines, figs):
     figs.append(h.figure)
 
 
-def barstats(df, col, title, figs):
+def barstats(df, col, title, figs, method_names):
+    # Create a copy with pretty names
+    df_plot = df.copy()
+    df_plot['name'] = prettify(df_plot['name'].tolist(), method_names)
+    pretty_mthds = prettify(mthds, method_names)
+    pretty_baselines = prettify(baselines, method_names)
+    # Create palette with pretty names
+    pretty_palette = {method_names.get(k, k): v for k, v in palette.items()}
+
     fig, axes = plt.subplots(2, 1, figsize=(1.7, 3), dpi=150, sharex=True, gridspec_kw={'height_ratios': [len(mthds), len(baselines)]})
     ax = axes[0]
     sns.barplot(
-        data=df[df['name'].isin(mthds)],
+        data=df_plot[df_plot['name'].isin(pretty_mthds)],
         x=col,
         y='name',
         hue='name',
         orient='h',
-        palette=palette,
+        palette=pretty_palette,
         ax=ax,
-        order=mthds
+        order=pretty_mthds
     )
     ax.set_ylabel('Methods')
     ax = axes[1]
     sns.barplot(
-        data=df[df['name'].isin(baselines)],
+        data=df_plot[df_plot['name'].isin(pretty_baselines)],
         x=col,
         y='name',
         hue='name',
         orient='h',
-        palette=palette,
+        palette=pretty_palette,
         ax=ax,
-        order=baselines
+        order=pretty_baselines
     )
     ax.set_ylabel('Baselines')
     ax.set_xlabel(title)
@@ -89,6 +97,15 @@ palette = config['colors']['nets']
 mthds = list(config['methods'].keys())
 baselines = args.baselines
 mthds = [m for m in mthds if m not in baselines]
+
+# Method names mapping for pretty labels
+method_names = config['method_names']
+method_names['promoters'] = 'Promoters'  # Special case for TSS plot
+
+
+def prettify(names, mapping):
+    """Convert lowercase names to pretty names."""
+    return [mapping.get(n, n) for n in names]
 
 # Read
 sims = pd.read_csv(args.path_sims)
@@ -136,22 +153,28 @@ mat = mat.loc[r_order, c_order]
 # Plot
 figs = []
 
-plot_heatmap(sims, col='tf_oc', title='TFs', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
-plot_heatmap(sims, col='cre_oc', title='CREs', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
-plot_heatmap(sims, col='target_oc', title='Genes', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
-plot_heatmap(sims, col='edge_oc', title='Edges', prefix='name', mthds=mthds, baselines=baselines, figs=figs)
-plot_heatmap(tss, col='ocoef', title='TSS', prefix='tss', mthds=mthds, baselines=['promoters'], figs=figs)
+plot_heatmap(sims, col='tf_oc', title='TFs', prefix='name', mthds=mthds, baselines=baselines, figs=figs, method_names=method_names)
+plot_heatmap(sims, col='cre_oc', title='CREs', prefix='name', mthds=mthds, baselines=baselines, figs=figs, method_names=method_names)
+plot_heatmap(sims, col='target_oc', title='Genes', prefix='name', mthds=mthds, baselines=baselines, figs=figs, method_names=method_names)
+plot_heatmap(sims, col='edge_oc', title='Edges', prefix='name', mthds=mthds, baselines=baselines, figs=figs, method_names=method_names)
+plot_heatmap(tss, col='ocoef', title='TSS', prefix='tss', mthds=mthds, baselines=['promoters'], figs=figs, method_names=method_names)
 
-fig, ax = plt.subplots(1, 1, figsize=(2, 2.5), dpi=150)
+fig, ax = plt.subplots(1, 1, figsize=(2, 3), dpi=150)
+
+# Map mth column to pretty names for boxplot
+dst_plot = dst.copy()
+dst_plot['mth'] = prettify(dst_plot['mth'].tolist(), method_names)
+pretty_palette = {method_names.get(k, k): v for k, v in palette.items()}
+pretty_order = prettify(list(palette.keys()), method_names)
 
 sns.boxplot(
-    data=dst,
+    data=dst_plot,
     x='kb',
     y='mth',
     hue='mth',
-    palette=palette,
+    palette=pretty_palette,
     ax=ax,
-    order=palette.keys(),
+    order=pretty_order,
     fliersize=0,
     fill=False,
 )
@@ -162,16 +185,16 @@ ax.set_xlabel('Distance to TSS (kb)')
 ax.set_ylabel('')
 figs.append(fig)
 
-barstats(stats, col='n_tfs', title='Number TFs', figs=figs)
-barstats(stats, col='n_cres', title='Number CREs', figs=figs)
-barstats(stats, col='n_targets', title='Number Genes', figs=figs)
-barstats(stats, col='n_edges', title='Number Edges', figs=figs)
-barstats(stats, col='odegree', title='Regulon size', figs=figs)
-barstats(stats, col='betweenc', title='B. centrality', figs=figs)
-barstats(stats, col='eigv', title='E. centrality', figs=figs)
+barstats(stats, col='n_tfs', title='Number TFs', figs=figs, method_names=method_names)
+barstats(stats, col='n_cres', title='Number CREs', figs=figs, method_names=method_names)
+barstats(stats, col='n_targets', title='Number Genes', figs=figs, method_names=method_names)
+barstats(stats, col='n_edges', title='Number Edges', figs=figs, method_names=method_names)
+barstats(stats, col='odegree', title='Regulon size', figs=figs, method_names=method_names)
+barstats(stats, col='betweenc', title='B. centrality', figs=figs, method_names=method_names)
+barstats(stats, col='eigv', title='E. centrality', figs=figs, method_names=method_names)
 
-h = ma.Heatmap(mat, cmap='Purples', width=2, height=8, label="Overlap\nCoefficient", vmin=0, vmax=1)
-h.add_bottom(mp.Labels(mat.columns))
+h = ma.Heatmap(mat, cmap='Purples', width=mat.shape[1] * 0.15, height=mat.shape[0] * 0.15, label="Overlap\nCoefficient", vmin=0, vmax=1)
+h.add_bottom(mp.Labels(prettify(mat.columns, method_names)))
 h.add_left(mp.Labels(mat.index))
 h.render()
 plt.close()
