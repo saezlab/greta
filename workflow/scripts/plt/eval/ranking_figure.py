@@ -215,7 +215,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
         ax_bar.barh(y_positions, overall_mean.values, color=bar_colors, height=0.95)
         ax_bar.set_ylim(-0.5, n_methods - 0.5)
         ax_bar.invert_yaxis()
-        ax_bar.set_xlabel('Mean F0.1', fontsize=10)
+        ax_bar.set_xlabel(r'Mean F$\mathrm{_{0.1}}$', fontsize=10)
         ax_bar.set_yticks([])
         ax_bar.set_xlim(0, overall_mean.max() * 1.05)
 
@@ -390,7 +390,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
     # --- Colorbars in bottom row ---
     # F0.1 colorbar (for class and dataset heatmaps)
     cbar_f01 = plt.colorbar(im_dataset, cax=ax_cbar_f01, orientation='horizontal')
-    cbar_f01.set_label('Mean F0.1', fontsize=9)
+    cbar_f01.set_label(r'Mean F$\mathrm{_{0.1}}$', fontsize=9)
     cbar_f01.ax.tick_params(labelsize=8)
 
     # Stability colorbar (Greens)
@@ -575,7 +575,7 @@ def create_dataset_boxplot_figure(dataset_mean, posthoc_df, config, dataset_orde
     for dts in dataset_order:
         values = dataset_mean[dts].dropna().values
         for v in values:
-            plot_data.append({'Dataset': dts, 'Mean F0.1': v})
+            plot_data.append({'Dataset': dts, r'Mean F$\mathrm{_{0.1}}$': v})
     plot_df = pd.DataFrame(plot_data)
 
     # Create mapping from dataset name to x position (0-indexed for seaborn)
@@ -585,12 +585,12 @@ def create_dataset_boxplot_figure(dataset_mean, posthoc_df, config, dataset_orde
     fig, ax = plt.subplots(figsize=(5, 3))
 
     # Boxplot using seaborn
-    sns.boxplot(data=plot_df, x='Dataset', y='Mean F0.1', ax=ax, width=0.6, order=dataset_order, fill=False)
+    sns.boxplot(data=plot_df, x='Dataset', y=r'Mean F$\mathrm{_{0.1}}$', ax=ax, width=0.6, order=dataset_order, fill=False)
 
     # Rotate x-tick labels
     ax.tick_params(axis='x', labelsize=10, rotation=90)
     ax.set_xlabel('')
-    ax.set_ylabel('Mean F0.1', fontsize=12)
+    ax.set_ylabel(r'Mean F$\mathrm{_{0.1}}$', fontsize=12)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
@@ -933,7 +933,7 @@ def create_database_heatmap_figure(db_mean, db_ranks, db_hierarchy, method_order
     cbar_left = 0.5 - cbar_width / 2
     cbar_ax = fig.add_axes([cbar_left, 0.02, cbar_width, 0.015])
     cbar = plt.colorbar(im, cax=cbar_ax, orientation='horizontal')
-    cbar.set_label('Mean F0.1', fontsize=9)
+    cbar.set_label(r'Mean F$\mathrm{_{0.1}}$', fontsize=9)
     cbar.ax.tick_params(labelsize=7)
 
     return fig, col_list
@@ -953,9 +953,6 @@ def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
     class_names_map = config.get('class_names', {})
     db_names_map = config.get('dbs_names', {})
     class_colors = {'genom': 'white', 'pred': 'white', 'prior': 'white', 'mech': 'white'}
-
-    # Exclude control datasets
-    db_size_df = db_size_df[~db_size_df['dts'].isin(['Synthetic Pituitary', 'Unpaired Pituitary'])]
 
     # Get unique datasets ordered alphabetically
     dataset_order = sorted(db_size_df['dts'].unique())
@@ -1127,8 +1124,8 @@ def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
                     color_data[row_i, col_j] = np.nan
                 else:
                     lmin, lmax = label_ranges[label]
-                    if lmax > lmin:
-                        color_data[row_i, col_j] = (val - lmin) / (lmax - lmin)
+                    if lmax > 0:
+                        color_data[row_i, col_j] = val / lmax
                     else:
                         color_data[row_i, col_j] = 0.5
 
@@ -1222,7 +1219,7 @@ def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
             height = 0.35 * bbox.height
 
             cbar_ax = fig.add_axes([left, bottom, width, height])
-            sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=lmin, vmax=lmax))
+            sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=0, vmax=lmax))
             cbar = plt.colorbar(sm, cax=cbar_ax, orientation='horizontal')
 
             # Shorten label for display
@@ -1265,7 +1262,7 @@ def create_pair_comparison_figure(pair_df, config):
     ax1.axvline(x=0, ls='--', lw=1, c='black')
     ax1.set_yticks(y_positions)
     ax1.set_yticklabels(method_order, fontsize=9)
-    ax1.set_xlabel('ΔF0.1', fontsize=10)
+    ax1.set_xlabel(r'ΔF$\mathrm{_{0.1}}$', fontsize=10)
     ax1.set_title('Unpaired vs Paired', fontsize=11)
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
@@ -1276,7 +1273,7 @@ def create_pair_comparison_figure(pair_df, config):
     ax2.axvline(x=0, ls='--', lw=1, c='black')
     ax2.set_yticks(y_positions)
     ax2.set_yticklabels(method_order, fontsize=9)
-    ax2.set_xlabel('ΔF0.1', fontsize=10)
+    ax2.set_xlabel(r'ΔF$\mathrm{_{0.1}}$', fontsize=10)
     ax2.set_title('Synthetic vs Paired', fontsize=11)
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
@@ -1374,7 +1371,7 @@ def create_topology_correlation_figure(df, stats_df, config):
 
         ax.set_xlabel(stat_col, fontsize=9)
         if i == 0:
-            ax.set_ylabel('Mean F0.1', fontsize=9)
+            ax.set_ylabel(r'Mean F$\mathrm{_{0.1}}$', fontsize=9)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.tick_params(labelsize=8)
