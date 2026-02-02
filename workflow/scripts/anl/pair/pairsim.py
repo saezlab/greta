@@ -27,8 +27,8 @@ org, dname_a, case_a = os.path.basename(path_a).split('.')[:3]
 org, dname_b, case_b = os.path.basename(path_b).split('.')[:3]
 dname_a = dname_a.replace('pair', '')
 dname_b = dname_b.replace('pair', '')
-path_pair = sorted(glob.glob(f'dts/hg38/{dname_a}pair/cases/{case_b}/runs/*.grn.csv'))
-path_npair = sorted(glob.glob(f'dts/hg38/{dname_b}pair/cases/{case_b}/runs/*.grn.csv'))
+path_pair = sorted(glob.glob(f'dts/hg38/{dname_a}pair/cases/{case_b}/runs/o_*.grn.csv'))
+path_npair = sorted(glob.glob(f'dts/hg38/{dname_b}pair/cases/{case_b}/runs/o_*.grn.csv'))
 
 # Compute ocoef
 df = []

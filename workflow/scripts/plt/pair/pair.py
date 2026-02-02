@@ -21,10 +21,12 @@ df_oc = pd.read_csv(sys.argv[6])
 
 # Read config
 config = read_config()
-palette = config['colors']['nets']
+palette_old = config['colors']['nets']
+palette = {config['method_names'][k]: palette_old[k] for k in palette_old}
 mthds = list(config['methods'].keys())
 baselines = ['collectri', 'dorothea', 'grnboost', 'scenic', 'pearson', 'spearman', 'scgpt', 'random']
 mthds = [m for m in mthds if m not in baselines]
+mth_dict = config['method_names']
 
 figs = []
 fig, ax = plt.subplots(1, 1, figsize=(4, 4), dpi=150)
@@ -140,14 +142,18 @@ df_oc['mth'] = [m.replace('o_', '') for m in df_oc['mth']]
 def base_stability(df, col, mthds, baselines, palette, figs):
     fig, axes = plt.subplots(2, 1, figsize=(1.7, 3), dpi=150, gridspec_kw={'height_ratios': [len(mthds), len(baselines)]})
     ax = axes[0]
-    sns.barplot(data=df[df['mth'].isin(mthds)], y='mth', x=col, hue='mth', ax=ax, palette=palette)
+    tmp = df[df['mth'].isin(mthds)]
+    tmp['mth'] = [mth_dict[m] for m in tmp['mth']]
+    sns.barplot(data=tmp, y='mth', x=col, hue='mth', ax=ax, palette=palette)
     ax.tick_params(axis='x', rotation=90)
     ax.set_xlabel('')
     ax.set_ylabel('Methods')
     ax.set_xlim(-0.05, 1.05)
     
     ax = axes[1]
-    sns.barplot(data=df[df['mth'].isin(baselines)], y='mth', x=col, hue='mth', ax=ax, palette=palette)
+    tmp = df[df['mth'].isin(baselines)]
+    tmp['mth'] = [mth_dict[m] for m in tmp['mth']]
+    sns.barplot(data=tmp, y='mth', x=col, hue='mth', ax=ax, palette=palette)
     ax.tick_params(axis='x', rotation=90)
     ax.set_xlabel('Overlap coefficient')
     ax.set_ylabel('Baselines')
