@@ -12,8 +12,8 @@ path_hpa = sys.argv[2]
 path_out = sys.argv[3]
 
 # knocktf
-data = pd.read_csv(os.path.join(path_knocktf, 'diff.csv'), index_col=0)
-meta = pd.read_csv(os.path.join(path_knocktf, 'meta.csv'), index_col=0)
+data = pd.read_csv(os.path.join(path_knocktf, 'diff.csv.gz'), index_col=0)
+meta = pd.read_csv(os.path.join(path_knocktf, 'meta.csv.gz'), index_col=0)
 fig_ktf, ax = plt.subplots(1, 1, figsize=(4, 3))
 sns.histplot(x=meta['logFC'], y=data.std(1), cbar=True, cmap='viridis')
 ax.set_xlabel('TF log2FC')

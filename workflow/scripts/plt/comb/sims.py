@@ -17,7 +17,9 @@ def fixed_pip(mthds, res, title):
     steps = ['pre', 'c2g', 'tfb', 'mdl']
     fig, axes = plt.subplots(len(mthds), 1, sharex=True, sharey=True, figsize=(2, 1.5 * len(mthds)), dpi=150, tight_layout=True)
     for i, mth in enumerate(mthds):
-        df = res[res['mth'] == mth]
+        df = res[res['mth'] == mth].copy()
+        df['mth'] = [mth_dict[x] for x in df['mth']]
+        mth = mth_dict[mth]
         ax = axes[i]
         if i == 0:
             ax.set_title(title)
@@ -34,6 +36,7 @@ def sim_mat(mat, sts, palette):
     legend=False
     for cat_col in ['mdl', 'tfb', 'c2g', 'pre']:
         cats = sts[cat_col].to_list()
+        cats = [mth_dict[cat] for cat in cats]
         cat_colors = mp.Colors(cats, palette={k: v for k, v in palette.items() if k in cats}, label=cat_col, legend_kws=dict(title=''))
         if cat_col == 'pre':
             legend=True
@@ -57,11 +60,13 @@ def sim_mat(mat, sts, palette):
 
 # Read config
 config = read_config()
-palette = config['colors']['nets']
+palette_old = config['colors']['nets']
+palette = {config['method_names'][k]: palette_old[k] for k in palette_old}
 mthds = list(config['methods'].keys())
 baselines = config['baselines']
 is_modular = [config['methods'][m]['modular'] for m in mthds]
 m_mthds = [m for m, is_m in zip(mthds, is_modular) if is_m]
+mth_dict = config['method_names']
 
 
 mdata = mu.read(sys.argv[1])
@@ -109,7 +114,7 @@ cmap = {
 sns.boxplot(
     data=df_qc,
     x='omic',
-    y='log1p_n_genes_by_counts',
+    y='log1p_total_counts',
     hue='omic',
     ax=ax,
     palette=cmap,
@@ -119,7 +124,7 @@ sns.boxplot(
 sns.stripplot(
     data=df_qc,
     x='omic',
-    y='log1p_n_genes_by_counts',
+    y='log1p_total_counts',
     hue='omic',
     ax=ax,
     palette=cmap,
@@ -165,7 +170,7 @@ for oc in ['tf_oc', 'cre_oc', 'target_oc', 'edge_oc']:
 fig, axes = plt.subplots(2, 1, figsize=(2, 4), tight_layout=True)
 ax = axes[0]
 sns.barplot(
-    data=df_stab,
+    data=df_stab.assign(mth=lambda x: [mth_dict[n] for n in x['mth']]),
     y='mth',
     x='ocoeff',
     hue='mth',
@@ -177,7 +182,7 @@ ax.set_xlabel('Edge Overlap\nCoefficient')
 ax.set_ylabel('')
 ax = axes[1]
 sns.barplot(
-    data=df_stab,
+    data=df_stab.assign(mth=lambda x: [mth_dict[n] for n in x['mth']]),
     y='mth',
     x='stat',
     hue='mth',

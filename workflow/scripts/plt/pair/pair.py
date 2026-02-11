@@ -87,7 +87,7 @@ df_qc = df_qc.groupby(['celltype', 'omic', 'type'], as_index=False).mean(numeric
 sns.boxplot(
     data=df_qc,
     x='type',
-    y='log1p_n_genes_by_counts',
+    y='log1p_total_counts',
     hue='omic',
     ax=ax,
     palette=cmap,
@@ -97,7 +97,7 @@ sns.boxplot(
 sns.stripplot(
     data=df_qc,
     x='type',
-    y='log1p_n_genes_by_counts',
+    y='log1p_total_counts',
     hue='omic',
     ax=ax,
     palette=cmap,
