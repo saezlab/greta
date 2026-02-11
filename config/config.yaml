@@ -180,7 +180,7 @@ class_names:
   genom: Genomic
   mech: Mechanistic
   pred: Predictive
-  prior: Prior
+  prior: Literature
 
 method_names:
   celloracle: CellOracle
