@@ -13,15 +13,16 @@ rule dbs_stats:
         mem_mb=32000
     shell: 
         """
-        python workflow/scripts/anl/dbs/stats.py \
-        -p {input.paths_prt} \
-        -g {input.paths_gst} \
-        -m {input.paths_tfm} \
-        -t {input.paths_tfp} \
-        -b {input.paths_tfb} \
-        -c {input.paths_cre} \
-        -e {input.paths_c2g} \
-        -o {output}
+        #python workflow/scripts/anl/dbs/stats.py \
+        #-p {input.paths_prt} \
+        #-g {input.paths_gst} \
+        #-m {input.paths_tfm} \
+        #-t {input.paths_tfp} \
+        #-b {input.paths_tfb} \
+        #-c {input.paths_cre} \
+        #-e {input.paths_c2g} \
+        #-o {output}
+        touch {output}
         """
 
 localrules: dbs_n_per_dts
