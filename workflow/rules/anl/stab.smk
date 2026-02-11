@@ -99,11 +99,21 @@ rule stab_ovsd:
         python workflow/scripts/anl/stab/ovsd.py {input} {output}
         """
 
+rule stab_unsmthds:
+    threads: 1
+    container: None
+    input: [[[os.path.join(os.path.dirname(p), '{org}.{dat}.' + str(case), f'{mth}.{mth}.{mth}.{mth}.scores.csv') for p in rules.metric_summ.input.aggr] for case in [ f'16384_16384_{i}' for i in range(n_seeds)] + ['all']] for mth in ['o_dictys', 'o_hummus', 'o_scdori', 'o_scenicplus', 'o_scmtni', 'o_scenic', 'o_random']]
+    output: 'anl/stab/unsmthds/{org}.{dat}.scores.csv'
+    shell:
+        """
+        python workflow/scripts/anl/metrics/stab_seed.py {output.stab_seed}
+        """
+
 
 #for i in range(n_seeds):
-#    config['dts']['pbmc10k']['cases'][str(i)] = config['dts']['pbmc10k']['cases']['all'].copy()
-#    config['dts']['pbmc10k']['cases'][str(i)]['n_sample'] = 1000000
-#    config['dts']['pbmc10k']['cases'][str(i)]['seed'] = str(i)
+#    config['dts']['pitupair']['cases'][str(i)] = config['dts']['pitupair']['cases']['all'].copy()
+#    config['dts']['pitupair']['cases'][str(i)]['n_sample'] = 1000000
+#    config['dts']['pitupair']['cases'][str(i)]['seed'] = str(i)
 
 #rule stab_unsmthds:
 #    threads: 1

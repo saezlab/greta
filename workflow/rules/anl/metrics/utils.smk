@@ -78,11 +78,9 @@ rule metric_summ:
         metrics='anl/metrics/summary/metrics.csv',
         scale='anl/metrics/summary/scalability.csv',
         pair='anl/metrics/summary/pair.csv',
-        stab_seed='anl/metrics/summary/stab_seed.csv',
     shell:
         """
         python workflow/scripts/anl/metrics/aggr_all.py {output.metrics} && \
         python workflow/scripts/anl/metrics/scalability.py {input.scale} {output.scale} && \
-        python workflow/scripts/anl/metrics/pair.py {output.metrics} {output.pair} && \
-        python workflow/scripts/anl/metrics/stab_seed.py {output.stab_seed}
+        python workflow/scripts/anl/metrics/pair.py {output.metrics} {output.pair}
         """
