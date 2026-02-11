@@ -3,6 +3,7 @@ import sys
 
 
 df = pd.read_csv(sys.argv[1])
+df = df[df['name'].str.startswith('o_')]
 
 pair = df[df['dts'] == 'Pituitary']
 npair = df[df['dts'] == 'Unpaired Pituitary']

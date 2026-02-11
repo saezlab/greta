@@ -10,9 +10,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from utils import (
     ocoeff,
     get_grn_name,
-    get_grn_stats
+    get_grn_stats,
+    _map_regions,
 )
 import argparse
+import pyranges as pr
 
 
 # Init args
@@ -47,8 +49,7 @@ for path in tqdm(paths):
     genes.append(set(df['target']))
     tdf = df.drop_duplicates(['source', 'target'], keep='first')
     edges.append(set(tdf['source'] + '|' + tdf['target']))
-    
-    
+
 
 # Store as df
 cols = ['name', 'n_tfs', 'n_cres', 'n_targets', 'n_edges', 'odegree', 'betweenc', 'eigv']
@@ -57,13 +58,35 @@ stats = pd.DataFrame(stats, columns=cols)
 print('Computing pairwise overlap coefficients...')
 
 
-def set_ocoef(a, b):
+#def set_ocoef(a, b):
+#    min_s = min(len(a), len(b))
+#    if min_s == 0:
+#        return np.nan
+#    else:
+#        inter = len(a & b)
+#        return inter / min_s
+
+def set_ocoef(a, b, use_overlap: bool = False) -> float:
     min_s = min(len(a), len(b))
-    if min_s == 0:
-        return np.nan
+    a_size = len(a)
+    b_size = len(b)
+    if min_s > 0:
+        i_size = len(a & b)
+        coeff = i_size / min_s
+        if coeff == 0 and use_overlap:
+            mapping = _map_regions(list(a), list(b))
+            if mapping.empty:
+                i_size = 0
+            else:
+                # Count overlapping regions from the smaller set
+                if a_size <= b_size:
+                    i_size = mapping["region_a"].nunique()
+                else:
+                    i_size = mapping["region_b"].nunique()
+            coeff = i_size / min_s
     else:
-        inter = len(a & b)
-        return inter / min_s
+        coeff = np.nan
+    return coeff
 
 
 names_a = []
@@ -87,7 +110,11 @@ for i in tqdm(range(len(names))):
         names_a.append(name_a)
         names_b.append(name_b)
         tf_coefs.append(set_ocoef(tf_a, tf_b))
-        cre_coefs.append(set_ocoef(cr_a, cr_b))
+        if name_a.startswith('pando') or name_b.startswith('pando'):
+            use_overlap = True
+        else:
+            use_overlap = False
+        cre_coefs.append(set_ocoef(cr_a, cr_b, use_overlap=use_overlap))
         target_coefs.append(set_ocoef(gn_a, gn_b))
         edge_coefs.append(set_ocoef(ed_a, ed_b))
 
