@@ -15,28 +15,28 @@ def set_ocoef(a, b):
 # Overlap TFs
 tf_dbs = dict()
 
-df = pd.read_csv('dbs/hg38/prt/knocktf/meta.csv', index_col=0)
+df = pd.read_csv('dbs/hg38/prt/knocktf/meta.csv.gz', index_col=0)
 tf_dbs['knocktf'] = set(df['TF'])
 
-df = pd.read_csv('dbs/hg38/tfm/hpa/hpa.tsv', sep='\t', header=None)
+df = pd.read_csv('dbs/hg38/tfm/hpa/hpa.tsv.gz', sep='\t', header=None)
 tf_dbs['hpa'] = set(df[0])
 
-df = pd.read_csv('dbs/hg38/tfm/tfmdb/tfmdb.tsv', sep='\t', header=None)
+df = pd.read_csv('dbs/hg38/tfm/tfmdb/tfmdb.tsv.gz', sep='\t', header=None)
 tf_dbs['tfmdb'] = set(df[0])
 
-df = pd.read_csv('dbs/hg38/tfp/europmc/europmc.tsv', sep='\t', header=None)
+df = pd.read_csv('dbs/hg38/tfp/europmc/europmc.tsv.gz', sep='\t', header=None)
 tf_dbs['europmc'] = set(df[0]) | set(df[1])
 
-df = pd.read_csv('dbs/hg38/tfp/intact/intact.tsv', sep='\t', header=None)
+df = pd.read_csv('dbs/hg38/tfp/intact/intact.tsv.gz', sep='\t', header=None)
 tf_dbs['intact'] = set(df[0]) | set(df[1])
 
-df = pd.read_csv('dbs/hg38/tfb/chipatlas/chipatlas.bed', sep='\t', usecols=[3], header=None)
+df = pd.read_csv('dbs/hg38/tfb/chipatlas/chipatlas.bed.gz', sep='\t', usecols=[3], header=None)
 tf_dbs['chipatlas'] = set(df[3])
 
-df = pd.read_csv('dbs/hg38/tfb/remap2022/remap2022.bed', sep='\t', usecols=[3], header=None)
+df = pd.read_csv('dbs/hg38/tfb/remap2022/remap2022.bed.gz', sep='\t', usecols=[3], header=None)
 tf_dbs['remap2022'] = set(df[3])
 
-df = pd.read_csv('dbs/hg38/tfb/unibind/unibind.bed', sep='\t', usecols=[3], header=None)
+df = pd.read_csv('dbs/hg38/tfb/unibind/unibind.bed.gz', sep='\t', usecols=[3], header=None)
 tf_dbs['unibind'] = set(df[3])
 
 ocf = []
@@ -50,22 +50,22 @@ for i, k_a in enumerate(keys):
 # Overlap Genes
 g_dbs = dict()
 
-df = pd.read_csv('dbs/hg38/gst/hall.csv')
+df = pd.read_csv('dbs/hg38/gst/hall.csv.gz')
 g_dbs['hall'] = set(df['target'])
 
-df = pd.read_csv('dbs/hg38/gst/kegg.csv')
+df = pd.read_csv('dbs/hg38/gst/kegg.csv.gz')
 g_dbs['kegg'] = set(df['target'])
 
-df = pd.read_csv('dbs/hg38/gst/prog.csv')
+df = pd.read_csv('dbs/hg38/gst/prog.csv.gz')
 g_dbs['prog'] = set(df['target'])
 
-df = pd.read_csv('dbs/hg38/gst/reac.csv')
+df = pd.read_csv('dbs/hg38/gst/reac.csv.gz')
 g_dbs['reac'] = set(df['target'])
 
-df = pd.read_csv('dbs/hg38/prt/knocktf/diff.csv', index_col=0)
+df = pd.read_csv('dbs/hg38/prt/knocktf/diff.csv.gz', index_col=0)
 g_dbs['knocktf'] = set(df.columns)
 
-df = pd.read_csv('dbs/hg38/c2g/eqtlcatalogue/eqtlcatalogue.bed', sep='\t', header=None, usecols=[3])
+df = pd.read_csv('dbs/hg38/c2g/eqtlcatalogue/eqtlcatalogue.bed.gz', sep='\t', header=None, usecols=[3])
 g_dbs['eqtlcatalogue'] = set(df[3])
 
 keys = list(g_dbs.keys())
@@ -77,16 +77,16 @@ for i, k_a in enumerate(keys):
 
 # Overlap bp
 bp_dbs = dict()
-bp_dbs['chipatlas'] = pr.read_bed('dbs/hg38/tfb/chipatlas/chipatlas.bed')
-bp_dbs['remap2022'] = pr.read_bed('dbs/hg38/tfb/remap2022/remap2022.bed')
-bp_dbs['unibind'] = pr.read_bed('dbs/hg38/tfb/unibind/unibind.bed')
-bp_dbs['blacklist'] = pr.read_bed('dbs/hg38/cre/blacklist/blacklist.bed')
-bp_dbs['encode'] = pr.read_bed('dbs/hg38/cre/encode/encode.bed')
-bp_dbs['gwascatalogue'] = pr.read_bed('dbs/hg38/cre/gwascatalogue/gwascatalogue.bed')
-bp_dbs['phastcons'] = pr.read_bed('dbs/hg38/cre/phastcons/phastcons.bed')
-bp_dbs['promoters'] = pr.read_bed('dbs/hg38/cre/promoters/promoters.bed')
-bp_dbs['zhang21'] = pr.read_bed('dbs/hg38/cre/zhang21/zhang21.bed')
-bp_dbs['eqtlcatalogue'] = pr.read_bed('dbs/hg38/c2g/eqtlcatalogue/eqtlcatalogue.bed')
+bp_dbs['chipatlas'] = pr.read_bed('dbs/hg38/tfb/chipatlas/chipatlas.bed.gz')
+bp_dbs['remap2022'] = pr.read_bed('dbs/hg38/tfb/remap2022/remap2022.bed.gz')
+bp_dbs['unibind'] = pr.read_bed('dbs/hg38/tfb/unibind/unibind.bed.gz')
+bp_dbs['blacklist'] = pr.read_bed('dbs/hg38/cre/blacklist/blacklist.bed.gz')
+bp_dbs['encode'] = pr.read_bed('dbs/hg38/cre/encode/encode.bed.gz')
+bp_dbs['gwascatalogue'] = pr.read_bed('dbs/hg38/cre/gwascatalogue/gwascatalogue.bed.gz')
+bp_dbs['phastcons'] = pr.read_bed('dbs/hg38/cre/phastcons/phastcons.bed.gz')
+bp_dbs['promoters'] = pr.read_bed('dbs/hg38/cre/promoters/promoters.bed.gz')
+bp_dbs['zhang21'] = pr.read_bed('dbs/hg38/cre/zhang21/zhang21.bed.gz')
+bp_dbs['eqtlcatalogue'] = pr.read_bed('dbs/hg38/c2g/eqtlcatalogue/eqtlcatalogue.bed.gz')
 
 tfb = ['chipatlas', 'remap2022', 'unibind']
 keys = list(bp_dbs.keys())
