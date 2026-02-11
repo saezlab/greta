@@ -46,6 +46,8 @@ grn = grn.drop_duplicates(['source', 'target'], keep='first')
 
 if dataset in ['fakepitupair', 'pitunpair']:
     dataset = 'pitupair'
+if case != 'all':
+    case = 'all'
 
 def init_celloracle(adata, grn, fit_grn):
     oracle = Oracle()

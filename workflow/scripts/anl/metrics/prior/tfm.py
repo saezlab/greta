@@ -26,6 +26,8 @@ grn_name = os.path.basename(grn_path).replace('.grn.csv', '')
 data_path = os.path.join(os.path.dirname(os.path.dirname(grn_path)), 'mdata.h5mu')
 dataset = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(data_path))))
 case = os.path.basename(os.path.dirname(data_path))
+if case != 'all':
+    case = 'all'
 resource_name = os.path.basename(resource_path).split('.')[0]
 
 # Read grn
