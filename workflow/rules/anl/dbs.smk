@@ -25,18 +25,6 @@ rule dbs_stats:
         touch {output}
         """
 
-localrules: dbs_n_per_dts
-rule dbs_n_per_dts:
-    threads: 1
-    singularity: 'workflow/envs/gretabench.sif'
-    input: rules.metric_summ.output.metrics
-    output: 'anl/dbs/n_per_dts.csv'
-    shell:
-        """
-        python workflow/scripts/anl/dbs/n_per_dts.py {output}
-        """
-
-
 rule dbs_hg38_terms:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -67,6 +55,35 @@ rule dbs_mm10_terms:
     shell:
         """
         python workflow/scripts/anl/dbs/terms.py -i {input} -o {output}
+        """
+
+localrules: dbs_n_per_dts
+DTS_QC_DATASETS = [
+    ('hg38', 'brain'),
+    ('hg38', 'breast'),
+    ('hg38', 'embryo'),
+    ('hg38', 'eye'),
+    ('hg38', 'heart'),
+    ('hg38', 'kidney'),
+    ('hg38', 'lung'),
+    ('hg38', 'pbmc10k'),
+    ('hg38', 'pitupair'),
+    ('hg38', 'reprofibro'),
+    ('hg38', 'skin'),
+    ('mm10', 'epalate'),
+]
+rule dbs_n_per_dts:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        mdata=expand('dts/{org}/{dat}/cases/all/mdata.h5mu',
+            zip, org=[d[0] for d in DTS_QC_DATASETS], dat=[d[1] for d in DTS_QC_DATASETS]),
+        terms_hg38=rules.dbs_hg38_terms.output,
+        terms_mm10=rules.dbs_mm10_terms.output,
+    output: 'anl/dbs/n_per_dts.csv'
+    shell:
+        """
+        python workflow/scripts/anl/dbs/n_per_dts.py {output}
         """
 
 
