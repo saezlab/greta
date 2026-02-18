@@ -639,9 +639,21 @@ def get_allgenes_files(ogids_dir):
 # -------- Function to run scMTNI for a single batch --------
 def run_scmtni_for_batch(datadir, gene_file):
     data = Path(datadir)
+    batch_id = gene_file.stem  # e.g., "AllGenes1"
+    # Create a batch-specific config with batch-specific output dirs
+    config_lines = []
+    with open(data / "testdata_config.txt") as f:
+        for line in f:
+            parts = line.strip().split("\t")
+            parts[2] = parts[2] + f"_{batch_id}"
+            Path(parts[2]).mkdir(parents=True, exist_ok=True)
+            config_lines.append("\t".join(parts))
+    batch_config = data / f"testdata_config_{batch_id}.txt"
+    with open(batch_config, "w") as f:
+        f.write("\n".join(config_lines) + "\n")
     cmd = [
         "/opt/scMTNI/Code/scMTNI",
-        "-f", str(data / "testdata_config.txt"),
+        "-f", str(batch_config),
         "-x5",
         "-l", str(data / "TFs_OGs.txt"),
         "-n", str(gene_file),
@@ -680,11 +692,39 @@ def parallel_scmtni(datadir, max_workers=batch_size):
                     print(f"Error in {gf}: {e}")
 
 
+def merge_batch_results(datadir, cell_types):
+    """Concatenate var_mb_pw_k5.txt from all batch directories into one per celltype."""
+    data = Path(datadir)
+    ogids_dir = data / "ogids"
+    gene_files = get_allgenes_files(ogids_dir)
+    batch_ids = [gf.stem for gf in gene_files]
+
+    for sample in cell_types:
+        main_results_dir = data / "Results" / sample / "fold0"
+        main_results_dir.mkdir(parents=True, exist_ok=True)
+        
+        combined_network = main_results_dir / "var_mb_pw_k5.txt"
+        
+        with open(combined_network, "w") as out_f:
+            for batch_id in batch_ids:
+                batch_file = data / "Results" / f"{sample}_{batch_id}" / "fold0" / "var_mb_pw_k5.txt"
+                if batch_file.exists():
+                    with open(batch_file) as in_f:
+                        out_f.write(in_f.read())
+                else:
+                    print(f"Warning: missing {batch_file}")
+        
+        n_lines = sum(1 for _ in open(combined_network))
+        print(f"Merged {sample}: {n_lines} edges")
+
+
 # Run parallel scMTNI
 parallel_scmtni(
     datadir=path_output,
     max_workers=batch_size
 )
+
+merge_batch_results(datadir=path_output, cell_types=celltypes)
 
 #----------------------------------
 # Remap TF-gene edge back to CRE
@@ -877,12 +917,8 @@ def merge_networks(outdir):
         arr = np.array(score)
         # maximum absolute value
         max_abs = np.max(np.abs(arr))
-        # sign product (ignoring zeros)
         signs = np.sign(arr[arr != 0])
-        if len(signs) == 0:
-            sign = 0
-        else:
-            sign = np.prod(signs)
+        sign = 1 if sum(signs) > 0 else -1
         consensus_val = max_abs * sign
         consensus.append((tf, cre, target, consensus_val))
 
