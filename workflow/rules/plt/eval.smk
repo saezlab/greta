@@ -46,6 +46,7 @@ rule fig_eval:
         pair=rules.metric_summ.output.pair,
         stats=rules.topo_aggr.output,
         ndbs=rules.dbs_n_per_dts.output,
+        stab_seed='anl/stab/unsmthds/hg38.pitupair.scores.csv',
     output: 'plt/eval/fig.pdf'
     shell:
         """
@@ -55,5 +56,6 @@ rule fig_eval:
         -p {input.pair} \
         -t {input.stats} \
         -d {input.ndbs} \
+        -b {input.stab_seed} \
         -o {output}
         """

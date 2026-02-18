@@ -134,7 +134,7 @@ dts_names:
     fakepitupair: Synthetic Pituitary
     pitunpair: Unpaired Pituitary
     breast: Breast
-    reprofibro: Reprog. Fibro
+    reprofibro: R. Fibro
     brain: Brain
 
 dbs_names:
@@ -187,13 +187,13 @@ method_names:
   collectri: CollecTRI
   crema: CREMA
   dictys: Dictys
-  directnet: DirectNet
+  directnet: DIRECT-NET
   dorothea: DoRothEA
   figr: FigR
   granie: GRaNIE
   grnboost: GRNBoost2
   hummus: HuMMuS
-  inferelator: Inferelator
+  inferelator: Inferelator3.0
   pando: Pando
   pearson: Pearson
   random: Random

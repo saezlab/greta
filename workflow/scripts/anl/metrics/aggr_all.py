@@ -29,6 +29,8 @@ for path in lst_paths:
     name_org = spath[-1].split('.')[0]
     name_dts = spath[-1].split('.')[1]
     tmp = pd.read_csv(path)
+    msk = tmp['name'].str.startswith('o_')
+    tmp = tmp.loc[msk, :].copy()
     tmp['class'] = class_dict[class_metric]
     tmp['task'] = task_dict[task_metric]
     tmp['db'] = db_dict[name_db]

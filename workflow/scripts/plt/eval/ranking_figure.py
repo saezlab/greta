@@ -64,6 +64,11 @@ def load_database_size_data(path_db_size):
     return pd.read_csv(path_db_size)
 
 
+def load_boxplot_data(path_boxplot):
+    """Load per-method boxplot comparison data from CSV."""
+    return pd.read_csv(path_boxplot)
+
+
 def compute_scalability_rankings(scalability_df):
     """Compute rankings for scalability metrics where lower is better.
 
@@ -986,7 +991,7 @@ def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
 
     # Build task structure from ordered_cols
     task_list = []  # [(cls, task, col_list), ...]
-    class_order_internal = ['Genomic', 'Predictive', 'Prior', 'Mechanistic']
+    class_order_internal = ['Genomic', 'Predictive', 'Literature', 'Mechanistic']
 
     for cls in class_order_internal:
         cls_rows = db_hierarchy[db_hierarchy['class'] == cls]
@@ -1073,7 +1078,7 @@ def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
     for i, (cls, task, cols) in enumerate(task_list):
         gs_col = gs_col_mapping[i]
         # Map class name to short form for colors
-        cls_short = {'Genomic': 'genom', 'Predictive': 'pred', 'Prior': 'prior', 'Mechanistic': 'mech'}.get(cls, cls)
+        cls_short = {'Genomic': 'genom', 'Predictive': 'pred', 'Literature': 'prior', 'Mechanistic': 'mech'}.get(cls, cls)
         if cls not in class_spans:
             class_spans[cls] = [gs_col, gs_col, cls_short]
         else:
@@ -1173,9 +1178,9 @@ def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
         '# Regions': 'Genomic',
         '# Enriched Sets': 'Predictive',
         '# Features': 'Predictive',
-        '# TFs': 'Prior',
-        '# TF pairs': 'Prior',
-        '# Edges': 'Prior',
+        '# TFs': 'Literature',
+        '# TF pairs': 'Literature',
+        '# Edges': 'Literature',
         '# Experiments': 'Mechanistic',
         '# Cell types': 'Mechanistic'
     }
@@ -1184,7 +1189,7 @@ def create_database_size_heatmap_figure(db_size_df, ordered_cols, config):
     labels_with_data = [l for l in label_ranges.keys() if label_ranges[l][0] != label_ranges[l][1] or label_ranges[l][0] > 0]
 
     # Group labels by class
-    class_labels = {'Genomic': [], 'Predictive': [], 'Prior': [], 'Mechanistic': []}
+    class_labels = {'Genomic': [], 'Predictive': [], 'Literature': [], 'Mechanistic': []}
     for label in labels_with_data:
         cls = label_to_class.get(label)
         if cls:
@@ -1387,6 +1392,95 @@ def create_topology_correlation_figure(df, stats_df, config):
     return fig
 
 
+def create_method_boxplot_figure(df, config):
+    """Create per-method boxplot figure comparing F0.1 scores across db-task combinations.
+
+    Args:
+        df: DataFrame with columns 'name', 'class', 'task', 'db', 'f01'
+        config: Configuration dictionary with method colors
+
+    Returns:
+        matplotlib Figure with one subplot per method
+    """
+    # Get method colors from config
+    method_colors_old = config['colors']['nets']
+    method_colors = {config['method_names'][k]: method_colors_old[k] for k in method_colors_old}
+
+    # Construct class.task.db column
+    df = df.copy()
+    df['class.task.db'] = df['class'] + '.' + df['task'] + '.' + df['db']
+
+    # Sort methods alphabetically
+    methods = sorted(df['name'].unique())
+    n_methods = len(methods)
+
+    # Order y-axis hierarchically: class → task → db
+    class_order = ['Genomic', 'Predictive', 'Literature', 'Mechanistic']
+
+    # Build hierarchical ordering
+    ordered_labels = []
+    for cls in class_order:
+        cls_data = df[df['class'] == cls]
+        if cls_data.empty:
+            continue
+
+        # Get unique tasks in this class
+        tasks = cls_data['task'].unique()
+        for task in sorted(tasks):
+            task_data = cls_data[cls_data['task'] == task]
+            # Get unique databases in this task
+            dbs = task_data['db'].unique()
+            for db in sorted(dbs):
+                label = f'{cls}.{task}.{db}'
+                if label not in ordered_labels:
+                    ordered_labels.append(label)
+
+    # Create subplot grid: 1 row, n_methods columns
+    fig, axes = plt.subplots(1, n_methods, figsize=(14, 4), sharey=True)
+
+    # Handle case where there's only one method
+    if n_methods == 1:
+        axes = [axes]
+
+    for i, method_name in enumerate(methods):
+        ax = axes[i]
+
+        # Filter data for this method
+        method_data = df[df['name'] == method_name]
+
+        # Get method color
+        color = method_colors.get(method_name, 'gray')
+
+        # Draw boxplot (no fill, no fliers)
+        sns.boxplot(data=method_data, y='class.task.db', x='f01',
+                   fill=False, fliersize=0, color=color, ax=ax,
+                   order=ordered_labels)
+
+        # Draw stripplot
+        sns.stripplot(data=method_data, y='class.task.db', x='f01',
+                     color=color, s=3, ax=ax, order=ordered_labels)
+
+        # Set x-axis
+        ax.set_xlim(0, 1)
+        if i == 0:
+            ax.set_xlabel(r'F$\mathrm{_{0.1}}$', fontsize=10)
+        else:
+            ax.set_xlabel(r'F$\mathrm{_{0.1}}$', fontsize=10)
+
+        # Set title
+        ax.set_title(method_name, fontsize=10)
+
+        # Set y-label (empty for shared y-axis)
+        ax.set_ylabel('', fontsize=10)
+
+        # Remove top and right spines
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+    return fig
+
+
 def main():
     """Main function to generate the ranking figure."""
     # Parse arguments
@@ -1400,6 +1494,8 @@ def main():
                         help='Path to topology stats CSV (columns: dts, name, # TFs, etc.)')
     parser.add_argument('-d', '--path_db_size', required=True,
                         help='Path to database size CSV')
+    parser.add_argument('-b', '--path_boxplot', required=True,
+                        help='Path to per-method boxplot CSV')
     parser.add_argument('-o', '--path_out', required=True)
     args = vars(parser.parse_args())
     path_inp = args['path_inp']
@@ -1407,6 +1503,7 @@ def main():
     path_pair = args['path_pair']
     path_stats = args['path_stats']
     path_db_size = args['path_db_size']
+    path_boxplot = args['path_boxplot']
     path_out = args['path_out']
 
     # Load data
@@ -1423,6 +1520,9 @@ def main():
 
     # Load database size data
     db_size_df = load_database_size_data(path_db_size)
+
+    # Load boxplot data
+    boxplot_df = load_boxplot_data(path_boxplot)
 
     # Compute aggregations
     overall_mean, class_mean, dataset_mean = compute_aggregations(df)
@@ -1488,6 +1588,9 @@ def main():
     # Create database size heatmap figure (page 6)
     fig6 = create_database_size_heatmap_figure(db_size_df, ordered_cols, config)
 
+    # Create method boxplot figure (page 7)
+    fig7 = create_method_boxplot_figure(boxplot_df, config)
+
     # Save multi-page PDF
     with PdfPages(path_out) as pdf:
         pdf.savefig(fig1, bbox_inches='tight', dpi=300)
@@ -1496,6 +1599,7 @@ def main():
         pdf.savefig(fig4, bbox_inches='tight', dpi=300)
         pdf.savefig(fig5, bbox_inches='tight', dpi=300)
         pdf.savefig(fig6, bbox_inches='tight', dpi=300)
+        pdf.savefig(fig7, bbox_inches='tight', dpi=300)
 
     plt.close('all')
 

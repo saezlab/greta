@@ -1,4 +1,4 @@
-localrules: run_stab, stab_ovsd, stab_cor
+localrules: run_stab, stab_ovsd, stab_cor, stab_unsmthds
 
 n_seeds = 10
 
@@ -101,12 +101,12 @@ rule stab_ovsd:
 
 rule stab_unsmthds:
     threads: 1
-    container: None
+    container: 'workflow/envs/gretabench.sif'
     input: [[[os.path.join(os.path.dirname(p), '{org}.{dat}.' + str(case), f'{mth}.{mth}.{mth}.{mth}.scores.csv') for p in rules.metric_summ.input.aggr] for case in [ f'16384_16384_{i}' for i in range(n_seeds)] + ['all']] for mth in ['o_dictys', 'o_hummus', 'o_scdori', 'o_scenicplus', 'o_scmtni', 'o_scenic', 'o_random']]
     output: 'anl/stab/unsmthds/{org}.{dat}.scores.csv'
     shell:
         """
-        python workflow/scripts/anl/metrics/stab_seed.py {output.stab_seed}
+        python workflow/scripts/anl/metrics/stab_seed.py {output}
         """
 
 
