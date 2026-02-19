@@ -127,16 +127,17 @@ if grn.shape[0] > 0:
         # Filter using FULL RNA genes (GRN-independent) for denominators
         msk_full = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna_var_names_full) & (obs['logFC'] < -0.5)
         obs_full = obs.loc[msk_full, :]
+        mat_full = mat.loc[msk_full, :]
         n_experiments = obs_full.shape[0]  # Recall denominator (GRN-independent)
 
         # Precision denominator: GRN TFs present in perturbation DB
         grn_tfs = set(grn['source'])
-        n_grn_tfs_in_prt = len(grn_tfs & set(obs_full['TF']))
 
         # Filter for actual simulation using GRN-subset genes
-        msk = obs['Tissue.Type'].isin(cats) & obs['TF'].isin(rna.var_names) & (obs['logFC'] < -0.5)
-        obs = obs.loc[msk, :]
-        mat = mat.loc[msk, :]
+        msk = obs_full['TF'].isin(grn_tfs)
+        obs = obs_full.loc[msk, :]
+        mat = mat_full.loc[msk, :]
+        n_grn_tfs_in_prt = mat.shape[0]
     
         # Subset by overlap with rna
         genes = list(genes & set(mat.columns))
