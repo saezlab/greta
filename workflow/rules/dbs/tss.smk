@@ -122,11 +122,13 @@ rule gen_tss_scenicplus:
 rule gen_tss_scmtni:
     threads: 1
     singularity: 'workflow/envs/scmtni.sif'
-    input: rules.gen_motif_scmtni.output.promoters_dir,
+    input:
+        promoters_dir=rules.gen_motif_scmtni.output.promoters_dir,
+        chain='dbs/chain_files/hg19ToHg38.over.chain.gz',
     output: 'dbs/hg38/gen/tss/scmtni.bed.gz'
     shell:
         """
-        python workflow/scripts/dbs/gen/tss/scmtni.py {input}/Homo_sapiens.GRCh37.74.TSS.5000.bed {output}
+        python workflow/scripts/dbs/gen/tss/scmtni.py {input.promoters_dir}/Homo_sapiens.GRCh37.74.TSS.5000.bed {input.chain} {output}
         """
 
 rule gen_tss_promoters:
