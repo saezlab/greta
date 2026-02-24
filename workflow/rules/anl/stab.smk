@@ -69,6 +69,29 @@ rule run_stab:
         rm {output.res}.tmp
         """
 
+rule run_stab_nomem:
+    threads: 1
+    singularity: 'workflow/envs/inferelator.sif'
+    input:
+        lambda wc: list(dict.fromkeys(
+            f'dts/hg38/{dat}/cases/{case}/runs/{mth}.{mth}.{mth}.{mth}.grn.csv'
+            for dat, case, mth in zip(d_lst, c_lst, m_lst)
+            if dat == wc.dat
+        ))
+    output:
+        res='anl/stab/{dat}.ovc_nomem.csv',
+        auc='anl/stab/{dat}.auc_nomem.csv',
+    params:
+        n_seeds=n_seeds,
+    shell:
+        """
+        python workflow/scripts/anl/stab/run_stab_nomem.py \
+        -i {input} \
+        -n {params.n_seeds} \
+        -r {output.res} \
+        -a {output.auc}
+        """
+
 
 rule stab_cor:
     threads: 1

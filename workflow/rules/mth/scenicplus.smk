@@ -135,7 +135,7 @@ rule mdl_scenicplus:
     params:
         script=lambda w: 'workflow/scripts/mth/scenicplus/mdl_mm10.sh' if config['dts'][w.dat]['organism'] == 'mm10' else 'workflow/scripts/mth/scenicplus/mdl.sh'
     resources:
-        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 2,
+        mem_mb=lambda wildcards, attempt: restart_mem(wildcards, attempt) * 3,
         runtime=config['max_mins_per_step'],
     shell:
         """

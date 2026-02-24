@@ -122,17 +122,17 @@ def auc(df, typ, title, palette, figs):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s','--path_diff_seeds', required=True)
 parser.add_argument('-d','--path_df', required=True)
+parser.add_argument('-m','--path_ovc_nomem', required=True)
 parser.add_argument('-b','--baselines', required=True, nargs='+')
 parser.add_argument('-a','--path_ac', required=True)
 parser.add_argument('-o','--path_out', required=True)
 args = parser.parse_args()
 
 # Read
-df = pd.read_csv(args.path_df)
-ac = pd.read_csv(args.path_ac)
-diff_seed = pd.read_csv(args.path_diff_seeds)
+df = pd.read_csv(args.path_df)           # ovc.csv — h/gb only
+df_nomem = pd.read_csv(args.path_ovc_nomem)  # ovc_nomem.csv — ocoeff plots
+ac = pd.read_csv(args.path_ac)           # auc_nomem.csv
 
 # Read config
 config = read_config()
@@ -147,23 +147,38 @@ palette_old = config['colors']['nets']
 palette = {config['method_names'][k]: palette_old[k] for k in palette_old}
 fbaselines = [config['method_names'][b] for b in baselines]
 
+# Build full_df from ovc_nomem for base_stability plots
+full_df = df_nomem[df_nomem['cat'] == 'full'].copy()
+full_df['seeds'] = [
+    ''.join(sorted([str(int(sa)), str(int(sb))]))
+    for sa, sb in zip(full_df['seed'], full_df['other_seed'])
+]
+full_df = full_df.drop_duplicates(['mth', 'seeds'])
+full_df['name'] = [mth_dict[m] for m in full_df['mth']]
+full_df = full_df.rename(columns={
+    's_ocoeff': 'oc_source',
+    'c_ocoeff': 'oc_cre',
+    't_ocoeff': 'oc_target',
+    'e_ocoeff': 'oc_edge',
+})
+
 # Plot
 figs = []
-base_stability(diff_seed, col='oc_source', title='TFs', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
-base_stability(diff_seed, col='oc_cre', title='CREs', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
-base_stability(diff_seed, col='oc_target', title='Genes', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
-base_stability(diff_seed, col='oc_edge', title='Edges', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
+base_stability(full_df, col='oc_source', title='TFs', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
+base_stability(full_df, col='oc_cre', title='CREs', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
+base_stability(full_df, col='oc_target', title='Genes', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
+base_stability(full_df, col='oc_edge', title='Edges', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
 
-sampled_stability(df, col='s_ocoeff', ylabel='TF Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
-sampled_stability(df, col='c_ocoeff', ylabel='CRE Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
-sampled_stability(df, col='t_ocoeff', ylabel='Gene Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
-sampled_stability(df, col='e_ocoeff', ylabel='Edge Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
+sampled_stability(df_nomem, col='s_ocoeff', ylabel='TF Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
+sampled_stability(df_nomem, col='c_ocoeff', ylabel='CRE Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
+sampled_stability(df_nomem, col='t_ocoeff', ylabel='Gene Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
+sampled_stability(df_nomem, col='e_ocoeff', ylabel='Edge Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
 
-sampled_stability(df, col='n_sources', ylabel='Number of TFs', palette=palette, figs=figs)
-sampled_stability(df, col='n_cres', ylabel='Number of CREs', palette=palette, figs=figs)
-sampled_stability(df, col='n_targets', ylabel='Number of Genes', palette=palette, figs=figs)
-sampled_stability(df, col='n_edges', ylabel='Number of edges', palette=palette, figs=figs)
-sampled_stability(df, col='r_size', ylabel='Regulon size', palette=palette, figs=figs)
+#sampled_stability(df, col='n_sources', ylabel='Number of TFs', palette=palette, figs=figs)
+#sampled_stability(df, col='n_cres', ylabel='Number of CREs', palette=palette, figs=figs)
+#sampled_stability(df, col='n_targets', ylabel='Number of Genes', palette=palette, figs=figs)
+#sampled_stability(df, col='n_edges', ylabel='Number of edges', palette=palette, figs=figs)
+#sampled_stability(df, col='r_size', ylabel='Regulon size', palette=palette, figs=figs)
 
 sampled_stability(df, col='h', ylabel='Time (hours)', palette=palette, figs=figs)
 sampled_stability(df, col='gb', ylabel='Memory (GBs)', palette=palette, figs=figs)

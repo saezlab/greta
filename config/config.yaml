@@ -395,7 +395,7 @@ dts:
 
 
 stab_datasets: ['pitupair']
-modular_datasets: ['pitupair']
+modular_datasets: ['pitupair', 'lung', 'embryo']
 nocombs_datasets: ['pitupair', 'pitunpair', 'fakepitupair']
 big_datasets: ['brain', 'heartatlas']
 

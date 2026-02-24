@@ -24,6 +24,9 @@ for path in [path_tss_a, path_tss_b]:
     tss = pd.read_csv(path, sep='\t', header=None)
     tss.columns = ['Chromosome', 'Start', 'End', 'Name']
     tss = tss.sort_values(['Chromosome', 'Start', 'End', 'Name'])
+    is_onebp = (tss['Start'] == tss['End']).all()
+    if is_onebp:
+        tss['End'] += 1
     tss = pr.PyRanges(tss)
     names.append(name)
     pr_tss.append(tss)
@@ -32,9 +35,13 @@ for path in [path_tss_a, path_tss_b]:
 genes = set().union(pr_tss[0].Name).intersection(pr_tss[1].Name)
 
 # Find genomic overlap coef
+def merge_span(gr, by=None):
+    df = gr.df.groupby('Chromosome').agg({"Start": "min", "End": "max"}).reset_index()
+    return pr.PyRanges(df)
+
 def overlap_coef_per_gene(gene, tss_a, tss_b):
-    ftss_a = tss_a[tss_a.Name == gene].merge()
-    ftss_b = tss_b[tss_b.Name == gene].merge()
+    ftss_a = merge_span(tss_a[tss_a.Name == gene].merge())
+    ftss_b = merge_span(tss_b[tss_b.Name == gene].merge())
     if ftss_a.empty or ftss_b.empty:
         raise ValueError('Gene has to be in tss')
     overlap = ftss_a.intersect(ftss_b)

@@ -4,9 +4,9 @@ rule plt_dwns:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        dsd='anl/topo/hg38.pitupair.topo_diff_seed.csv',
         ovc='anl/stab/pitupair.ovc.csv',
-        auc='anl/stab/pitupair.auc.csv',
+        ovc_nomem='anl/stab/pitupair.ovc_nomem.csv',
+        auc='anl/stab/pitupair.auc_nomem.csv',
         wgt='anl/stab/pitupair.wgt.csv',
         cor='anl/stab/pitupair.cor.csv',
     output:
@@ -16,7 +16,7 @@ rule plt_dwns:
         baselines=baselines,
     shell:
         """
-        python workflow/scripts/plt/stab/stab.py -s {input.dsd} -d {input.ovc} -b {baselines} -a {input.auc} -o {output.stab}
+        python workflow/scripts/plt/stab/stab.py -d {input.ovc} -m {input.ovc_nomem} -b {params.baselines} -a {input.auc} -o {output.stab}
         python workflow/scripts/plt/stab/cors.py -w {input.wgt} -b {baselines} -c {input.cor} -o {output.cors}
         """
 

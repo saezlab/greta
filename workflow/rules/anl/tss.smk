@@ -1,6 +1,6 @@
 localrules: tss_aggr
 
-# Need to modify this so that it does not use tss file as input for baselines
+
 rule tss_gocoef:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
@@ -39,7 +39,7 @@ rule tss_dist:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
-        c=rules.tss_aggr.output,
+        c=[f'dbs/hg38/gen/tss/{mth}.bed.gz' for mth in tss_mthds],
         g='anl/topo/{org}.{dat}.{case}.stats_mult.csv'
     output: "anl/tss/{org}.{dat}.{case}.dist.csv"
     resources:
