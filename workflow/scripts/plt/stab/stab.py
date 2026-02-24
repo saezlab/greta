@@ -9,7 +9,7 @@ from utils import read_config, savefigs
 import argparse
 
 
-def base_stability(df, col, title, mthds, baselines, palette, figs):
+def base_stability_old(df, col, title, mthds, baselines, palette, figs):
     fig, axes = plt.subplots(2, 1, figsize=(1.7, 3), dpi=150, gridspec_kw={'height_ratios': [len(mthds), len(baselines)]})
     ax = axes[0]
     data = df[df['cat'].isin(['full']) & df['mth'].isin(mthds)].copy()
@@ -36,6 +36,29 @@ def base_stability(df, col, title, mthds, baselines, palette, figs):
     ax.set_ylabel('Baselines')
     ax.set_xlim(-0.05, 1.05)
     
+    fig.subplots_adjust(wspace=0.05, hspace=0)
+    figs.append(fig)
+
+def base_stability(df, col, title, mthds, baselines, palette, figs):
+    fig, axes = plt.subplots(2, 1, figsize=(1.7, 3), dpi=150, gridspec_kw={'height_ratios': [len(mthds), len(baselines)]})
+    ax = axes[0]
+    is_baseline = df['name'].isin(baselines)
+    data = df[~is_baseline]
+    sns.boxplot(data=data, y='name', x=col, hue='name', ax=ax, fill=False, palette=palette, fliersize=0)
+    sns.stripplot(data=data, y='name', x=col, hue='name', ax=ax, palette=palette, size=0)
+    ax.tick_params(axis='x', rotation=90)
+    ax.set_xlabel('')
+    ax.set_ylabel('Methods')
+    ax.set_title(title)
+    ax.set_xlim(-0.05, 1.05)
+    ax = axes[1]
+    data = df[is_baseline]
+    sns.boxplot(data=data, y='name', x=col, hue='name', ax=ax, fill=False, palette=palette, fliersize=0)
+    sns.stripplot(data=data, y='name', x=col, hue='name', ax=ax, palette=palette, size=0)
+    ax.tick_params(axis='x', rotation=90)
+    ax.set_xlabel('Overlap coefficient')
+    ax.set_ylabel('Baselines')
+    ax.set_xlim(-0.05, 1.05)
     fig.subplots_adjust(wspace=0.05, hspace=0)
     figs.append(fig)
 
@@ -99,6 +122,7 @@ def auc(df, typ, title, palette, figs):
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-s','--path_diff_seeds', required=True)
 parser.add_argument('-d','--path_df', required=True)
 parser.add_argument('-b','--baselines', required=True, nargs='+')
 parser.add_argument('-a','--path_ac', required=True)
@@ -108,6 +132,7 @@ args = parser.parse_args()
 # Read
 df = pd.read_csv(args.path_df)
 ac = pd.read_csv(args.path_ac)
+diff_seed = pd.read_csv(args.path_diff_seeds)
 
 # Read config
 config = read_config()
@@ -115,17 +140,19 @@ mthds = list(config['methods'].keys())
 baselines = args.baselines
 mthds = [m for m in mthds if m not in baselines]
 
+
 # Rename
 mth_dict = config['method_names']
 palette_old = config['colors']['nets']
 palette = {config['method_names'][k]: palette_old[k] for k in palette_old}
+fbaselines = [config['method_names'][b] for b in baselines]
 
 # Plot
 figs = []
-base_stability(df, col='s_ocoeff', title='TFs', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
-base_stability(df, col='c_ocoeff', title='CREs', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
-base_stability(df, col='t_ocoeff', title='Genes', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
-base_stability(df, col='e_ocoeff', title='Edges', mthds=mthds, baselines=baselines, palette=palette, figs=figs)
+base_stability(diff_seed, col='oc_source', title='TFs', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
+base_stability(diff_seed, col='oc_cre', title='CREs', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
+base_stability(diff_seed, col='oc_target', title='Genes', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
+base_stability(diff_seed, col='oc_edge', title='Edges', mthds=mthds, baselines=fbaselines, palette=palette, figs=figs)
 
 sampled_stability(df, col='s_ocoeff', ylabel='TF Overlap coefficient', palette=palette, plot_diag=True, figs=figs)
 sampled_stability(df, col='c_ocoeff', ylabel='CRE Overlap coefficient', palette=palette, plot_diag=True, figs=figs)

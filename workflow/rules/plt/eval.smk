@@ -28,7 +28,7 @@ rule fig_dts_qc:
             zip, org=[d[0] for d in DTS_QC_DATASETS], dat=[d[1] for d in DTS_QC_DATASETS]),
         nc=expand('anl/dts/{org}.{dat}.all.nc.csv',
             zip, org=[d[0] for d in DTS_QC_DATASETS], dat=[d[1] for d in DTS_QC_DATASETS]),
-    output: 'plt/eval/dts_qc.png'
+    output: 'plt/eval/dts_qc.pdf'
     shell:
         """
         python workflow/scripts/plt/eval/dts_qc.py \

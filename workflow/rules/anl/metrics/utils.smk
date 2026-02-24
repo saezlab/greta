@@ -73,7 +73,8 @@ rule metric_summ:
     singularity: 'workflow/envs/gretabench.sif'
     input:
         aggr=[make_metric_rules(dat=dat) for dat in config['dts'].keys()],
-        scale='anl/stab/pitupair.ovc.csv'
+        scale='anl/stab/pitupair.ovc.csv',
+        dfs='anl/topo/hg38.pitupair.topo_diff_seed.csv'
     output:
         metrics='anl/metrics/summary/metrics.csv',
         scale='anl/metrics/summary/scalability.csv',
@@ -81,6 +82,6 @@ rule metric_summ:
     shell:
         """
         python workflow/scripts/anl/metrics/aggr_all.py {output.metrics} && \
-        python workflow/scripts/anl/metrics/scalability.py {input.scale} {output.scale} && \
+        python workflow/scripts/anl/metrics/scalability.py {input.scale} {input.dfs} {output.scale} && \
         python workflow/scripts/anl/metrics/pair.py {output.metrics} {output.pair}
         """

@@ -1,5 +1,15 @@
-localrules: topo_inter, topo_fvsd, topo_simul, topo_aggr
+localrules: topo_diff_seed, topo_inter, topo_fvsd, topo_simul, topo_aggr
 
+n_seeds = 10
+rule topo_diff_seed:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input: [['dts/{org}/{dts}/cases/16384_16384_' + f'{i}/runs/o_{mth}.o_{mth}.o_{mth}.o_{mth}.grn.csv' for mth in mthds] for i in range(n_seeds)]
+    output: 'anl/topo/{org}.{dts}.topo_diff_seed.csv'
+    shell:
+        """
+        python workflow/scripts/anl/topo/stab_seed.py {output}
+        """
 
 rule topo_mult:
     threads: 4

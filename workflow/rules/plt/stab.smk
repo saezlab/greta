@@ -1,10 +1,10 @@
 localrules: plt_dwns, plt_sims, plt_AREG, fig_stability
 
-
 rule plt_dwns:
     threads: 1
     singularity: 'workflow/envs/gretabench.sif'
     input:
+        dsd='anl/topo/hg38.pitupair.topo_diff_seed.csv',
         ovc='anl/stab/pitupair.ovc.csv',
         auc='anl/stab/pitupair.auc.csv',
         wgt='anl/stab/pitupair.wgt.csv',
@@ -16,7 +16,7 @@ rule plt_dwns:
         baselines=baselines,
     shell:
         """
-        python workflow/scripts/plt/stab/stab.py -d {input.ovc} -b {baselines} -a {input.auc} -o {output.stab}
+        python workflow/scripts/plt/stab/stab.py -s {input.dsd} -d {input.ovc} -b {baselines} -a {input.auc} -o {output.stab}
         python workflow/scripts/plt/stab/cors.py -w {input.wgt} -b {baselines} -c {input.cor} -o {output.cors}
         """
 
