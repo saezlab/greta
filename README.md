@@ -18,6 +18,7 @@ Clone repo:
 git clone git@github.com:saezlab/greta.git
 cd greta
 ```
+In some cases, execute permissions must be granted to the SLURM configuration files before running GRETA. You can do this with `chmod +x config/slurm/*.py`
 
 Then create a new enviroment specific for `Snakemake`:
 ```
