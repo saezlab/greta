@@ -25,6 +25,7 @@ Then create a new enviroment specific for `Snakemake`:
 mamba create -c conda-forge -c bioconda -n snakemake snakemake=7.32.4
 mamba activate snakemake
 ```
+This pipeline uses Singularity for containerized execution. It must be installed at the system level prior to running. For installation instructions, refer to the official Singularity documentation([local](https://docs.sylabs.io/guides/latest/user-guide/), [cluster](https://docs.sylabs.io/guides/latest/admin-guide/)) or contact your cluster administrator.
 
 ## Overview
 Due to the magnitude of datasets and analyses, the repository is organized as a reproducible 
