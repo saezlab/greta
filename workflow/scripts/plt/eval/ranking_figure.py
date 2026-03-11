@@ -210,6 +210,7 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
         # Invert ranks so longer bars = better (transform: max_rank - rank + 1)
         mean_class_rank_ordered = mean_class_rank.loc[method_order]
         display_values = n_methods + 1 - mean_class_rank_ordered.values
+        print(display_values)
         ax_bar.barh(y_positions, display_values, color=bar_colors, height=0.95)
         ax_bar.set_ylim(-0.5, n_methods - 0.5)
         ax_bar.invert_yaxis()
