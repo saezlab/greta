@@ -86,7 +86,10 @@ rule c2g_eqtlcatalogue:
     params: id=config['zenodo_id']
     shell:
         """
+        path_tmp=$(dirname {output})/tmp.gz
         wget --no-check-certificate --no-verbose \
         'https://zenodo.org/records/{params.id}/files/hg38_c2g_eqtlcatalogue.bed.gz?download=1' \
-        -O {output}
+        -O $path_tmp
+        python workflow/scripts/dbs/c2g/eqtl_distal.py $path_tmp dbs/hg38/cre/promoters/promoters.bed.gz {output}
+        rm $path_tmp
         """
