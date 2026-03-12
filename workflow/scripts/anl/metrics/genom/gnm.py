@@ -56,6 +56,8 @@ cat_resources = ['chipatlas', 'remap2022', 'unibind', 'gwascatalogue', 'eqtlcata
 if grn.df.shape[0] > 0:
     # Read resource and filter by cats
     db = pr.read_bed(resource_path)
+    if 'ThickStart' in db.df.columns:
+        db = db[db.df['ThickStart'] > 5_000]
     cats = load_cats(dataset, case)
     cats = cats[resource_name]
     if cats == 'None' and resource_name in cat_resources:
@@ -82,7 +84,7 @@ if grn.df.shape[0] > 0:
             db_feats = db.df['Name'].unique()
             features = np.setdiff1d(grn_feats, db_feats)
             grn = grn[~grn.df['Name'].isin(features)]
-        
+
             tps = 0
             fps = 0
             fns = 0
