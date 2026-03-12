@@ -93,14 +93,20 @@ def compute_scalability_rankings(scalability_df):
 
 def compute_aggregations(df):
     """Compute mean f01 scores at different aggregation levels."""
-    # Overall mean per method
-    overall_mean = df.groupby('name')['f01'].mean()
+    # Per-class mean (hierarchical: dts -> db -> task -> class -> name)
+    s1 = df.groupby(['name', 'class', 'task', 'db', 'dts'])['f01'].mean()
+    s2 = s1.groupby(['name', 'class', 'task', 'db']).mean()
+    s3 = s2.groupby(['name', 'class', 'task']).mean()
+    class_mean = s3.groupby(['name', 'class']).mean().unstack()
 
-    # Per-class mean
-    class_mean = df.groupby(['name', 'class'])['f01'].mean().unstack()
+    # Per-dataset mean (hierarchical: db -> task -> class -> dts -> name)
+    s1 = df.groupby(['name', 'dts', 'class', 'task', 'db'])['f01'].mean()
+    s2 = s1.groupby(['name', 'dts', 'class', 'task']).mean()
+    s3 = s2.groupby(['name', 'dts', 'class']).mean()
+    dataset_mean = s3.groupby(['name', 'dts']).mean().unstack()
 
-    # Per-dataset mean
-    dataset_mean = df.groupby(['name', 'dts'])['f01'].mean().unstack()
+    # Overall mean: each class gets equal weight (reuse hierarchical class_mean)
+    overall_mean = class_mean.mean(axis=1)
 
     return overall_mean, class_mean, dataset_mean
 
@@ -522,8 +528,11 @@ def compute_dataset_comparison_stats(df):
         kw_pval: Kruskal-Wallis p-value
         posthoc_df: DataFrame with pairwise comparisons
     """
-    # Compute mean F0.1 per method for each dataset
-    method_dataset_mean = df.groupby(['name', 'dts'])['f01'].mean().reset_index()
+    # Compute mean F0.1 per method for each dataset (hierarchical)
+    s1 = df.groupby(['name', 'dts', 'class', 'task', 'db'])['f01'].mean()
+    s2 = s1.groupby(['name', 'dts', 'class', 'task']).mean()
+    s3 = s2.groupby(['name', 'dts', 'class']).mean()
+    method_dataset_mean = s3.groupby(['name', 'dts']).mean().reset_index()
 
     # Get unique datasets
     datasets = method_dataset_mean['dts'].unique()
@@ -1288,7 +1297,7 @@ def create_pair_comparison_figure(pair_df, config):
     return fig
 
 
-def create_topology_correlation_figure(df, stats_df, config):
+def create_topology_correlation_figure(df, stats_df, config, mean_class_rank):
     """Create scatter plots of network topology statistics vs F0.1 performance.
 
     Args:
@@ -1306,11 +1315,15 @@ def create_topology_correlation_figure(df, stats_df, config):
     # Merge metrics and stats on ['dts', 'name']
     merged = df.merge(stats_df, on=['dts', 'name'], how='inner')
 
-    # Aggregate by method name: compute mean of numeric columns
-    agg_df = merged.groupby('name').mean(numeric_only=True).reset_index()
-
     # Stat columns to plot
     stat_columns = ['# TFs', '# CREs', '# Genes', '# Edges', 'Regulon size']
+
+    # Aggregate topology stats per method
+    agg_df = merged.groupby('name')[stat_columns].mean().reset_index()
+
+    # Use mean inverted rank from figure 1 (N + 1 - mean_class_rank)
+    n_methods = len(mean_class_rank)
+    agg_df['inv_rank'] = agg_df['name'].map(n_methods + 1 - mean_class_rank)
 
     # Create figure: 1 row x 5 columns
     fig, axes = plt.subplots(1, 5, figsize=(12, 3), sharey=True)
@@ -1322,7 +1335,7 @@ def create_topology_correlation_figure(df, stats_df, config):
     correlations = []
     for i, stat_col in enumerate(stat_columns):
         x = agg_df[stat_col].values
-        y = agg_df['f01'].values
+        y = agg_df['inv_rank'].values
         mask = ~(np.isnan(x) | np.isnan(y))
         if mask.sum() > 2:
             r, p = pearsonr(x[mask], y[mask])
@@ -1346,7 +1359,7 @@ def create_topology_correlation_figure(df, stats_df, config):
 
         # Get data for this stat
         x = agg_df[stat_col].values
-        y = agg_df['f01'].values
+        y = agg_df['inv_rank'].values
         names = agg_df['name'].values
 
         # Scatter plot colored by method
@@ -1377,7 +1390,7 @@ def create_topology_correlation_figure(df, stats_df, config):
 
         ax.set_xlabel(stat_col, fontsize=9)
         if i == 0:
-            ax.set_ylabel(r'Mean F$\mathrm{_{0.1}}$', fontsize=9)
+            ax.set_ylabel('Mean inverted rank', fontsize=9)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.tick_params(labelsize=8)
@@ -1584,7 +1597,7 @@ def main():
     fig4 = create_pair_comparison_figure(pair_df, config)
 
     # Create topology correlation figure (page 5)
-    fig5 = create_topology_correlation_figure(df, stats_df, config)
+    fig5 = create_topology_correlation_figure(df, stats_df, config, mean_class_rank)
 
     # Create database size heatmap figure (page 6)
     fig6 = create_database_size_heatmap_figure(db_size_df, ordered_cols, config)
