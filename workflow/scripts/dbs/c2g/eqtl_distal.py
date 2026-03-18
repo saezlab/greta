@@ -19,8 +19,8 @@ res = db.merge(tss_mid, on='Name', how='left')
 res['Distance'] = ((res['Start'] + res['End']) // 2 - res['TSS_mid']).abs()
 
 # Filter
-res['Strand'] = np.nan
-res = res[['Chromosome', 'Start', 'End', 'Name', 'Score', 'Strand', 'Distance']]
+res = res[res['Distance'] >= 5_000]
+res = res[['Chromosome', 'Start', 'End', 'Name', 'Score']]
 
 # Write
 res.to_csv(path_out, index=False, sep='\t', header=None, compression="gzip")
