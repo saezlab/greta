@@ -48,9 +48,9 @@ def compute_matrices(df_sub):
     step_per_dts = {}
     for stp in steps:
         mean_step = df_sub.groupby([stp, 'dts', 'class', 'task'], as_index=False)['f01'].mean()
-        step_per_dts[stp] = mean_step.rename(columns={stp: 'name'}).copy()
         mean_step = mean_step.groupby([stp, 'dts', 'class'], as_index=False)['f01'].mean()
         mean_step = mean_step.groupby([stp, 'dts'], as_index=False)['f01'].mean()
+        step_per_dts[stp] = mean_step.rename(columns={stp: 'name'}).copy()
         mean_step = mean_step.rename(columns={stp: 'name'})
         mean_step['step'] = stp
         res.append(mean_step)
@@ -72,8 +72,8 @@ def make_fig(df_sub, title):
         data_stp = step_per_dts[stp]
         pvals, methods_in_step = [], []
         for mth in res_mat.index:
-            # 3 observations: per-dataset mean f01 for this method & step
-            g1 = data_stp.loc[data_stp['name'] == mth].groupby('dts')['f01'].mean().values
+            # 5 observations: per-dataset mean f01 for this method & step
+            g1 = data_stp.loc[data_stp['name'] == mth]['f01'].values
             # background: other methods, same step — per-dataset mean then averaged
             other = data_stp.loc[data_stp['name'] != mth]
             step_mean = other.groupby('dts')['f01'].mean().mean()
@@ -210,7 +210,8 @@ def compute_delta_matrices(df_sub):
     for stp in steps:
         stp_data = delta_df[delta_df['step'] == stp]
         per_dts = (
-            stp_data.groupby(['alt', 'dts', 'base'], as_index=False)['delta'].mean()
+            stp_data.groupby(['alt', 'dts', 'base', 'class'], as_index=False)['delta'].mean()
+                    .groupby(['alt', 'dts', 'base'], as_index=False)['delta'].mean()
                     .groupby(['alt', 'dts'], as_index=False)['delta'].mean()
         )
         step_per_dts[stp] = per_dts

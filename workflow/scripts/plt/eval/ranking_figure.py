@@ -224,12 +224,14 @@ def create_figure(overall_mean, class_mean, dataset_mean, class_ranks, dataset_r
         ax_bar.set_yticks([])
         ax_bar.set_xlim(0, n_methods + 0.5)
     else:
-        ax_bar.barh(y_positions, overall_mean.values, color=bar_colors, height=0.95)
+        display_values = overall_mean.values
+        ax_bar.barh(y_positions, display_values, color=bar_colors, height=0.95)
         ax_bar.set_ylim(-0.5, n_methods - 0.5)
         ax_bar.invert_yaxis()
         ax_bar.set_xlabel(r'Mean F$\mathrm{_{0.1}}$', fontsize=10)
         ax_bar.set_yticks([])
         ax_bar.set_xlim(0, overall_mean.max() * 1.05)
+    print(display_values)
 
     ax_bar.spines['top'].set_visible(False)
     ax_bar.spines['right'].set_visible(False)
@@ -1297,13 +1299,14 @@ def create_pair_comparison_figure(pair_df, config):
     return fig
 
 
-def create_topology_correlation_figure(df, stats_df, config, mean_class_rank):
+def create_topology_correlation_figure(df, stats_df, config, overall_mean):
     """Create scatter plots of network topology statistics vs F0.1 performance.
 
     Args:
         df: Metrics DataFrame with columns 'dts', 'name', 'f01'
         stats_df: Topology stats DataFrame with columns 'dts', 'name', '# TFs', etc.
         config: Configuration dictionary with method colors
+        overall_mean: Series of mean F0.1 scores per method
 
     Returns:
         matplotlib Figure with 5 scatter plots and shared legend
@@ -1321,9 +1324,8 @@ def create_topology_correlation_figure(df, stats_df, config, mean_class_rank):
     # Aggregate topology stats per method
     agg_df = merged.groupby('name')[stat_columns].mean().reset_index()
 
-    # Use mean inverted rank from figure 1 (N + 1 - mean_class_rank)
-    n_methods = len(mean_class_rank)
-    agg_df['inv_rank'] = agg_df['name'].map(n_methods + 1 - mean_class_rank)
+    # Use mean F0.1 score per method
+    agg_df['inv_rank'] = agg_df['name'].map(overall_mean)
 
     # Create figure: 1 row x 5 columns
     fig, axes = plt.subplots(1, 5, figsize=(12, 3), sharey=True)
@@ -1384,13 +1386,14 @@ def create_topology_correlation_figure(df, stats_df, config, mean_class_rank):
             else:
                 stars = ''
 
-            # Annotate with r value and stars (bottom right)
-            ax.text(0.95, 0.05, f'r = {r:.2f} {stars}', transform=ax.transAxes,
+            # Annotate with r value and FDR significance (bottom right)
+            sig_text = 'FDR < 0.05' if fdr < 0.05 else 'FDR > 0.05'
+            ax.text(0.95, 0.05, f'r = {r:.2f} {stars}\n{sig_text}', transform=ax.transAxes,
                    fontsize=9, va='bottom', ha='right')
 
         ax.set_xlabel(stat_col, fontsize=9)
         if i == 0:
-            ax.set_ylabel('Mean inverted rank', fontsize=9)
+            ax.set_ylabel(r'Mean F$\mathrm{_{0.1}}$', fontsize=9)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.tick_params(labelsize=8)
@@ -1561,7 +1564,7 @@ def main():
     fig1 = create_figure(overall_mean, class_mean, dataset_mean,
                          class_ranks, dataset_ranks,
                          scalability_df, scalability_ranks, config,
-                         use_rank_barplot=True,
+                         use_rank_barplot=False,
                          mean_class_rank=mean_class_rank)
 
     # Create dataset comparison figure (page 2)
@@ -1580,8 +1583,8 @@ def main():
     db_mean = db_mean[ordered_cols]
     db_ranks = compute_rankings(db_mean)
 
-    # Get method order (same as main figure - sorted by mean rank ascending)
-    method_order = mean_class_rank.sort_values(ascending=True).index.tolist()
+    # Get method order (same as main figure - sorted by overall mean F0.1 descending)
+    method_order = overall_mean.sort_values(ascending=False).index.tolist()
 
     # Create database heatmap figure (page 3)
     fig3, ordered_cols = create_database_heatmap_figure(
@@ -1597,7 +1600,7 @@ def main():
     fig4 = create_pair_comparison_figure(pair_df, config)
 
     # Create topology correlation figure (page 5)
-    fig5 = create_topology_correlation_figure(df, stats_df, config, mean_class_rank)
+    fig5 = create_topology_correlation_figure(df, stats_df, config, overall_mean)
 
     # Create database size heatmap figure (page 6)
     fig6 = create_database_size_heatmap_figure(db_size_df, ordered_cols, config)
