@@ -12,6 +12,12 @@ The emergence of single-cell multi-omics technologies has driven the development
    <img src="https://drive.google.com/uc?id=1HpJx1deKivG2DRv3uXp_xLz90R0YfOwU" alt="GRETA graphical abstract" width="500" style="pointer-events: none;" />
 </div>
 
+## GRETApy
+For users interested in evaluating pre-computed GRNs without requiring HPC infrastructure or Snakemake,
+we provide [GRETApy](https://github.com/saezlab/gretapy), a standalone lightweight Python package.
+GRETApy takes as input a dataset in MuData format and a pre-computed GRN, and computes all evaluation metrics directly.
+Note that running the full GRN inference methods still requires the Snakemake pipeline and HPC infrastructure.
+
 ## Installation
 Clone repo:
 ```
@@ -54,6 +60,8 @@ greta/
     │   └── plt              # plots
     └── Snakefile         # Main Snakemake file
 ```
+
+Note: The SLURM configuration files in config/slurm/ (e.g., partition names, memory limits, time limits) are specific to our cluster environment and must be adapted to match your system before running the pipeline. Users running a different workload manager can create a compatible [Snakemake profile](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles); see the Snakemake documentation for details.
 
 Here are some lines to generate important intermediate outputs:
 ```
