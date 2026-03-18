@@ -94,7 +94,7 @@ heatmap(oc, typ='tf', title='TFs', order=order, figs=figs)
 order = ['knocktf', 'hall', 'kegg', 'reac', 'prog', 'eqtlcatalogue']
 heatmap(oc, typ='gene', title='Genes', order=order, figs=figs)
 
-order = ['chipatlas', 'remap2022', 'unibind', 'encode', 'gwascatalogue', 'blacklist', 'phastcons', 'promoters', 'zhang21']
+order = ['chipatlas', 'remap2022', 'unibind', 'encode', 'gwascatalogue', 'blacklist', 'phastcons', 'promoters', 'zhang21', 'eqtlcatalogue']
 heatmap(oc, typ='bp', title='Base pairs', order=order, figs=figs)
 
 # Write
