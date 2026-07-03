@@ -52,6 +52,10 @@ methods:
     inferelator:
         modular: False
         ext: 500000
+    linger:
+        modular: False
+        version: 'LINGER'
+        mode: 'parallel'
     pando:
         modular: True
         exclude_exons: 'TRUE'
@@ -108,6 +112,7 @@ colors:
         granie: '#97de8a'
         hummus: '#d52727'
         inferelator: '#ff9796'
+        linger: '#17a589'
         pando: '#9467bc'
         scdori: '#c4afd4'
         scenicplus: '#8c554a'
@@ -194,6 +199,7 @@ method_names:
   grnboost: GRNBoost2
   hummus: HuMMuS
   inferelator: Inferelator3.0
+  linger: LINGER
   pando: Pando
   pearson: Pearson
   random: Random

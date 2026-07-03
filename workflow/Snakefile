@@ -97,6 +97,7 @@ include: 'rules/dbs/gst.smk'
 include: 'rules/dbs/c2g.smk'
 include: 'rules/dbs/prt.smk'
 include: 'rules/dbs/sim.smk'
+include: 'rules/dbs/linger_prior.smk'
 
 # Datasets
 include: 'rules/dts/pbmc10k.smk'
@@ -133,6 +134,7 @@ include: 'rules/mth/scdori.smk'
 include: 'rules/mth/scenic.smk'
 include: 'rules/mth/scgpt.smk'
 include: 'rules/mth/scmtni.smk'
+include: 'rules/mth/linger.smk'
 
 # Analyses
 include: 'rules/anl/metrics/prior.smk'

@@ -1,4 +1,4 @@
-localrules: gen_tss_celloracle, gen_tss_crema, gen_tss_dictys, gen_tss_figr, gen_tss_granie, gen_tss_pando, gen_tss_scenicplus, gen_tss_scdori, gen_tss_scmtni, gen_tss_promoters
+localrules: gen_tss_celloracle, gen_tss_crema, gen_tss_dictys, gen_tss_figr, gen_tss_granie, gen_tss_linger, gen_tss_pando, gen_tss_scenicplus, gen_tss_scdori, gen_tss_scmtni, gen_tss_promoters
 
 
 rule gen_tss_celloracle:
@@ -81,6 +81,21 @@ rule gen_tss_inferelator:
     shell:
         """
         cp {input} {output}
+        """
+
+rule gen_tss_linger:
+    threads: 1
+    singularity: 'workflow/envs/gretabench.sif'
+    input:
+        gtf=rules.gen_genome_inferelator.output.gtf,
+        genes='dbs/lingerGRN/data_bulk/bulk_gene_all.txt'
+    output: 'dbs/hg38/gen/tss/linger.bed.gz'
+    shell:
+        """
+        python workflow/scripts/dbs/gen/tss/linger.py \
+        -i {input.gtf} \
+        -g {input.genes} \
+        -o {output}
         """
 
 rule gen_tss_pando:
